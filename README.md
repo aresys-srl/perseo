@@ -5,3 +5,7 @@ dedicated to SAR products analysis and core functionalities for performing funda
 
 This project consists of several standalone packages that can be installed separately to perform
 thematic operations as indicated by the package name.
+
+Available packages:
+
+    - **PERSEO Quality**: to perform quality analysis and calibration assessment of SAR Products
