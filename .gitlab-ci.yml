@@ -1,0 +1,21 @@
+stages:
+  - subproject
+
+.subproject:
+  stage: subproject
+  variables:
+    SUBPROJECT: $CI_JOB_NAME
+    DEPLOY_DOC: $DEPLOY_DOC
+
+perseo-quality:
+  extends: .subproject
+  trigger:
+    include: perseo-quality/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^perseo-quality.*/"
+    - if: "$CI_COMMIT_TAG == null"
+      changes:
+        - .gitlab-ci.yml
+        - perseo-quality/*
+        - perseo-quality/**/*
