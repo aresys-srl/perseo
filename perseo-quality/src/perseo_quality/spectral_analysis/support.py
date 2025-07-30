@@ -1,0 +1,555 @@
+# SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
+# SPDX-License-Identifier: MIT
+
+"""Spectral Analysis support functionalities"""
+
+from __future__ import annotations
+
+import numpy as np
+from arepytools.timing.precisedatetime import PreciseDateTime
+from numpy.polynomial import Polynomial
+from scipy.constants import speed_of_light
+from scipy.fft import fft2, fftshift, ifft2, ifftshift
+from scipy.signal import spectrogram
+from scipy.signal.windows import hamming
+
+from perseo_quality.core.generic_dataclasses import SARAcquisitionMode
+from perseo_quality.core.signal_processing import (
+    convert_to_db,
+    estimate_modulation_frequency2d,
+    locate_max_2d_interp,
+)
+from perseo_quality.io.quality_input_protocol import ChannelData, SARCoordinatesFunction
+
+# TODO: check what can be moved into Perseo Core
+
+
+def data_deramping(
+    data: np.ndarray,
+    channel_data: ChannelData,
+    burst: int,
+    roi_center_location_px: tuple[int, int],
+) -> np.ndarray:
+    """Deramping input raster data portion.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        raster data portion, with shape (samples, lines)
+    channel_data : ChannelData
+        channel data manager instance
+    burst : int
+        current burst number
+    roi_center_location_px : tuple[int, int]
+        roi center location in pixels, (azimuth pixel, range pixel)
+
+    Returns
+    -------
+    np.ndarray
+        deramped raster data portion
+    """
+
+    burst_start_time_px = np.sum(channel_data.lines_per_burst[:burst])
+    mid_burst_az_time, _ = channel_data.get_mid_burst_times(burst=burst)
+    lines_step = channel_data.azimuth_axis[1] - channel_data.azimuth_axis[0]
+
+    # default: scansar mode
+    azimuth_steering_rate_axis = None
+    sensor_velocity_norm_mid_burst = None
+    if channel_data.acquisition_mode == SARAcquisitionMode.TOPSAR:
+        azimuth_steering_rate_axis = np.array(
+            [
+                channel_data.get_steering_rate(azimuth_time=mid_burst_az_time, burst=burst)
+                for _ in channel_data.slant_range_axis
+            ]
+        )
+        sensor_velocity_norm_mid_burst = np.linalg.norm(
+            channel_data.trajectory.evaluate_first_derivatives(mid_burst_az_time)
+        )
+
+    burst_deramping_function = compute_burst_deramping_function(
+        mid_burst_az_time=mid_burst_az_time,
+        lines_per_burst=channel_data.lines_per_burst[burst],
+        lines_step=lines_step,
+        slant_range_axis=channel_data.slant_range_axis,
+        doppler_centroid_poly=channel_data.doppler_centroid,
+        doppler_rate_poly=channel_data.doppler_rate,
+        azimuth_steering_rate_axis=azimuth_steering_rate_axis,
+        carrier_frequency=channel_data.carrier_frequency,
+        sensor_velocity_norm_mid_burst=sensor_velocity_norm_mid_burst,
+    )
+    burst_az_relative_target_location_px = roi_center_location_px[0] - burst_start_time_px
+    burst_target_start_az_roi_crop = burst_az_relative_target_location_px - np.floor(data.shape[1] / 2).astype(int)
+    burst_target_start_rng_roi_crop = roi_center_location_px[1] - np.floor(data.shape[0] / 2).astype(int)
+    roi_deramping_function = burst_deramping_function[
+        burst_target_start_az_roi_crop : burst_target_start_az_roi_crop + data.shape[1],
+        burst_target_start_rng_roi_crop : burst_target_start_rng_roi_crop + data.shape[0],
+    ]
+    return data * roi_deramping_function.T
+
+
+def compute_deramping_phase_exponential(
+    lines_per_burst: int, lines_step: float, doppler_centroid_axis: np.ndarray, doppler_rate_axis: np.ndarray
+) -> np.ndarray:
+    """Computing deramping exponential phase function, ideally for scansar mode (without introducing the steering rate).
+
+    .. math::
+
+        exp \\left( \\pi i \\cdot k_D \\left(t_{burst}^{rel} - \\left(t_{mid\\_burst}^{rel} - \\frac{f_{DC}}{k_D}
+        \\right) \\right)^2 \\right)
+
+    where :math:`k_D` is the doppler rate axis and :math:`f_{DC}` is the doppler centroid axis.
+
+    Parameters
+    ----------
+    lines_per_burst : int
+        lines per burst
+    lines_step : float
+        lines step in seconds
+    doppler_centroid_axis : np.ndarray
+        doppler centroid frequency axis, computed for each range sample, with shape (samples,)
+    doppler_rate_axis : np.ndarray
+        doppler rate axis, computed for each range sample, with shape (samples,)
+
+    Returns
+    -------
+    np.ndarray
+        deramping exponential phase function, with shape (lines per burst, samples)
+    """
+    burst_deramping_azimuth_time_axis = compute_deramping_azimuth_axis(
+        lines_per_burst=lines_per_burst,
+        lines_step=lines_step,
+        doppler_centroid_axis=doppler_centroid_axis,
+        doppler_rate_axis=doppler_rate_axis,
+    )
+    deramping_phase = np.pi * doppler_rate_axis * (burst_deramping_azimuth_time_axis) ** 2
+    return np.exp(1j * deramping_phase)
+
+
+def compute_deramping_phase_exponential_with_steering(
+    lines_per_burst: int,
+    lines_step: float,
+    sensor_velocity_norm_mid_burst: float,
+    carrier_frequency: float,
+    doppler_centroid_axis: np.ndarray,
+    doppler_rate_axis: np.ndarray,
+    azimuth_steering_rate_axis: np.ndarray,
+) -> np.ndarray:
+    """Computing deramping exponential phase function, ideally for topsar mode, using the azimuth steering rate.
+
+    .. math::
+
+        exp \\left( \\pi i \\cdot \\frac{-k_D \\cdot a_r}{a_r - k_D} \\left(t_{burst}^{rel} -
+        \\left(t_{mid\\_burst}^{rel} - \\frac{f_{DC}}{k_D} \\right) \\right)^2 \\right)
+
+    Parameters
+    ----------
+    lines_per_burst : int
+        lines per burst
+    lines_step : float
+        lines step in seconds
+    sensor_velocity_norm_mid_burst : float
+        sensor velocity norm computed at burst mid azimuth time
+    carrier_frequency : float
+        signal carrier frequency
+    doppler_centroid_axis : np.ndarray
+        doppler centroid frequency axis, computed for each range sample, with shape (samples,)
+    doppler_rate_axis : np.ndarray
+        doppler rate axis, computed for each range sample, with shape (samples,)
+    azimuth_steering_rate_axis : np.ndarray
+        azimuth steering rate axis, computed for each range sample, with shape (samples,)
+
+    Returns
+    -------
+    np.ndarray
+        deramping exponential phase function, with shape (lines per burst, samples)
+    """
+
+    burst_deramping_azimuth_time_axis = compute_deramping_azimuth_axis(
+        lines_per_burst=lines_per_burst,
+        lines_step=lines_step,
+        doppler_centroid_axis=doppler_centroid_axis,
+        doppler_rate_axis=doppler_rate_axis,
+    )
+    wavelength = speed_of_light / carrier_frequency
+    steering_rate_factor = 2 * sensor_velocity_norm_mid_burst / wavelength * azimuth_steering_rate_axis
+    deramping_phase = (
+        -np.pi
+        * (-doppler_rate_axis * steering_rate_factor)
+        / (steering_rate_factor - doppler_rate_axis)
+        * (burst_deramping_azimuth_time_axis) ** 2
+    )
+
+    return np.exp(1j * deramping_phase)
+
+
+def compute_deramping_azimuth_axis(
+    lines_per_burst: int, lines_step: float, doppler_centroid_axis: np.ndarray, doppler_rate_axis: np.ndarray
+) -> np.ndarray:
+    """Computing deramping phase burst azimuth relative axis.
+
+    Parameters
+    ----------
+    lines_per_burst : int
+        lines per burst
+    lines_step : float
+        lines step in seconds
+    doppler_centroid_axis : np.ndarray
+        doppler centroid frequency axis, computed for each range sample, with shape (samples,)
+    doppler_rate_axis : np.ndarray
+        doppler rate axis, computed for each range sample, with shape (samples,)
+
+    Returns
+    -------
+    np.ndarray
+        deramping phase burst azimuth relative axis, with shape (lines per burst, samples)
+    """
+
+    burst_azimuth_relative_axis = np.arange(0, lines_per_burst, 1) * lines_step
+    beam_center_times = -doppler_centroid_axis / doppler_rate_axis
+    reference_times = lines_per_burst / 2 * lines_step + beam_center_times
+    return burst_azimuth_relative_axis.reshape(-1, 1) - reference_times
+
+
+def compute_demodulation_phase_exponential(
+    lines_per_burst: int,
+    lines_step: float,
+    doppler_centroid_axis: np.ndarray,
+    doppler_rate_axis: np.ndarray,
+) -> np.ndarray:
+    """Computing demodulation exponential phase function.
+
+    .. math::
+
+        exp \\left( -2 \\pi i \\cdot f_{DC} t_{burst}^{rel} \\right)
+
+    Parameters
+    ----------
+    lines_per_burst : int
+        lines per burst
+    lines_step : float
+        lines step in seconds
+    doppler_centroid_axis : np.ndarray
+        doppler centroid frequency axis, with shape (samples,)
+    doppler_rate_axis : np.ndarray
+        doppler rate axis, computed for each range sample, with shape (samples,)
+
+    Returns
+    -------
+    np.ndarray
+        demodulation exponential phase function, with shape (lines per burst, samples)
+    """
+    burst_deramping_azimuth_time_axis = compute_deramping_azimuth_axis(
+        lines_per_burst=lines_per_burst,
+        lines_step=lines_step,
+        doppler_centroid_axis=doppler_centroid_axis,
+        doppler_rate_axis=doppler_rate_axis,
+    )
+    demodulation_phase = -2 * np.pi * doppler_centroid_axis * burst_deramping_azimuth_time_axis
+    return np.exp(1j * demodulation_phase)
+
+
+def compute_burst_deramping_function(
+    mid_burst_az_time: PreciseDateTime,
+    lines_per_burst: int,
+    lines_step: float,
+    slant_range_axis: np.ndarray,
+    doppler_centroid_poly: SARCoordinatesFunction,
+    doppler_rate_poly: SARCoordinatesFunction,
+    azimuth_steering_rate_axis: np.ndarray | None = None,
+    sensor_velocity_norm_mid_burst: float | None = None,
+    carrier_frequency: float | None = None,
+) -> np.ndarray:
+    """Computing the deramping and demodulation phase exponential function for topsar and scansar acquisition for a
+    given burst, defined by the mid burst azimuth time.
+
+    Azimuth steering rate is needed only for topsar deramping phase computation, it can be omitted for
+    scansar deramping.
+
+    Parameters
+    ----------
+    mid_burst_az_time : PreciseDateTime
+        azimuth time at mid burst
+    lines_per_burst : int
+        number of lines of the selected burst
+    lines_step : float
+        azimuth lines step in seconds
+    slant_range_axis : np.ndarray
+        slant range values
+    doppler_centroid_poly : SARCoordinatesFunction
+        doppler centroid polynomial
+    doppler_rate_poly : SARCoordinatesFunction
+        doppler rate polynomial
+    azimuth_steering_rate_axis : np.ndarray | None, optional
+        steering rate axis, needed for topsar deramping, by default None
+
+    Returns
+    -------
+    np.ndarray
+        deramping and demodulation phase exponential function to be multiplied to the selected burst data
+    """
+
+    doppler_centroid_axis = np.array(
+        [doppler_centroid_poly.evaluate(azimuth_time=mid_burst_az_time, range_time=r) for r in slant_range_axis]
+    )
+    doppler_rate_axis = np.array(
+        [doppler_rate_poly.evaluate(azimuth_time=mid_burst_az_time, range_time=r) for r in slant_range_axis]
+    )
+    if azimuth_steering_rate_axis is not None:
+        # topsar
+        if sensor_velocity_norm_mid_burst is None or carrier_frequency is None:
+            raise RuntimeError("For Topsar deramping steering rate, normalized velocity and fc_hz are needed")
+        deramping_phase_exp = compute_deramping_phase_exponential_with_steering(
+            lines_per_burst=lines_per_burst,
+            lines_step=lines_step,
+            sensor_velocity_norm_mid_burst=sensor_velocity_norm_mid_burst,
+            carrier_frequency=carrier_frequency,
+            doppler_centroid_axis=doppler_centroid_axis,
+            doppler_rate_axis=doppler_rate_axis,
+            azimuth_steering_rate_axis=azimuth_steering_rate_axis,
+        )
+    else:
+        # scansar
+        deramping_phase_exp = compute_deramping_phase_exponential(
+            lines_per_burst=lines_per_burst,
+            lines_step=lines_step,
+            doppler_centroid_axis=doppler_centroid_axis,
+            doppler_rate_axis=doppler_rate_axis,
+        )
+
+    demodulation_phase_exp = compute_demodulation_phase_exponential(
+        lines_per_burst=lines_per_burst,
+        lines_step=lines_step,
+        doppler_centroid_axis=doppler_centroid_axis,
+        doppler_rate_axis=doppler_rate_axis,
+    )
+
+    return deramping_phase_exp * demodulation_phase_exp
+
+
+def recenter_data(data: np.ndarray) -> np.ndarray:
+    """Centering target area on point target signal peak.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        target area 2D array
+
+    Returns
+    -------
+    np.ndarray
+        recentered 2D array
+    """
+    _, row_peak_pos, col_peak_pos = locate_max_2d_interp(data=data)
+    y_shift = row_peak_pos - data.shape[0] // 2
+    x_shift = col_peak_pos - data.shape[1] // 2
+    _, rng_frq_vect, _, az_freq_vect = estimate_modulation_frequency2d(data=data)
+    frequency_y_axis = _frequency_axis_generation(freq_vect=rng_frq_vect.ravel(), samples=data.shape[0])
+    frequency_x_axis = _frequency_axis_generation(freq_vect=az_freq_vect.ravel(), samples=data.shape[1])
+    phi = np.exp(2j * np.pi * (frequency_x_axis * x_shift + frequency_y_axis.T * y_shift))
+    return ifftshift(ifft2(fft2(data) * phi))
+
+
+def compute_spectrogram_db(
+    data: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Computing the spectrogram and its time and frequency axes.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        target area 2D
+
+    Returns
+    -------
+    np.ndarray
+        spectrogram in dB
+    np.ndarray
+        spectrogram frequency axis
+    np.ndarray
+        spectrogram times axis
+    """
+    _, _, near_spectrogram = spectrogram(
+        data[0, :],
+        fs=1,
+        window=hamming(32),
+        nfft=64,
+        noverlap=31,
+        return_onesided=False,
+    )
+    spectrogram_freq, spectrogram_times, mid_spectrogram = spectrogram(
+        data[data.shape[0] // 2, :],
+        fs=1,
+        window=hamming(32),
+        nfft=64,
+        noverlap=31,
+        return_onesided=False,
+    )
+    _, _, far_spectrogram = spectrogram(
+        data[-1, :],
+        fs=1,
+        window=hamming(32),
+        nfft=64,
+        noverlap=31,
+        return_onesided=False,
+    )
+    spectrogram_db = convert_to_db(
+        np.abs((np.abs(near_spectrogram) + np.abs(mid_spectrogram) + np.abs(far_spectrogram)) / 3)
+    )
+    return spectrogram_db, fftshift(spectrogram_freq), spectrogram_times
+
+
+def compute_polynomial_fit(profile: np.ndarray, freq_axis: np.ndarray) -> Polynomial:
+    """FItting polynomial on profile portion.
+
+    Parameters
+    ----------
+    profile : np.ndarray
+        profile to be fit
+    freq_axis : np.ndarray
+        frequency axis
+
+    Returns
+    -------
+    Polynomial
+        fitting Polynomial
+    """
+    start_id = profile.size // 4
+    stop_id = -profile.size // 4 + 1
+    return Polynomial.fit(freq_axis[start_id:stop_id], profile[start_id:stop_id], deg=2)
+
+
+def extract_abs_profiles(
+    data_fft: np.ndarray,
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """Extract range and azimuth absolute profiles in dB.
+
+    Parameters
+    ----------
+    data_fft : np.ndarray
+        fft of the target area
+
+    Returns
+    -------
+    list[np.ndarray]
+        3 range absolute profiles in dB
+    list[np.ndarray]
+        3 azimuth absolute profiles in dB
+    """
+    rng_profiles_starts, rng_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[1])
+    range_profiles_db = [
+        convert_to_db(np.nanmean(np.abs(data_fft[:, start:stop]) ** 2, axis=1))
+        for start, stop in zip(rng_profiles_starts, rng_profiles_stops, strict=True)
+    ]
+    az_profiles_starts, az_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[0])
+    azimuth_profiles_db = [
+        convert_to_db(np.nanmean(np.abs(data_fft[start:stop, :]) ** 2, axis=0))
+        for start, stop in zip(az_profiles_starts, az_profiles_stops, strict=True)
+    ]
+    return range_profiles_db, azimuth_profiles_db
+
+
+def extract_phase_profiles(
+    data_fft: np.ndarray,
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """Extract range and azimuth phase profiles in deg.
+
+    Parameters
+    ----------
+    data_fft : np.ndarray
+        fft of the target area
+
+    Returns
+    -------
+    list[np.ndarray]
+        3 range phase profiles in deg
+    list[np.ndarray]
+        3 azimuth phase profiles in deg
+    """
+    rng_profiles_starts, rng_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[1])
+    range_profiles_deg = [
+        np.angle(np.nanmean(data_fft[:, start:stop], axis=1), deg=True)
+        for start, stop in zip(rng_profiles_starts, rng_profiles_stops, strict=True)
+    ]
+    az_profiles_starts, az_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[0])
+    azimuth_profiles_deg = [
+        np.angle(np.nanmean(data_fft[start:stop, :], axis=0), deg=True)
+        for start, stop in zip(az_profiles_starts, az_profiles_stops, strict=True)
+    ]
+    return range_profiles_deg, azimuth_profiles_deg
+
+
+# TODO: remove this using new layout?
+def detect_burst_from_pixel(lines_per_burst: np.ndarray, azimuth_px: int) -> int:
+    """Detect the burst belonging to the selected azimuth pixel value.
+
+    Parameters
+    ----------
+    lines_per_burst : np.ndarray
+        lines per burst
+    azimuth_px : int
+        selected azimuth pixel
+
+    Returns
+    -------
+    int
+        burst
+    """
+
+    if lines_per_burst.size > 1:
+        cumulative_burst = np.cumsum(lines_per_burst)
+        pixel_diff = np.ma.masked_less(azimuth_px - cumulative_burst, 0)
+        return np.argmin(pixel_diff)
+
+    return 0
+
+
+def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1) -> np.ndarray:
+    """Compute frequency axis.
+
+    Parameters
+    ----------
+    freq_vect : np.ndarray
+        frequency vector
+    samples : int
+        samples
+    prf : int, optional
+        sensor prf, by default 1
+
+    Returns
+    -------
+    np.ndarray
+        frequency axis
+    """
+    freq_shift = freq_vect % prf
+    delta_freq = prf / samples
+    freq_0 = np.arange(samples) * delta_freq
+    freq_axis = np.zeros((freq_vect.size, samples))
+    for f_id, freq in enumerate(freq_vect):
+        f = (freq_0 - freq_shift[f_id] + prf / 2) % prf - prf / 2
+        freq_axis[f_id, :] = f + freq
+
+    return freq_axis
+
+
+def _compute_profiles_extraction_boundaries(
+    axis_length: int,
+) -> tuple[list[int], list[int]]:
+    """Define start and stop indexes for profiles to be extracted. 3 profiles are extracted properly spaced along the
+    axis length.
+
+    Parameters
+    ----------
+    axis_length : int
+        full length of the axis
+
+    Returns
+    -------
+    list[int]
+        profiles start indexes
+    list[int]
+        profiles stop indexes
+    """
+    profiles_starts = [round(axis_length * p / 4 - axis_length * 0.1) for p in range(1, 4)]
+    profiles_stops = [round(axis_length * p / 4 + axis_length * 0.1) for p in range(1, 4)]
+    return profiles_starts, profiles_stops
