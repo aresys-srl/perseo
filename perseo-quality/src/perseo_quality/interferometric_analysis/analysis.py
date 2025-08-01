@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 
 from perseo_quality.interferometric_analysis.config import InterferometricConfig
@@ -17,9 +15,7 @@ from perseo_quality.interferometric_analysis.support import (
     coherence_computation_interferogram_core,
 )
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
+from perseo_quality.logger import quality_logger as log
 
 
 def interferometric_analysis(

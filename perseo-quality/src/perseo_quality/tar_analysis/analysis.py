@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
@@ -15,6 +13,7 @@ from arepytools.io.io_support import NominalPointTarget
 from perseo_quality.core.common import check_targets_visibility
 from perseo_quality.core.generic_dataclasses import SARCoordinates
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.tar_analysis.config import AmbiguityRatioConfig
 from perseo_quality.tar_analysis.custom_dataclasses import AmbiguityRatioOutput
 from perseo_quality.tar_analysis.support import (
@@ -25,9 +24,6 @@ from perseo_quality.tar_analysis.support import (
     dtar_computing_function_wrapper,
     ptar_computing_function_wrapper,
 )
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def point_target_ambiguity_ratio_analysis(
@@ -148,7 +144,7 @@ def point_target_ambiguity_ratio_analysis(
                     else None
                 )
                 if doppler_rate is None or channel_data.prf is None:
-                    log.error(
+                    log.warning(
                         "Doppler Rate function not available in protocol instance, "
                         + "could not compute ambiguities location"
                     )
@@ -172,7 +168,7 @@ def point_target_ambiguity_ratio_analysis(
                         lines=channel_data.azimuth_axis.size,
                         samples=channel_data.range_axis.size,
                     ):
-                        log.error("Ambiguities out of scene boundaries")
+                        log.warning("Ambiguities out of scene boundaries")
                         continue
                     output_results.azimuth_time_delta = az_delta
                     output_results.range_time_delta = rng_delta
@@ -195,7 +191,7 @@ def point_target_ambiguity_ratio_analysis(
                     output_results.left_ambiguity_image = l_ambiguity_roi
                     output_results.right_ambiguity_image = r_ambiguity_roi
                 except Exception as err:
-                    log.error(f"Could not evaluate PTAR for target {trgt}")
+                    log.warning(f"Could not evaluate PTAR for target {trgt}")
                     log.error(f"Error {err}")
                     res.append(output_results)
                     continue
@@ -272,7 +268,7 @@ def distributed_target_ambiguity_ratio_analysis(
                 )
                 output_results.target_nominal_coordinates = target_ground_point
             except Exception:
-                log.error("Invalid Direct Geocoding for the current Swath")
+                log.warning("Invalid Direct Geocoding for the current Swath")
                 res.append(output_results)
                 continue
 
@@ -282,7 +278,7 @@ def distributed_target_ambiguity_ratio_analysis(
                 else None
             )
             if doppler_rate is None or channel_data.prf is None:
-                log.error(
+                log.warning(
                     "Doppler Rate function not available in protocol instance, "
                     + "could not compute ambiguities location"
                 )
@@ -306,7 +302,7 @@ def distributed_target_ambiguity_ratio_analysis(
                     lines=channel_data.azimuth_axis.size,
                     samples=channel_data.range_axis.size,
                 ):
-                    log.error("Ambiguities out of scene boundaries")
+                    log.warning("Ambiguities out of scene boundaries")
                     continue
                 output_results.azimuth_time_delta = az_delta
                 output_results.range_time_delta = rng_delta
@@ -329,7 +325,7 @@ def distributed_target_ambiguity_ratio_analysis(
                 output_results.left_ambiguity_image = l_ambiguity_roi
                 output_results.right_ambiguity_image = r_ambiguity_roi
             except Exception as err:
-                log.error(f"Could not evaluate DTAR for target {roi_id}")
+                log.warning(f"Could not evaluate DTAR for target {roi_id}")
                 log.error(f"Error {err}")
                 res.append(output_results)
                 continue

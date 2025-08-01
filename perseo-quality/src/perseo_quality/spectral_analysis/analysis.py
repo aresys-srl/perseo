@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
 from arepytools.io.io_support import NominalPointTarget
@@ -17,6 +15,7 @@ from perseo_quality.core.custom_errors import AzimuthExceedsBoundariesError, Ran
 from perseo_quality.core.generic_dataclasses import SARAcquisitionMode, SARCoordinates
 from perseo_quality.core.signal_processing import convert_to_db
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.spectral_analysis.custom_dataclasses import SpectraDataOutput
 from perseo_quality.spectral_analysis.support import (
     compute_polynomial_fit,
@@ -27,9 +26,6 @@ from perseo_quality.spectral_analysis.support import (
     extract_phase_profiles,
     recenter_data,
 )
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def point_target_spectral_analysis(

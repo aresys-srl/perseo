@@ -5,17 +5,14 @@
 
 from __future__ import annotations
 
-import logging
 from enum import Enum
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.spectral_analysis.custom_dataclasses import SpectraDataOutput
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 COLORS_SET = ["#282A3E", "#8783D1", "#B0413E"]
 CMAP = "inferno"
@@ -56,7 +53,7 @@ def spectral_graphs(data: list[SpectraDataOutput], output_dir: str | Path, graph
 
     for item in data:
         if item.spectrum_db is None:
-            log.error(
+            log.warning(
                 f"Cannot create graph for target {item.target_name}, pol {item.polarization.name}, swath {item.swath}"
             )
             continue

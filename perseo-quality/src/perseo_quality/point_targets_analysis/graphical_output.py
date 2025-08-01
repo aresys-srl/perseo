@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import matplotlib.patches as patches
@@ -17,9 +16,7 @@ from matplotlib.font_manager import FontProperties
 import perseo_quality.core.generic_dataclasses as gdt
 import perseo_quality.point_targets_analysis.custom_dataclasses as ptdt
 from perseo_quality.core.signal_processing import convert_to_db
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
+from perseo_quality.logger import quality_logger as log
 
 
 def point_target_graphs_generation(
@@ -77,7 +74,7 @@ def point_target_graphs_generation(
             )
             rcs_graphs(data_graph=item.rcs, label=label, out_dir=output_dir, interactive=interactive)
         except Exception:
-            log.error(f"Could not create graph for {item.channel}, target {item.target} ...")
+            log.warning(f"Could not create graph for {item.channel}, target {item.target} ...")
             continue
 
 

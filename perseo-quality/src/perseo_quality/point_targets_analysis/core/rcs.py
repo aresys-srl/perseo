@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 import math
 
 import numpy as np
@@ -14,14 +13,12 @@ from scipy.constants import speed_of_light as LIGHT_SPEED
 
 import perseo_quality.core.signal_processing as sp
 from perseo_quality.core.generic_dataclasses import SARPolarization, TargetDataType
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.point_targets_analysis.core.pre_processing import (
     detect_data_type,
 )
 from perseo_quality.point_targets_analysis.custom_dataclasses import RCSDataOutput
 from perseo_quality.point_targets_analysis.custom_errors import PointTargetComputationError
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def compute_point_target_rcs(
@@ -233,7 +230,7 @@ def _roi_extraction(data: np.ndarray, roi: np.ndarray, target_pos: np.ndarray = 
         (row_lim_up < 0, row_lim_dwn > data.shape[0], col_lim_sx < 0, col_lim_dx > data.shape[1])
     )
     if break_cond:
-        log.error("Could not evaluate RCS: extracted target area is too small")
+        log.warning("Could not evaluate RCS: extracted target area is too small")
         raise PointTargetComputationError
 
     roi_target = data[row_lim_up:row_lim_dwn, col_lim_sx:col_lim_dx].copy()

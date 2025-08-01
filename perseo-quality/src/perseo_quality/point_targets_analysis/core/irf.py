@@ -5,18 +5,14 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 
 import perseo_quality.core.masking_operations as masking
 from perseo_quality.core.generic_dataclasses import MaskingMethod
 from perseo_quality.core.signal_processing import convert_to_db, locate_max_2d
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.point_targets_analysis.custom_dataclasses import IRFComputedParameters
 from perseo_quality.point_targets_analysis.support import SideLobesDirections
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def compute_point_target_irf_analysis(
@@ -70,7 +66,7 @@ def compute_point_target_irf_analysis(
                 side_lobes_directions=side_lobes_directions,
             )
         except Exception:
-            log.error("Could not evaluate PSLR properly.")
+            log.warning("Could not evaluate PSLR properly.")
     else:
         log.warning("PSLR computation has been disabled in configuration file.")
 
@@ -83,7 +79,7 @@ def compute_point_target_irf_analysis(
                 side_lobes_directions=side_lobes_directions,
             )
         except Exception:
-            log.error("Could not evaluate ISLR properly.")
+            log.warning("Could not evaluate ISLR properly.")
     else:
         log.warning("ISLR computation has been disabled in configuration file.")
 
@@ -95,7 +91,7 @@ def compute_point_target_irf_analysis(
                 side_lobes_directions=side_lobes_directions,
             )
         except Exception:
-            log.error("Could not evaluate SSLR properly.")
+            log.warning("Could not evaluate SSLR properly.")
     else:
         log.warning("SSLR computation has been disabled in configuration file.")
 

@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 from enum import Enum
 from pathlib import Path
 
@@ -14,9 +13,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 import perseo_quality.radiometric_analysis.custom_dataclasses as rdt
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
+from perseo_quality.logger import quality_logger as log
 
 
 class PlotModes(Enum):

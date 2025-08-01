@@ -5,18 +5,15 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 
 import numpy as np
 from scipy.signal import convolve2d, medfilt2d
 
 from perseo_quality.core.signal_processing import convert_to_db
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters
 from perseo_quality.radiometric_analysis.block_wise.support import masking_outliers_by_percentiles
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 # custom profile extractor callable type to be matched
 RadiometricProfileExtractorType = Callable[[np.ndarray, ProfileExtractionParameters], np.ndarray]

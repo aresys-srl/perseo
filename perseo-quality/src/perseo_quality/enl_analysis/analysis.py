@@ -5,14 +5,10 @@
 
 from __future__ import annotations
 
-import logging
-
 from perseo_quality.core.signal_processing import compute_equivalent_number_of_looks
 from perseo_quality.enl_analysis.custom_dataclasses import ENLOutput
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
+from perseo_quality.logger import quality_logger as log
 
 
 def equivalent_number_of_looks_analysis(

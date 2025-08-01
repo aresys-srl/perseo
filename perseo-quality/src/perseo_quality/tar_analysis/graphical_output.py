@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 from enum import Enum
 from pathlib import Path
 
@@ -14,10 +13,8 @@ import numpy as np
 from matplotlib.gridspec import GridSpec
 
 from perseo_quality.core.signal_processing import convert_to_db
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.tar_analysis.custom_dataclasses import AmbiguityRatioOutput
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 class TargetRatioGraphType(Enum):
@@ -50,7 +47,7 @@ def ambiguities_graphs(
 
     for item in data:
         if item.ambiguity_ratio_db is None:
-            log.error(f"Cannot create {graph_type.name} ambiguity graph for target {item.target_name}")
+            log.warning(f"Cannot create {graph_type.name} ambiguity graph for target {item.target_name}")
             continue
 
         fig = plt.figure(figsize=(14, 6))

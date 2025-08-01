@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 from arepytools.geometry.geometric_functions import (
     compute_incidence_angles,
@@ -17,6 +15,7 @@ from arepytools.geometry.geometric_functions import (
 from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.core.signal_processing import radiometric_correction
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import RadiometricProfilesConfig
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import RadiometricProfileExtractorType
 from perseo_quality.radiometric_analysis.block_wise.support import (
@@ -28,9 +27,6 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import (
     RadiometricAnalysisDirection,
     RadiometricProfilesOutput,
 )
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def radiometric_profiles(

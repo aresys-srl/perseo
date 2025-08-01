@@ -5,11 +5,10 @@
 
 from __future__ import annotations
 
-import logging
-
 import perseo_quality.core.generic_dataclasses as gdt
 import perseo_quality.radiometric_analysis.custom_dataclasses as rdt
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import RadiometricProfilesConfig
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import (
     average_elevation_profiles_extractor,
@@ -17,9 +16,6 @@ from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors impo
     scalloping_profiles_extractor,
 )
 from perseo_quality.radiometric_analysis.block_wise.core.radiometric_profiles import radiometric_profiles
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def nesz_profiles(

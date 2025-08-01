@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 
 import perseo_quality.core.signal_processing as sp
@@ -18,10 +16,8 @@ from perseo_quality.core.custom_errors import (
 from perseo_quality.core.generic_dataclasses import SARCoordinates, TargetDataType
 from perseo_quality.core.masking_operations import get_interpolated_lobes_cuts
 from perseo_quality.io.quality_input_protocol import ChannelData
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.point_targets_analysis.support import SideLobesDirections
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def detect_data_type(target_area: np.ndarray) -> TargetDataType:
@@ -299,7 +295,7 @@ def extract_target_area(
             burst=azimuth_range_coordinates.burst,
         )
     except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
-        log.critical(err)
+        log.warning(err)
         return None, None, None, None
 
     # locating real peak position in cropped image
@@ -310,7 +306,7 @@ def extract_target_area(
         _, peak_range_im, peak_azimuth_im = sp.locate_max_2d_interp(data=target_area)
 
     if np.isnan(peak_range_im) or np.isnan(peak_azimuth_im):
-        log.error("Could not find peak of the target area")
+        log.warning("Could not find peak of the target area")
         return None, None, None, None
 
     # evaluating distance between nominal target and peak
@@ -323,7 +319,7 @@ def extract_target_area(
             np.abs(delta_rng_trgt_pk) > ale_limits[0], np.abs(delta_az_trgt_pk) > ale_limits[1]
         )
         if ale_break_cond:
-            log.error("Target not within ALE limits")
+            log.warning("Target not within ALE limits")
             return None, None, None, None
 
     # second cropping, centered on peak coordinates
@@ -353,7 +349,7 @@ def extract_target_area(
                 burst=azimuth_range_coordinates.burst,
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError):
-            log.error(f"Extracted ROI exceeds burst boundaries, trying a smaller roi {initial_crop}")
+            log.warning(f"Extracted ROI exceeds burst boundaries, trying a smaller roi {initial_crop}")
             target_area = channel_data.read_data(
                 azimuth_index=int(peak_az_index),
                 range_index=int(peak_rng_index),
@@ -362,7 +358,7 @@ def extract_target_area(
             )
             log.debug(f"Cropping target area around signal peak position: size {initial_crop}")
     except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
-        log.critical(err)
+        log.warning(err)
         return None, None, None, None
 
     # checking for other conditions
@@ -406,7 +402,7 @@ def extract_target_area(
                 ),
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
-            log.critical(err)
+            log.warning(err)
             return None, None, None, None
 
     peak_coordinates = np.array(

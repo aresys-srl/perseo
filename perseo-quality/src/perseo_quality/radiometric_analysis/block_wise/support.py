@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import numpy as np
@@ -16,11 +15,9 @@ from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 from scipy.signal import convolve2d
 
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import Radiometric2DHistogramParameters
 from perseo_quality.radiometric_analysis.custom_dataclasses import RadiometricProfilesOutput
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def radiometric_profiles_to_netcdf(

@@ -5,22 +5,19 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from perseo_quality.core.generic_dataclasses import SARProjection
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     PointWiseRadiometricAnalysisOutput,
     RadiometricAnalysisAxes,
     RadiometricAnalysisDirection,
     RadiometricAnalysisValue,
 )
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 COLOR_SET = ["#7E5920", "#FFA737", "#5F5449", "#5999D9"]
 

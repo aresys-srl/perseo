@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-import logging
-
 import numpy as np
 from arepytools.geometry.geometric_functions import (
     compute_incidence_angles_from_trajectory,
@@ -21,6 +19,7 @@ from perseo_quality.core.generic_dataclasses import SARPolarization, SARProjecti
 from perseo_quality.core.masking_operations import masking_outliers
 from perseo_quality.core.signal_processing import convert_to_db, radiometric_correction
 from perseo_quality.io.quality_input_protocol import ExtendedChannelData, QualityInputProduct
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     PointWiseRadiometricAnalysisOutput,
     RadiometricAnalysisAxes,
@@ -31,9 +30,6 @@ from perseo_quality.radiometric_analysis.point_wise.config import (
     PointWiseRadiometricAnalysisConfig,
     RadiometricAnalysisParameters,
 )
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def point_wise_radiometric_analysis(

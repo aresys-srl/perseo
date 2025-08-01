@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -17,9 +16,7 @@ from perseo_quality.interferometric_analysis.custom_dataclasses import (
     InterferometricCoherence2DHistograms,
     InterferometricCoherenceOutput,
 )
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
+from perseo_quality.logger import quality_logger as log
 
 
 def generate_coherence_graphs(

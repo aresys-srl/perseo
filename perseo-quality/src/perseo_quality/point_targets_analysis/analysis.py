@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import contextlib
-import logging
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -19,6 +18,7 @@ import perseo_quality.core.generic_dataclasses as gdt
 import perseo_quality.core.signal_processing as sp
 import perseo_quality.point_targets_analysis.custom_dataclasses as ptdt
 from perseo_quality.core.common import check_targets_visibility
+from perseo_quality.logger import quality_logger as log
 from perseo_quality.point_targets_analysis.config import PointTargetAnalysisConfig, RCSParameters
 from perseo_quality.point_targets_analysis.core.irf import compute_point_target_irf_analysis
 from perseo_quality.point_targets_analysis.core.localization_error import compute_localization_errors_pixels
@@ -38,9 +38,6 @@ if TYPE_CHECKING:
     from arepytools.io.io_support import NominalPointTarget
 
     from perseo_quality.io.quality_input_protocol import ChannelData, QualityInputProduct
-
-# syncing with logger
-log = logging.getLogger("quality_analysis")
 
 
 def point_target_analysis(
@@ -704,7 +701,7 @@ def irf_analysis_profiles(
         side_lobes_directions=side_lobes_directions,
     )
     if np.isnan(range_resolution_px) or np.isnan(azimuth_resolution_px):
-        log.error("IRF Resolution couldn't be properly assessed.")
+        log.warning("IRF Resolution couldn't be properly assessed.")
         raise PointTargetComputationError
 
     graph = ptdt.IRFGraphDataOutput(
