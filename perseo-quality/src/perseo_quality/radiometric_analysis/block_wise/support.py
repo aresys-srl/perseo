@@ -37,7 +37,7 @@ def radiometric_profiles_to_netcdf(
     out_path = Path(out_path)
     tag = "radiometric" if tag is None else tag
 
-    out_name = tag + "_profiles_" + data.swath + "_" + data.polarization.name
+    out_name = tag + "_profiles_channel_" + str(data.channel)
     log.info(f"Saving {out_name} data to NetCDF file.")
 
     root = Dataset(out_path.joinpath(out_name).with_suffix(".nc"), "w", format="NETCDF4")

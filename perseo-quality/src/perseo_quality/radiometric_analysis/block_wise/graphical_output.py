@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import savgol_filter
 
-import perseo_quality.radiometric_analysis.custom_dataclasses as rdt
 from perseo_quality.logger import quality_logger as log
+from perseo_quality.radiometric_analysis.custom_dataclasses import RadiometricProfilesOutput
 
 
 class PlotModes(Enum):
@@ -24,7 +24,7 @@ class PlotModes(Enum):
 
 
 def radiometric_2D_hist_plot(
-    data: rdt.RadiometricProfilesOutput,
+    data: RadiometricProfilesOutput,
     out_dir: str | Path | None,
     title: str | None = None,
     plot_mode: str | PlotModes = PlotModes.MEAN,
@@ -34,7 +34,7 @@ def radiometric_2D_hist_plot(
 
     Parameters
     ----------
-    data : rdt.RadiometricProfilesOutput
+    data : RadiometricProfilesOutput
         radiometric profiles output data
     out_dir : str | Path | None
         output folder path, while interactive mode is on it is ignored so it can be passed as None
@@ -67,7 +67,7 @@ def radiometric_2D_hist_plot(
 
     # figure plot
     if title is None:
-        title = f"Radiometric Profile Histogram {data.swath} {data.polarization.name}"
+        title = f"Radiometric Profile Histogram {data.swath} {data.polarization.name} Channel {str(data.channel)}"
     log.info(f"Generating {title}")
 
     fig, ax = plt.subplots(figsize=(8, 6), dpi=180)
@@ -117,7 +117,7 @@ def radiometric_2D_hist_plot(
     plt.grid(color="#7EB4B4", alpha=0.4)
 
     if not interactive:
-        fig.savefig(graphs_dir.joinpath(title.lower().replace(" ", "_")).with_suffix(".png"))
+        fig.savefig(graphs_dir.joinpath(f"radiometric_hist_{str(data.channel)}").with_suffix(".png"))
         plt.close("all")
     else:
         plt.show()

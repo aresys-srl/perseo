@@ -14,13 +14,18 @@ import pandas as pd
 from matplotlib.font_manager import FontProperties
 
 import perseo_quality.core.generic_dataclasses as gdt
-import perseo_quality.point_targets_analysis.custom_dataclasses as ptdt
 from perseo_quality.core.signal_processing import convert_to_db
 from perseo_quality.logger import quality_logger as log
+from perseo_quality.point_targets_analysis.custom_dataclasses import (
+    IRFGraphDataOutput,
+    PointTargetGraphicalData,
+    PTAGraphsInfo,
+    RCSGraphDataOutput,
+)
 
 
 def point_target_graphs_generation(
-    graphs_data: list[ptdt.PointTargetGraphicalData],
+    graphs_data: list[PointTargetGraphicalData],
     results_df: pd.DataFrame,
     output_dir: str | Path | None,
     interactive: bool = False,
@@ -64,33 +69,43 @@ def point_target_graphs_generation(
                 + "burst == @item.burst & swath == @item.swath & "
                 + "polarization == @item.polarization.value"
             ).to_dict("records")[0]
-            label = (
-                f"target_{data_val[target_var]}_{data_val['swath']}_"
-                + f"polarization_{data_val['polarization'].replace('/', '')}_"
-                + f"{data_val['product_type']}_b{data_val['burst']}"
+            graphs_info = PTAGraphsInfo(
+                channel=str(item.channel),
+                polarization=item.polarization.name,
+                swath=item.swath,
+                target=str(item.target),
+                burst=str(item.burst),
             )
             irf_graphs(
-                data_graph=item.irf, data_values=data_val, label=label, out_dir=output_dir, interactive=interactive
+                data_graph=item.irf,
+                data_values=data_val,
+                graphs_info=graphs_info,
+                out_dir=output_dir,
+                interactive=interactive,
             )
-            rcs_graphs(data_graph=item.rcs, label=label, out_dir=output_dir, interactive=interactive)
+            rcs_graphs(data_graph=item.rcs, graphs_info=graphs_info, out_dir=output_dir, interactive=interactive)
         except Exception:
             log.warning(f"Could not create graph for {item.channel}, target {item.target} ...")
             continue
 
 
 def irf_graphs(
-    data_graph: ptdt.IRFGraphDataOutput, data_values: dict, label: str, out_dir: Path | None, interactive: bool = False
+    data_graph: IRFGraphDataOutput,
+    data_values: dict,
+    graphs_info: PTAGraphsInfo,
+    out_dir: Path | None,
+    interactive: bool = False,
 ) -> None:
     """Function to generate the graphical output after IRF analysis.
 
     Parameters
     ----------
-    data_graph : ptdt.IRFGraphDataOutput
+    data_graph : IRFGraphDataOutput
         dataclass instance containing all relevant data for plotting results
     data_values : dict
         dictionary of IRF results
-    label : str
-        label of point target in exam
+    graphs_info : PTAGraphsInfo
+        info for graphs labelling
     out_dir : Path | None
         output folder path, while interactive mode is on it is ignored so it can be passed as None
     interactive : bool, optional
@@ -109,7 +124,7 @@ def irf_graphs(
         raise ValueError("A valid output directory path must be provided when interactive mode is off")
 
     # figure init
-    fig = plt.figure(figsize=(9, 9))
+    fig = plt.figure(figsize=(11, 11))
     gs = fig.add_gridspec(3, 2)
     ax1 = fig.add_subplot(gs[:2, 0])
     ax2 = fig.add_subplot(gs[0, 1])
@@ -275,29 +290,33 @@ def irf_graphs(
     ax5.set_xlabel("Azimuth (along cut) [m]", fontweight="bold")
     ax5.set_ylabel("Power [dB]", fontweight="bold")
 
-    title = label + " IRF Analysis"
+    title = (
+        f"Target {graphs_info.target} IRF - {graphs_info.channel} "
+        + "[{graphs_info.swath}, {graphs_info.polarization}, burst {graphs_info.burst}]"
+    )
     fig.suptitle(title, fontsize=16, fontweight="bold")
 
     gs.update(wspace=0.3, hspace=0, top=0.97)
 
     if not interactive:
-        fig.savefig(out_dir.joinpath(title).with_suffix(".png"), dpi=200)
+        filename = f"irf_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}"
+        fig.savefig(out_dir.joinpath(filename).with_suffix(".png"), dpi=200)
         plt.close("all")
     else:
         plt.show()
 
 
 def rcs_graphs(
-    data_graph: ptdt.RCSGraphDataOutput, label: str, out_dir: Path | None, interactive: bool = False
+    data_graph: RCSGraphDataOutput, graphs_info: PTAGraphsInfo, out_dir: Path | None, interactive: bool = False
 ) -> None:
     """Function to generate the graphical output after RCS analysis.
 
     Parameters
     ----------
-    data_graph : ptdt.RCSGraphDataOutput
+    data_graph : RCSGraphDataOutput
         dataclass instance containing all relevant data for plotting results
-    label : str
-        label of point target in exam
+    graphs_info : PTAGraphsInfo
+        info for graphs labelling
     out_dir : Path | None
         output folder path, while interactive mode is on it is ignored so it can be passed as None
     interactive : bool, optional
@@ -316,7 +335,7 @@ def rcs_graphs(
         raise ValueError("A valid output directory path must be provided when interactive mode is off")
 
     # figure init
-    fig, ax_1 = plt.subplots(figsize=(6, 6))
+    fig, ax_1 = plt.subplots(figsize=(8, 8))
     rng_axis = np.arange(-data_graph.roi_size[0] / 2, data_graph.roi_size[0] / 2) * data_graph.rng_step_distance
     az_axis = np.arange(-data_graph.roi_size[1] / 2, data_graph.roi_size[1] / 2) * data_graph.az_step_distance
 
@@ -366,12 +385,16 @@ def rcs_graphs(
     ax_1.set_ylabel("Range [m]", fontsize=13)
 
     # adding title and subtitle
-    title = label + " RCS Analysis"
-    plt.title(r"$\sigma = $" + f"{np.round(data_graph.rcs_lin, 4)} = " + f"{np.round(data_graph.rcs_db, 4)} [dB]")
+    title = (
+        f"Target {graphs_info.target} RCS - {graphs_info.channel} "
+        + "[{graphs_info.swath}, {graphs_info.polarization}, burst {graphs_info.burst}]"
+    )
+    plt.title(r"$\sigma = $" + f"{np.round(data_graph.rcs_lin, 4)} = " + f"{np.round(data_graph.rcs_db, 2)} [dB]")
     plt.suptitle(title, fontsize=16, fontweight="bold", y=0.97)
 
     if not interactive:
-        fig.savefig(out_dir.joinpath(title).with_suffix(".png"), dpi=200)
+        filename = f"rcs_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}"
+        fig.savefig(out_dir.joinpath(filename).with_suffix(".png"), dpi=200)
         plt.close("all")
     else:
         plt.show()
