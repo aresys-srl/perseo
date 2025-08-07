@@ -19,3 +19,16 @@ perseo-quality:
         - .gitlab-ci.yml
         - perseo-quality/*
         - perseo-quality/**/*
+
+perseo-perturbations:
+  extends: .subproject
+  trigger:
+    include: perseo-perturbations/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: "$CI_COMMIT_TAG =~ /^perseo-perturbations.*/"
+    - if: "$CI_COMMIT_TAG == null"
+      changes:
+        - .gitlab-ci.yml
+        - perseo-perturbations/*
+        - perseo-perturbations/**/*

@@ -1,0 +1,92 @@
+[project]
+name = "perseo-perturbations"
+description = "Python Ecosystem for Remote Sensing & Earth Observation: computing geodynamics displacements and atmospheric delays for SAR products."
+authors = [{ name = "Aresys S.R.L.", email = "info@aresys.it" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+dependencies = [
+    "numpy > 2",
+    "pandas >= 1.4.0",
+    "scipy > 1.13",
+    "more-itertools",
+    "netCDF4",
+    "arepytools >= 1.7.6",
+]
+dynamic = ["version"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Utilities",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+
+[project.optional-dependencies]
+build = ["meson-python", "meson", "ninja"]
+dev = ["ruff", "pylint", "nox"]
+test = ["unittest-xml-reporting", "coverage"]
+docs = [
+    "ipython",
+    "nbsphinx",
+    "sphinx",
+    "sphinx-design",
+    "sphinx-copybutton",
+    "pydata-sphinx-theme",
+]
+
+[build-system]
+requires = ["meson-python", "wheel", "numpy>2"]
+build-backend = "mesonpy"
+
+[tool.ruff]
+line-length = 120
+output-format = "grouped"
+extend-exclude = [".venv", "docs", "scripts"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "A", "B", "I"]
+
+[tool.pylint.master]
+fail-under = 8
+fail-on = ["unused-import"]
+
+[tool.pylint.message_control]
+disable = ["import-error", "logging-fstring-interpolation", "logging-not-lazy"]
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pdm]
+distribution = true
+
+[tool.pdm.resolution]
+respect-source-order = true
+
+[tool.pdm.scripts]
+format_check = "ruff format --check"
+format = "ruff format"
+sort = "ruff check --select I --fix-only"
+lint_check = "ruff check"
+lint_fix = "ruff check --show-fixes --fix-only"
+test = "python -m unittest discover -s ./tests -p test_*.py"
+clean_doc = "python -m sphinx -M clean docs/source {args}"
+build_doc = "python -m sphinx -b html docs/source {args}"
+check_code = { composite = ["format_check", "lint_check"] }
+fix_format = { composite = ["format", "sort", "lint_fix"] }

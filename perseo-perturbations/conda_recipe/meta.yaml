@@ -1,0 +1,46 @@
+{% set name = "perseo-perturbations" %}
+{% set version = "1.0.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: file://{{ RECIPE_DIR }}/../dist/{{ name }}-{{ version }}.tar.gz
+
+build:
+  script: {{ PYTHON }} -m pip install . -vv --no-deps --no-build-isolation
+  number: 0
+
+requirements:
+  host:
+    - python {{ python }}
+    - meson-python
+    - wheel
+    - numpy >2
+    - pip
+  run:
+    - python {{ python }}
+    - numpy >2
+    - pandas >=1.4.0
+    - more-itertools
+    - scipy >1.13
+    - arepytools >=1.7.6
+    - python-build >=1.2.1
+
+test:
+  requires:
+    - pip
+  imports:
+    - perseo_perturbations
+  commands:
+    - pip check
+
+about:
+  summary: Perturbations is the PERSEO python package for computing geodynamics displacements and atmospheric delays for SAR products.
+  license: MIT
+  license_file: LICENSE.txt
+
+extra:
+  recipe-maintainers:
+    - Aresys srl

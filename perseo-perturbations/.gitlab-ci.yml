@@ -1,0 +1,183 @@
+stages:
+  - analysis
+  - build
+  - test-build
+  - deploy
+
+workflow:
+  rules:
+    - when: always
+
+variables:
+  GIT_DEPTH: 1
+
+.tags_manylinux_2_28:
+  tags: ["manylinux_2_28"]
+
+.tags_win10:
+  tags: ["eo", "win10", "arepytools-win"]
+
+.tags_deploy:
+  tags: ["eo", "deploy"]
+
+default:
+  before_script:
+    - cd $SUBPROJECT
+
+# === analysis ===============================================================
+# ============================================================================
+check_code_compliance_ruff:
+  stage: analysis
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - python3.12 -m pip install nox
+    - python3.12 -m nox -s check_format
+
+check_code_compliance_pylint:
+  stage: analysis
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - python3.12 -m pip install nox
+    - python3.12 -m nox -s pylint
+
+version_check:
+  stage: analysis
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - python3 -m pip install nox
+    - python3 -m nox -s version_consistency_check
+
+# === build ==================================================================
+# ============================================================================
+sdist:
+  stage: build
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - python3.12 -m pip install nox
+    - python3.12 -m nox -s build_sdist
+  needs: []
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - ${SUBPROJECT}/dist/*.tar.gz
+
+python_package_linux:
+  stage: build
+  script:
+    - python${PYTHON} -m pip install nox
+    - python${PYTHON} -m nox -s build_python_package -p ${PYTHON}
+  parallel:
+    matrix:
+      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+  extends: .tags_manylinux_2_28
+  needs: []
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - ${SUBPROJECT}/dist/*.whl
+
+python_package_win:
+  stage: build
+  script:
+    - $env:CC = 'gcc'
+    - $env:CXX = 'gcc'
+    - python -m pip install nox
+    - python -m nox -s build_python_package -p ${PYTHON}
+  parallel:
+    matrix:
+      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+  extends: .tags_win10
+  needs: []
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - ${SUBPROJECT}/dist/*.whl
+
+doc:
+  stage: build
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - yum install -y pandoc
+    - python3.12 -m pip install nox
+    - python3.12 -m nox -s build_doc
+  needs: []
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - ${SUBPROJECT}/docs/build/*.zip
+
+# === test wheel =============================================================
+# ============================================================================
+test_wheel_linux:
+  stage: test-build
+  script:
+    - export match="cp${PYTHON/./}"
+    - python${PYTHON} -m venv ./ci_test
+    - source ./ci_test/bin/activate
+    - python -m pip install --find-links= dist/*$match*.whl
+    - cd ..
+    - python -m unittest perseo_perturbations.tests
+  parallel:
+    matrix:
+      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+  extends: .tags_manylinux_2_28
+  needs:
+    - job: python_package_linux
+
+test_wheel_win10:
+  stage: test-build
+  script:
+    - $match = "cp${PYTHON}".replace(".", "")
+    - $wheel_py = Get-ChildItem -Path dist -Filter *$match*.whl -Recurse | ForEach-Object{$_.FullName}
+    - cd ..
+    - pyenv local ${PYTHON}
+    - python -m pip install $wheel_py
+    - python -m unittest perseo_perturbations.tests
+  parallel:
+    matrix:
+      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+  extends: .tags_win10
+  needs:
+    - job: python_package_win
+
+# === deploy =================================================================
+# ============================================================================
+deploy_package:
+  stage: deploy
+  extends: .tags_deploy
+  rules:
+    - if: "$CI_COMMIT_TAG"
+  script:
+    - eval "$(ssh-agent -s)"
+    - cd ..
+    - for file in ${SUBPROJECT}/dist/*.tar.gz ${SUBPROJECT}/dist/*.whl; do
+      eo_pgp-signme ${file} > ${file}.asc &&
+      ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/perturbations/archive &&
+      ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/perturbations/archive;
+      done
+
+deploy_doc:
+  stage: deploy
+  extends: .tags_deploy
+  rules:
+    - if: "$CI_COMMIT_TAG"
+    - if: '$DEPLOY_DOC == "true"'
+  before_script:
+    - export PACKAGE_VERSION=v$(grep "__version__" $SUBPROJECT/src/perseo_perturbations/__init__.py | awk -F '"' '{print $2}')
+  script:
+    - eval "$(ssh-agent)"
+    - cat "$DASHBOARD_PRIVATE_KEY" | base64 -d | ssh-add -
+    - for file in ${SUBPROJECT}/docs/build/*.zip; do
+      eo_pgp-signme ${file} > ${file}.asc &&
+      ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/perturbations/archive &&
+      ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/perturbations/archive;
+      done
+    - unzip ${SUBPROJECT}/docs/build/*.zip
+    - mv *perseo-perturbations*-html-doc ${PACKAGE_VERSION}
+    - rsync --stats -r ${PACKAGE_VERSION} sardashboard@intranet.aresys.it:develop/perseo/perturbations/docs
+    - ssh sardashboard@intranet.aresys.it "cd develop/perseo/perturbations/docs && rm latest && ln -s ${PACKAGE_VERSION} latest"
