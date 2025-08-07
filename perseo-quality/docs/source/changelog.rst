@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.2
+------
+
+**Other Changes**
+
+- Fixed graphs name and title for Point Target Analysis and Radiometric Analysis Block-Wise
+
 v1.0.1
 ------
 

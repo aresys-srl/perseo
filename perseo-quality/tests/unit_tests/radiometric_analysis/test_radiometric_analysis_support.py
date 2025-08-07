@@ -267,10 +267,10 @@ class RadiometricProfilesToNetCDF(unittest.TestCase):
                 polarization=SARPolarization.HH,
                 profiles=np.ones((3, 10)),
             )
-            out_file = out_fldr.joinpath(tag + "_profiles_" + data.swath + "_" + data.polarization.name + ".nc")
+            out_file = out_fldr.joinpath(tag + "_profiles_channel_" + str(data.channel) + ".nc")
             support.radiometric_profiles_to_netcdf(data=data, out_path=out_fldr, tag=tag)
 
-            out_file = out_fldr.joinpath(tag + "_profiles_" + data.swath + "_" + data.polarization.name + ".nc")
+            out_file = out_fldr.joinpath(tag + "_profiles_channel_" + str(data.channel) + ".nc")
             # checking results
             self.assertTrue(out_file.exists())
             self.assertTrue(out_file.is_file())

@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -14,6 +13,7 @@ import numpy as np
 
 from perseo_quality.point_targets_analysis.custom_dataclasses import (
     IRFGraphDataOutput,
+    PTAGraphsInfo,
     RCSGraphDataOutput,
 )
 from perseo_quality.point_targets_analysis.graphical_output import (
@@ -22,7 +22,6 @@ from perseo_quality.point_targets_analysis.graphical_output import (
 )
 
 
-@unittest.skipIf(sys.platform.startswith("win"), "skipping Windows on CI")
 class PointTargetsGraphicalOutputTest(unittest.TestCase):
     """Testing Point Target Analysis graphical output functionalities"""
 
@@ -51,10 +50,15 @@ class PointTargetsGraphicalOutputTest(unittest.TestCase):
             "azimuth_islr_[dB]": -11,
             "ground_range_localization_error_[m]": 4,
         }
+        graphs_info = PTAGraphsInfo(channel="s1_vv", burst=str(0), polarization="VV", swath="S1", target="CR12")
         with TemporaryDirectory() as temp_dir:
             temp_dir = Path(temp_dir)
-            irf_graphs(data_graph=data_graph, data_values=data_val, label="test_irf", out_dir=temp_dir)
-            self.assertTrue(temp_dir.joinpath("test_irf" + " IRF Analysis" + ".png").is_file())
+            irf_graphs(data_graph=data_graph, data_values=data_val, graphs_info=graphs_info, out_dir=temp_dir)
+            self.assertTrue(
+                temp_dir.joinpath(
+                    f"irf_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}.png"
+                ).is_file()
+            )
 
     def test_rcs_graphs(self) -> None:
         """Testing rcs_graphs"""
@@ -69,10 +73,15 @@ class PointTargetsGraphicalOutputTest(unittest.TestCase):
             roi_peak=[7, 8, 12, 15],
             roi_size=np.array([20, 20]),
         )
+        graphs_info = PTAGraphsInfo(channel="s1_vv", burst=str(0), polarization="VV", swath="S1", target="CR12")
         with TemporaryDirectory() as temp_dir:
             temp_dir = Path(temp_dir)
-            rcs_graphs(data_graph=data_graph, label="test_rcs", out_dir=temp_dir)
-            self.assertTrue(temp_dir.joinpath("test_rcs" + " RCS Analysis" + ".png").is_file())
+            rcs_graphs(data_graph=data_graph, graphs_info=graphs_info, out_dir=temp_dir)
+            self.assertTrue(
+                temp_dir.joinpath(
+                    f"rcs_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}.png"
+                ).is_file()
+            )
 
 
 if __name__ == "__main__":

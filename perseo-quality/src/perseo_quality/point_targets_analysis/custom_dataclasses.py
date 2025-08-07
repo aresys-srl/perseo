@@ -219,9 +219,20 @@ class PointTargetGraphicalData:
     """Dataclass to collect data for graphical output of Point Target Analysis"""
 
     target: int | None = None
-    channel: int | None = None
+    channel: int | str | None = None
     swath: str | None = None
     burst: int | None = None
     polarization: SARPolarization | None = None
     irf: IRFGraphDataOutput | None = None
     rcs: RCSGraphDataOutput | None = None
+
+
+@dataclass
+class PTAGraphsInfo:
+    """Simple Info for Graphs labelling"""
+
+    channel: str
+    swath: str
+    polarization: str
+    burst: str
+    target: str

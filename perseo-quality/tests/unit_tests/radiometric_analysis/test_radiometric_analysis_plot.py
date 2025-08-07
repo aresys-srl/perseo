@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -26,7 +25,6 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import (
 )
 
 
-@unittest.skipIf(sys.platform.startswith("win"), "skipping Windows on CI")
 class Radiometric2DHistPlotTest(unittest.TestCase):
     """Testing Radiometric Analysis graphical output functionalities"""
 
@@ -61,7 +59,7 @@ class Radiometric2DHistPlotTest(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             tag = "test"
             radiometric_2D_hist_plot(data=data, out_dir=temp_dir, title=tag)
-            out_file = Path(temp_dir).joinpath("graphs", tag.lower().replace(" ", "_")).with_suffix(".png")
+            out_file = Path(temp_dir).joinpath("graphs", f"radiometric_hist_{str(data.channel)}").with_suffix(".png")
             self.assertTrue(out_file.exists())
             self.assertTrue(out_file.is_file())
 
