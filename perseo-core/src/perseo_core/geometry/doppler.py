@@ -1,0 +1,217 @@
+# SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
+# SPDX-License-Identifier: MIT
+
+"""
+Geometry - Doppler-related Utilities
+------------------------------------
+"""
+
+from __future__ import annotations
+
+import numpy as np
+
+from perseo_core.geometry.angles import get_geometric_squint_angle
+from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
+
+
+# TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
+def doppler_equation(
+    wavelength: float,
+    pv_scalar: float,
+    distance: float,
+    frequency_doppler_centroid: float,
+    sensor_velocity: CoordinatesArrayType,
+    los: np.ndarray,
+) -> tuple[float, FloatArrayType]:
+    """Doppler equation solver.
+
+    Parameters
+    ----------
+    wavelength : float
+        carrier signal wavelength
+    pv_scalar : float
+        scalar product between sensor velocity and line of sight
+    distance : float
+        ground point - sensor distance
+    frequency_doppler_centroid : float
+        frequency doppler centroid
+    sensor_velocity : CoordinatesArrayType
+        sensor velocity
+    los : np.ndarray
+        line of sight
+
+    Returns
+    -------
+    float
+        doppler equation solution
+    FloatArrayType
+        doppler equation gradient
+    """
+
+    c_factor = 2.0 / wavelength / distance
+    doppler_equation = c_factor * pv_scalar + frequency_doppler_centroid
+    norm_pv = pv_scalar / distance**2
+    grad_doppler_equation = (c_factor * (-sensor_velocity + (norm_pv * los.T).T).T).T
+    return doppler_equation, grad_doppler_equation
+
+
+def doppler_equation_monostatic_residuals(
+    ground_point: CoordinatesArrayType,
+    sensor_positions: CoordinatesArrayType,
+    sensor_velocities: CoordinatesArrayType,
+    frequency_doppler_centroid: float,
+    wavelength: float,
+) -> FloatArrayType:
+    """Evaluate SAR doppler equation residual, assuming monostatic approximation.
+
+    *Doppler Equation*
+
+    .. math::
+
+        f_{doppler} = \\frac{2}{\\lambda}  \\frac{v_{sensor} \\cdot LOS}{\\|LOS\\|}
+
+    *Doppler Equation Residual*
+
+    .. math::
+
+        Residual = \\frac{2}{\\lambda}  \\frac{v_{sensor} \\cdot LOS}{\\|LOS\\|} - f_{doppler}
+
+    where LOS is defined as the line of sight, a.k.a. the position difference between the ground point and the sensor
+    positions.
+
+    Parameters
+    ----------
+    ground_point : CoordinatesArrayType
+        ground point in ECEF coordinates, with shape (3,)
+    sensor_positions : CoordinatesArrayType
+        sensor positions, with shape (N, 3)
+    sensor_velocities : CoordinatesArrayType
+        sensor velocities, with shape (N, 3)
+    frequency_doppler_centroid : float
+        frequency doppler centroid
+    wavelength : float
+        signal carrier wavelength
+
+    Returns
+    -------
+    FloatArrayType
+        doppler equation residual (Hz) for each input sensor position, (N,)
+    """
+
+    if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
+        raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+
+    if sensor_velocities.ndim > 2 or sensor_velocities.shape[-1] != 3:
+        raise ValueError(f"sensor_velocities has invalid shape: {sensor_velocities.shape}, it should be (3,) or (N, 3)")
+
+    line_of_sight = ground_point - sensor_positions
+    line_of_sight_norm = np.linalg.norm(line_of_sight, axis=1)
+
+    def col_wise_scalar_product(matrix_a, matrix_b):
+        return np.einsum("ij,ij->i", matrix_a, matrix_b)  # Einstein notation -- col wise dot product.
+
+    return (
+        np.divide(
+            2 / wavelength * col_wise_scalar_product(line_of_sight, sensor_velocities),
+            line_of_sight_norm,
+        )
+        - frequency_doppler_centroid
+    )
+
+
+def doppler_equation_bistatic_residuals(
+    sensor_pos_rx: CoordinatesArrayType,
+    sensor_pos_tx: CoordinatesArrayType,
+    sensor_vel_rx: CoordinatesArrayType,
+    sensor_vel_tx: CoordinatesArrayType,
+    ground_points: CoordinatesArrayType,
+    wavelength: float,
+    doppler_freq: float,
+) -> FloatArrayType:
+    """Evaluating doppler equation residual for bistatic sensors.
+
+    Parameters
+    ----------
+    sensor_pos_rx : CoordinatesArrayType
+        sensor rx position, (3,) or (N, 3)
+    sensor_pos_tx : CoordinatesArrayType
+        sensor tx position, (3,) or (N, 3)
+    sensor_vel_rx : CoordinatesArrayType
+        sensor rx velocity, (3,) or (N, 3)
+    sensor_vel_tx : CoordinatesArrayType
+        sensor tx velocity, (3,) or (N, 3)
+    ground_points : CoordinatesArrayType
+        ground points from direct geocoding solution, (3,) or (N, 3)
+    wavelength : float
+        carrier signal wavelength
+    doppler_freq : float
+        doppler frequency
+
+    Returns
+    -------
+    FloatArrayType
+        doppler equation residual
+    """
+
+    los_rx = sensor_pos_rx - ground_points
+    los_tx = sensor_pos_tx - ground_points
+    los_vel_prod_rx = np.sum(sensor_vel_rx * los_rx, axis=-1)
+    los_vel_prod_tx = np.sum(sensor_vel_tx * los_tx, axis=-1)
+    distance_rx = np.sqrt(np.sum(los_rx * los_rx, axis=-1))
+    distance_tx = np.sqrt(np.sum(los_tx * los_tx, axis=-1))
+
+    doppler_residual_rx, _ = doppler_equation(
+        pv_scalar=los_vel_prod_rx,
+        los=los_rx,
+        sensor_velocity=sensor_vel_rx,
+        distance=distance_rx,
+        wavelength=wavelength,
+        frequency_doppler_centroid=doppler_freq,
+    )
+
+    doppler_residual_tx, _ = doppler_equation(
+        pv_scalar=los_vel_prod_tx,
+        los=los_tx,
+        sensor_velocity=sensor_vel_tx,
+        distance=distance_tx,
+        wavelength=wavelength,
+        frequency_doppler_centroid=doppler_freq,
+    )
+
+    return np.array(doppler_residual_rx + doppler_residual_tx)
+
+
+def get_geometric_doppler_centroid(
+    sensor_positions: CoordinatesArrayType,
+    sensor_velocities: CoordinatesArrayType,
+    ground_points: CoordinatesArrayType,
+    wavelength: float,
+) -> float:
+    """Calculating doppler centroid (geometrically) from squint angle.
+
+    Parameters
+    ----------
+    sensor_positions : CoordinatesArrayType
+        sensor positions array, in the form (3,) or (N, 3)
+    sensor_velocities : CoordinatesArrayType
+        sensor velocities array, in the form (3,) or (N, 3)
+    ground_points : CoordinatesArrayType
+        ground points array, in the form (3,) or (N, 3)
+    wavelength : int
+        carrier signal wavelength in meters
+
+    Returns
+    -------
+    float
+        doppler centroid in Hz
+    """
+
+    # evaluating squint
+    squint_angles = get_geometric_squint_angle(
+        sensor_positions=sensor_positions,
+        sensor_velocities=sensor_velocities,
+        ground_points=ground_points,
+    )
+    sensor_velocity_norm = np.linalg.norm(sensor_velocities, axis=-1)
+
+    return 2 * sensor_velocity_norm * np.sin(squint_angles) / wavelength
