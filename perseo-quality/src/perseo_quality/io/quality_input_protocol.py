@@ -81,6 +81,10 @@ class ChannelData(Protocol):
     """Protocol to define an object that contains all the channel dependent info and data"""
 
     @property
+    def sensor_name(self) -> str:
+        """Name of the sensor"""
+
+    @property
     def swath_name(self) -> str:
         """Name of the swath being analyzed"""
 
