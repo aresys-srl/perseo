@@ -143,7 +143,8 @@ class GenericInfoOutput:
     swath: str | None = None
     burst: int | None = None
     product_type: str | None = None
-    polarization: SARPolarization | str | None = None
+    polarization: str | None = None
+    acquisition_mode: str | None = None
     incidence_angle: float | None = None
     squint_angle: float | None = None
     range_position: float | None = None
@@ -175,7 +176,9 @@ class PointTargetAnalysisOutput:
     """Dataclass to collect output for the whole Point Target Analysis"""
 
     target: int | None = None
-    channel: int | None = None
+    channel: str | None = None
+    product_name: str | None = None
+    sensor_name: str | None = None
     info: GenericInfoOutput = field(default_factory=GenericInfoOutput)
     irf: IRFDataOutput = field(default_factory=IRFDataOutput)
     rcs: RCSDataOutput = field(default_factory=RCSDataOutput)
@@ -219,7 +222,7 @@ class PointTargetGraphicalData:
     """Dataclass to collect data for graphical output of Point Target Analysis"""
 
     target: int | None = None
-    channel: int | str | None = None
+    channel: str | None = None
     swath: str | None = None
     burst: int | None = None
     polarization: SARPolarization | None = None

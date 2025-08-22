@@ -8,6 +8,7 @@ v1.0.2
 
 - Fixed graphs name and title for Point Target Analysis and Radiometric Analysis Block-Wise
 - Added ``sensor_name`` property to quality input channel protocol
+- Added ``sensor``, ``product`` and ``acquisition_mode`` info to Point Target Analysis output .csv
 
 v1.0.1
 ------

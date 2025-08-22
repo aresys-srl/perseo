@@ -117,6 +117,7 @@ def point_target_analysis(
                     config=config,
                 )
 
+                output.product_name = product.name
                 output.target = target_id
                 graph.target = target_id
 
@@ -166,12 +167,14 @@ def point_target_analysis_single(
         if there is an error in computing the side lobes direction
     """
     output = ptdt.PointTargetAnalysisOutput(
-        channel=channel_data.channel_id,
+        channel=str(channel_data.channel_id),
+        sensor_name=channel_data.sensor_name,
         info=ptdt.GenericInfoOutput(
             swath=channel_data.swath_name,
             burst=burst,
             product_type=channel_data.image_type.name.lower(),
             polarization=channel_data.polarization.value,
+            acquisition_mode=channel_data.acquisition_mode.name,
         ),
     )
     graph = ptdt.PointTargetGraphicalData(
@@ -426,7 +429,10 @@ def _results_to_dataframe(results: list[ptdt.PointTargetAnalysisOutput]) -> pd.D
     additional_info_df = pd.DataFrame([r.additional_info for r in results])
     irf_df = pd.DataFrame([r.irf for r in results])
     rcs_df = pd.DataFrame([r.rcs for r in results])
-    ch_trgt_df = pd.DataFrame([(r.target, r.channel) for r in results], columns=["target", "channel"])
+    ch_trgt_df = pd.DataFrame(
+        [(r.target, r.channel, r.product_name, r.sensor_name) for r in results],
+        columns=["target", "channel", "product", "sensor"],
+    )
 
     # merging dataframe horizontally
     df_res = pd.concat([ch_trgt_df, info_df, additional_info_df, irf_df, rcs_df], axis=1)

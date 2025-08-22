@@ -40,7 +40,7 @@ class MockChannelData:
             slicing index along range
         burst : int
             burst index
-        cropping_size : _type_, optional
+        cropping_size : tuple[int, int], optional
             cropping size along both axes, by default tuple[int, int]
 
         Returns
@@ -621,7 +621,7 @@ class ResultsToDataframeTest(unittest.TestCase):
         # creating test data
         self.data = [PointTargetAnalysisOutput()]
         # expected results
-        self.expected_values = np.zeros((1, 40)) + np.nan
+        self.expected_values = np.zeros((1, 43)) + np.nan
 
     def test_results_to_dataframe(self) -> None:
         """Testing _results_to_dataframe function"""
