@@ -7,6 +7,8 @@ Point Target Analysis
 
 .. automodule:: perseo_quality.point_targets_analysis.graphical_output
 
+.. automodule:: perseo_quality.point_targets_analysis.rcs_geometric_computation
+
 Core Algorithms
 ===============
 

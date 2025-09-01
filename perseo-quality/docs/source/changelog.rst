@@ -7,6 +7,7 @@ v1.0.2
 **New Features**
 
 - Added KPI estimation for Block-Wise Radiometric Analysis
+- Added RCS Geometrical computation for trihedral corner reflectors
 
 **Other Changes**
 
