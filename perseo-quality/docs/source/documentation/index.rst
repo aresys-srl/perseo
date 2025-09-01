@@ -26,12 +26,12 @@ The main analyses that can be performed using this tool are:
 
 These functionalities are located in different submodules of this framework that can be accessed as:
 
-- `arepyextras.quality.point_target_analysis`
-- `arepyextras.quality.radiometric_analysis`
-- `arepyextras.quality.interferometric_analysis`
-- `arepyextras.quality.target_ambiguity_ratio_analysis`
-- `arepyextras.quality.spectral_analysis`
-- `arepyextras.quality.enl_analysis`
+- `perseo_quality.point_target_analysis`
+- `perseo_quality.radiometric_analysis`
+- `perseo_quality.interferometric_analysis`
+- `perseo_quality.target_ambiguity_ratio_analysis`
+- `perseo_quality.spectral_analysis`
+- `perseo_quality.enl_analysis`
 
 These operations can be fully customized down to low level parameters in order to tweak and tune the algorithms behavior
 to the users' needs.

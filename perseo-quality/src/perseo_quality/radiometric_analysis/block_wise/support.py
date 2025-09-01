@@ -5,14 +5,17 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 from arepytools.geometry.conversions import llh2xyz, xyz2llh
 from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
 from arepytools.geometry.direct_geocoding import GeocodingSide, direct_geocoding_monostatic
 from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
+from numpy.polynomial import Polynomial
 from scipy.signal import convolve2d
 
 from perseo_quality.logger import quality_logger as log
@@ -42,15 +45,15 @@ def radiometric_profiles_to_netcdf(
     out_path = Path(out_path)
     tag = "radiometric" if tag is None else tag
 
-    out_name = tag + "_profiles_channel_" + str(data.channel)
+    out_name = tag + "_profiles_" + data.general_info.swath + "_" + data.general_info.polarization
     log.info(f"Saving {out_name} data to NetCDF file.")
 
     root = Dataset(out_path.joinpath(out_name).with_suffix(".nc"), "w", format="NETCDF4")
-    root.swath = data.swath
-    root.channel = data.channel
-    root.polarization = data.polarization.name
+    root.swath = data.general_info.swath
+    root.channel = data.general_info.channel
+    root.polarization = data.general_info.polarization
     root.direction = data.direction.name.lower()
-    root.output_radiometric_quantity = data.output_radiometric_quantity.name
+    root.output_radiometric_quantity = data.general_info.radiometric_quantity
     root.azimuth_blocks_num = data.blocks_num
     root.azimuth_block_centers = [str(d) for d in data.azimuth_block_centers]
     root.range_block_centers = data.range_block_centers
@@ -262,3 +265,53 @@ def masking_outliers_by_percentiles(
     data[np.where(mask)] = np.nan
 
     return data
+
+
+def compute_profile_variability_index(profile: np.ndarray, look_angles_deg: np.ndarray) -> tuple[float, float]:
+    """Computing radiometric variability index for the current profile, with respect to the look angles axis.
+
+    Parameters
+    ----------
+    profile : np.ndarray
+        current radiometric profile in [dB]
+    look_angles_deg : np.ndarray
+        look angles axis of the provided profile in degrees
+
+    Returns
+    -------
+    float
+        slope with respect to look angles axis in [dB/deg]
+    float
+        radiometric variability index in [dB]
+    """
+    # linear fit
+    linear_fit_params = Polynomial.fit(look_angles_deg, profile, deg=1).convert()
+
+    # homogeneity index
+    regression_line = linear_fit_params.coef[0] + linear_fit_params.coef[1] * look_angles_deg
+    radiometric_profiles_de_sloped = profile - regression_line
+    variability_index = np.percentile(radiometric_profiles_de_sloped.compressed(), 90) - np.percentile(
+        radiometric_profiles_de_sloped.compressed(), 10
+    )
+    return float(linear_fit_params.coef[1]), float(variability_index)
+
+
+def radiometric_statistical_analysis_to_df(data: list[RadiometricProfilesOutput]) -> pd.DataFrame:
+    """Converting statistical radiometric output to pandas DataFrame.
+
+    Parameters
+    ----------
+    data : list[RadiometricProfilesOutput]
+        radiometric statistics
+
+    Returns
+    -------
+    pd.DataFrame
+        dataframe with radiometric statistics
+    """
+    item_df = []
+    for item in data:
+        block_info = [asdict(blk) for blk in item.kpi]
+        general_info = [asdict(item.general_info)] * len(block_info)
+        item_df.append(pd.concat([pd.DataFrame(general_info), pd.DataFrame(block_info)], axis=1))
+    return pd.concat(item_df).reset_index(drop=True)

@@ -67,7 +67,10 @@ def radiometric_2D_hist_plot(
 
     # figure plot
     if title is None:
-        title = f"Radiometric Profile Histogram {data.swath} {data.polarization.name} Channel {str(data.channel)}"
+        title = (
+            f"Radiometric Profile Histogram {data.general_info.swath} {data.general_info.polarization} "
+            + f"Channel {str(data.general_info.channel)}"
+        )
     log.info(f"Generating {title}")
 
     fig, ax = plt.subplots(figsize=(8, 6), dpi=180)
@@ -117,7 +120,7 @@ def radiometric_2D_hist_plot(
     plt.grid(color="#7EB4B4", alpha=0.4)
 
     if not interactive:
-        fig.savefig(graphs_dir.joinpath(f"radiometric_hist_{str(data.channel)}").with_suffix(".png"))
+        fig.savefig(graphs_dir.joinpath(f"radiometric_hist_{str(data.general_info.channel)}").with_suffix(".png"))
         plt.close("all")
     else:
         plt.show()

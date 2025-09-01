@@ -17,6 +17,7 @@ from perseo_quality.core.signal_processing import radiometric_correction
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import RadiometricProfilesConfig
+from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import RadiometricBlockKPIEstimatorType
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import RadiometricProfileExtractorType
 from perseo_quality.radiometric_analysis.block_wise.support import (
     angles_computation_setup,
@@ -25,6 +26,8 @@ from perseo_quality.radiometric_analysis.block_wise.support import (
 )
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     RadiometricAnalysisDirection,
+    RadiometricOutputProductGeneralInfo,
+    RadiometricProfileAxes,
     RadiometricProfilesOutput,
 )
 
@@ -32,6 +35,7 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import (
 def radiometric_profiles(
     product: QualityInputProduct,
     profile_extractor_func: RadiometricProfileExtractorType,
+    kpi_estimator_func: RadiometricBlockKPIEstimatorType,
     direction: RadiometricAnalysisDirection = RadiometricAnalysisDirection.RANGE,
     output_quantity: SARRadiometricQuantity = SARRadiometricQuantity.GAMMA_NOUGHT,
     config: RadiometricProfilesConfig | None = None,
@@ -44,6 +48,8 @@ def radiometric_profiles(
         object containing product information and data satisfying the QualityInputProduct protocol
     profile_extractor_func : RadiometricProfileExtractorType
         function to perform radiometric profile extraction
+    kpi_estimator_func : RadiometricBlockKPIEstimatorType
+        function to estimate KPI from a given block and its extracted profile
     direction : RadiometricAnalysisDirection, optional
         direction along which profiles are extracted, by default RadiometricAnalysisDirection.RANGE
     output_quantity : SARRadiometricQuantity, optional
@@ -103,6 +109,7 @@ def radiometric_profiles(
         )
 
         profiles = []
+        kpi = []
         look_angles_array = []
         incidence_angles_array = []
         az_rel_times = []
@@ -126,11 +133,12 @@ def radiometric_profiles(
                 look_direction=channel_data.looking_side.value,
             )
 
+            look_angles_mid_block_deg = np.rad2deg(
+                compute_look_angles(sensor_positions=sensor_pos, nadir_directions=nadir, points=ground_points)
+            )
             if direction == RadiometricAnalysisDirection.RANGE:
-                look_angles_rad = compute_look_angles(
-                    sensor_positions=sensor_pos, nadir_directions=nadir, points=ground_points
-                )
-                look_angles_array.append(np.rad2deg(look_angles_rad))
+                look_angles_array.append(look_angles_mid_block_deg)
+
             elif direction == RadiometricAnalysisDirection.AZIMUTH:
                 az_axis_start_idx = center[0] - np.floor(az_block_size / 2).astype(int)
                 az_block_axis = channel_data.azimuth_axis[az_axis_start_idx : az_axis_start_idx + az_block_size]
@@ -150,14 +158,27 @@ def radiometric_profiles(
                     incidence_angle=incidence_angles_mid_block_rad,
                     input_quantity=channel_data.radiometric_quantity,
                     output_quantity=output_quantity,
-                    exp_power=config.radiometric_correction_exponent,
+                    exp_power=1,  # NOTE: power data is processed with 1 as exponent
                 )
 
             # applying provided profile extraction function
             log.debug("Extracting profiles.")
-            profiles.append(profile_extractor_func(target_area, config.profile_extraction_parameters))
+            profile_axes = RadiometricProfileAxes(
+                look_angles_deg=look_angles_mid_block_deg,
+                incidence_angles_deg=np.rad2deg(incidence_angles_mid_block_rad),
+                azimuth=None,  # TODO: add this when scalloping is completed
+                slant_range=channel_data.slant_range_axis[config.range_pixel_margin : -config.range_pixel_margin],
+            )
+            profile = profile_extractor_func(target_area, config.profile_extraction_parameters)
+            block_kpi = kpi_estimator_func(profile, profile_axes, target_area)
+            block_kpi.block_num = bc_num
+            block_kpi.first_az_line_block = int(center[0] - np.floor(cropping_size[1] / 2))
+            block_kpi.lines_block = target_area.shape[1]
+            profiles.append(profile)
+            kpi.append(block_kpi)
 
         # 2D histogram
+        log.info("Computing 2D radiometric histogram...")
         profiles = np.ma.stack(profiles)
         look_angles_array = np.vstack(look_angles_array) if look_angles_array else None
         incidence_angles_array = np.vstack(incidence_angles_array)
@@ -172,11 +193,19 @@ def radiometric_profiles(
         # storing results
         output_results.append(
             RadiometricProfilesOutput(
-                swath=channel_data.swath_name,
-                channel=channel,
-                polarization=channel_data.polarization,
+                general_info=RadiometricOutputProductGeneralInfo(
+                    product_name=product.name,
+                    channel=str(channel),
+                    swath=channel_data.swath_name,
+                    acquisition_mode=channel_data.acquisition_mode.name,
+                    orbit_direction=channel_data.orbit_direction.name,
+                    polarization=channel_data.polarization.name,
+                    product_type=channel_data.image_type.name,
+                    radiometric_quantity=output_quantity.name,
+                    sensor=channel_data.sensor_name,
+                ),
                 direction=direction,
-                output_radiometric_quantity=output_quantity,
+                kpi=kpi,
                 azimuth_start_time=channel_data.azimuth_axis[0],
                 azimuth_block_centers=channel_data.azimuth_axis[[t[0] for t in blocks_centers_px]],
                 range_block_centers=channel_data.slant_range_axis[[t[1] for t in blocks_centers_px]],

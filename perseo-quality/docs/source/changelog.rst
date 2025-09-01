@@ -4,6 +4,10 @@ Changelog
 v1.0.2
 ------
 
+**New Features**
+
+- Added KPI estimation for Block-Wise Radiometric Analysis
+
 **Other Changes**
 
 - Fixed graphs name and title for Point Target Analysis and Radiometric Analysis Block-Wise

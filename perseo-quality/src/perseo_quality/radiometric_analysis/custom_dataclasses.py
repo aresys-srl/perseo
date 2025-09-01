@@ -41,11 +41,9 @@ class RadiometricAnalysisAxes(Enum):
 class RadiometricProfilesOutput:
     """Dataclass to collect Radiometric Profiles output"""
 
-    swath: str | None = None
-    channel: str | int | None = None
-    polarization: SARPolarization | None = None
+    general_info: RadiometricOutputProductGeneralInfo | None = None
     direction: RadiometricAnalysisDirection | None = None
-    output_radiometric_quantity: SARRadiometricQuantity | None = None
+    kpi: list[AverageElevationRadiometricKPI] | list[NESZRadiometricKPI] | list[ScallopingRadiometricKPI] | None = None
     azimuth_block_centers: np.ndarray | None = None
     range_block_centers: np.ndarray | None = None
     blocks_num: int | None = None
@@ -76,3 +74,84 @@ class PointWiseRadiometricAnalysisOutput:
     value_type: RadiometricAnalysisValue | None = None
     axis_type: RadiometricAnalysisAxes | None = None
     radiometric_quantity: SARRadiometricQuantity | None = None
+
+
+@dataclass
+class BaseRadiometricKPI:
+    """Basic Radiometric Block info"""
+
+    block_num: int | None = None
+    first_az_line_block: int | None = None
+    lines_block: int | None = None
+
+
+@dataclass
+class AverageElevationRadiometricKPI(BaseRadiometricKPI):
+    """Block-wise Radiometry Block info"""
+
+    mid_incidence_angle_deg: float | None = None
+    mid_look_angle_deg: float | None = None
+    enl_block: float | None = None
+    mean_level_db: float | None = None
+    std_level_db: float | None = None
+    slope_wrt_look_angle_db_deg: float | None = None
+    variability_index_db: float | None = None
+
+
+@dataclass
+class NESZRadiometricKPI(BaseRadiometricKPI):
+    """NESZ Radiometric Block info"""
+
+    min_nesz_profile_db: float | None = None
+    min_nesz_incidence_angle_deg: float | None = None
+    min_nesz_range_position: float | None = None
+    min_nesz_look_angle_deg: float | None = None
+    max_nesz_profile_db: float | None = None
+    max_nesz_incidence_angle_deg: float | None = None
+    max_nesz_range_position: float | None = None
+    max_nesz_look_angle_deg: float | None = None
+    mean_nesz_profile_dB: float | None = None
+    std_nesz_profile_dB: float | None = None
+    mode_nesz_profile_dB: float | None = None
+    skewness_profile: float | None = None
+    kurtosis_profile: float | None = None
+    mean_block_dB: float | None = None
+    std_block_dB: float | None = None
+    mode_block_dB: float | None = None
+    skewness_block: float | None = None
+    kurtosis_block: float | None = None
+
+
+@dataclass
+class ScallopingRadiometricKPI(BaseRadiometricKPI):
+    """Scalloping Radiometric Block info"""
+
+    mean_level_db: float | None = None
+    min_level_db: float | None = None
+    max_level_db: float | None = None
+    std_level_db: float | None = None
+
+
+@dataclass
+class RadiometricOutputProductGeneralInfo:
+    """Block-wise Radiometric analysis product related generic info"""
+
+    product_name: str
+    channel: str
+    swath: str
+    polarization: str
+    sensor: str
+    product_type: str
+    acquisition_mode: str
+    radiometric_quantity: str
+    orbit_direction: str
+
+
+@dataclass
+class RadiometricProfileAxes:
+    """Axes corresponding to the computed radiometric profile"""
+
+    incidence_angles_deg: np.ndarray
+    look_angles_deg: np.ndarray
+    slant_range: np.ndarray
+    azimuth: np.ndarray

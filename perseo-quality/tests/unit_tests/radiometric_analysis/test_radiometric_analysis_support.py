@@ -14,15 +14,12 @@ from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 
 import perseo_quality.radiometric_analysis.block_wise.support as support
-from perseo_quality.core.generic_dataclasses import (
-    SARPolarization,
-    SARRadiometricQuantity,
-)
 from perseo_quality.radiometric_analysis.block_wise.config import (
     Radiometric2DHistogramParameters,
 )
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     RadiometricAnalysisDirection,
+    RadiometricOutputProductGeneralInfo,
     RadiometricProfilesOutput,
 )
 
@@ -244,8 +241,17 @@ class RadiometricProfilesToNetCDF(unittest.TestCase):
             out_fldr.mkdir()
             tag = "test"
             data = RadiometricProfilesOutput(
-                swath="S1",
-                channel=1,
+                general_info=RadiometricOutputProductGeneralInfo(
+                    product_name="test",
+                    channel="1",
+                    swath="S1",
+                    acquisition_mode="SCANSAR",
+                    orbit_direction="DESCENDING",
+                    polarization="HH",
+                    product_type="SLC",
+                    radiometric_quantity="BETA_NOUGHT",
+                    sensor="",
+                ),
                 blocks_num=3,
                 direction=RadiometricAnalysisDirection.RANGE,
                 azimuth_block_centers=np.array(
@@ -263,22 +269,21 @@ class RadiometricProfilesToNetCDF(unittest.TestCase):
                 hist_y_bins_axis=np.ones(10),
                 look_angles=np.ones((3, 10)),
                 incidence_angles=np.ones((3, 10)),
-                output_radiometric_quantity=SARRadiometricQuantity.BETA_NOUGHT,
-                polarization=SARPolarization.HH,
                 profiles=np.ones((3, 10)),
             )
-            out_file = out_fldr.joinpath(tag + "_profiles_channel_" + str(data.channel) + ".nc")
+            out_file = out_fldr.joinpath(
+                tag + "_profiles_" + data.general_info.swath + "_" + data.general_info.polarization + ".nc"
+            )
             support.radiometric_profiles_to_netcdf(data=data, out_path=out_fldr, tag=tag)
 
-            out_file = out_fldr.joinpath(tag + "_profiles_channel_" + str(data.channel) + ".nc")
             # checking results
             self.assertTrue(out_file.exists())
             self.assertTrue(out_file.is_file())
             root = Dataset(out_file, "r", format="NETCDF4")
-            self.assertEqual(root.swath, data.swath)
-            self.assertEqual(root.channel, data.channel)
+            self.assertEqual(root.swath, data.general_info.swath)
+            self.assertEqual(root.channel, data.general_info.channel)
             self.assertEqual(root.direction, data.direction.name.lower())
-            self.assertEqual(root.output_radiometric_quantity, data.output_radiometric_quantity.name)
+            self.assertEqual(root.output_radiometric_quantity, data.general_info.radiometric_quantity)
             self.assertEqual(root.azimuth_blocks_num, data.blocks_num)
             self.assertListEqual(root.azimuth_block_centers, [str(d) for d in data.azimuth_block_centers])
             np.testing.assert_array_equal(root.range_block_centers, data.range_block_centers)

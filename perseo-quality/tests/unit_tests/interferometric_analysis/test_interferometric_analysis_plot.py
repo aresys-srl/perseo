@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -22,7 +21,6 @@ from perseo_quality.interferometric_analysis.graphical_output import (
 )
 
 
-@unittest.skipIf(sys.platform.startswith("win"), "skipping Windows on CI")
 class InterferometricAnalysisGraphicalOutputTest(unittest.TestCase):
     """Testing Interferometric Analysis graphical output functionalities"""
 

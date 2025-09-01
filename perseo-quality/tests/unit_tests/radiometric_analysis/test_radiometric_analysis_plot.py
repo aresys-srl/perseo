@@ -12,15 +12,12 @@ from tempfile import TemporaryDirectory
 import numpy as np
 from arepytools.timing.precisedatetime import PreciseDateTime
 
-from perseo_quality.core.generic_dataclasses import (
-    SARPolarization,
-    SARRadiometricQuantity,
-)
 from perseo_quality.radiometric_analysis.block_wise.graphical_output import (
     radiometric_2D_hist_plot,
 )
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     RadiometricAnalysisDirection,
+    RadiometricOutputProductGeneralInfo,
     RadiometricProfilesOutput,
 )
 
@@ -34,8 +31,17 @@ class Radiometric2DHistPlotTest(unittest.TestCase):
         profiles[1, :] *= 15
         profiles[2, :] *= 125
         data = RadiometricProfilesOutput(
-            swath="S1",
-            channel=1,
+            general_info=RadiometricOutputProductGeneralInfo(
+                product_name="test",
+                channel="1",
+                swath="S1",
+                acquisition_mode="SCANSAR",
+                orbit_direction="DESCENDING",
+                polarization="HH",
+                product_type="SLC",
+                radiometric_quantity="BETA_NOUGHT",
+                sensor="",
+            ),
             blocks_num=3,
             direction=RadiometricAnalysisDirection.RANGE,
             azimuth_block_centers=np.array(
@@ -52,14 +58,16 @@ class Radiometric2DHistPlotTest(unittest.TestCase):
             hist_x_bins_axis=np.linspace(-3, 80, 100),
             hist_y_bins_axis=np.linspace(5, 35, 100),
             look_angles=np.ones((3, 100)) * 15,
-            output_radiometric_quantity=SARRadiometricQuantity.BETA_NOUGHT,
-            polarization=SARPolarization.HH,
             profiles=profiles,
         )
         with TemporaryDirectory() as temp_dir:
             tag = "test"
             radiometric_2D_hist_plot(data=data, out_dir=temp_dir, title=tag)
-            out_file = Path(temp_dir).joinpath("graphs", f"radiometric_hist_{str(data.channel)}").with_suffix(".png")
+            out_file = (
+                Path(temp_dir)
+                .joinpath("graphs", f"radiometric_hist_{str(data.general_info.channel)}")
+                .with_suffix(".png")
+            )
             self.assertTrue(out_file.exists())
             self.assertTrue(out_file.is_file())
 

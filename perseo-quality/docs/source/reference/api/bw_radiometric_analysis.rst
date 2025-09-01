@@ -14,6 +14,8 @@ Core Algorithms
 
 .. automodule:: perseo_quality.radiometric_analysis.block_wise.core.profile_extractors
 
+.. automodule:: perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators
+
 Utilities
 =========
 
