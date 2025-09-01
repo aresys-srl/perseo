@@ -101,7 +101,6 @@ class RadiometricProfilesConfig:
 
     azimuth_block_size: int = 2000
     range_pixel_margin: int = 150
-    radiometric_correction_exponent: float = 1.0
     histogram_parameters: Radiometric2DHistogramParameters = field(default_factory=Radiometric2DHistogramParameters)
     profile_extraction_parameters: ProfileExtractionParameters = field(default_factory=ProfileExtractionParameters)
 
@@ -139,8 +138,6 @@ class RadiometricProfilesConfig:
                 ra_obj.azimuth_block_size = arg["azimuth_block_size"]
             if "range_pixel_margin" in arg:
                 ra_obj.range_pixel_margin = arg["range_pixel_margin"]
-            if "radiometric_correction_exponent" in arg:
-                ra_obj.radiometric_correction_exponent = arg["radiometric_correction_exponent"]
 
             return ra_obj
 

@@ -645,7 +645,6 @@ def _radiometric_swath_processing(
                 incidence_angle=incidence_angle_array,
                 input_quantity=input_quantity,
                 output_quantity=config.output_quantity,
-                exp_power=config.parameters.radiometric_correction_exponent,
             )
 
         # switching to power domain

@@ -45,7 +45,6 @@ class RadiometricAnalysisConfigTest(unittest.TestCase):
             "outliers_percentile_boundaries": [10, 80],
             "smoothening_order": 5,
             "smoothening_window_length": 70,
-            "radiometric_correction_exponent": 1,
         }
 
     def test_radiometric_analysis_config_from_dict(self):

@@ -24,7 +24,6 @@ class RadiometricProfilesConfigTest(unittest.TestCase):
         self.rp_flags = {
             "azimuth_block_size": 1500,
             "range_pixel_margin": 50,
-            "radiometric_correction_exponent": 0.5,
         }
         self.rp_hist_flags = {
             "x_bins_step": 5,

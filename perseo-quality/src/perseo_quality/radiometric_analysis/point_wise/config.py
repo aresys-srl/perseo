@@ -21,7 +21,6 @@ class RadiometricAnalysisParameters:
 
     smoothening_order: int = 3
     smoothening_window_length: int = 71
-    radiometric_correction_exponent: float = 0.5
     outliers_kernel_size: tuple[int, int] = (5, 5)
     outliers_filter_kernel_size: tuple[int, int] = (10, 10)
     outliers_percentile_boundaries: tuple[int, int] = (20, 90)
