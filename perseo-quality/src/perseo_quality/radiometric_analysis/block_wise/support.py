@@ -22,7 +22,7 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import RadiometricPr
 
 def radiometric_profiles_to_netcdf(
     data: RadiometricProfilesOutput, out_path: str | Path, tag: str | None = None
-) -> None:
+) -> Path:
     """Saving Radiometric Profiles output data to NetCDF4 file.
 
     Parameters
@@ -33,6 +33,11 @@ def radiometric_profiles_to_netcdf(
         path where to save the NetCDF file
     tag : str | None, optional
         tag string to be added to the output filename, by default None
+
+    Returns
+    -------
+    Path
+        path to the output netCDF file
     """
     out_path = Path(out_path)
     tag = "radiometric" if tag is None else tag
@@ -76,6 +81,8 @@ def radiometric_profiles_to_netcdf(
     profs[:] = data.profiles
 
     root.close()
+
+    return out_path.joinpath(out_name).with_suffix(".nc")
 
 
 def angles_computation_setup(
