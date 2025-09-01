@@ -47,7 +47,7 @@ def equivalent_number_of_looks_analysis(
                 cropping_size=cropping_size,
                 output_radiometric_quantity=channel_data.radiometric_quantity,
             )
-            enl = compute_equivalent_number_of_looks(roi_data=roi_data)
+            enl = compute_equivalent_number_of_looks(intensity_data=abs(roi_data) ** 2)
             log.info(f"ENL for current ROI center {roi}, size {cropping_size}: {enl}")
             output_results.append(
                 ENLOutput(

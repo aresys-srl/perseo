@@ -1219,7 +1219,7 @@ def compute_distributed_target_ambiguity_ratio_db(
     )
 
 
-def compute_equivalent_number_of_looks(roi_data: np.ndarray) -> float:
+def compute_equivalent_number_of_looks(intensity_data: np.ndarray) -> float:
     """Computing Equivalent Number of Looks (ENL) from input roi data.
 
     .. math::
@@ -1228,8 +1228,8 @@ def compute_equivalent_number_of_looks(roi_data: np.ndarray) -> float:
 
     Parameters
     ----------
-    roi_data : np.ndarray
-        2D roi data image, with shape (samples, lines)
+    intensity_data : np.ndarray
+        intensity of 2D roi data image (abs ** 2), with shape (samples, lines)
 
     Returns
     -------
@@ -1237,8 +1237,8 @@ def compute_equivalent_number_of_looks(roi_data: np.ndarray) -> float:
         Equivalent Number of Looks (ENL) for the given data region
 
     """
-    intensity_data = np.abs(roi_data) ** 2
+
     intensity_mean = np.nanmean(intensity_data)
     intensity_std = np.nanstd(intensity_data)
 
-    return (intensity_mean**2) / (intensity_std**2)
+    return float((intensity_mean**2) / (intensity_std**2))

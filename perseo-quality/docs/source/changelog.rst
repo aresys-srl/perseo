@@ -11,6 +11,10 @@ v1.0.2
 - Added ``sensor``, ``product`` and ``acquisition_mode`` info to Point Target Analysis output .csv
 - Removed ``pulse_latch_time`` and ``swst_changes`` from protocol definition
 
+**Incompatible Changes**
+
+- Changing ENL core function behavior ``compute_equivalent_number_of_looks``, moving intensity data conversion to the wrapping routine
+
 v1.0.1
 ------
 

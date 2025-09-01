@@ -742,7 +742,7 @@ class SignalProcessingTest(unittest.TestCase):
 
     def test_compute_equivalent_number_of_looks(self) -> None:
         """Testing compute_equivalent_number_of_looks function."""
-        enl = sp.compute_equivalent_number_of_looks(roi_data=raster)
+        enl = sp.compute_equivalent_number_of_looks(intensity_data=np.abs(raster) ** 2)
         np.testing.assert_allclose(enl, self.expected_enl, atol=1e-5, rtol=0)
 
     def test_radiometric_correction_case0(self) -> None:
