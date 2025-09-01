@@ -660,11 +660,13 @@ def point_target_analysis_core_computation(
         rcs_res = ptdt.RCSDataOutput()
         graph_rcs = ptdt.RCSGraphDataOutput()
 
-    # Convert pixel related quantities to original sammpling
+    # Convert pixel related quantities to original sampling
     graph_irf.rng_resolution = graph_irf.rng_resolution / config.irf_parameters.oversampling_factor
     graph_irf.az_resolution = graph_irf.az_resolution / config.irf_parameters.oversampling_factor
     graph_irf.rng_axis = graph_irf.rng_axis / config.irf_parameters.oversampling_factor
     graph_irf.az_axis = graph_irf.az_axis / config.irf_parameters.oversampling_factor
+    graph_irf.rng_step_distance = original_range_step_m
+    graph_irf.az_step_distance = original_azimuth_step_m
 
     return irf_res, rcs_res, graph_irf, graph_rcs
 
