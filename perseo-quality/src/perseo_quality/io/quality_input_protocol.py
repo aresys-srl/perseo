@@ -184,14 +184,6 @@ class ChannelData(Protocol):
     def radiometric_quantity(self) -> SARRadiometricQuantity:
         """Channel radiometric quantity"""
 
-    @property
-    def pulse_latch_time(self) -> float:
-        """Signal pulse latch time"""
-
-    @property
-    def swst_changes(self) -> list[tuple[PreciseDateTime, float]]:
-        """SWST changes list as tuple of time of change and new SWST value"""
-
     def get_mid_burst_times(self, burst: int) -> tuple[PreciseDateTime, float] | tuple[None, None]:
         """Compute mid azimuth and range times for a given burst.
 
