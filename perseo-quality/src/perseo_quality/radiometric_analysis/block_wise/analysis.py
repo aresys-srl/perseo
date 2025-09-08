@@ -10,6 +10,11 @@ import perseo_quality.radiometric_analysis.custom_dataclasses as rdt
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import RadiometricProfilesConfig
+from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import (
+    average_elevation_profile_kpi_estimator,
+    nesz_kpi_estimator,
+    scalloping_kpi_estimator,
+)
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import (
     average_elevation_profiles_extractor,
     nesz_profiles_extractor,
@@ -47,6 +52,7 @@ def nesz_profiles(
         product=product,
         direction=rdt.RadiometricAnalysisDirection.RANGE,
         profile_extractor_func=nesz_profiles_extractor,
+        kpi_estimator_func=nesz_kpi_estimator,
         output_quantity=output_quantity,
         config=config,
     )
@@ -82,6 +88,7 @@ def average_elevation_profiles(
         product=product,
         direction=rdt.RadiometricAnalysisDirection.RANGE,
         profile_extractor_func=average_elevation_profiles_extractor,
+        kpi_estimator_func=average_elevation_profile_kpi_estimator,
         output_quantity=output_quantity,
         config=config,
     )
@@ -117,6 +124,7 @@ def scalloping_profiles(
         direction=rdt.RadiometricAnalysisDirection.AZIMUTH,
         output_quantity=output_quantity,
         profile_extractor_func=scalloping_profiles_extractor,
+        kpi_estimator_func=scalloping_kpi_estimator,
         config=config,
     )
 

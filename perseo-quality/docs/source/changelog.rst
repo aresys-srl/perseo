@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.3
+------
+
+**Bug Fixing**
+
+- Radiometric profiles missing ``kpi_estimator`` argument
+
 v1.0.2
 ------
 
