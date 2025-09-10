@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.4
+------
+
+**Other Changes**
+
+- Removing ``pulse_rate`` property from quality protocol definition
+
 v1.0.3
 ------
 

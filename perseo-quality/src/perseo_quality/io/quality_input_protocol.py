@@ -129,10 +129,6 @@ class ChannelData(Protocol):
         """Channel data sampling constants"""
 
     @property
-    def pulse_rate(self) -> float:
-        """Signal pulse rate (bandwidth / pulse length)"""
-
-    @property
     def looking_side(self) -> SARSideLooking:
         """Sensor look direction for this channel"""
 
