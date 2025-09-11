@@ -11,11 +11,17 @@ workflow:
 variables:
   GIT_DEPTH: 1
 
-.tags_manylinux_2_28:
+.tags_manylinux_2_28_std:
   tags: ["manylinux_2_28"]
+
+.tags_manylinux_2_28:
+  tags: ["eotools_manylinux228"]
 
 .tags_win10:
   tags: ["eo", "win10", "arepytools-win"]
+
+.tags_win10_new:
+  tags: ["eotools_win10"]
 
 .tags_deploy:
   tags: ["eo", "deploy"]
@@ -29,7 +35,7 @@ default:
 check_code_compliance_ruff:
   stage: analysis
   extends:
-    - .tags_manylinux_2_28
+    - .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
     - python3.12 -m nox -s check_format
@@ -37,7 +43,7 @@ check_code_compliance_ruff:
 check_code_compliance_pylint:
   stage: analysis
   extends:
-    - .tags_manylinux_2_28
+    - .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
     - python3.12 -m nox -s pylint
@@ -46,7 +52,7 @@ check_code_compliance_pylint:
 # ============================================================================
 unittest_linux:
   stage: test
-  extends: .tags_manylinux_2_28
+  extends: .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
     - python3.12 -m nox -s unittest -p ${PYTHON}
@@ -82,12 +88,45 @@ unittest_win:
         coverage_format: cobertura
         path: ${SUBPROJECT}/_build/unittest-coverage-*.xml
 
+# === test - integration =====================================================
+# ============================================================================
+integration_test_linux:
+  stage: test
+  script:
+    - python${PYTHON} -m venv ./ci_test
+    - source ./ci_test/bin/activate
+    - python -m pip install .[graphs]
+    - pip install sct[cli,graphs]
+    - python -m pip install sct_aresys_reader sct_sentinel1_reader
+    - sct-testing -r ./tests/integration_tests/test_registry_linux.json -out ./test_output
+  parallel:
+    matrix:
+      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+  extends: .tags_manylinux_2_28
+  needs: []
+
+integration_test_windows:
+  stage: test
+  script:
+    - . "C:\Users\ContainerAdministrator\Documents\WindowsPowerShell\profile.ps1"
+    - conda create -y -n integration_test python=${PYTHON}
+    - conda activate integration_test
+    - python -m pip install -e .[graphs]
+    - pip install sct[cli,graphs]
+    - python -m pip install sct_aresys_reader sct_sentinel1_reader
+    - sct-testing -r ./tests/integration_tests/test_registry_windows.json -out ./test_output
+  parallel:
+    matrix:
+      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+  extends: .tags_win10_new
+  needs: []
+
 # === build ==================================================================
 # ============================================================================
 sdist:
   stage: build
   extends:
-    - .tags_manylinux_2_28
+    - .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
     - python3.12 -m nox -s build_sdist
@@ -100,7 +139,7 @@ sdist:
 wheel:
   stage: build
   extends:
-    - .tags_manylinux_2_28
+    - .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
     - python3.12 -m nox -s build_wheel
@@ -113,7 +152,7 @@ wheel:
 doc:
   stage: build
   extends:
-    - .tags_manylinux_2_28
+    - .tags_manylinux_2_28_std
   script:
     - yum install -y pandoc
     - python3.12 -m pip install nox
