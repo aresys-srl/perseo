@@ -242,7 +242,7 @@ class RadiometricProfilesToNetCDF(unittest.TestCase):
             tag = "test"
             data = RadiometricProfilesOutput(
                 general_info=RadiometricOutputProductGeneralInfo(
-                    product_name="test",
+                    product="test",
                     channel="1",
                     swath="S1",
                     acquisition_mode="SCANSAR",

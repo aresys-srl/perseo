@@ -136,7 +136,7 @@ class ScallopingRadiometricKPI(BaseRadiometricKPI):
 class RadiometricOutputProductGeneralInfo:
     """Block-wise Radiometric analysis product related generic info"""
 
-    product_name: str
+    product: str
     channel: str
     swath: str
     polarization: str

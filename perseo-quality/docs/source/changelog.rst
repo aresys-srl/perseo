@@ -7,6 +7,7 @@ v1.0.4
 **Other Changes**
 
 - Removing ``pulse_rate`` property from quality protocol definition
+- Radiometric output KPI `product_name` field changed to `product`
 
 v1.0.3
 ------

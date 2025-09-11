@@ -194,7 +194,7 @@ def radiometric_profiles(
         output_results.append(
             RadiometricProfilesOutput(
                 general_info=RadiometricOutputProductGeneralInfo(
-                    product_name=product.name,
+                    product=product.name,
                     channel=str(channel),
                     swath=channel_data.swath_name,
                     acquisition_mode=channel_data.acquisition_mode.name,
