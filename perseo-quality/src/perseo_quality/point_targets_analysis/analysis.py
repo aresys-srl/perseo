@@ -32,6 +32,12 @@ from perseo_quality.point_targets_analysis.core.pre_processing import (
 )
 from perseo_quality.point_targets_analysis.core.rcs import compute_additional_rcs_values, compute_point_target_rcs
 from perseo_quality.point_targets_analysis.custom_errors import PointTargetComputationError
+from perseo_quality.point_targets_analysis.output_reference import (
+    PROD_INFO_COLS,
+    PTA_OUTPUT_COLUMNS_DF_UM,
+    REMOVED_OUTPUT_COLS,
+    add_unit_of_measure_to_df_columns,
+)
 from perseo_quality.point_targets_analysis.support import SideLobesDirections, compute_side_lobes_directions
 
 if TYPE_CHECKING:
@@ -431,70 +437,21 @@ def _results_to_dataframe(results: list[ptdt.PointTargetAnalysisOutput]) -> pd.D
     rcs_df = pd.DataFrame([r.rcs for r in results])
     ch_trgt_df = pd.DataFrame(
         [(r.target, r.channel, r.product_name, r.sensor_name) for r in results],
-        columns=["target", "channel", "product", "sensor"],
+        columns=PROD_INFO_COLS,
     )
 
     # merging dataframe horizontally
     df_res = pd.concat([ch_trgt_df, info_df, additional_info_df, irf_df, rcs_df], axis=1)
-    df_res.drop(["peak_value_complex"], axis=1, inplace=True)
+    df_res.drop(REMOVED_OUTPUT_COLS, axis=1, inplace=True)
 
     # adding unit of measure to column names
-    new_col = _add_unit_of_measure(columns=df_res.columns)
+    new_col = add_unit_of_measure_to_df_columns(columns=list(df_res.columns))
+    assert new_col == PTA_OUTPUT_COLUMNS_DF_UM
     df_res.columns = new_col
     with contextlib.suppress(ValueError):
         df_res["target"] = pd.to_numeric(df_res["target"])
 
     return df_res
-
-
-def _add_unit_of_measure(columns: pd.Index) -> list:
-    """Attributing unit of measure to dataframe column names.
-
-    Parameters
-    ----------
-    columns : pd.Index
-        results dataframe column names
-
-    Returns
-    -------
-    list
-        new names with unit of measure added
-
-    """
-    ref_dict = {
-        "incidence_angle": "[deg]",
-        "look_angle": "[deg]",
-        "ground_velocity": "[ms]",
-        "doppler_frequency": "[Hz]",
-        "steering_doppler_frequency": "[Hz]",
-        "doppler_rate_real": "[Hzs]",
-        "doppler_rate_theoretical": "[Hzs]",
-        "peak_azimuth_time": "[UTC]",
-        "peak_range_time": "[s]",
-        "squint_angle": "[rad]",
-        "azimuth_resolution": "[m]",
-        "azimuth_pslr": "[dB]",
-        "azimuth_islr": "[dB]",
-        "azimuth_sslr": "[dB]",
-        "azimuth_localization_error": "[m]",
-        "range_resolution": "[m]",
-        "ground_range_resolution": "[m]",
-        "range_pslr": "[dB]",
-        "range_islr": "[dB]",
-        "range_sslr": "[dB]",
-        "pslr_2d": "[dB]",
-        "islr_2d": "[dB]",
-        "sslr_2d": "[dB]",
-        "ground_range_localization_error": "[m]",
-        "slant_range_localization_error": "[m]",
-        "rcs": "[dB]",
-        "rcs_error": "[dB]",
-        "peak_phase_error": "[deg]",
-        "clutter": "[dB]",
-        "scr": "[dB]",
-    }
-
-    return [(c + "_" + ref_dict[c] if c in ref_dict else c) for c in columns]
 
 
 def point_target_analysis_core_computation(

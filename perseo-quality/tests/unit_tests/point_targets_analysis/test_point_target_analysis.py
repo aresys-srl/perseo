@@ -21,6 +21,7 @@ from perseo_quality.point_targets_analysis.custom_dataclasses import (
     PointTargetAnalysisOutput,
     RCSDataOutput,
 )
+from perseo_quality.point_targets_analysis.output_reference import add_unit_of_measure_to_df_columns
 
 random_rng1 = np.random.default_rng(12345)
 raster = random_rng1.random((500, 650)) + random_rng1.random((500, 650)) * 1j
@@ -610,7 +611,7 @@ class AddUnitOfMeasureTest(unittest.TestCase):
 
     def test_add_unit_of_measure(self) -> None:
         """Testing _add_unit_of_measure function"""
-        cols = analysis._add_unit_of_measure(self.df.columns)
+        cols = add_unit_of_measure_to_df_columns(self.df.columns)
         self.assertListEqual(cols, self.expected_columns)
 
 
