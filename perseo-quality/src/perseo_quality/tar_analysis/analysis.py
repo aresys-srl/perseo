@@ -8,10 +8,10 @@ from __future__ import annotations
 import numpy as np
 from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
-from arepytools.io.io_support import NominalPointTarget
 
 from perseo_quality.core.common import check_targets_visibility
 from perseo_quality.core.generic_dataclasses import SARCoordinates
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.tar_analysis.config import AmbiguityRatioConfig
@@ -28,7 +28,7 @@ from perseo_quality.tar_analysis.support import (
 
 def point_target_ambiguity_ratio_analysis(
     product: QualityInputProduct,
-    point_targets: dict[str, NominalPointTarget],
+    point_targets: list[PointTarget],
     config: AmbiguityRatioConfig | None = None,
 ) -> list[AmbiguityRatioOutput]:
     """Function to compute the Point Target Ambiguity Ratio (PTAR) analysis on selected Point Target locations.
@@ -37,9 +37,8 @@ def point_target_ambiguity_ratio_analysis(
     ----------
     product : QualityInputProduct
         object satisfying the QualityInputProduct protocol
-    point_targets : dict[str, NominalPointTarget]
-        dictionary of point targets locations, with keys being the target id label and value a NominalPointTarget
-        dataclass instance with point target location data
+    point_targets : list[PointTarget]
+        list of point targets locations, as PointTarget objects
     config : AmbiguityRatioConfig | None, optional
         configuration parameters, by default None
 
@@ -79,6 +78,9 @@ def point_target_ambiguity_ratio_analysis(
         for trgt_idx, trgt in enumerate(targets_visible_by_channel):
             bursts_selection = visible_targets.query("channel == @channel & id == @trgt")
             bursts_selection = bursts_selection.loc[:, "burst"].to_list()[0]
+            current_point_target = [p for p in point_targets if p.name == trgt]
+            assert len(current_point_target) == 1
+            current_point_target = current_point_target[0]
             for burst in bursts_selection:
                 log.info(
                     f"Processing Target Point {trgt} ({trgt_idx + 1}/{len(targets_visible_by_channel)}), Burst #{burst}"
@@ -90,7 +92,7 @@ def point_target_ambiguity_ratio_analysis(
                     swath=swath,
                     polarization=channel_data.polarization,
                     burst=burst,
-                    target_nominal_coordinates=point_targets[trgt].xyz_coordinates,
+                    target_nominal_coordinates=current_point_target.xyz_coordinates,
                     roi_size_azimuth=config.cropping_size[1],
                     roi_size_range=config.cropping_size[0],
                 )
@@ -99,13 +101,13 @@ def point_target_ambiguity_ratio_analysis(
                 try:
                     trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic_core(
                         trajectory=channel_data.trajectory,
-                        ground_points=point_targets[trgt].xyz_coordinates,
+                        ground_points=current_point_target.xyz_coordinates,
                         initial_guesses=channel_data.mid_azimuth_time,
                         frequencies_doppler_centroid=0,
                         wavelength=1,
                     )
-                    if point_targets[trgt].delay is not None:
-                        trgt_rng_time += point_targets[trgt].delay
+                    if current_point_target.delay is not None:
+                        trgt_rng_time += current_point_target.delay
 
                     trgt_azmth_idx, trgt_rng_idx = channel_data.times_to_pixel_conversion(
                         azimuth_time=trgt_az_time, range_time=trgt_rng_time, burst=burst
@@ -154,7 +156,7 @@ def point_target_ambiguity_ratio_analysis(
                 try:
                     l_ambiguity_loc_px, r_ambiguity_loc_px, az_delta, rng_delta = compute_ambiguities_locations(
                         channel_data=channel_data,
-                        point_target_xyz_coords=point_targets[trgt].xyz_coordinates,
+                        point_target_xyz_coords=current_point_target.xyz_coordinates,
                         point_target_azimuth_time=az_rng_coords.azimuth,
                         point_target_range_time=az_rng_coords.range,
                         prf=channel_data.prf,

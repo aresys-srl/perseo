@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import numpy as np
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
-from arepytools.io.io_support import NominalPointTarget
 from scipy.fft import fft2, fftshift
 
 from perseo_quality.core.common import check_targets_visibility
 from perseo_quality.core.custom_errors import AzimuthExceedsBoundariesError, RangeExceedsBoundariesError
 from perseo_quality.core.generic_dataclasses import SARAcquisitionMode, SARCoordinates
 from perseo_quality.core.signal_processing import convert_to_db
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.spectral_analysis.custom_dataclasses import SpectraDataOutput
@@ -30,7 +30,7 @@ from perseo_quality.spectral_analysis.support import (
 
 def point_target_spectral_analysis(
     product: QualityInputProduct,
-    point_targets: dict[str, NominalPointTarget],
+    point_targets: list[PointTarget],
     cropping_size: tuple[int, int] = (128, 128),
 ) -> list[SpectraDataOutput]:
     """Function to compute Spectral Analysis for selected Point Targets.
@@ -39,9 +39,8 @@ def point_target_spectral_analysis(
     ----------
     product : QualityInputProduct
         object satisfying the QualityInputProduct protocol
-    point_targets : dict[str, NominalPointTarget]
-        dictionary of point targets locations, with keys being the target id label and value a NominalPointTarget
-        dataclass instance with point target location data
+    point_targets : list[PointTarget]
+        list of point targets locations, as PointTarget objects
     cropping_size : tuple[int, int], optional
         roi cropping size, (number of samples, number of lines), by default (128, 128)
 
@@ -78,6 +77,9 @@ def point_target_spectral_analysis(
         for trgt_idx, trgt in enumerate(targets_visible_by_channel):
             bursts_selection = visible_targets.query("channel == @channel & id == @trgt")
             bursts_selection = bursts_selection.loc[:, "burst"].to_list()[0]
+            current_point_target = [p for p in point_targets if p.name == trgt]
+            assert len(current_point_target) == 1
+            current_point_target = current_point_target[0]
             for burst in bursts_selection:
                 log.info(
                     f"Processing Target Point {trgt} ({trgt_idx + 1}/{len(targets_visible_by_channel)}), Burst #{burst}"
@@ -96,13 +98,13 @@ def point_target_spectral_analysis(
                 try:
                     trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic_core(
                         trajectory=channel_data.trajectory,
-                        ground_points=point_targets[trgt].xyz_coordinates,
+                        ground_points=current_point_target.xyz_coordinates,
                         initial_guesses=channel_data.mid_azimuth_time,
                         frequencies_doppler_centroid=0,
                         wavelength=1,
                     )
-                    if point_targets[trgt].delay is not None:
-                        trgt_rng_time += point_targets[trgt].delay
+                    if current_point_target.delay is not None:
+                        trgt_rng_time += current_point_target.delay
 
                     trgt_azmth_idx, trgt_rng_idx = channel_data.times_to_pixel_conversion(
                         azimuth_time=trgt_az_time, range_time=trgt_rng_time, burst=burst

@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 import numpy as np
-from arepytools.io.io_support import NominalPointTarget
 from arepytools.timing.precisedatetime import PreciseDateTime
 from scipy.fft import fft2, ifft2
 
 from perseo_quality.core.generic_dataclasses import SARPolarization
 from perseo_quality.core.signal_processing import locate_max_2d_interp
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.point_targets_analysis.custom_dataclasses import IRFDataOutput
 
 ref_data_irf_results = IRFDataOutput(
@@ -224,8 +224,9 @@ class MockProduct:
 
 REF_TIME = PreciseDateTime.from_utc_string("15-JAN-2019 16:37:12.051461300098")
 REF_GROUND_POINT = np.array([-4989394.044, 2746844.389, -2862070.09])
-REF_POINTS = {
-    "0": NominalPointTarget(
+REF_POINTS = [
+    PointTarget(
+        name="0",
         xyz_coordinates=np.array([4921229.04081908, -4051559.15884936, 216078.76707954]),
         rcs_hh=(100000 + 0j),
         rcs_vv=0j,
@@ -233,7 +234,8 @@ REF_POINTS = {
         rcs_hv=0j,
         delay=None,
     ),
-    "1": NominalPointTarget(
+    PointTarget(
+        name="1",
         xyz_coordinates=np.array([4832296.19624738, -4155847.75546086, 241004.24360898]),
         rcs_hh=(100000 + 0j),
         rcs_vv=0j,
@@ -241,7 +243,8 @@ REF_POINTS = {
         rcs_hv=0j,
         delay=None,
     ),
-    "2": NominalPointTarget(
+    PointTarget(
+        name="2",
         xyz_coordinates=np.array([4891219.45186627, -4087200.87719583, 225939.83847657]),
         rcs_hh=(100000 + 0j),
         rcs_vv=0j,
@@ -249,4 +252,4 @@ REF_POINTS = {
         rcs_hv=0j,
         delay=None,
     ),
-}
+]

@@ -29,7 +29,7 @@ class CheckTargetsVisibilityTest(unittest.TestCase):
 
     def test_check_targets_visibility(self):
         """Testing check_targets_visibility"""
-        targets_visibility = check_targets_visibility(product=MockProduct(), points=REF_POINTS)
+        targets_visibility = check_targets_visibility(product=MockProduct(), point_targets=REF_POINTS)
         targets_visibility["id"] = targets_visibility["id"].astype("int64")
         pd.testing.assert_frame_equal(targets_visibility, self.reference_df)
 

@@ -10,7 +10,7 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 from arepytools.geometry.curve import Generic3DCurve
 from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
-from arepytools.io.metadata import PreciseDateTime
+from arepytools.timing.precisedatetime import PreciseDateTime
 from numpy.typing import ArrayLike
 
 from perseo_quality.core.generic_dataclasses import (

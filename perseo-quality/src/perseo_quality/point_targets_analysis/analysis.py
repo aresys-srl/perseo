@@ -18,6 +18,7 @@ import perseo_quality.core.generic_dataclasses as gdt
 import perseo_quality.core.signal_processing as sp
 import perseo_quality.point_targets_analysis.custom_dataclasses as ptdt
 from perseo_quality.core.common import check_targets_visibility
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.point_targets_analysis.config import PointTargetAnalysisConfig, RCSParameters
 from perseo_quality.point_targets_analysis.core.irf import compute_point_target_irf_analysis
@@ -41,14 +42,12 @@ from perseo_quality.point_targets_analysis.output_reference import (
 from perseo_quality.point_targets_analysis.support import SideLobesDirections, compute_side_lobes_directions
 
 if TYPE_CHECKING:
-    from arepytools.io.io_support import NominalPointTarget
-
     from perseo_quality.io.quality_input_protocol import ChannelData, QualityInputProduct
 
 
 def point_target_analysis(
     product: QualityInputProduct,
-    point_targets: dict[str, NominalPointTarget],
+    point_targets: list[PointTarget],
     config: PointTargetAnalysisConfig | None = None,
 ) -> tuple[pd.DataFrame, list[ptdt.PointTargetGraphicalData]]:
     """Compute the full point target analysis: IRF, RCS and localization errors.
@@ -57,9 +56,8 @@ def point_target_analysis(
     ----------
     product : QualityInputProduct
         object satisfying the QualityInputProduct protocol
-    point_targets : dict[str, NominalPointTarget]
-        dictionary of point targets locations, with keys being the target id label and value a NominalPointTarget
-        dataclass instance with point target location data
+    point_targets : list[PointTarget]
+        list of point target locations as PointTarget objects
     config : PointTargetAnalysisConfig, optional
         config file PointTargetAnalysisConfig dataclass to enable and manage different features, if provided,
         by default None
@@ -111,6 +109,8 @@ def point_target_analysis(
         for target_count, target_id in enumerate(targets_visible_by_channel):
             bursts_selection = visible_targets.query("channel == @channel_id & id == @target_id")
             bursts_selection = bursts_selection.loc[:, "burst"].to_list()[0]
+            current_point_target = [p for p in point_targets if p.name == target_id]
+            assert len(current_point_target) == 1
 
             for burst in bursts_selection:
                 log.info(
@@ -119,7 +119,7 @@ def point_target_analysis(
                 output, graph = point_target_analysis_single(
                     channel_data=channel_data,
                     burst=burst,
-                    point_target=point_targets[target_id],
+                    point_target=current_point_target[0],
                     config=config,
                 )
 
@@ -144,7 +144,7 @@ def point_target_analysis(
 def point_target_analysis_single(
     channel_data: ChannelData,
     burst: int,
-    point_target: NominalPointTarget,
+    point_target: PointTarget,
     config: PointTargetAnalysisConfig,
 ) -> tuple[ptdt.PointTargetAnalysisOutput, ptdt.PointTargetGraphicalData]:
     """Analysis of a single point target.
@@ -155,7 +155,7 @@ def point_target_analysis_single(
         current channel data
     burst : int
         current burst id
-    point_target : NominalPointTarget
+    point_target : PointTarget
         current point target to be analyzed
     config : PointTargetAnalysisConfig
         point target analysis configuration
@@ -330,12 +330,12 @@ def point_target_analysis_single(
     return output, graph
 
 
-def compute_sar_coordinates(target: NominalPointTarget, channel_data: ChannelData, burst: int) -> gdt.SARCoordinates:
+def compute_sar_coordinates(target: PointTarget, channel_data: ChannelData, burst: int) -> gdt.SARCoordinates:
     """Extract azimuth and range coordinates.
 
     Parameters
     ----------
-    target : NominalPointTarget
+    target : PointTarget
         current point target nominal data
     channel_data : ChannelData
         current channel data
@@ -466,7 +466,7 @@ def point_target_analysis_core_computation(
     carrier_frequency: float,
     original_range_step_m: float,
     original_azimuth_step_m: float,
-    target_info: NominalPointTarget,
+    target_info: PointTarget,
     config: PointTargetAnalysisConfig,
 ) -> tuple[ptdt.IRFDataOutput, ptdt.RCSDataOutput, ptdt.IRFGraphDataOutput, ptdt.RCSGraphDataOutput]:
     """Perform the core computation of the point target analysis.
@@ -495,7 +495,7 @@ def point_target_analysis_core_computation(
         original range step in meters
     original_azimuth_step_m : float
         original azimuth step in meters
-    target_info : NominalPointTarget
+    target_info : PointTarget
         current target to be analyzed
     config : PointTargetAnalysisConfig
         point target analysis configuration
@@ -697,7 +697,7 @@ def rcs_analysis(
     target_pos_real: np.ndarray,
     rcs_parameters: RCSParameters,
     polarization: gdt.SARPolarization,
-    target_info: NominalPointTarget,
+    target_info: PointTarget,
     sensor_position_at_target: np.ndarray,
     carrier_frequency: float,
     range_resolution_px: float,
@@ -716,7 +716,7 @@ def rcs_analysis(
         rcs parameters
     polarization : gdt.SARPolarization
         SAR product polarization
-    target_info : NominalPointTarget
+    target_info : PointTarget
         current target to be analyzed
     sensor_position_at_target : np.ndarray
         sensor position in orbit at target location

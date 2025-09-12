@@ -8,11 +8,11 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from arepytools.io.io_support import NominalPointTarget
 from scipy.constants import speed_of_light as LIGHT_SPEED
 
 import perseo_quality.core.signal_processing as sp
 from perseo_quality.core.generic_dataclasses import SARPolarization, TargetDataType
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.point_targets_analysis.core.pre_processing import (
     detect_data_type,
@@ -139,7 +139,7 @@ def compute_additional_rcs_values(
     step_distances: list,
     interp_factor: int,
     polarization: SARPolarization,
-    target_info: NominalPointTarget,
+    target_info: PointTarget,
     sensor_position: np.ndarray,
     fc_hz: float,
 ) -> tuple[float, float, float, float]:
@@ -155,8 +155,8 @@ def compute_additional_rcs_values(
         rcs interpolation factor
     polarization : EPolarization
         polarization value [V/V, H/H, H/V, V/H]
-    target_info : NominalPointTarget
-        target info as NominalPointTarget
+    target_info : PointTarget
+        target info as PointTarget
     sat_position : np.ndarray
         satellite position at given azimuth time
     fc_hz : float

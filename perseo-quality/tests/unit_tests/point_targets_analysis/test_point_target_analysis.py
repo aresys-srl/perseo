@@ -9,13 +9,13 @@ import unittest
 
 import numpy as np
 import pandas as pd
-from arepytools.io.io_support import NominalPointTarget
 
 from perseo_quality.core.generic_dataclasses import (
     SARCoordinates,
     SARPolarization,
     SARSamplingFrequencies,
 )
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.point_targets_analysis import analysis
 from perseo_quality.point_targets_analysis.custom_dataclasses import (
     PointTargetAnalysisOutput,
@@ -649,9 +649,7 @@ class ComputeAdditionalRCSValuesTest(unittest.TestCase):
         self.interp = 7
         self.pol = SARPolarization.VH
         self.sat_pos = np.array([7580000, 1520000, 1250253])
-        self.nominal_target = NominalPointTarget(
-            xyz_coordinates=np.array([7557000, 1480000, 1130783]), rcs_vh=2000 + 0j
-        )
+        self.nominal_target = PointTarget(xyz_coordinates=np.array([7557000, 1480000, 1130783]), rcs_vh=2000 + 0j)
         self.carrier_freq = 900000000
         self.tolerance = 1e-9
         # expected results

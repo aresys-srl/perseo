@@ -5,21 +5,21 @@
 
 import numpy as np
 import pandas as pd
-from arepytools.io.io_support import NominalPointTarget
 
 from perseo_quality.core.generic_dataclasses import PointTargetVisibility
+from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 
 
-def check_targets_visibility(product: QualityInputProduct, points: dict[str, NominalPointTarget]) -> pd.DataFrame:
+def check_targets_visibility(product: QualityInputProduct, point_targets: list[PointTarget]) -> pd.DataFrame:
     """Checking if a set of targets is seen by the sensor in the recorded swath.
 
     Parameters
     ----------
     product : ProductManager
         product folder ProductManager instance
-    points : dict[NominalPointTarget]
-        dict of NominalPointTarget target dataclass
+    point_targets : list[PointTarget]
+        list of PointTarget objects
 
     Returns
     -------
@@ -27,8 +27,8 @@ def check_targets_visibility(product: QualityInputProduct, points: dict[str, Nom
         pandas dataframe collecting all visible points
     """
 
-    coordinates = np.vstack([coord.xyz_coordinates for coord in points.values()])
-    target_ids = list(points.keys())
+    coordinates = np.vstack([c.xyz_coordinates for c in point_targets])
+    target_ids = [c.name for c in point_targets]
 
     valid_points = []
     # iterating over channels
