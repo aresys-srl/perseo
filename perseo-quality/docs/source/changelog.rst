@@ -8,6 +8,8 @@ v1.0.4
 
 - Removing ``pulse_rate`` property from quality protocol definition
 - Radiometric output KPI `product_name` field changed to `product`
+- Adding the complete list of dataframe columns for Point Target Analysis output as ``PTA_OUTPUT_COLUMNS_DF_UM``
+- Adding the complete list of dataframe columns for Block-Wise Radiometric Analysis KPIs outputs
 
 v1.0.3
 ------

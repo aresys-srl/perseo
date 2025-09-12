@@ -311,7 +311,7 @@ def radiometric_statistical_analysis_to_df(data: list[RadiometricProfilesOutput]
     """
     item_df = []
     for item in data:
-        block_info = [asdict(blk) for blk in item.kpi]
-        general_info = [asdict(item.general_info)] * len(block_info)
-        item_df.append(pd.concat([pd.DataFrame(general_info), pd.DataFrame(block_info)], axis=1))
+        kpi_info = [asdict(blk) for blk in item.kpi]
+        general_info = [asdict(item.general_info)] * len(kpi_info)
+        item_df.append(pd.concat([pd.DataFrame(general_info), pd.DataFrame(kpi_info)], axis=1))
     return pd.concat(item_df).reset_index(drop=True)
