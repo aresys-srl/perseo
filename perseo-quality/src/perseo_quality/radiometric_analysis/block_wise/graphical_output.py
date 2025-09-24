@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from enum import Enum
 from pathlib import Path
 
@@ -87,15 +88,17 @@ def radiometric_2D_hist_plot(
         ],
     )
     ax.invert_yaxis()
-    if plot_mode == PlotModes.MEAN:
-        mean_profile = np.nanmean(data.profiles, 0)
-    elif plot_mode == PlotModes.MIN:
-        np.ma.set_fill_value(data.profiles, np.nan)
-        mean_profile = np.nanmin(data.profiles.data, 0)
-    if data.look_angles is not None:
-        mean_profile_axis = np.nanmean(data.look_angles, 0)
-    else:
-        mean_profile_axis = np.nanmean(data.block_azimuth_times, 0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        if plot_mode == PlotModes.MEAN:
+            mean_profile = np.nanmean(data.profiles, 0)
+        elif plot_mode == PlotModes.MIN:
+            np.ma.set_fill_value(data.profiles, np.nan)
+            mean_profile = np.nanmin(data.profiles.data, 0)
+        if data.look_angles is not None:
+            mean_profile_axis = np.nanmean(data.look_angles, 0)
+        else:
+            mean_profile_axis = np.nanmean(data.block_azimuth_times, 0)
     smoothed_profile = savgol_filter(mean_profile, polyorder=3, window_length=mean_profile.size // 10)
 
     # forcing equal aspect ratio

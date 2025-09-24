@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.5
+------
+
+**Other Changes**
+
+- Radiometric Analysis Block-Wise: silenced a All NaN slice encountered warning in graphical_output.py
+
 v1.0.4
 ------
 
