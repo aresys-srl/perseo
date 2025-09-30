@@ -161,6 +161,10 @@ def radiometric_profiles(
                     exp_power=1,  # NOTE: power data is processed with 1 as exponent
                 )
 
+            # replacing all zeroes with NaNs
+            log.debug("Replacing all zeroes with NaNs.")
+            target_area = np.where(target_area == 0, np.nan, target_area)
+
             # applying provided profile extraction function
             log.debug("Extracting profiles.")
             profile_axes = RadiometricProfileAxes(

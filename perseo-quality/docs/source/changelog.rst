@@ -8,6 +8,7 @@ v1.0.5
 
 - Radiometric Analysis Block-Wise: silenced a All NaN slice encountered warning in graphical_output.py
 - Improved Radiometric Analysis NESZ performance using numba
+- Radiometry: zeroes in raster data are now treated as NaNs
 
 v1.0.4
 ------
