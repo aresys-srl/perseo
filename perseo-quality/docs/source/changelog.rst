@@ -7,6 +7,7 @@ v1.0.5
 **Other Changes**
 
 - Radiometric Analysis Block-Wise: silenced a All NaN slice encountered warning in graphical_output.py
+- Improved Radiometric Analysis NESZ performance using numba
 
 v1.0.4
 ------

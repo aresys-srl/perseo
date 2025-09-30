@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import numpy as np
+from numba import jit, prange
 from scipy.signal import convolve2d, medfilt2d
 
 from perseo_quality.core.signal_processing import convert_to_db
@@ -17,6 +18,43 @@ from perseo_quality.radiometric_analysis.block_wise.support import masking_outli
 
 # custom profile extractor callable type to be matched
 RadiometricProfileExtractorType = Callable[[np.ndarray, ProfileExtractionParameters], np.ndarray]
+
+
+@jit(nopython=True, parallel=True, cache=True)
+def _compute_num_bins(data: np.ndarray) -> np.ndarray:
+    # Freedman Diaconis Estimator
+    rows = data.shape[0]
+    result = np.empty(rows)
+
+    for i in prange(rows):
+        row_data = data[i]
+        valid_data = row_data[~np.isnan(row_data)]
+        if len(valid_data) == 0:
+            result[i] = np.nan
+            continue
+
+        q75 = np.percentile(valid_data, 75)
+        q25 = np.percentile(valid_data, 25)
+        iqr = q75 - q25
+        fd_bins_width = 2.0 * iqr * len(valid_data) ** (-1.0 / 3.0)
+        bin_range = np.max(valid_data) - np.min(valid_data)
+        result[i] = np.ceil(bin_range / fd_bins_width)
+
+    return result
+
+
+@jit(nopython=True, cache=True)
+def _compute_histogram_peak(data: np.ndarray, num_bins: int) -> float:
+    if num_bins <= 0 or not np.isfinite(num_bins):
+        return np.nan
+
+    valid_data = data[np.isfinite(data)]
+    if len(valid_data) == 0:
+        return np.nan
+
+    hist, bin_edges = np.histogram(valid_data, bins=int(num_bins))
+    max_idx = np.argmax(hist)
+    return (bin_edges[max_idx] + bin_edges[max_idx + 1]) / 2
 
 
 def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
@@ -34,7 +72,6 @@ def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameter
     np.ndarray
         nesz profile
     """
-
     # azimuth profile as a sum over range
     current_block_az_profile = np.nansum(data, axis=0)
 
@@ -48,22 +85,19 @@ def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameter
 
     # performing multi-looking 2D convolution (moving average 2D)
     zero_rows_indexes = np.where(np.count_nonzero(data, axis=1) / data.shape[1] < 0.8)[0]
-    data = convolve2d(
-        data,
-        kernel,
-        mode="same",
-    )
+    data = convolve2d(data, kernel, mode="same")
 
-    # hist_bins = int(np.mean([uu.size for uu in u]))
-    row_histograms = [np.histogram(row[np.isfinite(row)], bins="fd") for row in data]
-    peaks = np.array([(h[1][np.argmax(h[0])] + h[1][np.argmax(h[0]) + 1]) / 2 for h in row_histograms])
+    bin_edges = _compute_num_bins(data)
+    peaks = np.array([_compute_histogram_peak(row, bins) for row, bins in zip(data, bin_edges, strict=True)])
     peaks[zero_rows_indexes] = np.nan
+
     averaging_window_length = np.max([5, int(0.01 * peaks.size)])
     # window length must be odd
     averaging_window_length = (
         averaging_window_length if averaging_window_length % 2 != 0 else averaging_window_length + 1
     )
     peaks = np.convolve(peaks, np.ones(averaging_window_length) / averaging_window_length, mode="same")
+
     masking_invalid_convoluted_data = (averaging_window_length - 1) // 2
     # removing convolution artifacts at profile borders
     peaks[:masking_invalid_convoluted_data] = np.nan

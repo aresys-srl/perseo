@@ -34,11 +34,11 @@ def average_elevation_profile_kpi_estimator(
     Parameters
     ----------
     profile : np.ndarray
-        average elevation profile for the current block
+        average elevation profile for the current block, numpy masked invalid array
     axes : RadiometricProfileAxes
         axes of the current average elevation profile
     data_block : np.ndarray
-        data block
+        data block, numpy masked invalid array
 
     Returns
     -------
@@ -51,8 +51,8 @@ def average_elevation_profile_kpi_estimator(
         mid_incidence_angle_deg=float(axes.incidence_angles_deg[axes.incidence_angles_deg.size // 2]),
         mid_look_angle_deg=float(axes.look_angles_deg[axes.look_angles_deg.size // 2]),
         enl_block=enl_block,
-        mean_level_db=float(np.nanmean(profile)),
-        std_level_db=float(np.nanstd(profile)),
+        mean_level_db=float(profile.mean()),
+        std_level_db=float(profile.std()),
         slope_wrt_look_angle_db_deg=slope,
         variability_index_db=variability_index,
     )
@@ -64,19 +64,19 @@ def nesz_kpi_estimator(profile: np.ndarray, axes: RadiometricProfileAxes, data_b
     Parameters
     ----------
     profile : np.ndarray
-        nesz profile for the current block
+        nesz profile for the current block, numpy masked invalid array
     axes : RadiometricProfileAxes
         axes of the current nesz profile
     data_block : np.ndarray
-        data block
+        data block, numpy masked invalid array
 
     Returns
     -------
     NESZRadiometricKPI
         KPI for NESZ analysis
     """
-    min_nesz_idx = np.nanargmin(profile)
-    max_nesz_idx = np.nanargmax(profile)
+    min_nesz_idx = profile.argmin()
+    max_nesz_idx = profile.argmax()
     return NESZRadiometricKPI(
         min_nesz_profile_db=float(profile[min_nesz_idx]),
         min_nesz_incidence_angle_deg=float(axes.incidence_angles_deg[min_nesz_idx]),
@@ -86,13 +86,13 @@ def nesz_kpi_estimator(profile: np.ndarray, axes: RadiometricProfileAxes, data_b
         max_nesz_incidence_angle_deg=float(axes.incidence_angles_deg[max_nesz_idx]),
         max_nesz_range_position=float(axes.slant_range[max_nesz_idx]),
         max_nesz_look_angle_deg=float(axes.look_angles_deg[max_nesz_idx]),
-        mean_nesz_profile_dB=float(np.nanmean(profile)),
-        std_nesz_profile_dB=float(np.nanstd(profile)),
+        mean_nesz_profile_dB=float(profile.mean()),
+        std_nesz_profile_dB=float(profile.std()),
         mode_nesz_profile_dB=float(mode(profile).mode),
         skewness_profile=float(skew(profile)),
         kurtosis_profile=float(kurtosis(profile)),
-        mean_block_dB=float(convert_to_db(np.nanmean(data_block))),
-        std_block_dB=float(convert_to_db(np.nanstd(data_block))),
+        mean_block_dB=float(convert_to_db(data_block.mean())),
+        std_block_dB=float(convert_to_db(data_block.std())),
         mode_block_dB=float(convert_to_db(mode(data_block, axis=None).mode)),
         skewness_block=float(skew(data_block, axis=None)),
         kurtosis_block=float(kurtosis(data_block, axis=None)),
@@ -107,11 +107,11 @@ def scalloping_kpi_estimator(
     Parameters
     ----------
     profile : np.ndarray
-        scalloping profile for the current block
+        scalloping profile for the current block, numpy masked invalid array
     axes : RadiometricProfileAxes
         axes of the current scalloping profile
     data_block : np.ndarray
-        data block
+        data block, numpy masked invalid array
 
     Returns
     -------
@@ -119,8 +119,8 @@ def scalloping_kpi_estimator(
         KPI for Scalloping analysis
     """
     return ScallopingRadiometricKPI(
-        mean_level_db=float(np.nanmean(profile)),
-        max_level_db=float(np.nanmax(profile)),
-        min_level_db=float(np.nanmin(profile)),
-        std_level_db=float(np.nanstd(profile)),
+        mean_level_db=float(profile.mean()),
+        max_level_db=float(profile.max()),
+        min_level_db=float(profile.min()),
+        std_level_db=float(profile.std()),
     )

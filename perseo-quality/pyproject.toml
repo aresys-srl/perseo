@@ -11,7 +11,8 @@ dependencies = [
     "scipy > 1.13",
     "netCDF4",
     "arepytools >= 1.7.6",
-    "pydantic"
+    "pydantic",
+    "numba"
 ]
 dynamic = ["version"]
 classifiers = [

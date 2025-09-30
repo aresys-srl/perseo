@@ -170,7 +170,9 @@ def radiometric_profiles(
                 slant_range=channel_data.slant_range_axis[config.range_pixel_margin : -config.range_pixel_margin],
             )
             profile = profile_extractor_func(target_area, config.profile_extraction_parameters)
-            block_kpi = kpi_estimator_func(profile, profile_axes, target_area)
+            block_kpi = kpi_estimator_func(
+                np.ma.masked_invalid(profile), profile_axes, np.ma.masked_invalid(target_area)
+            )
             block_kpi.block_num = bc_num
             block_kpi.first_az_line_block = int(center[0] - np.floor(cropping_size[1] / 2))
             block_kpi.lines_block = target_area.shape[1]

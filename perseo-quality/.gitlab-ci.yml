@@ -71,9 +71,12 @@ unittest_linux:
 
 unittest_win:
   stage: test
-  extends: .tags_win10
+  extends: .tags_win10_new
   script:
-    - python -m pip install nox
+    - . "C:\Users\ContainerAdministrator\Documents\WindowsPowerShell\profile.ps1"
+    - conda create -y -n test python=${PYTHON}
+    - conda activate test
+    - pip install nox
     - python -m nox -s unittest -p ${PYTHON}
   parallel:
     matrix:

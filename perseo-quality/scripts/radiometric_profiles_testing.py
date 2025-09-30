@@ -6,6 +6,7 @@
 import logging
 import sys
 from pathlib import Path
+import time
 
 from sct_aresys_reader.protocol_implementation import ProductFolderManagerExtended
 
@@ -13,6 +14,7 @@ from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.logger import quality_logger
 from perseo_quality.radiometric_analysis.block_wise.analysis import (
     average_elevation_profiles,
+    nesz_profiles,
     scalloping_profiles,
 )
 from perseo_quality.radiometric_analysis.block_wise.graphical_output import (
@@ -27,31 +29,34 @@ if __name__ == "__main__":
     # setup custom logger
     quality_logger.addHandler(logging.StreamHandler(sys.stdout))
 
-    out_fldr = Path(r"C:\Users\giorgio.parma\Aresys_DATA\quality_data\radiometry\reports")
+    out_fldr = Path(r"C:\Users\giorgio.parma\Desktop\temporary_outputs\output_ref")
 
-    prod = r"C:\Users\giorgio.parma\Aresys_DATA\quality_data\real_ICEYE_slc\SLH_45599_SLC"
+    prod = r"C:\Users\giorgio.parma\Aresys_DATA\quality_data\radiometry\NovaSAR_NESZ"
     prod = ProductFolderManagerExtended(prod)
 
+    start = time.perf_counter()
     # performing NESZ analysis
-    # res = nesz_profiles(product=prod)
-    # tag = "nesz"
-    # plot_mode = "min"
+    res = nesz_profiles(product=prod)
+    tag = "nesz"
+    plot_mode = "min"
 
     # stats_df = radiometric_statistical_analysis_to_df(res)
 
     # performing NESZ analysis
-    res = scalloping_profiles(product=prod)
-    tag = "scalloping"
-    plot_mode = "mean"
+    # res = scalloping_profiles(product=prod)
+    # tag = "scalloping"
+    # plot_mode = "mean"
 
-    stats_df = radiometric_statistical_analysis_to_df(res)
+    # stats_df = radiometric_statistical_analysis_to_df(res)
 
     # performing Rain Forest analysis
-    res = average_elevation_profiles(product=prod, output_quantity=SARRadiometricQuantity.GAMMA_NOUGHT)
-    tag = "rain_forest"
-    plot_mode = "mean"
+    # res = average_elevation_profiles(product=prod, output_quantity=SARRadiometricQuantity.GAMMA_NOUGHT)
+    # tag = "rain_forest"
+    # plot_mode = "mean"
 
+    quality_logger.info(f"Elapsed time: {time.perf_counter() - start} seconds")
     stats_df = radiometric_statistical_analysis_to_df(res)
+    stats_df.to_csv(out_fldr / f"{tag}_kpi_stats.csv")
 
     # graphs and netcdf saving
     for item in res:
