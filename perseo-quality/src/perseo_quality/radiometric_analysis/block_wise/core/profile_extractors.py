@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Callable
 
 import numpy as np
@@ -134,7 +135,9 @@ def average_elevation_profiles_extractor(data: np.ndarray, params: ProfileExtrac
             percentile_boundaries=params.outliers_percentile_boundaries,
         )
 
-    profile_db = convert_to_db(np.nanmean(data, 1))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        profile_db = convert_to_db(np.nanmean(data, 1))
     return np.ma.masked_invalid(profile_db)
 
 
