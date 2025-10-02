@@ -285,7 +285,7 @@ def compute_profile_variability_index(profile: np.ndarray, look_angles_deg: np.n
         radiometric variability index in [dB]
     """
     # linear fit
-    linear_fit_params = Polynomial.fit(look_angles_deg, profile, deg=1).convert()
+    linear_fit_params = Polynomial.fit(look_angles_deg[~profile.mask], profile.compressed(), deg=1).convert()
 
     # homogeneity index
     regression_line = linear_fit_params.coef[0] + linear_fit_params.coef[1] * look_angles_deg
