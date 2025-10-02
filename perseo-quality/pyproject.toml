@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = { file = "LICENSE.txt" }
 dependencies = [
-    "numpy > 2",
+    "numpy",
     "pandas >= 1.4.0",
     "scipy > 1.13",
     "netCDF4",
