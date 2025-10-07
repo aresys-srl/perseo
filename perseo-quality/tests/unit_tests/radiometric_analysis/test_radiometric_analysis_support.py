@@ -14,6 +14,7 @@ from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 
 import perseo_quality.radiometric_analysis.block_wise.support as support
+from perseo_quality.core.common import blocks_partitioning
 from perseo_quality.radiometric_analysis.block_wise.config import (
     Radiometric2DHistogramParameters,
 )
@@ -167,7 +168,7 @@ class BlocksDefinitionTest(unittest.TestCase):
 
     def test_blocks_definition_0(self):
         """Testing blocks_definition function"""
-        blocks_data = support.blocks_definition(
+        blocks_data = blocks_partitioning(
             azimuth_axis=self._az_axis,
             default_block_size=self._default_block_size,
             lines_per_burst=self._lines_per_burst,
@@ -177,7 +178,7 @@ class BlocksDefinitionTest(unittest.TestCase):
 
     def test_blocks_definition_1(self):
         """Testing blocks_definition function"""
-        blocks_data = support.blocks_definition(
+        blocks_data = blocks_partitioning(
             azimuth_axis=self._az_axis,
             default_block_size=self._default_block_size,
             lines_per_burst=np.array([self._lines_per_burst[0]]),

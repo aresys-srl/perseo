@@ -10,6 +10,7 @@ import unittest
 import numpy as np
 
 import perseo_quality.radiometric_analysis.block_wise.support as support
+from perseo_quality.core.common import blocks_partitioning
 from perseo_quality.radiometric_analysis.block_wise.config import (
     Radiometric2DHistogramParameters,
 )
@@ -417,7 +418,7 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
         rng_axis = np.zeros(1200)
         block_size = 200
         lines_per_burst = np.array([600])
-        blk_sz, blk_num, blk_centers = support.blocks_definition(
+        blk_sz, blk_num, blk_centers = blocks_partitioning(
             azimuth_axis=az_axis, range_axis=rng_axis, default_block_size=block_size, lines_per_burst=lines_per_burst
         )
         self.assertEqual(block_size, blk_sz)
@@ -432,7 +433,7 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
         rng_axis = np.zeros(1200)
         block_size = 200
         lines_per_burst = np.array([300, 300])
-        blk_sz, blk_num, blk_centers = support.blocks_definition(
+        blk_sz, blk_num, blk_centers = blocks_partitioning(
             azimuth_axis=az_axis, range_axis=rng_axis, default_block_size=block_size, lines_per_burst=lines_per_burst
         )
         self.assertFalse(block_size == blk_sz)

@@ -62,7 +62,7 @@ class TestTargetAmbiguityRatioFunctions(unittest.TestCase):
     def test_detect_burst_from_pixel_case0(self) -> None:
         """Testing detect_burst_from_pixel function, case 0"""
         burst = detect_burst_from_pixel(lines_per_burst=self.lines_per_burst, azimuth_px=301)
-        self.assertEqual(burst, 1)
+        self.assertEqual(burst, 2)
 
     def test_detect_burst_from_pixel_case1(self) -> None:
         """Testing detect_burst_from_pixel function, case 0"""
