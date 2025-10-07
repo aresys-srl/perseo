@@ -8,6 +8,7 @@ import unittest
 import numpy as np
 from arepytools.timing.precisedatetime import PreciseDateTime
 
+from perseo_quality.core.common import detect_burst_from_pixel
 from perseo_quality.tar_analysis import support
 
 TIMESTAMP = PreciseDateTime.from_utc_string("15-JAN-2019 17:14:00.177514769177")
@@ -60,12 +61,12 @@ class TestTargetAmbiguityRatioFunctions(unittest.TestCase):
 
     def test_detect_burst_from_pixel_case0(self) -> None:
         """Testing detect_burst_from_pixel function, case 0"""
-        burst = support.detect_burst_from_pixel(lines_per_burst=self.lines_per_burst, azimuth_px=301)
+        burst = detect_burst_from_pixel(lines_per_burst=self.lines_per_burst, azimuth_px=301)
         self.assertEqual(burst, 1)
 
     def test_detect_burst_from_pixel_case1(self) -> None:
         """Testing detect_burst_from_pixel function, case 0"""
-        burst = support.detect_burst_from_pixel(lines_per_burst=self.lines_per_burst[0], azimuth_px=146)
+        burst = detect_burst_from_pixel(lines_per_burst=self.lines_per_burst[0], azimuth_px=146)
         self.assertEqual(burst, 0)
 
     def test_compute_ambiguities_location(self) -> None:

@@ -9,7 +9,7 @@ import numpy as np
 from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
 
-from perseo_quality.core.common import check_targets_visibility
+from perseo_quality.core.common import check_targets_visibility, detect_burst_from_pixel
 from perseo_quality.core.generic_dataclasses import SARCoordinates
 from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
@@ -20,7 +20,6 @@ from perseo_quality.tar_analysis.support import (
     ambiguity_ratio_computation_core,
     are_ambiguities_inside_scene,
     compute_ambiguities_locations,
-    detect_burst_from_pixel,
     dtar_computing_function_wrapper,
     ptar_computing_function_wrapper,
 )

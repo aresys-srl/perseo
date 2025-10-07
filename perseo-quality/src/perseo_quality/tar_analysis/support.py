@@ -223,28 +223,3 @@ def are_ambiguities_inside_scene(
     return np.logical_and.reduce(
         (0 < r_amb[0] < lines, 0 < r_amb[1] < samples, 0 < l_amb[0] < lines, 0 < l_amb[1] < samples)
     )
-
-
-# TODO: remove this using layout?
-def detect_burst_from_pixel(lines_per_burst: np.ndarray, azimuth_px: int) -> int:
-    """Detect the burst belonging to the selected azimuth pixel value.
-
-    Parameters
-    ----------
-    lines_per_burst : np.ndarray
-        lines per burst
-    azimuth_px : int
-        selected azimuth pixel
-
-    Returns
-    -------
-    int
-        burst
-    """
-
-    if lines_per_burst.size > 1:
-        cumulative_burst = np.cumsum(lines_per_burst)
-        pixel_diff = np.ma.masked_less(azimuth_px - cumulative_burst, 0)
-        return np.argmin(pixel_diff)
-
-    return 0
