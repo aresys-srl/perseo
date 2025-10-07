@@ -479,31 +479,6 @@ def extract_phase_profiles(
     return range_profiles_deg, azimuth_profiles_deg
 
 
-# TODO: remove this using new layout?
-def detect_burst_from_pixel(lines_per_burst: np.ndarray, azimuth_px: int) -> int:
-    """Detect the burst belonging to the selected azimuth pixel value.
-
-    Parameters
-    ----------
-    lines_per_burst : np.ndarray
-        lines per burst
-    azimuth_px : int
-        selected azimuth pixel
-
-    Returns
-    -------
-    int
-        burst
-    """
-
-    if lines_per_burst.size > 1:
-        cumulative_burst = np.cumsum(lines_per_burst)
-        pixel_diff = np.ma.masked_less(azimuth_px - cumulative_burst, 0)
-        return np.argmin(pixel_diff)
-
-    return 0
-
-
 def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1) -> np.ndarray:
     """Compute frequency axis.
 

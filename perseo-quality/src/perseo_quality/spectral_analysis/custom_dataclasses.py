@@ -15,14 +15,21 @@ from perseo_quality.core.generic_dataclasses import SARPolarization
 
 
 @dataclass
-class SpectraDataOutput:
-    """Storing data for Spectral Analysis graphs"""
+class PointTargetSpectraDataOutput:
+    """Storing data for Point Target Spectral Analysis graphs"""
 
-    target_name: str | None = None
     product_name: str | None = None
     channel: str | None = None
     swath: str | None = None
     polarization: SARPolarization | None = None
+    targets_info: list[SpectralAnalysisTargetInfo] | None = None
+
+
+@dataclass
+class SpectralAnalysisTargetInfo:
+    """Storing data for Point TargetSpectral Analysis graphs"""
+
+    target_name: str | None = None
     burst: int | None = None
     roi_size_azimuth: int | None = None
     roi_size_range: int | None = None
@@ -43,3 +50,35 @@ class SpectraDataOutput:
     azimuth_profiles_deg: list[np.ndarray] | None = None
     range_polynomial_fit: Polynomial | None = None
     azimuth_polynomial_fit: Polynomial | None = None
+
+
+@dataclass
+class DistributedSpectraDataOutput:
+    """Storing data for Distributed Spectral Analysis graphs"""
+
+    product_name: str | None = None
+    channel: str | None = None
+    swath: str | None = None
+    polarization: SARPolarization | None = None
+    blocks_info: list[SpectralAnalysisBlockInfo] | None = None
+
+
+@dataclass
+class SpectralAnalysisBlockInfo:
+    """Block-wise Spectral Analysis info"""
+
+    block_num: int | None = None
+    first_az_line_block: int | None = None
+    lines_block: int | None = None
+    samples_block: int | None = None
+    azimuth_frequency_axis: np.ndarray | None = None
+    range_frequency_axis: np.ndarray | None = None
+    spectrum_db: np.ndarray | None = None
+    spectrum_deg: np.ndarray | None = None
+    spectrogram_db: np.ndarray | None = None
+    spectrogram_frequencies: np.ndarray | None = None
+    spectrogram_times: np.ndarray | None = None
+    range_profiles_db: list[np.ndarray] | None = None
+    azimuth_profiles_db: list[np.ndarray] | None = None
+    range_profiles_deg: list[np.ndarray] | None = None
+    azimuth_profiles_deg: list[np.ndarray] | None = None

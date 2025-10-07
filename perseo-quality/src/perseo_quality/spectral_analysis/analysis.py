@@ -9,19 +9,23 @@ import numpy as np
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
 from scipy.fft import fft2, fftshift
 
-from perseo_quality.core.common import check_targets_visibility
+from perseo_quality.core.common import blocks_partitioning, check_targets_visibility, detect_burst_from_pixel
 from perseo_quality.core.custom_errors import AzimuthExceedsBoundariesError, RangeExceedsBoundariesError
 from perseo_quality.core.generic_dataclasses import SARAcquisitionMode, SARCoordinates
 from perseo_quality.core.signal_processing import convert_to_db
 from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
-from perseo_quality.spectral_analysis.custom_dataclasses import SpectraDataOutput
+from perseo_quality.spectral_analysis.custom_dataclasses import (
+    DistributedSpectraDataOutput,
+    PointTargetSpectraDataOutput,
+    SpectralAnalysisBlockInfo,
+    SpectralAnalysisTargetInfo,
+)
 from perseo_quality.spectral_analysis.support import (
     compute_polynomial_fit,
     compute_spectrogram_db,
     data_deramping,
-    detect_burst_from_pixel,
     extract_abs_profiles,
     extract_phase_profiles,
     recenter_data,
@@ -32,7 +36,7 @@ def point_target_spectral_analysis(
     product: QualityInputProduct,
     point_targets: list[PointTarget],
     cropping_size: tuple[int, int] = (128, 128),
-) -> list[SpectraDataOutput]:
+) -> list[PointTargetSpectraDataOutput]:
     """Function to compute Spectral Analysis for selected Point Targets.
 
     Parameters
@@ -46,7 +50,7 @@ def point_target_spectral_analysis(
 
     Returns
     -------
-    list[SpectraDataOutput]
+    list[PointTargetSpectraDataOutput]
         spectral analysis results for each product channel and each Point Target
     """
 
@@ -74,6 +78,14 @@ def point_target_spectral_analysis(
         # recovering only targets visible by this channel
         targets_visible_by_channel = visible_targets[visible_targets["channel"] == channel]["id"]
 
+        output_results = PointTargetSpectraDataOutput(
+            product_name=product.name,
+            channel=channel,
+            swath=channel_data.swath_name,
+            polarization=channel_data.polarization,
+        )
+
+        targets_info = []
         for trgt_idx, trgt in enumerate(targets_visible_by_channel):
             bursts_selection = visible_targets.query("channel == @channel & id == @trgt")
             bursts_selection = bursts_selection.loc[:, "burst"].to_list()[0]
@@ -83,16 +95,6 @@ def point_target_spectral_analysis(
             for burst in bursts_selection:
                 log.info(
                     f"Processing Target Point {trgt} ({trgt_idx + 1}/{len(targets_visible_by_channel)}), Burst #{burst}"
-                )
-                output_results = SpectraDataOutput(
-                    target_name=trgt,
-                    product_name=product.name,
-                    channel=channel,
-                    swath=channel_data.swath_name,
-                    burst=burst,
-                    polarization=channel_data.polarization,
-                    roi_size_azimuth=cropping_size[1],
-                    roi_size_range=cropping_size[0],
                 )
                 # extracting azimuth and range coordinates
                 try:
@@ -128,11 +130,6 @@ def point_target_spectral_analysis(
                     res.append(output_results)
                     continue
 
-                output_results.target_azimuth_pixel = az_rng_coords.azimuth_index_subpx
-                output_results.target_range_pixel = az_rng_coords.range_index_subpx
-                output_results.azimuth_time = trgt_az_time
-                output_results.range_time = trgt_rng_time
-
                 point_target_location_px = (
                     np.round(az_rng_coords.azimuth_index_subpx).astype("int64"),
                     np.round(az_rng_coords.range_index_subpx).astype("int64"),
@@ -162,56 +159,74 @@ def point_target_spectral_analysis(
 
                 data_recentered = recenter_data(data.copy())
                 data_fft = fftshift(fft2(data_recentered))
-                output_results.azimuth_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[1])
-                output_results.range_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[0])
+                azimuth_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[1])
+                range_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[0])
                 # absolute (dB) profiles and data
-                output_results.spectrum_db = convert_to_db(np.abs(data_fft) ** 2)
-                output_results.range_profiles_db, output_results.azimuth_profiles_db = extract_abs_profiles(data_fft)
-                (
-                    output_results.spectrogram_db,
-                    output_results.spectrogram_frequencies,
-                    output_results.spectrogram_times,
-                ) = compute_spectrogram_db(data)
+                range_profiles_db, azimuth_profiles_db = extract_abs_profiles(data_fft)
+                spectrogram_db, spectrogram_frequencies, spectrogram_times = compute_spectrogram_db(data)
                 # phase (deg) profiles and data
-                output_results.spectrum_deg = np.angle(data_fft, deg=True)
-                output_results.range_profiles_deg, output_results.azimuth_profiles_deg = extract_phase_profiles(
-                    data_fft
-                )
+                range_profiles_deg, azimuth_profiles_deg = extract_phase_profiles(data_fft)
                 # only for the central profile, the one passing through the point target
-                output_results.range_polynomial_fit = compute_polynomial_fit(
-                    profile=output_results.range_profiles_deg[1], freq_axis=output_results.range_frequency_axis
+                range_polynomial_fit = compute_polynomial_fit(
+                    profile=range_profiles_deg[1], freq_axis=range_frequency_axis
                 )
-                output_results.azimuth_polynomial_fit = compute_polynomial_fit(
-                    profile=output_results.azimuth_profiles_deg[1], freq_axis=output_results.azimuth_frequency_axis
+                azimuth_polynomial_fit = compute_polynomial_fit(
+                    profile=azimuth_profiles_deg[1], freq_axis=azimuth_frequency_axis
                 )
-                res.append(output_results)
+                targets_info.append(
+                    SpectralAnalysisTargetInfo(
+                        target_name=trgt,
+                        burst=burst,
+                        roi_size_azimuth=cropping_size[1],
+                        roi_size_range=cropping_size[0],
+                        azimuth_time=trgt_az_time,
+                        range_time=trgt_rng_time,
+                        target_azimuth_pixel=az_rng_coords.azimuth_index_subpx,
+                        target_range_pixel=az_rng_coords.range_index_subpx,
+                        azimuth_frequency_axis=azimuth_frequency_axis,
+                        range_frequency_axis=range_frequency_axis,
+                        spectrum_db=convert_to_db(np.abs(data_fft) ** 2),
+                        range_profiles_db=range_profiles_db,
+                        azimuth_profiles_db=azimuth_profiles_db,
+                        spectrogram_db=spectrogram_db,
+                        spectrogram_frequencies=spectrogram_frequencies,
+                        spectrogram_times=spectrogram_times,
+                        spectrum_deg=np.angle(data_fft, deg=True),
+                        range_profiles_deg=range_profiles_deg,
+                        azimuth_profiles_deg=azimuth_profiles_deg,
+                        range_polynomial_fit=range_polynomial_fit,
+                        azimuth_polynomial_fit=azimuth_polynomial_fit,
+                    )
+                )
+
+        output_results.targets_info = targets_info
+        res.append(output_results)
 
     return res
 
 
-def distributed_target_spectral_analysis(
-    product: QualityInputProduct, roi_centers: list[tuple[int, int]], cropping_size: tuple[int, int] = (128, 128)
-) -> list[SpectraDataOutput]:
-    """Compute Spectral Analysis for each channel the input product raster at the selected location.
+def block_wise_distributed_spectral_analysis(
+    product: QualityInputProduct,
+    azimuth_block_size: int = 2000,
+) -> list[DistributedSpectraDataOutput]:
+    """Compute Spectral Analysis for each channel of the input product raster, by partitioning the scene in blocks along
+    azimuth. If the product's acquisition mode, bursts are considered as blocks and data is deramped.
 
     Parameters
     ----------
     product : QualityInputProduct
         object satisfying the QualityInputProduct protocol
-    roi_centers : list[tuple[int, int]]
-        roi centers pixel coordinates where to compute the analysis, (range pixel index, azimuth pixel index)
-    cropping_size : tuple[int, int], optional
-        roi cropping size, (number of samples, number of lines), by default (128, 128)
+    azimuth_block_size : int, optional
+        azimuth block size, by default 2000
 
     Returns
     -------
-    list[SpectraDataOutput]
-        list of Spectral Data for every product channel and every selected roi
+    list[DistributedSpectraDataOutput]
+        list of Spectral Data for every product channel and every block
     """
 
-    log.info(f"Performing Distributed Target Spectral Analysis on {product.name}")
+    log.info(f"Performing Block-Wise Distributed Target Spectral Analysis on {product.name}")
     log.info(f"Selected Product has {len(product.channels_list)} channels")
-    log.info(f"ROI cropping size provided: azimuth {cropping_size[1]}, range {cropping_size[0]}")
 
     res = []
     for channel in product.channels_list:
@@ -222,51 +237,71 @@ def distributed_target_spectral_analysis(
             + f" Polarization {channel_data.polarization.name}..."
         )
         log.info(f"Channel Data acquisition mode is: {channel_data.acquisition_mode.name}")
-        for roi_id, roi in enumerate(roi_centers):
-            log.info(f"Processing ROI {roi_id + 1}/{len(roi_centers)}")
-            log.info(f"ROI center: azimuth {roi[1]}, range {roi[0]}")
-            burst = detect_burst_from_pixel(lines_per_burst=channel_data.lines_per_burst, azimuth_px=roi[1])
-            azimuth_time, range_time = channel_data.pixel_to_times_conversion(
-                azimuth_index=roi[1], range_index=roi[0], burst=burst
-            )
-            output_results = SpectraDataOutput(
-                target_name=roi_id,
-                product_name=product.name,
-                channel=channel,
-                swath=channel_data.swath_name,
-                burst=burst,
-                polarization=channel_data.polarization,
-                roi_size_azimuth=cropping_size[1],
-                roi_size_range=cropping_size[0],
-                target_azimuth_pixel=roi[1],
-                target_range_pixel=roi[0],
-                azimuth_time=azimuth_time,
-                range_time=range_time,
-            )
-            # processing target area
-            data = channel_data.read_data(
-                azimuth_index=roi[1],
-                range_index=roi[0],
+
+        log.info("Defining blocks partitioning of the whole scene.")
+        # defining scene partitioning by blocks
+        az_block_size, blocks_num, blocks_centers_px = blocks_partitioning(
+            azimuth_axis=channel_data.azimuth_axis,
+            range_axis=channel_data.slant_range_axis,
+            lines_per_burst=channel_data.lines_per_burst,
+            default_block_size=azimuth_block_size,
+        )
+
+        cropping_size = (
+            channel_data.slant_range_axis.size,
+            az_block_size,
+        )
+
+        output_results = DistributedSpectraDataOutput(
+            product_name=product.name,
+            channel=channel,
+            swath=channel_data.swath_name,
+            polarization=channel_data.polarization,
+        )
+
+        blocks_info = []
+        for bc_num, center in enumerate(blocks_centers_px):
+            log.info(f"Processing block {bc_num + 1} of {blocks_num}")
+
+            burst = detect_burst_from_pixel(lines_per_burst=channel_data.lines_per_burst, azimuth_px=center[0])
+            # reading block, without converting the data here, applying radiometric conversion in the next steps
+            target_area = channel_data.read_data(
+                azimuth_index=center[0],
+                range_index=center[1],
                 cropping_size=cropping_size,
                 output_radiometric_quantity=channel_data.radiometric_quantity,
             )
+
             if channel_data.acquisition_mode in (SARAcquisitionMode.TOPSAR, SARAcquisitionMode.SCANSAR):
                 # deramping data for topsar and scansar products
                 log.info("Performing data deramping...")
-                data = data_deramping(
-                    data=data.copy(),
+                target_area = data_deramping(
+                    data=target_area.copy(),
                     channel_data=channel_data,
                     burst=burst,
-                    roi_center_location_px=(roi[1], roi[0]),
+                    roi_center_location_px=center,
                 )
-            data_fft = fftshift(fft2(data))
-            output_results.spectrum_db = convert_to_db(np.abs(data_fft) ** 2)
-            output_results.azimuth_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[1])
-            output_results.range_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[0])
-            output_results.range_profiles_db, output_results.azimuth_profiles_db = extract_abs_profiles(data_fft)
-            output_results.spectrogram_db, output_results.spectrogram_frequencies, output_results.spectrogram_times = (
-                compute_spectrogram_db(data)
+            data_fft = fftshift(fft2(target_area))
+            range_profiles_db, azimuth_profiles_db = extract_abs_profiles(data_fft)
+            spectrogram_db, spectrogram_frequencies, spectrogram_times = compute_spectrogram_db(target_area)
+            blocks_info.append(
+                SpectralAnalysisBlockInfo(
+                    block_num=bc_num,
+                    first_az_line_block=int(center[0] - np.floor(cropping_size[1] / 2)),
+                    lines_block=target_area.shape[1],
+                    samples_block=target_area.shape[0],
+                    azimuth_frequency_axis=np.linspace(-0.5, 0.5, data_fft.shape[1]),
+                    range_frequency_axis=np.linspace(-0.5, 0.5, data_fft.shape[0]),
+                    spectrum_db=convert_to_db(np.abs(data_fft) ** 2),
+                    range_profiles_db=range_profiles_db,
+                    azimuth_profiles_db=azimuth_profiles_db,
+                    spectrogram_db=spectrogram_db,
+                    spectrogram_frequencies=spectrogram_frequencies,
+                    spectrogram_times=spectrogram_times,
+                )
             )
-            res.append(output_results)
+
+        output_results.blocks_info = blocks_info
+        res.append(output_results)
 
     return res
