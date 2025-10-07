@@ -139,49 +139,6 @@ def angles_computation_setup(
     return sensor_pos, ground_points, nadir
 
 
-def blocks_definition(
-    azimuth_axis: np.ndarray,
-    range_axis: np.ndarray,
-    lines_per_burst: np.ndarray,
-    default_block_size: int,
-) -> tuple[int, int, list[tuple[int, int]]]:
-    """Defining the blocks partitioning of the whole scene.
-
-    Parameters
-    ----------
-    azimuth_axis : np.ndarray
-        azimuth axis of the whole scene
-    range_axis : np.ndarray
-        range axis of the whole scene
-    lines_per_burst : np.ndarray
-        lines per burst array
-    default_block_size : int
-        default block size value, needed for stripmap case
-
-    Returns
-    -------
-    int
-        size of each block
-    int
-        number of partitioning blocks
-    list[tuple[int, int]]
-        pixel coordinates of blocks centers (azimuth and range pixel values)
-    """
-    block_size = default_block_size
-    blocks_num = int(np.floor(azimuth_axis.size / block_size))
-    mid_range_pixel = int(range_axis.size // 2)
-
-    if lines_per_burst.size > 1:
-        # TOPSAR/SCANSAR case: blocks set using bursts
-        block_size = lines_per_burst[0]
-        blocks_num = lines_per_burst.size  # number of bursts
-
-    blocks_centers_px = np.arange(block_size // 2, block_size * blocks_num, block_size).tolist()
-    blocks_centers_px = [(px, mid_range_pixel) for px in blocks_centers_px]
-
-    return block_size, blocks_num, blocks_centers_px
-
-
 def compute_2d_histogram(
     x_data: np.ndarray, y_data: np.ndarray, x_axis: np.ndarray, config: Radiometric2DHistogramParameters
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

@@ -12,6 +12,7 @@ from arepytools.geometry.geometric_functions import (
     compute_look_angles_from_trajectory,
 )
 
+from perseo_quality.core.common import blocks_partitioning
 from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.core.signal_processing import radiometric_correction
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
@@ -21,7 +22,6 @@ from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import R
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import RadiometricProfileExtractorType
 from perseo_quality.radiometric_analysis.block_wise.support import (
     angles_computation_setup,
-    blocks_definition,
     compute_2d_histogram,
 )
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
@@ -77,7 +77,7 @@ def radiometric_profiles(
 
         log.info("Defining blocks partitioning of the whole scene.")
         # defining scene partitioning by blocks
-        az_block_size, blocks_num, blocks_centers_px = blocks_definition(
+        az_block_size, blocks_num, blocks_centers_px = blocks_partitioning(
             azimuth_axis=channel_data.azimuth_axis,
             range_axis=channel_data.slant_range_axis,
             lines_per_burst=channel_data.lines_per_burst,
