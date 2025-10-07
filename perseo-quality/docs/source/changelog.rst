@@ -4,12 +4,17 @@ Changelog
 v1.0.5
 ------
 
+**New Features**
+
+- Spectral Analysis: added a new block-wise spectral analysis
+
 **Other Changes**
 
 - Radiometric Analysis Block-Wise: silenced a All NaN slice encountered warning in graphical_output.py
 - Improved Radiometric Analysis NESZ performance using numba
 - Radiometry: zeroes in raster data are now treated as NaNs
 - Silencing all NaN slice warning
+- Spectral Analysis: refactoring of Point Target Spectral Analysis
 
 **Bug Fixes**
 
