@@ -9,10 +9,11 @@ dependencies = [
     "numpy",
     "pandas >= 1.4.0",
     "scipy > 1.13",
-    "netCDF4",
+    "netCDF4==1.7.2",
     "arepytools >= 1.7.6",
     "pydantic",
-    "numba>=0.61"
+    "numba>=0.61",
+    "h5py==3.14.0"
 ]
 dynamic = ["version"]
 classifiers = [
