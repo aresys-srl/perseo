@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v1.0.6
+------
+
+**Bug Fixes**
+
+- Pinning numba version >=0.61
+- Fixing bug in Point Target Analysis graphical output generation, missing f-string in title generation
+
 v1.0.5
 ------
 
