@@ -292,7 +292,7 @@ def irf_graphs(
 
     title = (
         f"Target {graphs_info.target} IRF - {graphs_info.channel} "
-        + "[{graphs_info.swath}, {graphs_info.polarization}, burst {graphs_info.burst}]"
+        + f"[{graphs_info.swath}, {graphs_info.polarization}, burst {graphs_info.burst}]"
     )
     fig.suptitle(title, fontsize=16, fontweight="bold")
 
@@ -387,7 +387,7 @@ def rcs_graphs(
     # adding title and subtitle
     title = (
         f"Target {graphs_info.target} RCS - {graphs_info.channel} "
-        + "[{graphs_info.swath}, {graphs_info.polarization}, burst {graphs_info.burst}]"
+        + f"[{graphs_info.swath}, {graphs_info.polarization}, burst {graphs_info.burst}]"
     )
     plt.title(r"$\sigma = $" + f"{np.round(data_graph.rcs_lin, 4)} = " + f"{np.round(data_graph.rcs_db, 2)} [dB]")
     plt.suptitle(title, fontsize=16, fontweight="bold", y=0.97)
