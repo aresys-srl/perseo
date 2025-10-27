@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.7
+------
+
+**Bug Fixes**
+
+- Fixing Spectral Analysis graphs generation, wrong code block indentation
+
 v1.0.6
 ------
 

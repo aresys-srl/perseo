@@ -160,67 +160,67 @@ def spectral_graph_core(
             ax.set_ylabel("Absolute [dB]")
         ax.set_xlabel("Azimuth Frequency")
 
-    if graph_mode == "PHASE":
-        # polynomial equations
-        ax = fig.add_subplot(grid[1, 0])
-        ax.axis("off")
-        ax.text(0, 0.8, "Range Phase Profile Polynomial:", fontdict={"weight": "bold", "fontsize": 14})
-        ax.text(0, 0.7, f"phase [deg] = {item.range_polynomial_fit}")
-        ax.text(0, 0.5, "Azimuth Phase Profile Polynomial:", fontdict={"weight": "bold", "fontsize": 14})
-        ax.text(0, 0.4, f"phase [deg] = {item.azimuth_polynomial_fit}")
-    else:
-        # spectrogram
-        ax = fig.add_subplot(grid[1, 0])
-        graph_extent = [
-            item.spectrogram_times[0],
-            item.spectrogram_times[-1],
-            item.spectrogram_frequencies[-1],
-            item.spectrogram_frequencies[0],
-        ]
-        graph_ = ax.imshow(item.spectrogram_db, cmap=CMAP, extent=graph_extent, aspect="auto")
-        fig.colorbar(graph_, ax=ax)
-
-        ax.locator_params(axis="both", nbins=8)
-        ax.set_title("Spectrogram", fontweight="bold")
-        ax.set_ylabel("Frequency")
-        ax.set_xlabel("Azimuth [lines]")
-
-        title_str = "Point Target" if is_pt_graph else "Distributed Target"
-        fig.suptitle(
-            f"{title_str} Spectral Analysis - {graph_mode.capitalize()}",
-            weight="bold",
-            fontsize=16,
-        )
-        txt_str = (
-            f"Product: {data.product_name}   Channel: {data.channel}  Polarization: {data.polarization.name}"
-            + f"   Swath: {data.swath}   "
-        )
-        if is_pt_graph:
-            txt_str += f"Burst: {item.burst}   Target: {item.target_name}   [Normalized Frequencies]"
+        if graph_mode == "PHASE":
+            # polynomial equations
+            ax = fig.add_subplot(grid[1, 0])
+            ax.axis("off")
+            ax.text(0, 0.8, "Range Phase Profile Polynomial:", fontdict={"weight": "bold", "fontsize": 14})
+            ax.text(0, 0.7, f"phase [deg] = {item.range_polynomial_fit}")
+            ax.text(0, 0.5, "Azimuth Phase Profile Polynomial:", fontdict={"weight": "bold", "fontsize": 14})
+            ax.text(0, 0.4, f"phase [deg] = {item.azimuth_polynomial_fit}")
         else:
-            txt_str += f"Block: {item.block_num}   [Normalized Frequencies]"
-        fig.text(
-            0.5,
-            0.93,
-            txt_str,
-            ha="center",
-        )
-        graph_name = "point_target" if is_pt_graph else "distributed_target"
-        filename = "_".join(
-            [
-                graph_name,
-                graph_mode.lower(),
-                data.product_name,
-                f"ch{data.channel}",
-                data.swath,
-                data.polarization.name,
+            # spectrogram
+            ax = fig.add_subplot(grid[1, 0])
+            graph_extent = [
+                item.spectrogram_times[0],
+                item.spectrogram_times[-1],
+                item.spectrogram_frequencies[-1],
+                item.spectrogram_frequencies[0],
             ]
-        )
-        if is_pt_graph:
-            filename += f"_trgt{item.target_name}_burst{item.burst}"
-        else:
-            filename += f"_block{item.block_num}"
-        fig.tight_layout(h_pad=2, w_pad=1.5)
-        plt.subplots_adjust(top=0.88)
-        fig.savefig(out_dir.joinpath(filename + ".png"), dpi=200)
-        plt.close("all")
+            graph_ = ax.imshow(item.spectrogram_db, cmap=CMAP, extent=graph_extent, aspect="auto")
+            fig.colorbar(graph_, ax=ax)
+
+            ax.locator_params(axis="both", nbins=8)
+            ax.set_title("Spectrogram", fontweight="bold")
+            ax.set_ylabel("Frequency")
+            ax.set_xlabel("Azimuth [lines]")
+
+            title_str = "Point Target" if is_pt_graph else "Distributed Target"
+            fig.suptitle(
+                f"{title_str} Spectral Analysis - {graph_mode.capitalize()}",
+                weight="bold",
+                fontsize=16,
+            )
+            txt_str = (
+                f"Product: {data.product_name}   Channel: {data.channel}  Polarization: {data.polarization.name}"
+                + f"   Swath: {data.swath}   "
+            )
+            if is_pt_graph:
+                txt_str += f"Burst: {item.burst}   Target: {item.target_name}   [Normalized Frequencies]"
+            else:
+                txt_str += f"Block: {item.block_num}   [Normalized Frequencies]"
+            fig.text(
+                0.5,
+                0.93,
+                txt_str,
+                ha="center",
+            )
+            graph_name = "point_target" if is_pt_graph else "distributed_target"
+            filename = "_".join(
+                [
+                    graph_name,
+                    graph_mode.lower(),
+                    data.product_name,
+                    f"ch{data.channel}",
+                    data.swath,
+                    data.polarization.name,
+                ]
+            )
+            if is_pt_graph:
+                filename += f"_trgt{item.target_name}_burst{item.burst}"
+            else:
+                filename += f"_block{item.block_num}"
+            fig.tight_layout(h_pad=2, w_pad=1.5)
+            plt.subplots_adjust(top=0.88)
+            fig.savefig(out_dir.joinpath(filename + ".png"), dpi=200)
+            plt.close("all")
