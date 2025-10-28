@@ -622,7 +622,7 @@ class ResultsToDataframeTest(unittest.TestCase):
         # creating test data
         self.data = [PointTargetAnalysisOutput()]
         # expected results
-        self.expected_values = np.zeros((1, 43)) + np.nan
+        self.expected_values = np.zeros((1, 44)) + np.nan
 
     def test_results_to_dataframe(self) -> None:
         """Testing _results_to_dataframe function"""

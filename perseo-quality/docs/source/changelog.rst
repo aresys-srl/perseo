@@ -10,7 +10,8 @@ v1.0.7
 
 **Other Changes**
 
-- Adding acquisition_time to ``RadiometricOutputProductGeneralInfo`` dataclass
+- Adding acquisition_start_time to ``RadiometricOutputProductGeneralInfo`` dataclass
+- Adding acquisition_start_time to Point Target Analysis ``GenericInfoOutput`` dataclass
 
 v1.0.6
 ------

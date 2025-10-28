@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import contextlib
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -181,6 +182,7 @@ def point_target_analysis_single(
             product_type=channel_data.image_type.name.lower(),
             polarization=channel_data.polarization.value,
             acquisition_mode=channel_data.acquisition_mode.name,
+            acquisition_start_time=datetime.fromisoformat(channel_data.azimuth_axis[0].isoformat()),
         ),
     )
     graph = ptdt.PointTargetGraphicalData(

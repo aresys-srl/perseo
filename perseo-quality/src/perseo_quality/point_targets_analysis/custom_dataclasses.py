@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
+from datetime import datetime
 
 import numpy as np
 from arepytools.timing.precisedatetime import PreciseDateTime
@@ -145,6 +146,7 @@ class GenericInfoOutput:
     product_type: str | None = None
     polarization: str | None = None
     acquisition_mode: str | None = None
+    acquisition_start_time: datetime | None = None
     incidence_angle: float | None = None
     squint_angle: float | None = None
     range_position: float | None = None
