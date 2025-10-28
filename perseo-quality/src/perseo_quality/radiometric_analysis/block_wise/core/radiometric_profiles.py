@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import numpy as np
 from arepytools.geometry.geometric_functions import (
     compute_incidence_angles,
@@ -209,6 +211,7 @@ def radiometric_profiles(
                     product_type=channel_data.image_type.name,
                     radiometric_quantity=output_quantity.name,
                     sensor=channel_data.sensor_name,
+                    acquisition_start_time=datetime.fromisoformat(channel_data.azimuth_axis[0].isoformat()),
                 ),
                 direction=direction,
                 kpi=kpi,

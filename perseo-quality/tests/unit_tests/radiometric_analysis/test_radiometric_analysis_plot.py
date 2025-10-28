@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import unittest
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -41,6 +42,7 @@ class Radiometric2DHistPlotTest(unittest.TestCase):
                 product_type="SLC",
                 radiometric_quantity="BETA_NOUGHT",
                 sensor="",
+                acquisition_start_time=datetime(2020, 1, 1),
             ),
             blocks_num=3,
             direction=RadiometricAnalysisDirection.RANGE,

@@ -8,6 +8,10 @@ v1.0.7
 
 - Fixing Spectral Analysis graphs generation, wrong code block indentation
 
+**Other Changes**
+
+- Adding acquisition_time to ``RadiometricOutputProductGeneralInfo`` dataclass
+
 v1.0.6
 ------
 

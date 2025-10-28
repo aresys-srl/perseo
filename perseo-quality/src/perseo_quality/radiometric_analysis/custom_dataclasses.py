@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum, auto
 
 import numpy as np
@@ -145,6 +146,7 @@ class RadiometricOutputProductGeneralInfo:
     acquisition_mode: str
     radiometric_quantity: str
     orbit_direction: str
+    acquisition_start_time: datetime
 
 
 @dataclass
