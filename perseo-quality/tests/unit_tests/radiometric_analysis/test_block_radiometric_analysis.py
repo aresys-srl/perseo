@@ -11,6 +11,7 @@ import numpy as np
 
 from perseo_quality.radiometric_analysis.block_wise import analysis
 from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters
+from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import PROFILE_EXTRACTORS_REGISTRY
 
 random_rng1 = np.random.default_rng(12345)
 raster = random_rng1.random((10, 10)) + random_rng1.random((10, 10)) * 1j
@@ -82,13 +83,13 @@ class NESZProfileExtractorTest(unittest.TestCase):
 
     def test_extract_nesz_profiles(self):
         """Testing NESZ profile extraction"""
-        nesz_profile = analysis.nesz_profiles_extractor(data=abs(raster), params=MockParams())
+        nesz_profile = PROFILE_EXTRACTORS_REGISTRY["nesz"](data=abs(raster), params=MockParams())
         np.testing.assert_allclose(nesz_profile, self.expected_results, atol=self.tolerance, rtol=0)
 
     def test_extract_nesz_profiles_with_default_config(self):
         """Testing NESZ profile extraction, with default config"""
         nesz_config = analysis._nesz_config_manager(None)
-        nesz_profile = analysis.nesz_profiles_extractor(
+        nesz_profile = PROFILE_EXTRACTORS_REGISTRY["nesz"](
             data=abs(raster), params=nesz_config.profile_extraction_parameters
         )
         np.testing.assert_allclose(nesz_profile, self.expected_results_default, atol=self.tolerance, rtol=0)
@@ -131,14 +132,14 @@ class AverageProfileExtractorTest(unittest.TestCase):
 
     def test_extract_gamma_profiles(self):
         """Testing Gamma profile extraction"""
-        gamma_profile = analysis.average_elevation_profiles_extractor(data=abs(raster), params=MockParams())
+        gamma_profile = PROFILE_EXTRACTORS_REGISTRY["average_elevation"](data=abs(raster), params=MockParams())
         np.testing.assert_allclose(gamma_profile, self.expected_results, atol=self.tolerance, rtol=0)
 
     def test_extract_gamma_profiles_with_default_config(self):
         """Testing Gamma profile extraction, with default config"""
         gamma_config = analysis._average_elevation_config_manager(None)
         gamma_config.profile_extraction_parameters.smoothening_filter = True
-        gamma_profile = analysis.average_elevation_profiles_extractor(
+        gamma_profile = PROFILE_EXTRACTORS_REGISTRY["average_elevation"](
             data=abs(raster), params=gamma_config.profile_extraction_parameters
         )
         np.testing.assert_allclose(gamma_profile, self.expected_results_default, atol=self.tolerance, rtol=0)
@@ -150,20 +151,6 @@ class ScallopingProfileExtractorTest(unittest.TestCase):
     def setUp(self) -> None:
         self.params = ProfileExtractionParameters()
         self.tolerance = 1e-9
-        self.expected_results = np.array(
-            [
-                -6.334112329058485,
-                -3.044203217967147,
-                -1.77855916899467,
-                -1.9295475859591928,
-                -1.6781799186327797,
-                -1.446758389925901,
-                -1.898620508764473,
-                -1.9755710045789074,
-                -3.1868391218117647,
-                -7.4092428227368545,
-            ]
-        )
         self.expected_results_default = np.array(
             [
                 -0.1437943090691807,
@@ -181,13 +168,13 @@ class ScallopingProfileExtractorTest(unittest.TestCase):
 
     def test_extract_scalloping_profiles(self):
         """Testing Scalloping profile extraction"""
-        scalloping_profile = analysis.average_elevation_profiles_extractor(data=abs(raster), params=MockParams())
-        np.testing.assert_allclose(scalloping_profile, self.expected_results, atol=self.tolerance, rtol=0)
+        scalloping_profile = PROFILE_EXTRACTORS_REGISTRY["scalloping"](data=abs(raster), params=MockParams())
+        np.testing.assert_allclose(scalloping_profile, self.expected_results_default, atol=self.tolerance, rtol=0)
 
     def test_extract_scalloping_profiles_with_default_config(self):
         """Testing Scalloping profile extraction, with default config"""
         scalloping_config = analysis._scalloping_config_manager(None)
-        scalloping_profile = analysis.scalloping_profiles_extractor(
+        scalloping_profile = PROFILE_EXTRACTORS_REGISTRY["scalloping"](
             data=abs(raster), params=scalloping_config.profile_extraction_parameters
         )
         np.testing.assert_allclose(scalloping_profile, self.expected_results_default, atol=self.tolerance, rtol=0)

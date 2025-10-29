@@ -10,16 +10,8 @@ import perseo_quality.radiometric_analysis.custom_dataclasses as rdt
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import RadiometricProfilesConfig
-from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import (
-    average_elevation_profile_kpi_estimator,
-    nesz_kpi_estimator,
-    scalloping_kpi_estimator,
-)
-from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import (
-    average_elevation_profiles_extractor,
-    nesz_profiles_extractor,
-    scalloping_profiles_extractor,
-)
+from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import KPI_ESTIMATORS_REGISTRY
+from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import PROFILE_EXTRACTORS_REGISTRY
 from perseo_quality.radiometric_analysis.block_wise.core.radiometric_profiles import radiometric_profiles
 
 
@@ -51,8 +43,8 @@ def nesz_profiles(
     return radiometric_profiles(
         product=product,
         direction=rdt.RadiometricAnalysisDirection.RANGE,
-        profile_extractor_func=nesz_profiles_extractor,
-        kpi_estimator_func=nesz_kpi_estimator,
+        profile_extractor_func=PROFILE_EXTRACTORS_REGISTRY["nesz"],
+        kpi_estimator_func=KPI_ESTIMATORS_REGISTRY["nesz"],
         output_quantity=output_quantity,
         config=config,
     )
@@ -87,8 +79,8 @@ def average_elevation_profiles(
     return radiometric_profiles(
         product=product,
         direction=rdt.RadiometricAnalysisDirection.RANGE,
-        profile_extractor_func=average_elevation_profiles_extractor,
-        kpi_estimator_func=average_elevation_profile_kpi_estimator,
+        profile_extractor_func=PROFILE_EXTRACTORS_REGISTRY["average_elevation"],
+        kpi_estimator_func=KPI_ESTIMATORS_REGISTRY["average_elevation"],
         output_quantity=output_quantity,
         config=config,
     )
@@ -122,9 +114,9 @@ def scalloping_profiles(
     return radiometric_profiles(
         product=product,
         direction=rdt.RadiometricAnalysisDirection.AZIMUTH,
+        profile_extractor_func=PROFILE_EXTRACTORS_REGISTRY["scalloping"],
+        kpi_estimator_func=KPI_ESTIMATORS_REGISTRY["scalloping"],
         output_quantity=output_quantity,
-        profile_extractor_func=scalloping_profiles_extractor,
-        kpi_estimator_func=scalloping_kpi_estimator,
         config=config,
     )
 

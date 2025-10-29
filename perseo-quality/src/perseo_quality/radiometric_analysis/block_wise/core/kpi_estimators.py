@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import wraps
 
 import numpy as np
 from scipy.stats import kurtosis, mode, skew
@@ -19,13 +20,31 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import (
     ScallopingRadiometricKPI,
 )
 
-# custom profile extractor callable type to be matched
+# custom kpi estimator callable type to be matched
 RadiometricBlockKPIEstimatorType = Callable[
     [np.ndarray, RadiometricProfileAxes, np.ndarray],
     AverageElevationRadiometricKPI | NESZRadiometricKPI | ScallopingRadiometricKPI,
 ]
 
 
+KPI_ESTIMATORS_REGISTRY: dict[str, RadiometricBlockKPIEstimatorType] = {}
+
+
+def register_kpi_estimator(
+    name: str,
+) -> Callable[[RadiometricBlockKPIEstimatorType], RadiometricBlockKPIEstimatorType]:
+    def decorator(func: RadiometricBlockKPIEstimatorType) -> RadiometricBlockKPIEstimatorType:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> np.ndarray:
+            return func(*args, **kwargs)
+
+        KPI_ESTIMATORS_REGISTRY[name] = wrapper
+        return wrapper
+
+    return decorator
+
+
+@register_kpi_estimator("average_elevation")
 def average_elevation_profile_kpi_estimator(
     profile: np.ndarray, axes: RadiometricProfileAxes, data_block: np.ndarray
 ) -> AverageElevationRadiometricKPI:
@@ -58,6 +77,7 @@ def average_elevation_profile_kpi_estimator(
     )
 
 
+@register_kpi_estimator("nesz")
 def nesz_kpi_estimator(profile: np.ndarray, axes: RadiometricProfileAxes, data_block: np.ndarray) -> NESZRadiometricKPI:
     """Estimating KPI for NESZ analysis.
 
@@ -99,6 +119,7 @@ def nesz_kpi_estimator(profile: np.ndarray, axes: RadiometricProfileAxes, data_b
     )
 
 
+@register_kpi_estimator("scalloping")
 def scalloping_kpi_estimator(
     profile: np.ndarray, axes: RadiometricProfileAxes, data_block: np.ndarray
 ) -> ScallopingRadiometricKPI:

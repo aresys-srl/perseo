@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import Callable
+from functools import wraps
 
 import numpy as np
 from numba import jit, prange
@@ -19,6 +20,22 @@ from perseo_quality.radiometric_analysis.block_wise.support import masking_outli
 
 # custom profile extractor callable type to be matched
 RadiometricProfileExtractorType = Callable[[np.ndarray, ProfileExtractionParameters], np.ndarray]
+
+PROFILE_EXTRACTORS_REGISTRY: dict[str, RadiometricProfileExtractorType] = {}
+
+
+def register_profile_extractor(
+    name: str,
+) -> Callable[[RadiometricProfileExtractorType], RadiometricProfileExtractorType]:
+    def decorator(func: RadiometricProfileExtractorType) -> RadiometricProfileExtractorType:
+        @wraps(func)
+        def wrapper(*args, **kwargs) -> np.ndarray:
+            return func(*args, **kwargs)
+
+        PROFILE_EXTRACTORS_REGISTRY[name] = wrapper
+        return wrapper
+
+    return decorator
 
 
 @jit(nopython=True, parallel=True, cache=True)
@@ -58,6 +75,7 @@ def _compute_histogram_peak(data: np.ndarray, num_bins: int) -> float:
     return (bin_edges[max_idx] + bin_edges[max_idx + 1]) / 2
 
 
+@register_profile_extractor("nesz")
 def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
     """Profiles extraction function for NESZ analysis.
 
@@ -107,6 +125,7 @@ def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameter
     return np.ma.masked_invalid(convert_to_db(peaks))
 
 
+@register_profile_extractor("average_elevation")
 def average_elevation_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
     """Profiles extraction function for generic average elevation radiometric profiles analysis.
 
@@ -141,6 +160,7 @@ def average_elevation_profiles_extractor(data: np.ndarray, params: ProfileExtrac
     return np.ma.masked_invalid(profile_db)
 
 
+@register_profile_extractor("scalloping")
 def scalloping_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
     """Profiles extraction function for Scalloping analysis.
 

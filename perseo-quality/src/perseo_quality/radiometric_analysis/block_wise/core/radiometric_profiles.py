@@ -20,8 +20,12 @@ from perseo_quality.core.signal_processing import radiometric_correction
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import RadiometricProfilesConfig
-from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import RadiometricBlockKPIEstimatorType
-from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import RadiometricProfileExtractorType
+from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import (
+    RadiometricBlockKPIEstimatorType,
+)
+from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import (
+    RadiometricProfileExtractorType,
+)
 from perseo_quality.radiometric_analysis.block_wise.support import (
     angles_computation_setup,
     compute_2d_histogram,
