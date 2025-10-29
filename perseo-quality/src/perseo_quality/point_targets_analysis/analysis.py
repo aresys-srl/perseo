@@ -182,7 +182,14 @@ def point_target_analysis_single(
             product_type=channel_data.image_type.name.lower(),
             polarization=channel_data.polarization.value,
             acquisition_mode=channel_data.acquisition_mode.name,
-            acquisition_start_time=datetime.fromisoformat(channel_data.azimuth_axis[0].isoformat()),
+            acquisition_start_time=datetime(
+                year=channel_data.azimuth_axis[0].year,
+                month=channel_data.azimuth_axis[0].month,
+                day=channel_data.azimuth_axis[0].day_of_the_month,
+                hour=channel_data.azimuth_axis[0].hour_of_day,
+                minute=channel_data.azimuth_axis[0].minute_of_hour,
+                second=channel_data.azimuth_axis[0].second_of_minute,
+            ),
         ),
     )
     graph = ptdt.PointTargetGraphicalData(
