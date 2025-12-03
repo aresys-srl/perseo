@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.8
+------
+
+**Other Changes**
+
+- Generalizing block ``core.common.blocks_partitioning`` function to manage multiple bursts with different lines per burst
+
 v1.0.7
 ------
 

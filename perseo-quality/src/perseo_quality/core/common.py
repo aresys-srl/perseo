@@ -56,7 +56,7 @@ def blocks_partitioning(
     range_axis: np.ndarray,
     lines_per_burst: np.ndarray,
     default_block_size: int,
-) -> tuple[int, int, list[tuple[int, int]]]:
+) -> tuple[np.ndarray, int, list[tuple[int, int]]]:
     """Defining the blocks partitioning of the whole scene.
 
     Parameters
@@ -72,7 +72,7 @@ def blocks_partitioning(
 
     Returns
     -------
-    int
+    np.ndarray
         size of each block
     int
         number of partitioning blocks
@@ -85,13 +85,18 @@ def blocks_partitioning(
 
     if lines_per_burst.size > 1:
         # TOPSAR/SCANSAR case: blocks set using bursts
-        block_size = lines_per_burst[0]
+        block_size = lines_per_burst
         blocks_num = lines_per_burst.size  # number of bursts
+        blocks_centers_px = [
+            (int(a + b // 2), mid_range_pixel)
+            for a, b in zip(np.concatenate([[0], np.cumsum(block_size)[:-1]], dtype=int), lines_per_burst, strict=True)
+        ]
+        return block_size, blocks_num, blocks_centers_px
 
     blocks_centers_px = np.arange(block_size // 2, block_size * blocks_num, block_size).tolist()
     blocks_centers_px = [(px, mid_range_pixel) for px in blocks_centers_px]
 
-    return block_size, blocks_num, blocks_centers_px
+    return np.array([block_size] * blocks_num), blocks_num, blocks_centers_px
 
 
 # TODO: remove this using new layout?

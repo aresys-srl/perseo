@@ -109,11 +109,6 @@ def radiometric_profiles(
         else:
             raise RuntimeError(f"{direction} invalid. It must be Range or Azimuth.")
 
-        cropping_size = (
-            channel_data.slant_range_axis.size - 2 * config.range_pixel_margin,  # range
-            az_block_size,  # azimuth
-        )
-
         profiles = []
         kpi = []
         look_angles_array = []
@@ -121,6 +116,11 @@ def radiometric_profiles(
         az_rel_times = []
         for bc_num, center in enumerate(blocks_centers_px):
             log.info(f"Processing block {bc_num + 1} of {blocks_num}")
+
+            cropping_size = (
+                channel_data.slant_range_axis.size - 2 * config.range_pixel_margin,  # range
+                az_block_size[bc_num],  # azimuth
+            )
 
             # reading block, without converting the data here, applying radiometric conversion in the next steps
             target_area = channel_data.read_data(

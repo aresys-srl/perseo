@@ -421,7 +421,7 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
         blk_sz, blk_num, blk_centers = blocks_partitioning(
             azimuth_axis=az_axis, range_axis=rng_axis, default_block_size=block_size, lines_per_burst=lines_per_burst
         )
-        self.assertEqual(block_size, blk_sz)
+        np.testing.assert_array_equal([block_size] * blk_num, blk_sz)
         self.assertEqual(blk_num, az_axis.size // block_size)
         self.assertListEqual(
             blk_centers, [(block_size // 2 + block_size * n, rng_axis.size // 2) for n in range(blk_num)]
@@ -436,8 +436,8 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
         blk_sz, blk_num, blk_centers = blocks_partitioning(
             azimuth_axis=az_axis, range_axis=rng_axis, default_block_size=block_size, lines_per_burst=lines_per_burst
         )
-        self.assertFalse(block_size == blk_sz)
-        self.assertEqual(blk_sz, lines_per_burst[0])
+        self.assertFalse(block_size == blk_sz[0])
+        self.assertEqual(blk_sz[0], lines_per_burst[0])
         self.assertEqual(blk_num, lines_per_burst.size)
         self.assertListEqual(blk_centers, [(b * n + b // 2, rng_axis.size // 2) for n, b in enumerate(lines_per_burst)])
 

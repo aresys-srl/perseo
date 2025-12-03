@@ -247,11 +247,6 @@ def block_wise_distributed_spectral_analysis(
             default_block_size=azimuth_block_size,
         )
 
-        cropping_size = (
-            channel_data.slant_range_axis.size,
-            az_block_size,
-        )
-
         output_results = DistributedSpectraDataOutput(
             product_name=product.name,
             channel=channel,
@@ -262,6 +257,11 @@ def block_wise_distributed_spectral_analysis(
         blocks_info = []
         for bc_num, center in enumerate(blocks_centers_px):
             log.info(f"Processing block {bc_num + 1} of {blocks_num}")
+
+            cropping_size = (
+                channel_data.slant_range_axis.size,
+                az_block_size[bc_num],
+            )
 
             burst = detect_burst_from_pixel(lines_per_burst=channel_data.lines_per_burst, azimuth_px=center[0])
             # reading block, without converting the data here, applying radiometric conversion in the next steps

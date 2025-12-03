@@ -164,7 +164,11 @@ class BlocksDefinitionTest(unittest.TestCase):
         self._rng_axis = np.zeros(4500)
         self._lines_per_burst = np.array([300] * 5)
         self._default_block_size = 2000
-        self.expected_res_0 = [300, 5, [(150, 2250), (450, 2250), (750, 2250), (1050, 2250), (1350, 2250)]]
+        self.expected_res_0 = [
+            np.array([300] * 5),
+            5,
+            [(150, 2250), (450, 2250), (750, 2250), (1050, 2250), (1350, 2250)],
+        ]
         self.expected_res_1 = [2000, 1, [(1000, 2250)]]
 
     def test_blocks_definition_0(self):
@@ -175,7 +179,9 @@ class BlocksDefinitionTest(unittest.TestCase):
             lines_per_burst=self._lines_per_burst,
             range_axis=self._rng_axis,
         )
-        self.assertListEqual(list(blocks_data), self.expected_res_0)
+        np.testing.assert_array_equal(blocks_data[0], self.expected_res_0[0])
+        self.assertEqual(blocks_data[1], self.expected_res_0[1])
+        np.testing.assert_array_equal(blocks_data[2], self.expected_res_0[2])
 
     def test_blocks_definition_1(self):
         """Testing blocks_definition function"""
