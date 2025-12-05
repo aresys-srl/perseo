@@ -14,7 +14,10 @@ from arepytools.geometry.geometric_functions import (
     compute_look_angles_from_trajectory,
 )
 
-from perseo_quality.core.common import blocks_partitioning
+from perseo_quality.core.common import (
+    angles_computation_setup,
+    blocks_partitioning,
+)
 from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.core.signal_processing import radiometric_correction
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
@@ -26,10 +29,7 @@ from perseo_quality.radiometric_analysis.block_wise.core.kpi_estimators import (
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import (
     RadiometricProfileExtractorType,
 )
-from perseo_quality.radiometric_analysis.block_wise.support import (
-    angles_computation_setup,
-    compute_2d_histogram,
-)
+from perseo_quality.radiometric_analysis.block_wise.support import compute_2d_histogram
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     RadiometricAnalysisDirection,
     RadiometricOutputProductGeneralInfo,

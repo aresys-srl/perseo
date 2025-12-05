@@ -5,6 +5,10 @@
 
 import numpy as np
 import pandas as pd
+from arepytools.geometry.conversions import llh2xyz, xyz2llh
+from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
+from arepytools.geometry.direct_geocoding import GeocodingSide, direct_geocoding_monostatic
+from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import PointTargetVisibility
 from perseo_quality.io.point_targets import PointTarget
@@ -122,3 +126,54 @@ def detect_burst_from_pixel(lines_per_burst: np.ndarray, azimuth_px: int) -> int
         return np.argmin(pixel_diff)
 
     return 0
+
+
+def angles_computation_setup(
+    trajectory: TwiceDifferentiable3DCurve,
+    azimuth_time: PreciseDateTime,
+    range_values: np.ndarray,
+    look_direction: GeocodingSide | str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Setting up the stage to compute incidence and look angles by computing sensor position, ground points and nadir
+    direction.
+
+    Parameters
+    ----------
+    trajectory : TwiceDifferentiable3DCurve
+        sensor trajectory
+    azimuth_time : PreciseDateTime
+        azimuth time at which compute the output
+    range_values : np.ndarray
+        range values for which compute values
+    look_direction : GeocodingSide | str
+        sensor look direction
+
+    Returns
+    -------
+    np.ndarray
+        sensor position
+    np.ndarray
+        ground points
+    np.ndarray
+        nadir direction
+    """
+    look_direction = GeocodingSide(look_direction)
+    sensor_pos = trajectory.evaluate(azimuth_time)
+    sensor_vel = trajectory.evaluate_first_derivatives(azimuth_time)
+
+    ground_points = direct_geocoding_monostatic(
+        sensor_positions=sensor_pos,
+        sensor_velocities=sensor_vel,
+        range_times=range_values,
+        geocoding_side=look_direction.value,
+        frequencies_doppler_centroid=0,
+        wavelength=1,
+        geodetic_altitude=0,
+    )
+
+    sensor_position_ground = xyz2llh(sensor_pos)
+    sensor_position_ground[2] = 0.0
+    sensor_position_ground = llh2xyz(sensor_position_ground).squeeze()
+
+    nadir = sensor_position_ground - sensor_pos
+    return sensor_pos, ground_points, nadir
