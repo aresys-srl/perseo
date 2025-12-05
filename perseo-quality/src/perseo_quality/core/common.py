@@ -133,6 +133,7 @@ def angles_computation_setup(
     azimuth_time: PreciseDateTime,
     range_values: np.ndarray,
     look_direction: GeocodingSide | str,
+    altitude: float = 0.0,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Setting up the stage to compute incidence and look angles by computing sensor position, ground points and nadir
     direction.
@@ -147,6 +148,8 @@ def angles_computation_setup(
         range values for which compute values
     look_direction : GeocodingSide | str
         sensor look direction
+    altitude : float, optional
+        altitude over WGS84 ellipsoid, by default 0.0
 
     Returns
     -------
@@ -168,7 +171,7 @@ def angles_computation_setup(
         geocoding_side=look_direction.value,
         frequencies_doppler_centroid=0,
         wavelength=1,
-        geodetic_altitude=0,
+        geodetic_altitude=altitude,
     )
 
     sensor_position_ground = xyz2llh(sensor_pos)

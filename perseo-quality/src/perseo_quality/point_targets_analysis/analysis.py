@@ -77,7 +77,7 @@ def point_target_analysis(
     """
     # defining default config if None is given
     if config is None:
-        log.info("Configuration file not provided, using default")
+        log.info("Configuration not provided, using default")
         config = PointTargetAnalysisConfig()
 
     log.info(f"Starting Point Target Analysis on {product.name}")

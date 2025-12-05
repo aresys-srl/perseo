@@ -4,6 +4,11 @@ Changelog
 v1.0.8
 ------
 
+**New Features**
+
+- Adding `Elevation Notch Analysis`
+- Adding ``get_roll_angle_deg`` method to ``ExtendedChannelData`` input protocol
+
 **Bug Fixes**
 
 - Fixing Spectral Analysis graphs generation, another wrong code block indentation

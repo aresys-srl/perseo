@@ -331,6 +331,34 @@ class ExtendedChannelData(ChannelData, Protocol):
     Extension grants access to new methods that can be used inside for additional computations.
     """
 
+    def get_roll_angle_deg(self, azimuth_time: PreciseDateTime) -> float | None:
+        """Compute roll angle at a given azimuth time.
+
+        Parameters
+        ----------
+        azimuth_time : PreciseDateTime
+            azimuth time at which compute roll angle
+
+        Returns
+        -------
+        float | None
+            roll angle in degrees, None if roll angle is not available
+        """
+
+    def get_altitude_m(self, azimuth_time: PreciseDateTime) -> float:
+        """Compute altitude over WGS84 ellipsoid at a given azimuth time.
+
+        Parameters
+        ----------
+        azimuth_time : PreciseDateTime
+            azimuth time at which compute altitude
+
+        Returns
+        -------
+        float
+            altitude over WGS84 ellipsoid in meters
+        """
+
     def times_to_burst_association(self, azimuth_times: ArrayLike) -> list[int]:
         """Associate the right burst to a given input time point. This function returns 1 association for each
         input time.

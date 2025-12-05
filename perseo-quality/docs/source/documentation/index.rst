@@ -8,6 +8,7 @@
    target_ambiguity_ratio_doc
    spectral_analysis_doc
    enl_doc
+   elevation_notch_doc
 
 Documentation
 =============
@@ -23,6 +24,7 @@ The main analyses that can be performed using this tool are:
 - **Point & Distributed Target Ambiguity Ratio Analysis**
 - **Point & Distributed Target Spectral Analysis**
 - **Equivalent Number of Looks Analysis**
+- **Elevation Notch Analysis**
 
 These functionalities are located in different submodules of this framework that can be accessed as:
 
@@ -32,6 +34,7 @@ These functionalities are located in different submodules of this framework that
 - `perseo_quality.target_ambiguity_ratio_analysis`
 - `perseo_quality.spectral_analysis`
 - `perseo_quality.enl_analysis`
+- `perseo_quality.elevation_notch_analysis`
 
 These operations can be fully customized down to low level parameters in order to tweak and tune the algorithms behavior
 to the users' needs.

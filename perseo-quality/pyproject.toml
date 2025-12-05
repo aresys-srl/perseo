@@ -13,7 +13,8 @@ dependencies = [
     "arepytools >= 1.7.6",
     "pydantic",
     "numba>=0.61",
-    "h5py==3.14.0"
+    "h5py==3.14.0",
+    "xarray",
 ]
 dynamic = ["version"]
 classifiers = [
@@ -49,6 +50,7 @@ docs = [
     "sphinx-design",
     "sphinx-copybutton",
     "pydata-sphinx-theme",
+    "perseo-quality[graphs]",
 ]
 
 [build-system]
@@ -60,6 +62,9 @@ path = "src/perseo_quality/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 only-include = ["src", "tests", "docs"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.ruff]
 line-length = 120

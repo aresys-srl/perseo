@@ -15,3 +15,4 @@ API reference
    spectral_analysis
    tar_analysis
    enl
+   elevation_notch_analysis
