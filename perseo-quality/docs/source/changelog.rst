@@ -17,6 +17,7 @@ v1.0.8
 
 - Generalizing block ``core.common.blocks_partitioning`` function to manage multiple bursts with different lines per burst
 - Moved ``angles_computation_setup`` function from ``radiometric_analysis`` to ``core.common`` module
+- Changing radiometric profiles colormap to ``viridis`` and changing line color
 
 v1.0.7
 ------

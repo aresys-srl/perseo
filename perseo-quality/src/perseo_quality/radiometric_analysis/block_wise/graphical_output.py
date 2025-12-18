@@ -78,7 +78,7 @@ def radiometric_2D_hist_plot(
 
     ax.imshow(
         data.hist_2d,
-        cmap="binary",
+        cmap="viridis",
         vmin=1,
         extent=[
             data.hist_x_bins_axis.min(),
@@ -108,7 +108,7 @@ def radiometric_2D_hist_plot(
     ax.set_aspect(abs((extent[1] - extent[0]) / (extent[3] - extent[2])) / aspect)
 
     # ax.invert_yaxis()
-    plt.plot(mean_profile_axis, smoothed_profile, color="#63B6E3")
+    plt.plot(mean_profile_axis, smoothed_profile, color="#F0F0F0")
 
     plt.locator_params(axis="x", nbins=10)
     plt.locator_params(axis="y", nbins=10)
