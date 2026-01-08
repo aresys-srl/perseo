@@ -62,25 +62,28 @@ The previously described estimation procedure is carried out **only when the Ant
 must be provided as a nested dictionary of XArray Datasets containing the gain of and the elevation angles axis as shown
 below.
 
-   .. code-block:: python
-         {
-               "swath": {
-                  "polarization": xr.Dataset(
-                     {
-                           "gain": (
-                              ["azimuth_angles", "elevation_angles"],
-                              gain_data,  # in dB
-                           ),
-                           ...
-                     },
-                     coords={
-                           "elevation_angles": elevation_angles_axis,  # in deg
-                           "azimuth_angles": azimuth_angles_axis,  # in deg
-                           ...
-                     },
-                  )
-               }
-         }
+.. code-block:: python
+
+   import xarray as xr
+
+   antenna_pattern_datasets = {
+      "swath": {
+         "polarization": xr.Dataset(
+            {
+               "gain": (
+                  ["azimuth_angles", "elevation_angles"],
+                  gain_data,  # in dB
+               ),
+               ...
+            },
+            coords={
+               "elevation_angles": elevation_angles_axis,  # in deg
+               "azimuth_angles": azimuth_angles_axis,  # in deg
+               ...
+            },
+         )
+      }
+   }
 
 
 In addition to this estimation procedure based on the Antenna Pattern, another estimation method is carried out using a

@@ -48,24 +48,25 @@ def elevation_notch_analysis(
         Data must be provided in the following format:
 
         .. code-block:: python
-            {
-                "swath": {
-                    "polarization": xr.Dataset(
-                        {
-                            "gain": (
-                                ["azimuth_angles", "elevation_angles"],
-                                gain_data,  # in dB
-                            ),
-                            ...
-                        },
-                        coords={
-                            "elevation_angles": elevation_angles_axis,  # in deg
-                            "azimuth_angles": azimuth_angles_axis,  # in deg
-                            ...
-                        },
-                    )
-                }
-            }
+
+             {
+                 "swath": {
+                     "polarization": xr.Dataset(
+                         {
+                             "gain": (
+                                 ["azimuth_angles", "elevation_angles"],
+                                 gain_data,  # in dB
+                             ),
+                             ...
+                         },
+                         coords={
+                             "elevation_angles": elevation_angles_axis,  # in deg
+                             "azimuth_angles": azimuth_angles_axis,  # in deg
+                             ...
+                         },
+                     )
+                 }
+             }
 
     config : ElevationNotchConfig | None, optional
         ElevationNotchConfig configuration dataclass, by default None
