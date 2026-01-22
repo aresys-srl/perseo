@@ -99,7 +99,12 @@ def radiometric_2D_hist_plot(
             mean_profile_axis = np.nanmean(data.look_angles, 0)
         else:
             mean_profile_axis = np.nanmean(data.block_azimuth_times, 0)
-    smoothed_profile = savgol_filter(mean_profile, polyorder=3, window_length=mean_profile.size // 10)
+    m_indexes = np.arange(len(mean_profile))
+    nan_mask = np.isfinite(mean_profile)
+    mean_profile_nan_interp = np.interp(m_indexes, m_indexes[nan_mask], mean_profile[nan_mask])
+    smoothed_profile = savgol_filter(
+        mean_profile_nan_interp, polyorder=3, window_length=mean_profile_nan_interp.size // 10
+    )
 
     # forcing equal aspect ratio
     aspect = 8 / 6

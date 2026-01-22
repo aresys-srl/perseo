@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v1.0.9
+------
+
+**Bug Fixes**
+
+- Fixing ``radiometric_2D_hist_plot`` usage of ``scipy.signal.savgol_filter`` due to change in latest Numpy(2.3.x)/Scipy(1.17.x) NaN policy
+
 v1.0.8
 ------
 
