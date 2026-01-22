@@ -123,26 +123,34 @@ class RadiometricProfilesToNetCDF(unittest.TestCase):
                 incidence_angles=np.ones((3, 10)),
                 profiles=np.ones((3, 10)),
             )
-            out_file = out_fldr.joinpath(
-                tag + "_profiles_" + data.general_info.swath + "_" + data.general_info.polarization + ".nc"
-            )
-            support.radiometric_profiles_to_netcdf(data=data, out_path=out_fldr, tag=tag)
+            out_file = out_fldr.joinpath(tag + "_profiles_" + data.general_info.product + ".nc")
+            support.radiometric_profiles_to_netcdf(data=[data], out_path=out_fldr, tag=tag)
 
             # checking results
             self.assertTrue(out_file.exists())
             self.assertTrue(out_file.is_file())
             root = Dataset(out_file, "r", format="NETCDF4")
-            self.assertEqual(root.swath, data.general_info.swath)
-            self.assertEqual(root.channel, data.general_info.channel)
+            self.assertEqual(root.product, data.general_info.product)
+            self.assertEqual(root.sensor, data.general_info.sensor)
+            self.assertEqual(root.product_type, data.general_info.product_type)
+            self.assertEqual(root.acquisition_mode, data.general_info.acquisition_mode)
+            self.assertEqual(root.orbit_direction, data.general_info.orbit_direction)
+            self.assertEqual(root.acquisition_start_time, str(data.general_info.acquisition_start_time))
             self.assertEqual(root.direction, data.direction.name.lower())
             self.assertEqual(root.output_radiometric_quantity, data.general_info.radiometric_quantity)
-            self.assertEqual(root.azimuth_blocks_num, data.blocks_num)
-            self.assertListEqual(root.azimuth_block_centers, [str(d) for d in data.azimuth_block_centers])
-            np.testing.assert_array_equal(root.range_block_centers, data.range_block_centers)
-            np.testing.assert_array_equal(root.variables["look_angles"][:].data, data.look_angles)
-            np.testing.assert_array_equal(root.variables["incidence_angles"][:].data, data.incidence_angles)
-            np.testing.assert_array_equal(root.variables["radiometric_profiles"][:].data, data.profiles)
-            np.testing.assert_array_equal(root.variables["azimuth_times"][:].data, data.block_azimuth_times)
+            self.assertIn(data.general_info.swath, root.groups)
+            self.assertIn(data.general_info.polarization, root[data.general_info.swath].groups)
+            pol_grp = root[data.general_info.swath][data.general_info.polarization]
+            self.assertEqual(pol_grp.swath, data.general_info.swath)
+            self.assertEqual(pol_grp.channel, data.general_info.channel)
+            self.assertEqual(pol_grp.polarization, data.general_info.polarization)
+            self.assertEqual(pol_grp.azimuth_blocks_num, data.blocks_num)
+            self.assertListEqual(pol_grp.azimuth_block_centers, [str(d) for d in data.azimuth_block_centers])
+            np.testing.assert_array_equal(pol_grp.range_block_centers, data.range_block_centers)
+            np.testing.assert_array_equal(pol_grp.variables["look_angles"][:].data, data.look_angles)
+            np.testing.assert_array_equal(pol_grp.variables["incidence_angles"][:].data, data.incidence_angles)
+            np.testing.assert_array_equal(pol_grp.variables["radiometric_profiles"][:].data, data.profiles)
+            np.testing.assert_array_equal(pol_grp.variables["azimuth_times"][:].data, data.block_azimuth_times)
             root.close()
 
 

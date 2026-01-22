@@ -9,6 +9,7 @@ from pathlib import Path
 import time
 
 from sct_aresys_reader.protocol_implementation import ProductFolderManagerExtended
+from sct_sentinel1_reader.protocol_implementation import Sentinel1ProductManager
 
 from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.logger import quality_logger
@@ -31,14 +32,14 @@ if __name__ == "__main__":
 
     out_fldr = Path(r"C:\Users\giorgio.parma\Desktop\temporary_outputs\output_ref")
 
-    prod = r"C:\Users\giorgio.parma\Aresys_DATA\quality_data\radiometry\NovaSAR_NESZ"
-    prod = ProductFolderManagerExtended(prod)
+    prod = r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\GRD_24_RF.SAFE"
+    prod = Sentinel1ProductManager(prod)
 
     start = time.perf_counter()
     # performing NESZ analysis
-    res = nesz_profiles(product=prod)
-    tag = "nesz"
-    plot_mode = "min"
+    # res = nesz_profiles(product=prod)
+    # tag = "nesz"
+    # plot_mode = "min"
 
     # stats_df = radiometric_statistical_analysis_to_df(res)
 
@@ -50,14 +51,15 @@ if __name__ == "__main__":
     # stats_df = radiometric_statistical_analysis_to_df(res)
 
     # performing Rain Forest analysis
-    # res = average_elevation_profiles(product=prod, output_quantity=SARRadiometricQuantity.GAMMA_NOUGHT)
-    # tag = "rain_forest"
-    # plot_mode = "mean"
+    res = average_elevation_profiles(product=prod, output_quantity=SARRadiometricQuantity.GAMMA_NOUGHT)
+    tag = "rain_forest"
+    plot_mode = "mean"
 
     quality_logger.info(f"Elapsed time: {time.perf_counter() - start} seconds")
     stats_df = radiometric_statistical_analysis_to_df(res)
     stats_df.to_csv(out_fldr / f"{tag}_kpi_stats.csv")
 
+    radiometric_profiles_to_netcdf(data=res, out_path=out_fldr, tag=tag)
     # graphs and netcdf saving
     for item in res:
         radiometric_2D_hist_plot(
@@ -66,4 +68,3 @@ if __name__ == "__main__":
             title=f"{tag.upper()} Profiles {item.general_info.swath} {item.general_info.polarization}",
             plot_mode=plot_mode,
         )
-        radiometric_profiles_to_netcdf(data=item, out_path=out_fldr, tag=tag)

@@ -4,6 +4,10 @@ Changelog
 v1.0.9
 ------
 
+**Incompatible Changes**
+
+- Radiometric Analysis: output profiles are now stored in a single NetCDF file, grouped by swath and polarization
+
 **Bug Fixes**
 
 - Fixing ``radiometric_2D_hist_plot`` usage of ``scipy.signal.savgol_filter`` due to change in latest Numpy(2.3.x)/Scipy(1.17.x) NaN policy

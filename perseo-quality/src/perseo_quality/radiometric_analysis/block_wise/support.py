@@ -14,20 +14,31 @@ from netCDF4 import Dataset
 from numpy.polynomial import Polynomial
 from scipy.signal import convolve2d
 
-from perseo_quality.logger import quality_logger as log
 from perseo_quality.radiometric_analysis.block_wise.config import Radiometric2DHistogramParameters
 from perseo_quality.radiometric_analysis.custom_dataclasses import RadiometricProfilesOutput
 
 
 def radiometric_profiles_to_netcdf(
-    data: RadiometricProfilesOutput, out_path: str | Path, tag: str | None = None
+    data: list[RadiometricProfilesOutput], out_path: str | Path, tag: str | None = None
 ) -> Path:
     """Saving Radiometric Profiles output data to NetCDF4 file.
 
+    Hierarchy::
+
+        root/
+        ├── product_attributes...
+        └── swath
+            └── polarization
+                ├── channel_attributes...
+                ├── incidence_angles
+                ├── look_angles  [optional]
+                ├── azimuth_times  [optional]
+                └── radiometric_profiles
+
     Parameters
     ----------
-    data : RadiometricProfilesOutput
-        RadiometricProfilesOutput dataclass
+    data : list[RadiometricProfilesOutput]
+        list of RadiometricProfilesOutput dataclass, corresponding to the full output of the radiometric analysis
     out_path : str | Path
         path where to save the NetCDF file
     tag : str | None, optional
@@ -38,50 +49,69 @@ def radiometric_profiles_to_netcdf(
     Path
         path to the output netCDF file
     """
-    out_path = Path(out_path)
     tag = "radiometric" if tag is None else tag
+    out_name = tag + "_profiles_" + data[0].general_info.product
+    out_path = Path(out_path)
+    output_file = out_path.joinpath(out_name).with_suffix(".nc")
 
-    out_name = tag + "_profiles_" + data.general_info.swath + "_" + data.general_info.polarization
-    log.info(f"Saving {out_name} data to NetCDF file.")
+    root = Dataset(output_file, "w", format="NETCDF4")
+    root.product = data[0].general_info.product
+    root.sensor = data[0].general_info.sensor
+    root.product_type = data[0].general_info.product_type
+    root.acquisition_mode = data[0].general_info.acquisition_mode
+    root.orbit_direction = data[0].general_info.orbit_direction
+    root.acquisition_start_time = str(data[0].general_info.acquisition_start_time)
+    root.direction = data[0].direction.name.lower()
+    root.output_radiometric_quantity = data[0].general_info.radiometric_quantity
 
-    root = Dataset(out_path.joinpath(out_name).with_suffix(".nc"), "w", format="NETCDF4")
-    root.swath = data.general_info.swath
-    root.channel = data.general_info.channel
-    root.polarization = data.general_info.polarization
-    root.direction = data.direction.name.lower()
-    root.output_radiometric_quantity = data.general_info.radiometric_quantity
-    root.azimuth_blocks_num = data.blocks_num
-    root.azimuth_block_centers = [str(d) for d in data.azimuth_block_centers]
-    root.range_block_centers = data.range_block_centers
+    for item in data:
+        if item.general_info.swath not in root.groups:
+            swath_grp = root.createGroup(item.general_info.swath)
+        else:
+            swath_grp = root.groups[item.general_info.swath]
+        if item.general_info.polarization not in swath_grp.groups:
+            pol_grp = swath_grp.createGroup(item.general_info.polarization)
+        else:
+            pol_grp = swath_grp.groups[item.general_info.polarization]
+        pol_grp.swath = item.general_info.swath
+        pol_grp.channel = item.general_info.channel
+        pol_grp.polarization = item.general_info.polarization
+        pol_grp.azimuth_blocks_num = item.blocks_num
+        pol_grp.azimuth_block_centers = [str(d) for d in item.azimuth_block_centers]
+        pol_grp.range_block_centers = item.range_block_centers
 
-    # creating common dimensions
-    root.createDimension("samples", data.profiles.shape[1])
-    root.createDimension("azimuth_blocks", data.blocks_num)
+        # creating common dimensions
+        pol_grp.createDimension("samples", item.profiles.shape[1])
+        pol_grp.createDimension("azimuth_blocks", item.blocks_num)
 
-    # creating elevation angles variable
-    angles_axis = root.createVariable("incidence_angles", data.incidence_angles.dtype, ("azimuth_blocks", "samples"))
-    angles_axis.unit = "deg"
-    angles_axis[:] = data.incidence_angles
+        # creating elevation angles variable
+        angles_axis = pol_grp.createVariable(
+            "incidence_angles", item.incidence_angles.dtype, ("azimuth_blocks", "samples")
+        )
+        angles_axis.unit = "deg"
+        angles_axis[:] = item.incidence_angles
 
-    # creating elevation angles variable
-    if data.look_angles is not None:
-        data_axis = root.createVariable("look_angles", data.look_angles.dtype, ("azimuth_blocks", "samples"))
-        data_axis.unit = "deg"
-        data_axis[:] = data.look_angles
+        # creating elevation angles variable
+        if item.look_angles is not None:
+            data_axis = pol_grp.createVariable("look_angles", item.look_angles.dtype, ("azimuth_blocks", "samples"))
+            data_axis.unit = "deg"
+            data_axis[:] = item.look_angles
 
-    if data.block_azimuth_times is not None:
-        data_axis = root.createVariable("azimuth_times", data.block_azimuth_times.dtype, ("azimuth_blocks", "samples"))
-        data_axis.unit = "s"
-        data_axis[:] = data.block_azimuth_times
+        if item.block_azimuth_times is not None:
+            data_axis = pol_grp.createVariable(
+                "azimuth_times", item.block_azimuth_times.dtype, ("azimuth_blocks", "samples")
+            )
+            data_axis.unit = "s"
+            data_axis[:] = item.block_azimuth_times
 
-    # creating nesz profile variable
-    profs = root.createVariable("radiometric_profiles", data.profiles.dtype, ("azimuth_blocks", "samples"))
-    profs.unit = "dB"
-    profs[:] = data.profiles
+        # creating nesz profile variable
+        profs = pol_grp.createVariable("radiometric_profiles", item.profiles.dtype, ("azimuth_blocks", "samples"))
+        profs.unit = "dB"
+        profs[:] = item.profiles
 
     root.close()
 
-    return out_path.joinpath(out_name).with_suffix(".nc")
+    return output_file
 
 
 def compute_2d_histogram(
