@@ -16,60 +16,76 @@ from perseo_quality.interferometric_analysis.custom_dataclasses import (
     InterferometricCoherence2DHistograms,
     InterferometricCoherenceOutput,
 )
-from perseo_quality.logger import quality_logger as log
 
 # ignoring invalid divide by 0 warning
 np.seterr(invalid="ignore")
 
 
-def coherence_histograms_to_netcdf(data: InterferometricCoherenceOutput, output_dir: str | Path) -> None:
+def coherence_histograms_to_netcdf(data: list[InterferometricCoherenceOutput], output_dir: str | Path) -> Path:
     """Saving Coherence 2D histograms to NetCDF4 file.
 
     Parameters
     ----------
-    data : InterferometricCoherenceOutput
-        InterferometricCoherenceOutput dataclass
+    data : list[InterferometricCoherenceOutput]
+        list of InterferometricCoherenceOutput dataclass
     output_dir : str | Path
-        path where to save the NetCDF file
+
+    Returns
+    -------
+    Path
+        path to the output netCDF file
     """
     output_dir = Path(output_dir)
+    output_file = output_dir.joinpath("coherence_histograms.nc")
 
-    out_name = "coherence_histograms_" + data.swath + "_b" + str(data.burst) + "_" + data.polarization.name
-    log.info(f"Saving {out_name} data to NetCDF file")
+    root = Dataset(output_file, "w", format="NETCDF4")
 
-    root = Dataset(output_dir.joinpath(out_name).with_suffix(".nc"), "w", format="NETCDF4")
-    root.swath = data.swath
-    root.channel = data.channel_name
-    root.burst = data.burst
-    root.polarization = data.polarization.name
+    for item in data:
+        if item.swath not in root.groups:
+            swath_grp = root.createGroup(item.swath)
+        else:
+            swath_grp = root.groups[item.swath]
+        if item.polarization.name not in swath_grp.groups:
+            pol_grp = swath_grp.createGroup(item.polarization.name)
+        else:
+            pol_grp = swath_grp.groups[item.polarization.name]
+        pol_grp.swath = item.swath
+        pol_grp.channel = item.channel_name
+        pol_grp.polarization = item.polarization.name
+        burst_name = "BURST_" + str(item.burst)
+        if burst_name not in pol_grp.groups:
+            burst_grp = pol_grp.createGroup(burst_name)
+        else:
+            burst_grp = pol_grp.groups[burst_name]
 
-    # creating common dimensions
-    root.createDimension("coherence_bins", data.coherence_histograms.coherence_bin_edges.size - 1)
-    root.createDimension("azimuth_blocks", data.coherence_histograms.azimuth_histogram.shape[1])
-    root.createDimension("range_blocks", data.coherence_histograms.range_histogram.shape[1])
+        # creating common dimensions
+        burst_grp.createDimension("coherence_bins", item.coherence_histograms.coherence_bin_edges.size - 1)
+        burst_grp.createDimension("azimuth_blocks", item.coherence_histograms.azimuth_histogram.shape[1])
+        burst_grp.createDimension("range_blocks", item.coherence_histograms.range_histogram.shape[1])
 
-    # creating coherence bins variable
-    coherence_bins = root.createVariable(
-        "coherence_bins", data.coherence_histograms.coherence_bin_edges.dtype, "coherence_bins"
-    )
-    coherence_bins.unit = ""
-    coherence_bins[:] = data.coherence_histograms.coherence_bin_edges[:-1]
+        # creating coherence bins variable
+        coherence_bins = burst_grp.createVariable(
+            "coherence_bins", item.coherence_histograms.coherence_bin_edges.dtype, "coherence_bins"
+        )
+        coherence_bins.unit = ""
+        coherence_bins[:] = item.coherence_histograms.coherence_bin_edges[:-1]
 
-    # creating azimuth histogram variable
-    az_hist = root.createVariable(
-        "azimuth_histogram", data.coherence_histograms.azimuth_histogram.dtype, ("coherence_bins", "azimuth_blocks")
-    )
-    az_hist.unit = ""
-    az_hist[:] = data.coherence_histograms.azimuth_histogram
+        # creating azimuth histogram variable
+        az_hist = burst_grp.createVariable(
+            "azimuth_histogram", item.coherence_histograms.azimuth_histogram.dtype, ("coherence_bins", "azimuth_blocks")
+        )
+        az_hist.unit = ""
+        az_hist[:] = item.coherence_histograms.azimuth_histogram
 
-    # creating range histogram variable
-    rng_hist = root.createVariable(
-        "range_histogram", data.coherence_histograms.range_histogram.dtype, ("coherence_bins", "range_blocks")
-    )
-    rng_hist.unit = ""
-    rng_hist[:] = data.coherence_histograms.range_histogram
+        # creating range histogram variable
+        rng_hist = burst_grp.createVariable(
+            "range_histogram", item.coherence_histograms.range_histogram.dtype, ("coherence_bins", "range_blocks")
+        )
+        rng_hist.unit = ""
+        rng_hist[:] = item.coherence_histograms.range_histogram
 
     root.close()
+    return output_file
 
 
 def coherence_2d_histogram_computation_core(

@@ -7,6 +7,7 @@ v1.0.9
 **Incompatible Changes**
 
 - Radiometric Analysis: output profiles are now stored in a single NetCDF file, grouped by swath and polarization
+- Interferometric Analysis: output coherence histograms are now stored in a single NetCDF file, grouped by swath, polarization and burst
 
 **Bug Fixes**
 

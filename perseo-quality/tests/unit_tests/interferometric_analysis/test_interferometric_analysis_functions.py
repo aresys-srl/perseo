@@ -1935,26 +1935,24 @@ class TestInterferometricAnalysisFunctions(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             out = Path(temp_dir).joinpath("output")
             out.mkdir()
-            out_file = out.joinpath(
-                "coherence_histograms_" + data.swath + "_b" + str(data.burst) + "_" + data.polarization.name + ".nc"
-            )
-            coherence_histograms_to_netcdf(data=data, output_dir=out)
+            out_file = out.joinpath("coherence_histograms.nc")
+            coherence_histograms_to_netcdf(data=[data], output_dir=out)
             # results checking
             self.assertTrue(out_file.exists())
             self.assertTrue(out_file.is_file())
             root = Dataset(out_file, "r", format="NETCDF4")
-            self.assertEqual(root.swath, data.swath)
-            self.assertEqual(root.channel, data.channel_name)
-            self.assertEqual(root.burst, data.burst)
-            self.assertEqual(root.polarization, data.polarization.name)
+            group = root["S1"]["HV"]
+            self.assertEqual(group.swath, data.swath)
+            self.assertEqual(group.channel, data.channel_name)
+            self.assertEqual(group.polarization, data.polarization.name)
             np.testing.assert_array_equal(
-                root.variables["coherence_bins"][:].data, data.coherence_histograms.coherence_bin_edges[:-1]
+                group["BURST_0"].variables["coherence_bins"][:].data, data.coherence_histograms.coherence_bin_edges[:-1]
             )
             np.testing.assert_array_equal(
-                root.variables["azimuth_histogram"][:].data, data.coherence_histograms.azimuth_histogram
+                group["BURST_0"].variables["azimuth_histogram"][:].data, data.coherence_histograms.azimuth_histogram
             )
             np.testing.assert_array_equal(
-                root.variables["range_histogram"][:].data, data.coherence_histograms.range_histogram
+                group["BURST_0"].variables["range_histogram"][:].data, data.coherence_histograms.range_histogram
             )
             root.close()
 
