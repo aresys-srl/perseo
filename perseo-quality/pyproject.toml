@@ -42,7 +42,7 @@ classifiers = [
 graphs = ["matplotlib >= 3.5"]
 dev = ["ruff", "pylint", "nox"]
 test = ["unittest-xml-reporting", "coverage"]
-local_testing = ["sct[cli,graphs]>=2", "sct_aresys_reader"]
+local_testing = ["sct[cli,graphs]>=2", "sct_aresys_reader", "sct_sentinel1_reader"]
 docs = [
     "ipython",
     "nbsphinx",
