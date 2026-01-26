@@ -43,12 +43,7 @@
             ],
             "config": "/data/integration_tests/sct/configurations/test_dc014546_config.toml",
             "targets": "",
-            "reference_output": [
-                "/data/integration_tests/sct/reference_results/aresys_pf/interf-coregistered/coherence_histograms_IW1_b0_VH.nc",
-                "/data/integration_tests/sct/reference_results/aresys_pf/interf-coregistered/coherence_histograms_IW1_b1_VH.nc",
-                "/data/integration_tests/sct/reference_results/aresys_pf/interf-coregistered/coherence_histograms_IW1_b0_VV.nc",
-                "/data/integration_tests/sct/reference_results/aresys_pf/interf-coregistered/coherence_histograms_IW1_b1_VV.nc"
-            ]
+            "reference_output": "/data/integration_tests/sct/reference_results/aresys_pf/interf-coregistered/coherence_histograms.nc"
         }
     },
     "sentinel1A": {
@@ -76,8 +71,8 @@
             "config": "",
             "targets": "",
             "reference_output": [
-                "/data/integration_tests/sct/reference_results/sentinel1A/grd-rain-forest/RAIN_FOREST_profiles_IW_VH.nc",
-                "/data/integration_tests/sct/reference_results/sentinel1A/grd-rain-forest/RAIN_FOREST_profiles_IW_VV.nc"
+                "/data/integration_tests/sct/reference_results/sentinel1A/grd-rain-forest/kpi_stats.csv",
+                "/data/integration_tests/sct/reference_results/sentinel1A/grd-rain-forest/RAIN_FOREST_profiles_GRD_24_RF.nc"
             ]
         },
         "grd-nesz": {
@@ -86,9 +81,19 @@
             "config": "",
             "targets": "",
             "reference_output": [
-                "/data/integration_tests/sct/reference_results/sentinel1A/grd-nesz/NESZ_profiles_IW_VH.nc",
-                "/data/integration_tests/sct/reference_results/sentinel1A/grd-nesz/NESZ_profiles_IW_VV.nc"
+                "/data/integration_tests/sct/reference_results/sentinel1A/grd-nesz/kpi_stats.csv",
+                "/data/integration_tests/sct/reference_results/sentinel1A/grd-nesz/NESZ_profiles_GRD_23_NESZ.nc"
             ]
+        }
+    },
+    "sentinel1D": {
+        "notch": {
+            "analysis": "notch",
+            "product": "/data/reference_dataset/sentinel1d/products/SLC_EN_25.SAFE",
+            "config": "/data/integration_tests/sct/configurations/test_9ce862bf_config.toml",
+            "targets": "",
+            "antenna_pattern": "/data/reference_dataset/sentinel1d/auxiliaries/antenna_pattern_TW_EN.nc",
+            "reference_output": "/data/integration_tests/sct/reference_results/sentinel1D/notch/elevation_notch_results.nc"
         }
     }
 }
