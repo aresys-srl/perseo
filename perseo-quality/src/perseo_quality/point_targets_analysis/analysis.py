@@ -133,7 +133,7 @@ def point_target_analysis(
 
     if res:
         results_df = _results_to_dataframe(res)
-        results_df.sort_values(by=["target", "polarization"], inplace=True)
+        results_df.sort_values(by=["target_name", "polarization"], inplace=True)
     else:
         log.critical("Provided Point Targets are not visible in the scene. Analysis could not be performed.")
         results_df = pd.DataFrame(columns=["error_point_target_not_in_scene"])
@@ -458,7 +458,7 @@ def _results_to_dataframe(results: list[ptdt.PointTargetAnalysisOutput]) -> pd.D
     assert new_col == PTA_OUTPUT_COLUMNS_DF_UM
     df_res.columns = new_col
     with contextlib.suppress(ValueError):
-        df_res["target"] = pd.to_numeric(df_res["target"])
+        df_res["target_name"] = pd.to_numeric(df_res["target_name"])
 
     return df_res
 

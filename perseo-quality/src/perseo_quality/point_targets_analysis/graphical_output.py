@@ -59,7 +59,7 @@ def point_target_graphs_generation(
     if not interactive and output_dir is None:
         raise ValueError("A valid output directory path must be provided when interactive mode is off")
 
-    target_var = "target_name" if "target_name" in results_df.columns else "target"
+    target_var = "target_name"
 
     for item in graphs_data:
         try:

@@ -14,7 +14,7 @@ from perseo_quality.point_targets_analysis.custom_dataclasses import (
     RCSDataOutput,
 )
 
-PROD_INFO_COLS = ["target", "channel", "product", "sensor"]
+PROD_INFO_COLS = ["target_name", "channel", "product", "sensor"]
 GENERIC_INFO_OUTPUT_COLS = [f.name for f in fields(GenericInfoOutput)]
 ADDITIONAL_INFO_OUTPUT_COLS = [f.name for f in fields(PTAdditionalInfo)]
 IRF_OUTPUT_COLS = [f.name for f in fields(IRFDataOutput)]

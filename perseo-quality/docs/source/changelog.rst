@@ -8,6 +8,7 @@ v1.0.9
 
 - Radiometric Analysis: output profiles are now stored in a single NetCDF file, grouped by swath and polarization
 - Interferometric Analysis: output coherence histograms are now stored in a single NetCDF file, grouped by swath, polarization and burst
+- Point Target Analysis: changed output results dataframe column names to ``target_name`` instead of ``target``
 
 **Bug Fixes**
 
