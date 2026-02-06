@@ -75,10 +75,10 @@ The theoretical resolution can be predicted from the processing parameter of the
 
 .. math::
 
-    \begin{align*}
+    \begin{aligned}
     Res_{th, rng} &= 0.886 * \frac{c}{2 B_{rng}}  a_{win, rng} \\
     Res_{th, az} &= 0.886 * \frac{v_{sat, grd}}{B_{az}}  a_{win, az}
-    \end{align*}
+    \end{aligned}
 
 where :math:`c` is the speed of light, :math:`B_{rng}` is the transmitted pulse bandwidth, :math:`v_{sat, grd}` is the
 sensor velocity projected on ground, :math:`B_{az}` is the processed azimuth bandwidth and :math:`a_{win, rng}` and 
@@ -91,10 +91,10 @@ point target location. Profiles along range and azimuth directions are then extr
 the proper step factor:
 
 .. math::
-    \begin{align*}
+    \begin{aligned}
     Res_{data, rng} &= \Delta Px_{rng, -3dB} * step_{rng} \\
     Res_{data, az} &= \Delta Px_{az, -3dB} * step_{az}
-    \end{align*}
+    \end{aligned}
 
 .. important::
 
@@ -147,11 +147,11 @@ PSLR 2D is defined as the worst of the two measured PSLR values.
 Example formulas for computing ISLR:
 
 .. math::
-    \begin{align*}
+    \begin{aligned}
     ISLR_{rng} &= -10 \cdot \log_{10} \left(\frac{\int_{Peak}|S(rng)|^2 dS_{rng}}{\int_{Side}|S(rg)|^2 dS_{rng}} \right) \\
     ISLR_{az} &= -10 \cdot \log_{10} \left(\frac{\int_{Peak}|S(az)|^2 dS_{az}}{\int_{Side}|S(az)|^2 dS_{az}} \right) \\
     ISLR_{2D} &= -10 \cdot \log_{10} \left(\frac{\iint_{2DPeak}|S|^2 dS}{\iint_{2DSide}|S|^2 dS} \right)
-    \end{align*}
+    \end{aligned}
 
 The measured PSLR and ISLR can be compared with the theoretical values from the processing parameters applicable to the
 product under analysis. Discrepancies between the measured and theoretical values could hint some problems during the
@@ -224,10 +224,10 @@ The comparison is performed in SAR SLC domain (azimuth and range times domain) a
    in space coordinates:
 
    .. math::
-        \begin{align*}
+        \begin{aligned}
         \epsilon_{rng} &= t_{rng,\, pred} - t_{rng,\, meas} \\
         \epsilon_{az} &= t_{az,\, pred} - t_{az,\, meas}
-        \end{align*}
+        \end{aligned}
 
 The measured geolocation error is expected to be as close to 0 as possible. When discrepancies are observed the main causes can be:
 
