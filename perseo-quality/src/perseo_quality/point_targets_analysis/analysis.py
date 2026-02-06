@@ -193,7 +193,7 @@ def point_target_analysis_single(
         ),
     )
     graph = ptdt.PointTargetGraphicalData(
-        channel=channel_data.channel_id,
+        channel=str(channel_data.channel_id),
         swath=channel_data.swath_name,
         burst=burst,
         polarization=channel_data.polarization,
