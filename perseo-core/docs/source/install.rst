@@ -5,7 +5,7 @@ Installation
 
 .. important::
 
-    This package requires Python 3.10 or higher.
+    This package requires Python 3.11 or higher.
 
 
 Install

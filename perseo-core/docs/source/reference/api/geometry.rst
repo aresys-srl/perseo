@@ -16,11 +16,7 @@ Doppler Computation
 
 .. automodule:: perseo_core.geometry.doppler
 
-Utilities
----------
+Velocities Computation
+----------------------
 
-.. automodule:: perseo_core.geometry.utilities.ellipsoid
-
-.. automodule:: perseo_core.geometry.utilities.reference_frames
-
-.. automodule:: perseo_core.geometry.utilities.rotation
+.. automodule:: perseo_core.geometry.velocities

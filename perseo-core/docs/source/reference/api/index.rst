@@ -10,3 +10,5 @@ API reference
    timing
    geometry
    geocoding
+   models
+   utilities

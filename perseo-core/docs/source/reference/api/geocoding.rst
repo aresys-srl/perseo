@@ -1,7 +1,6 @@
 Geocoding Operations
 ====================
 
-
 Direct Geocoding
 ----------------
 
@@ -16,3 +15,8 @@ Inverse Geocoding
 .. automodule:: perseo_core.geometry.geocoding.inverse_geocoding
 
 .. automodule:: perseo_core.geometry.geocoding.inverse_geocoding_core
+
+Errors
+------
+
+.. automodule:: perseo_core.geometry.geocoding.errors

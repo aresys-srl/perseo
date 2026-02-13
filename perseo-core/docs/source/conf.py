@@ -6,7 +6,7 @@
 
 project = "perseo-core"
 base_name = project.replace("-", "_")
-copyright = "2025, Aresys S.R.L."
+copyright = "2026, Aresys S.R.L."
 author = "Aresys S.R.L."
 
 import perseo_core
@@ -23,7 +23,7 @@ release = VERSION
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-needs_sphinx = "8.0"
+needs_sphinx = "9.0"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

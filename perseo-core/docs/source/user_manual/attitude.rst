@@ -231,7 +231,7 @@ Another example of common use case is the following:
     angles_rad = np.deg2rad(np.array([
         [0.0, 0.0, 0.0],
         [0.0, 0.0, 45.0],
-        [0.0, 45.0 90.0],
+        [0.0, 45.0, 90.0],
     ]))
     # attitude is therefore expressed in the Local Reference System (i.e. Zero Doppler)
     attitude = Attitude.from_euler_angles(euler_angles_rad=angles_rad, rotation_order="YPR", times=times)

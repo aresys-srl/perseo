@@ -10,7 +10,7 @@ PERSEO CORE Documentation
 
    install  
    reference/api/index
-   documentation/index
+   user_manual/index
    changelog
 
 ``Core`` is part of the `PERSEO` Aresys python project, and it's aimed at providing fundamental functionalities
