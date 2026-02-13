@@ -2,14 +2,14 @@
 name = "perseo-core"
 description = "Python Ecosystem for Remote Sensing & Earth Observation: generic, broadly used operations and structures for SAR processing."
 authors = [{ name = "Aresys S.R.L.", email = "info@aresys.it" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = { file = "LICENSE.txt" }
 dependencies = [
-    "numpy > 2",
-    "scipy > 1.13",
+    "numpy>2",
+    "scipy>1.15",
     "numpydantic >= 1.6",
-    "pyproj >= 3.5",
+    "pyproj>=3.5",
     "python-dateutil"
 ]
 dynamic = ["version"]
@@ -40,7 +40,7 @@ test = ["unittest-xml-reporting", "coverage"]
 docs = [
     "ipython",
     "nbsphinx",
-    "sphinx",
+    "sphinx>9",
     "sphinx-design",
     "sphinx-copybutton",
     "pydata-sphinx-theme",
