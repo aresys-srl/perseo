@@ -1,109 +1,36 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Ellipsoid module
-----------------
-"""
-
-# TODO: Check if all this can be replaced with pyproj utilities (Geod and so on)
+"""Ellipsoids"""
 
 from __future__ import annotations
 
-from dataclasses import InitVar, dataclass, field
-
 import numpy as np
-import numpy.typing as npt
+from pyproj import Geod
 
-_A_MAX = 6.378137e6  # semi-major axis of WGS84 ellipsoid
-_A_MIN = 6.356752314245e6  # semi-minor axis of WGS84 ellipsoid
+from perseo_core.models.types import CoordinatesArrayType
+
+WGS84 = Geod(ellps="WGS84")
 
 
-@dataclass(frozen=True)
-class Ellipsoid:
+def create_inflated_WGS84_ellipsoid(height: float) -> Geod:
+    """Creating an inflated WGS84 ellipsoid.
+
+    Parameters
+    ----------
+    height : float
+        height above WGS84 ellipsoid
+
+    Returns
+    -------
+    Geod
+        inflated WGS84-like ellipsoid
     """
-    Class to represent an Ellipsoid geometrical object.
-
-    Examples
-    --------
-    >>> ellipsoid = Ellipsoid(1.0, 3.0)
-    >>> ellipsoid = Ellipsoid(3.0, 1.0)
-
-    See also
-    --------
-    WGS84 : common earth ellipsoid
-    """
-
-    semi_major_axis: float = field(init=False)
-    semi_minor_axis: float = field(init=False)
-    semi_axes_ratio_min_max: float = field(init=False)
-    eccentricity_square: float = field(init=False)
-    eccentricity: float = field(init=False)
-    ep2: float = field(init=False)
-
-    first_semi_axis: InitVar[float]
-    second_semi_axis: InitVar[float]
-
-    def __post_init__(self, first_semi_axis, second_semi_axis):
-        """Initialize the object with the specified ellipsoid parameters
-
-        Parameters
-        ----------
-        first_semi_axis : float
-            length of the first semi-axis of the ellipsoid
-        second_semi_axis : float
-            length of the second semi-axis of the ellipsoid
-
-        Raises
-        ------
-        ValueError
-            in case of negative input axis
-        """
-        if first_semi_axis <= 0 or second_semi_axis <= 0:
-            raise ValueError("Non-positive input axes")
-
-        object.__setattr__(self, "semi_major_axis", max(first_semi_axis, second_semi_axis))
-        object.__setattr__(self, "semi_minor_axis", min(first_semi_axis, second_semi_axis))
-        object.__setattr__(self, "semi_axes_ratio_min_max", self.semi_minor_axis / self.semi_major_axis)
-        object.__setattr__(self, "eccentricity_square", 1 - self.semi_axes_ratio_min_max**2)
-        object.__setattr__(self, "eccentricity", np.sqrt(self.eccentricity_square))
-        object.__setattr__(self, "ep2", 1.0 / self.semi_axes_ratio_min_max**2 - 1)
-
-    def inflate(self, height: float) -> Ellipsoid:
-        """Compute an ellipsoid by adding height to the semi-axis
-
-        Parameters
-        ----------
-        height : float
-            additional height, it can be negative
-
-        Examples
-        --------
-        >>> a = Ellipsoid(1.0, 3.0)
-        >>> b = a.inflate(2)
-        >>> print(b)
-        Ellipsoid(semi_major_axis=5.0, semi_minor_axis=3.0,
-                  semi_axes_ratio_min_max=0.6, eccentricity_square=0.64,
-                  eccentricity=0.8, ep2=1.7777777777777777)
-        """
-        return Ellipsoid(self.semi_major_axis + height, self.semi_minor_axis + height)
-
-
-WGS84 = Ellipsoid(_A_MAX, _A_MIN)
-"""WGS 84 ellipsoid, constant ellipsoid object
-
-Examples
---------
->>> from perseo.geometry.utilities.ellipsoid import WGS84
->>> print(WGS84.semi_minor_axis)
-6356752.314245
->>> print(WGS84.semi_axes_ratio_min_max)
-0.9966471893352243
-"""
+    return Geod(a=WGS84.a + height, b=WGS84.b + height)
 
 
 def compute_line_ellipsoid_intersections(
-    line_directions: npt.ArrayLike, line_origins: npt.ArrayLike, ellipsoid: Ellipsoid
+    line_directions: CoordinatesArrayType, line_origins: CoordinatesArrayType, ellipsoid: Geod
 ) -> tuple[tuple[np.ndarray]] | tuple[np.ndarray]:
     """Compute the intersections between lines and an ellipsoid
 
@@ -113,11 +40,11 @@ def compute_line_ellipsoid_intersections(
 
     Parameters
     ----------
-    line_directions : npt.ArrayLike
+    line_directions : CoordinatesArrayType
         (3,), (N, 3) one or more line directions, not necessarily normalized
-    line_origins : npt.ArrayLike
+    line_origins : CoordinatesArrayType
         (3,), (N, 3) one or more line origins
-    ellipsoid : Ellipsoid
+    ellipsoid : Geod
         ellipsoid
 
     Returns
@@ -171,6 +98,8 @@ def compute_line_ellipsoid_intersections(
          (array([-2.,  0.,  0.]), array([2., 0., 0.])))
     """
 
+    # TODO: return always two solutions or None and check where this is used to update code accordingly
+
     line_directions = np.asarray(line_directions)
     line_origins = np.asarray(line_origins)
 
@@ -190,18 +119,18 @@ def compute_line_ellipsoid_intersections(
     assert isinstance(line_directions, np.ndarray)
     line_directions_scaled = np.stack(
         [
-            line_directions[..., 0] / ellipsoid.semi_major_axis,
-            line_directions[..., 1] / ellipsoid.semi_major_axis,
-            line_directions[..., 2] / ellipsoid.semi_minor_axis,
+            line_directions[..., 0] / ellipsoid.a,
+            line_directions[..., 1] / ellipsoid.a,
+            line_directions[..., 2] / ellipsoid.b,
         ],
         axis=-1,
     )
 
     line_origins_scaled = np.stack(
         [
-            line_origins[..., 0] / ellipsoid.semi_major_axis,
-            line_origins[..., 1] / ellipsoid.semi_major_axis,
-            line_origins[..., 2] / ellipsoid.semi_minor_axis,
+            line_origins[..., 0] / ellipsoid.a,
+            line_origins[..., 1] / ellipsoid.a,
+            line_origins[..., 2] / ellipsoid.b,
         ],
         axis=-1,
     )
