@@ -9,9 +9,11 @@ Geometry - Doppler-related Utilities
 from __future__ import annotations
 
 import numpy as np
+from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
-from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
+from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType, FloatArrayType
 
 
 # TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
@@ -215,3 +217,83 @@ def get_geometric_doppler_centroid(
     sensor_velocity_norm = np.linalg.norm(sensor_velocities, axis=-1)
 
     return 2 * sensor_velocity_norm * np.sin(squint_angles) / wavelength
+
+
+# TODO: new, add unittest
+def compute_theoretical_doppler_rate(
+    trajectory: TwiceDifferentiable3DCurve,
+    azimuth_time: ExtendedDatetimeType,
+    coords: np.ndarray,
+    fc_hz: float,
+) -> np.ndarray:
+    """Compute theoretical doppler rate.
+
+    Parameters
+    ----------
+    trajectory : TwiceDifferentiable3DCurve
+        sensor trajectory
+    azimuth_time : ExtendedDatetimeType
+        azimuth time when to evaluate the doppler rate
+    coords : np.ndarray
+        ground point coordinates
+    fc_hz : float
+        signal carrier frequency
+
+    Returns
+    -------
+    np.ndarray
+        theoretical doppler rate
+    """
+    sat_pos = trajectory.evaluate(azimuth_time)
+    sat_vel = trajectory.evaluate_first_derivatives(azimuth_time)
+    sat_acc = trajectory.evaluate_second_derivatives(azimuth_time)
+
+    los = (sat_pos - coords).transpose()
+    los_norm = np.linalg.norm(los)
+
+    return (
+        -2
+        / (speed_of_light / fc_hz)
+        / los_norm
+        * (np.linalg.norm(sat_vel) ** 2 + float(np.dot(los, sat_acc)) - (float(np.dot(los, sat_vel)) / los_norm) ** 2)
+    )
+
+
+# TODO: new, add unittest
+def compute_steering_doppler_frequency(
+    trajectory: TwiceDifferentiable3DCurve,
+    azimuth_time: ExtendedDatetimeType,
+    az_mid_burst_time: ExtendedDatetimeType,
+    doppler_rate: float,
+    az_steering_rate_rad_s: float,
+    fc_hz: float,
+) -> float:
+    """Compute doppler frequency related to the antenna electrical steering.
+
+    Parameters
+    ----------
+    trajectory : TwiceDifferentiable3DCurve
+        sensor trajectory
+    azimuth_time : ExtendedDatetimeType
+        azimuth time at which compute the steering frequency
+    az_mid_burst_time : ExtendedDatetimeType
+        azimuth mid burst time
+    doppler_rate : float
+        sensor doppler rate
+    az_steering_rate_rad_s : float
+        azimuth steering rate in rad/s
+    fc_hz : float
+        signal carrier frequency
+
+    Returns
+    -------
+    float
+        steering doppler frequency
+    """
+    sat_vel_norm = np.linalg.norm(trajectory.evaluate_first_derivatives(azimuth_time))
+    # azimuth steering rate conversion from rad/s to Hz/s
+    az_steering_rate_hz_s = 2 * sat_vel_norm / (speed_of_light / fc_hz) * az_steering_rate_rad_s
+    # antenna modulation rate
+    antenna_modulation_rate = -doppler_rate * az_steering_rate_hz_s / (az_steering_rate_hz_s - doppler_rate)
+
+    return antenna_modulation_rate * (azimuth_time - az_mid_burst_time)
