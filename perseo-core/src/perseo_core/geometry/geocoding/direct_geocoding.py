@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy.constants import speed_of_light
+from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
@@ -19,6 +20,7 @@ from perseo_core.geometry.utilities.ellipsoid import (
     create_inflated_WGS84_ellipsoid,
 )
 from perseo_core.geometry.utilities.reference_frames import (
+    compute_pointing_directions,
     compute_sensor_local_axis,
 )
 from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
@@ -119,6 +121,62 @@ def direct_geocoding_with_look_angles(
     )
 
 
+def direct_geocoding_with_pointing(
+    sensor_positions: CoordinatesArrayType,
+    antenna_reference_frame: Rotation,
+    azimuth_antenna_angles: FloatArrayType,
+    elevation_antenna_angles: FloatArrayType,
+    geodetic_altitude: float = 0.0,
+) -> CoordinatesArrayType:
+    """Compute ground points illuminated with the given antenna patterns angles
+
+    Parameters
+    ----------
+    sensor_positions : CoordinatesArrayType
+        sensor positions, with shape (3,) or (N, 3)
+    antenna_reference_frame : Rotation
+        antenna reference frame for the sensor as a Rotation object, with 1 or N rotations, same numerosity as
+        sensor_positions
+    azimuth_angles : FloatArrayType
+        scalar or (N,) array like, in radians
+    elevation_angles : FloatArrayType
+        scalar or (N,) array like, in radians
+    geodetic_altitude : float, optional
+        altitude over the WGS84 ellipsoid, by default 0.0
+
+    Returns
+    -------
+    np.ndarray
+        ground points (3,) or (N, 3) numpy array
+
+    Raises
+    ------
+    ValueError
+        in case of mismatching input dimensions
+    """
+    try:
+        arf_num = len(antenna_reference_frame)
+    except TypeError:
+        arf_num = 1
+    pos_num = np.size(sensor_positions) // 3
+
+    if arf_num != pos_num:
+        raise ValueError(
+            f"input shape mismatch: antenna reference frame {arf_num} != sensor positions {sensor_positions.shape}"
+        )
+
+    # TODO: looking direction computed this way could be simply provided as input and avoid the computation inside
+    return direct_geocoding_with_looking_direction(
+        sensor_positions=sensor_positions,
+        looking_direction=compute_pointing_directions(
+            antenna_reference_frame=antenna_reference_frame,
+            azimuth_antenna_angles=azimuth_antenna_angles,
+            elevation_antenna_angles=elevation_antenna_angles,
+        ),
+        geodetic_altitude=geodetic_altitude,
+    )
+
+
 def direct_geocoding_monostatic(
     sensor_positions: CoordinatesArrayType,
     sensor_velocities: CoordinatesArrayType,
@@ -155,11 +213,6 @@ def direct_geocoding_monostatic(
     -------
     CoordinatesArrayType
         geocoded position for each input time and position value
-
-    Raises
-    ------
-    AmbiguousInputCorrelation
-        if inputs shapes are ambiguous to match, this error is raised
     """
 
     look_direction = SensorLookDirection(look_direction)

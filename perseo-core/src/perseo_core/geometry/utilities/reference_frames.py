@@ -250,6 +250,76 @@ def compute_sensor_local_axis(
         return Rotation.from_matrix(compute_geodetic_reference_frame(sensor_positions, sensor_velocities))
 
 
+def compute_pointing_directions(
+    antenna_reference_frame: Rotation,
+    azimuth_antenna_angles: npt.ArrayLike,
+    elevation_antenna_angles: npt.ArrayLike,
+) -> np.ndarray:
+    """Compute the pointing directions corresponding to the given antenna angles.
+
+    Parameters
+    ----------
+    antenna_reference_frame : Rotation
+        antenna reference frame for the sensor as a Rotation object, with 1 or N rotations
+    azimuth_antenna_angles : npt.ArrayLike
+        scalar or (N,) array like, in radians
+    elevation_antenna_angles : npt.ArrayLike
+        scalar or (N,) array like, in radians
+
+    Returns
+    -------
+    np.ndarray
+        pointing directions, with shape (3,) or (N, 3)
+
+    Raises
+    ------
+    ValueError
+        in case of mismatching input dimensions
+    """
+    azimuth_antenna_angles = np.asarray(azimuth_antenna_angles)
+    elevation_antenna_angles = np.asarray(elevation_antenna_angles)
+    assert isinstance(antenna_reference_frame, Rotation), "antenna_reference_frame must be a Rotation object"
+    try:
+        arf_num = len(antenna_reference_frame)
+    except TypeError:
+        arf_num = 1
+
+    if arf_num != 1 and azimuth_antenna_angles.size != 1 and arf_num != np.size(azimuth_antenna_angles):
+        raise ValueError(
+            f"input shape mismatch: antenna reference frame {arf_num} != azimuth antenna angles "
+            + f"{np.size(azimuth_antenna_angles)}"
+        )
+
+    if arf_num != 1 and elevation_antenna_angles.size != 1 and arf_num != np.size(elevation_antenna_angles):
+        raise ValueError(
+            f"input shape mismatch: antenna reference frame {arf_num} != elevation antenna angles "
+            + f"{np.size(elevation_antenna_angles)}"
+        )
+
+    if (
+        elevation_antenna_angles.size != 1
+        and azimuth_antenna_angles.size != 1
+        and elevation_antenna_angles.size != azimuth_antenna_angles.size
+    ):
+        raise ValueError(
+            "Incompatible azimuth and elevation antenna angles numerosity: "
+            + f"{azimuth_antenna_angles.size}, {elevation_antenna_angles.size}"
+        )
+
+    if azimuth_antenna_angles.shape != elevation_antenna_angles.shape:
+        broadcast_shape = np.broadcast_shapes(azimuth_antenna_angles.shape, elevation_antenna_angles.shape)
+        azimuth_antenna_angles = np.broadcast_to(azimuth_antenna_angles, broadcast_shape)
+        elevation_antenna_angles = np.broadcast_to(elevation_antenna_angles, broadcast_shape)
+
+    ux = np.tan(azimuth_antenna_angles)
+    uy = np.tan(elevation_antenna_angles)
+    uz = np.ones_like(ux)
+    local_directions = np.stack([ux, uy, uz], axis=-1)
+    local_directions = local_directions / np.linalg.norm(local_directions, axis=-1, keepdims=True)
+
+    return antenna_reference_frame.apply(local_directions)
+
+
 def compute_inertial_velocity(sensor_positions: np.ndarray, sensor_velocities: np.ndarray) -> np.ndarray:
     """Compute the sensor inertial velocity
 

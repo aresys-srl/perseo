@@ -3,9 +3,11 @@
 
 """Testing geometry/utilities/reference_frames.py functionalities"""
 
+import itertools
 import unittest
 
 import numpy as np
+from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.utilities.reference_frames import (
     ReferenceFrame,
@@ -13,9 +15,11 @@ from perseo_core.geometry.utilities.reference_frames import (
     compute_geodetic_point,
     compute_geodetic_reference_frame,
     compute_inertial_velocity,
+    compute_pointing_directions,
     compute_sensor_local_axis,
     compute_zerodoppler_reference_frame,
 )
+from tests.common import compute_antenna_angles_a_posteriori
 
 
 class SensorAxisTestCase(unittest.TestCase):
@@ -249,6 +253,101 @@ class InertialFramesTestCase(unittest.TestCase):
             rtol=10,
             atol=self._tolerance,
         )
+
+
+class PointingDirectionsComputationTestCase(unittest.TestCase):
+    """Testing compute pointing directions function"""
+
+    def setUp(self):
+        self._arf_in = np.array(
+            [
+                [-0.604580222175426, -0.564852727629684, -0.561626344684451],
+                [-0.304829433093801, 0.815474732550541, -0.492016236816769],
+                [0.735908806628936, -0.126263045507894, -0.665203631728697],
+            ]
+        )
+        self._tolerance = 1e-8
+
+    def test_compute_pointing_directions(self):
+
+        boresight_dir = compute_pointing_directions(
+            antenna_reference_frame=Rotation.from_matrix(self._arf_in),
+            azimuth_antenna_angles=0,
+            elevation_antenna_angles=0,
+        )
+        np.testing.assert_allclose(boresight_dir, self._arf_in[:, 2], rtol=0, atol=self._tolerance)
+
+    def test_compute_pointing_directions_vectorized(self):
+        """Testing compute pointing directions, vectorized"""
+
+        num_elements = 10
+        arf_inputs = [self._arf_in, np.tile(self._arf_in, (num_elements, 1, 1))]
+
+        az_angles_in = np.deg2rad(np.linspace(-5, 5, 10))
+        el_angles_in = np.deg2rad(np.linspace(-3, 2, 10))
+
+        azimuth_angles_inputs = [az_angles_in, az_angles_in[0]]
+        elevation_angles_inputs = [el_angles_in, el_angles_in[4]]
+
+        for arf, azimuth_angles, elevation_angles in itertools.product(
+            arf_inputs, azimuth_angles_inputs, elevation_angles_inputs
+        ):
+            directions = compute_pointing_directions(Rotation.from_matrix(arf), azimuth_angles, elevation_angles)
+
+            expected_shape = (3,)
+            if arf.ndim == 3 or np.size(azimuth_angles) > 1 or np.size(elevation_angles) > 1:
+                expected_shape = (num_elements,) + expected_shape
+
+            self.assertEqual(directions.shape, expected_shape)
+
+            np.testing.assert_allclose(
+                np.linalg.norm(directions, axis=-1),
+                np.ones_like(azimuth_angles),
+                rtol=0,
+                atol=self._tolerance,
+            )
+
+            azimuth_out, elevation_out = compute_antenna_angles_a_posteriori(self._arf_in, directions)
+
+            self.assertLess(np.max(np.abs(azimuth_out - azimuth_angles)), self._tolerance)
+            self.assertLess(np.max(np.abs(elevation_out - elevation_angles)), self._tolerance)
+
+    def test_compute_pointing_directions_invalid_inputs(self):
+        arf_inputs = [
+            np.ones((10, 3, 3)),
+            np.ones((10, 3, 3)),
+            np.ones((10, 3, 3)),
+            np.ones((10, 3, 3)),
+            np.ones((3, 3)),
+            np.ones((3, 2)),
+            np.ones((10, 3, 2)),
+        ]
+        azimuth_angles_inputs = [
+            np.arange(5),
+            np.arange(5),
+            1,
+            np.arange(10),
+            np.arange(5),
+            1,
+            1,
+        ]
+        elevation_angles_inputs = [
+            np.arange(5),
+            1,
+            np.arange(5),
+            np.arange(3),
+            np.arange(3),
+            1,
+        ]
+
+        for arf, azimuth_angles, elevation_angles in zip(
+            arf_inputs,
+            azimuth_angles_inputs,
+            elevation_angles_inputs,
+            strict=False,
+        ):
+            with self.assertRaises(ValueError):
+                compute_pointing_directions(Rotation.from_matrix(arf), azimuth_angles, elevation_angles)
 
 
 if __name__ == "__main__":

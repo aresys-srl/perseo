@@ -82,3 +82,11 @@ def get_testing_trajectory() -> CubicSplineTrajectory:
         positions=state_vectors["sensor_positions"],
         velocities=state_vectors["sensor_velocities"],
     )
+
+
+def compute_antenna_angles_a_posteriori(antenna_reference_frame, vectors):
+    vectors = vectors / np.linalg.norm(vectors, axis=-1, keepdims=True)
+    local_components = np.einsum("...jk, ...j->...k", antenna_reference_frame, vectors)
+    azimuth_angles = np.arctan(local_components[..., 0] / local_components[..., 2])
+    elevation_angles = np.arctan(local_components[..., 1] / local_components[..., 2])
+    return azimuth_angles, elevation_angles

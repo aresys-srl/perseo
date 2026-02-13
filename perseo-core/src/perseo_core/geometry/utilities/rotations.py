@@ -25,14 +25,14 @@ def euler_angles_to_rotation(
     Parameters
     ----------
     euler_angles_rad : ArrayLike
-        euler angles in radians, with yaw[..., 0], pitch[..., 1], roll[..., 2], with shape (3,) or (N, 3)
+        euler angles in radians, with the same column order of the specified ``order``, with shape (3,) or (N, 3)
     order : RotationOrderLike
         rotation order
 
     Returns
     -------
     Rotation
-        a SciPy rotation object equivalent to the input euler angles matrix
+        a SciPy rotation object equivalent to the input euler angles matrix with the specified order
 
     Examples
     --------
@@ -70,7 +70,7 @@ def euler_angles_to_rotation(
 
 
 def rotation_to_euler_angles(rotation: Rotation, order: RotationOrderLike) -> np.ndarray:
-    """Compute euler angles (yaw, pitch and roll) array from the rotation matrix and its rotation order.
+    """Compute euler angles array from the Rotation object and its rotation order.
 
     This is the opposite of :py:func:`euler_angles_to_rotation`.
 
