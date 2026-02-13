@@ -6,6 +6,6 @@ PERSEO - CORE: Logging functionalities for the whole framework
 --------------------------------------------------------------
 """
 
-from perseo_core.logger import perseo_logger
+from perseo_core.logger.logger import perseo_logger
 
 __all__ = ["perseo_logger"]
