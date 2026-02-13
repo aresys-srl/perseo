@@ -121,7 +121,7 @@ def compute_look_angles(
     ----------
     trajectory : TwiceDifferentiable3DCurve
         sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
-    azimuth_time : PreciseDateTime
+    azimuth_time : ExtendedDatetimeType
         azimuth time at which compute the look a angles corresponding to the input range times
     range_times : float | FloatArrayType
         range times where to compute the look angles, a float or a (N,) array
@@ -228,7 +228,8 @@ def compute_look_angles_core(
         raise ValueError(f"points has invalid shape: {ground_points.shape}, it should be (3,) or (N, 3)")
 
     los_directions = ground_points - sensor_positions
-    los_directions = los_directions / np.linalg.norm(los_directions, axis=-1, keepdims=True)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        los_directions = los_directions / np.linalg.norm(los_directions, axis=-1, keepdims=True)
 
     if not assume_nadir_directions_normalized:
         nadir_directions = nadir_directions / np.linalg.norm(nadir_directions, axis=-1, keepdims=True)

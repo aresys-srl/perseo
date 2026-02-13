@@ -13,12 +13,15 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_bistatic_core,
     direct_geocoding_monostatic_core,
 )
-from perseo_core.geometry.utilities.ellipsoid import WGS84, compute_line_ellipsoid_intersections
+from perseo_core.geometry.utilities import ReferenceFrameLike
+from perseo_core.geometry.utilities.ellipsoid import (
+    compute_line_ellipsoid_intersections,
+    create_inflated_WGS84_ellipsoid,
+)
 from perseo_core.geometry.utilities.reference_frames import (
-    ReferenceFrameLike,
-    compute_rotation,
     compute_sensor_local_axis,
 )
+from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
 from perseo_core.models.enums import SensorLookDirection
 from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
 
@@ -48,7 +51,7 @@ def direct_geocoding_with_looking_direction(
     CoordinatesArrayType
         ground points, with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
     """
-    inflated_ellipsoid = WGS84.inflate(geodetic_altitude)
+    inflated_ellipsoid = create_inflated_WGS84_ellipsoid(geodetic_altitude)
 
     intersections = compute_line_ellipsoid_intersections(
         line_directions=looking_direction,
@@ -96,18 +99,24 @@ def direct_geocoding_with_look_angles(
     CoordinatesArrayType
         ground points, with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
     """
-    local_axis = compute_sensor_local_axis(sensor_positions, sensor_velocities, reference_frame)
-
-    rotation = compute_rotation(
-        "YPR",
-        yaw=np.zeros_like(look_angles),
-        pitch=np.zeros_like(look_angles),
-        roll=-np.asarray(look_angles),
+    local_axis = compute_sensor_local_axis(
+        sensor_positions=sensor_positions, sensor_velocities=sensor_velocities, reference_frame=reference_frame
     )
 
-    pointing = np.matmul(local_axis, rotation.as_matrix())[..., 2]
+    look_angles = np.atleast_1d(look_angles)
+    assert look_angles.ndim == 1
+    rotation = euler_angles_to_rotation(
+        euler_angles_rad=np.stack(
+            [np.zeros_like(look_angles), np.zeros_like(look_angles), -np.asarray(look_angles)], axis=-1
+        ),
+        order="YPR",
+    )
 
-    return direct_geocoding_with_looking_direction(sensor_positions, pointing, geodetic_altitude=geodetic_altitude)
+    pointing = (local_axis * rotation).as_matrix().squeeze()[..., 2]
+
+    return direct_geocoding_with_looking_direction(
+        sensor_positions=sensor_positions, looking_direction=pointing, geodetic_altitude=geodetic_altitude
+    )
 
 
 def direct_geocoding_monostatic(

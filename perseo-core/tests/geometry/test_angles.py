@@ -15,7 +15,7 @@ from perseo_core.geometry.angles import (
     compute_look_angles_core,
     get_geometric_squint_angle,
 )
-from perseo_core.models.orbit import Orbit
+from perseo_core.models.trajectories import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
@@ -486,7 +486,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
 
 
 class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
-    """Testing compute_incidence_angles_from_trajectory and compute_look_angles_from_trajectory functions"""
+    """Testing compute_incidence_angles_from_trajectory and compute_look_angles functions"""
 
     def setUp(self):
         sensor_positions = np.array(
@@ -979,7 +979,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         time_axis_relative = np.asarray([d_t * k for k in range(sensor_positions.size // 3)])
         time_axis_origin = PreciseDateTime.from_utc_string("17-FEB-2020 16:00:34.908999712209")
 
-        self.trajectory = Orbit(
+        self.trajectory = CubicSplineTrajectory(
             times=time_axis_relative + time_axis_origin, positions=sensor_positions, velocities=sensor_velocities
         )
 
@@ -1198,7 +1198,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
     def test_compute_look_angles_from_trajectory_case0(self) -> None:
-        """Testing compute_look_angles_from_trajectory function, case 0"""
+        """Testing compute_look_angles function, case 0"""
 
         # case 0: single range value
         angles = compute_look_angles(
@@ -1213,7 +1213,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         np.testing.assert_allclose(angles, self.look_angles_expected[0], atol=self.tolerance, rtol=0)
 
     def test_compute_look_angles_from_trajectory_case0_deg(self) -> None:
-        """Testing compute_look_angles_from_trajectory function, case 0, degrees"""
+        """Testing compute_look_angles function, case 0, degrees"""
 
         # case 0: single range value
         angles = compute_look_angles(
@@ -1229,7 +1229,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         np.testing.assert_allclose(np.deg2rad(angles), self.look_angles_expected[0], atol=self.tolerance, rtol=0)
 
     def test_compute_look_angles_from_trajectory_case1(self) -> None:
-        """Testing compute_look_angles_from_trajectory function, case 1"""
+        """Testing compute_look_angles function, case 1"""
 
         # case 1: range array
         angles = compute_look_angles(
@@ -1246,7 +1246,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         np.testing.assert_allclose(angles, self.look_angles_expected, atol=self.tolerance, rtol=0)
 
     def test_compute_look_angles_from_trajectory_case1_deg(self) -> None:
-        """Testing compute_look_angles_from_trajectory function, case 1, degrees"""
+        """Testing compute_look_angles function, case 1, degrees"""
 
         # case 1: range array
         angles = compute_look_angles(

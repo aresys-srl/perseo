@@ -10,6 +10,11 @@ from scipy.constants import speed_of_light
 from scipy.interpolate import interp1d
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
+from perseo_core.geometry.geocoding.errors import (
+    AmbiguousInputCorrelation,
+    NewtonMethodConvergenceError,
+    OrbitsNotOverlappedError,
+)
 from perseo_core.models.protocols import TwiceDifferentiable3DCurve
 from perseo_core.models.types import (
     CoordinatesArrayType,
@@ -17,18 +22,6 @@ from perseo_core.models.types import (
     ExtendedDatetimeType,
     FloatArrayType,
 )
-
-
-class NewtonMethodConvergenceError(RuntimeError):
-    """Newton method could not converge to a root solution."""
-
-
-class AmbiguousInputCorrelation(RuntimeError):
-    """Ambiguous correlation between input init times number and number of ground points. Operation not supported."""
-
-
-class OrbitsNotOverlappedError(RuntimeError):
-    """Orbits provided for bistatic inverse geocoding are not overlapped"""
 
 
 def inverse_geocoding_monostatic_core(
@@ -43,22 +36,20 @@ def inverse_geocoding_monostatic_core(
 ) -> tuple[ExtendedDatetimeType | ExtendedDatetimeArrayType, float | FloatArrayType]:
     """Core algorithm for precise inverse geocoding monostatic.
 
-    This function finds one zero of the doppler equation as a function of the
-    azimuth time. The search of the zero is restricted to the interval associated
-    to the polynomial indexed by polynomial_index.
-    Newton iterations are performed to find the exact azimuth time,
-    once that the sensor position is known the computation of the range time
-    is trivial.
+    This function finds one zero of the doppler equation as a function of the azimuth time. The search of the zero is
+    restricted to the interval associated to the polynomial indexed by polynomial_index. Newton iterations are performed
+    to find the exact azimuth time, once that the sensor position is known the computation of the range time is trivial.
 
     Vectorized function with the following supported cases:
-    - 1 guess and 1 earth point --> PDT, float
-    - N guesses and N earth points --> array[PDT], array[float]
-    - 1 guess and N earth points --> array[PDT], array[float]
-    - N guesses and 1 earth point --> array[PDT], array[float]
-    - N earth points and N frequencies and 1 guess --> array[PDT], array[float]
-    - N earth points and N frequencies and N guess --> array[PDT], array[float]
-    - 1 earth point and N frequencies and N guess --> array[PDT], array[float]
-    - 1 earth point and N frequencies and 1 guess --> array[PDT], array[float]
+
+        - 1 guess and 1 earth point --> PDT, float
+        - N guesses and N earth points --> array[PDT], array[float]
+        - 1 guess and N earth points --> array[PDT], array[float]
+        - N guesses and 1 earth point --> array[PDT], array[float]
+        - N earth points and N frequencies and 1 guess --> array[PDT], array[float]
+        - N earth points and N frequencies and N guess --> array[PDT], array[float]
+        - 1 earth point and N frequencies and N guess --> array[PDT], array[float]
+        - 1 earth point and N frequencies and 1 guess --> array[PDT], array[float]
 
     Parameters
     ----------
@@ -193,15 +184,16 @@ def inverse_geocoding_bistatic_core(
     """Core algorithm for precise inverse geocoding bistatic.
 
     Vectorized function with the following supported cases:
-    - 1 guess and 1 earth point --> PDT, float
-    - N guesses and N earth points --> array[PDT], array[float]
-    - 1 guess and N earth points --> array[PDT], array[float]
-    - N guesses and 1 earth point --> array[PDT], array[float]
-    - N guesses and N frequencies --> array[PDT], array[float]
-    - N earth points and N frequencies and 1 guess --> array[PDT], array[float]
-    - N earth points and N frequencies and N guess --> array[PDT], array[float]
-    - 1 earth point and N frequencies and N guess --> array[PDT], array[float]
-    - 1 earth point and N frequencies and 1 guess --> array[PDT], array[float]
+
+        - 1 guess and 1 earth point --> PDT, float
+        - N guesses and N earth points --> array[PDT], array[float]
+        - 1 guess and N earth points --> array[PDT], array[float]
+        - N guesses and 1 earth point --> array[PDT], array[float]
+        - N guesses and N frequencies --> array[PDT], array[float]
+        - N earth points and N frequencies and 1 guess --> array[PDT], array[float]
+        - N earth points and N frequencies and N guess --> array[PDT], array[float]
+        - 1 earth point and N frequencies and N guess --> array[PDT], array[float]
+        - 1 earth point and N frequencies and 1 guess --> array[PDT], array[float]
 
     Parameters
     ----------
@@ -426,6 +418,7 @@ def inverse_geocoding_monostatic_init_core(
     In principle each input ground point could be seen several times by the sensor orbit if it contains
     multiple periods. In this case, all possible solutions are kept and returned in a list with an array
     for each input point and the size of the array matches the number of solutions found for that point.
+
     Parameters
     ----------
     trajectory : TwiceDifferentiable3DCurve
@@ -636,10 +629,10 @@ def inverse_geocoding_attitude_core(
     abs_time_tolerance: float = 1e-8,
     max_iter: int = 8,
 ) -> tuple[ExtendedDatetimeType | ExtendedDatetimeArrayType, float | FloatArrayType]:
-    """Core algorithm for precise inverse geocoding monostatic using attitude and
-    3D Differentiable curve objects.
+    """Core algorithm for precise inverse geocoding monostatic using attitude and 3D Differentiable curve objects.
 
     Vectorized function with the following supported cases:
+
         - 1 guess and 1 earth point --> PDT, float
         - N guesses and N earth points --> array[PDT], array[float]
         - 1 guess and N earth points --> array[PDT], array[float]

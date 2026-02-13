@@ -182,7 +182,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
                 "ZERODOPPLER",
                 np.arange(5, dtype=float),
             )
-        with self.assertRaises(ValueError):
+        with self.assertRaises(AssertionError):
             direct_geocoding_with_look_angles(
                 np.arange(3, dtype=float),
                 np.arange(3, dtype=float),

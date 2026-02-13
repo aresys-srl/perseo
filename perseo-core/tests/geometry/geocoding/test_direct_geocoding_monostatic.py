@@ -8,7 +8,6 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
-from pyproj import Geod
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_init, direct_geocoding_monostatic
@@ -19,9 +18,8 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     _newton_for_direct_geocoding_monostatic,
     direct_geocoding_monostatic_core,
 )
+from perseo_core.geometry.utilities.ellipsoid import WGS84
 from perseo_core.models.enums import SensorLookDirection
-
-WGS84 = Geod(ellps="WGS84")
 
 
 def _doppler_equation_residual(

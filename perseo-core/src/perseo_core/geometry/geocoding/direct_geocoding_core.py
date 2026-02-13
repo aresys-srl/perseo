@@ -6,24 +6,14 @@
 from __future__ import annotations
 
 import numpy as np
-from pyproj import Geod
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.geocoding.errors import (
+    AmbiguousInputCorrelation,
+    NewtonMethodConvergenceError,
+)
+from perseo_core.geometry.utilities.ellipsoid import WGS84
 from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
-
-WGS84 = Geod(ellps="WGS84")
-
-
-class NewtonMethodConvergenceError(RuntimeError):
-    """Newton method could not converge to a root solution."""
-
-
-class EmptyEllipsoidIntersection(RuntimeError):
-    """Ellipsoid intersection cannot be found"""
-
-
-class AmbiguousInputCorrelation(RuntimeError):
-    """Ambiguous correlation between input in geocoding function. Operation not supported."""
 
 
 def direct_geocoding_monostatic_core(

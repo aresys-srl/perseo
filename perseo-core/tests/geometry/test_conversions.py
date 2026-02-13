@@ -6,11 +6,9 @@
 import unittest
 
 import numpy as np
-from pyproj import Geod
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-
-WGS84 = Geod(ellps="WGS84")
+from perseo_core.geometry.utilities.ellipsoid import WGS84
 
 
 class CoordsConversionsTest(unittest.TestCase):
