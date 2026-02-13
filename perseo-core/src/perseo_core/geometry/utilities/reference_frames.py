@@ -5,42 +5,32 @@
 
 from __future__ import annotations
 
-from enum import Enum
-from typing import Union
-
 import numpy as np
 import numpy.typing as npt
+from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
+from perseo_core.geometry.utilities import ReferenceFrame, ReferenceFrameLike, RotationOrder
 from perseo_core.geometry.utilities.ellipsoid import WGS84
-from perseo_core.geometry.utilities.rotation import RotationOrder, compute_rotation
-
-
-class ReferenceFrame(Enum):
-    """Available reference frames"""
-
-    GEOCENTRIC = "GEOCENTRIC"
-    GEODETIC = "GEODETIC"
-    ZERO_DOPPLER = "ZERODOPPLER"
-
-
-ReferenceFrameLike = Union[str, ReferenceFrame]
-""":class:`ReferenceFrame` like type hint """
+from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
 
 _SIDEREAL_DAY = 86164.09054
 _earth_angular_velocity = 2.0 * np.pi / _SIDEREAL_DAY
-_semi_axis_ratio_sqr = WGS84.semi_axes_ratio_min_max**2
-_major_semi_axis_sqr = WGS84.semi_major_axis**2
-_minor_semi_axis_sqr = WGS84.semi_minor_axis**2
+_semi_axes_ratio_min_max = WGS84.b / WGS84.a
+_semi_axis_ratio_sqr = _semi_axes_ratio_min_max**2
+_major_semi_axis_sqr = WGS84.a**2
+_minor_semi_axis_sqr = WGS84.b**2
 
 
+# TODO: improve documentation, specify input coords must be in Global Ref??
 def compute_zerodoppler_reference_frame(sensor_positions: np.ndarray, sensor_velocities: np.ndarray) -> np.ndarray:
     """Compute the ZeroDoppler reference frame at given sensor positions and velocities.
 
     Reference frame
-    - x-unit vector oriented as sensor non-inertial velocity
-    - y-unit vector given by the cross product between x and sensor position corrected with Earth eccentricity
-    - z-unit vector completing the reference frame
+
+    - x-unit vector: oriented as sensor non-inertial velocity
+    - y-unit vector: given by the cross product between x and sensor position corrected with Earth eccentricity
+    - z-unit vector: completing the reference frame
 
     - output frame has x as first column, y as second one and z as the last one.
 
@@ -91,6 +81,12 @@ def compute_zerodoppler_reference_frame(sensor_positions: np.ndarray, sensor_vel
 def compute_geocentric_reference_frame(sensor_positions: np.ndarray, sensor_velocities: np.ndarray) -> np.ndarray:
     """Computed the geocentric reference frame at given sensor positions and velocities.
 
+    Reference frame
+
+    - x-unit vector: completing the reference frame
+    - y-unit vector: given by the cross product between z and sensor inertial velocity
+    - z-unit vector: oriented as -sat_pos
+
     Parameters
     ----------
     sensor_positions : np.ndarray
@@ -108,9 +104,6 @@ def compute_geocentric_reference_frame(sensor_positions: np.ndarray, sensor_velo
     ValueError
         in case of invalid input
     """
-    # x-unit vector completing the reference frame
-    # y-unit vector given by the cross product between z and sensor inertial velocity
-    # z-unit vector oriented as -sat_pos
 
     sensor_positions = np.asarray(sensor_positions)
     sensor_velocities = np.asarray(sensor_velocities)
@@ -167,23 +160,23 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
         raise ValueError(f"sensor_position has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
 
-    geodetic_point = compute_geodetic_point(sensor_positions)
+    geodetic_point = compute_geodetic_point(sensor_positions=sensor_positions)
 
     unit_vector_z = geodetic_point - sensor_positions
     unit_vector_z = unit_vector_z / np.linalg.norm(unit_vector_z, axis=-1, keepdims=True)
 
-    geocentric_frame = compute_geocentric_reference_frame(sensor_positions, sensor_velocities)
+    geocentric_frame = compute_geocentric_reference_frame(
+        sensor_positions=sensor_positions, sensor_velocities=sensor_velocities
+    )
 
     z_geocentric = np.einsum("...jk, ...j->...k", geocentric_frame, unit_vector_z)
     z_geocentric = z_geocentric / np.linalg.norm(z_geocentric, axis=-1, keepdims=True)
 
     beta = -np.arctan2(z_geocentric[..., 1], z_geocentric[..., 2])
 
-    rotation = compute_rotation(
-        RotationOrder.ypr,
-        yaw=np.zeros_like(beta),
-        pitch=np.zeros_like(beta),
-        roll=beta,
+    rotation = euler_angles_to_rotation(
+        order=RotationOrder.ypr,
+        euler_angles_rad=np.stack([np.zeros_like(beta), np.zeros_like(beta), beta], axis=-1),
     )
 
     rotated_frame = np.matmul(geocentric_frame, rotation.as_matrix())
@@ -192,16 +185,19 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
     z_rotated = z_rotated / np.linalg.norm(z_rotated, axis=-1, keepdims=True)
     xsi = np.arctan2(z_rotated[..., 0], z_rotated[..., 2])
 
-    second_rotation = compute_rotation(RotationOrder.ypr, yaw=np.zeros_like(xsi), pitch=xsi, roll=np.zeros_like(xsi))
+    second_rotation = euler_angles_to_rotation(
+        order=RotationOrder.ypr, euler_angles_rad=np.stack([np.zeros_like(xsi), xsi, np.zeros_like(xsi)], axis=-1)
+    )
 
     return np.matmul(rotated_frame, second_rotation.as_matrix())
 
 
+# TODO: improve documentation
 def compute_sensor_local_axis(
     sensor_positions: np.ndarray,
     sensor_velocities: np.ndarray,
     reference_frame: ReferenceFrameLike,
-) -> np.ndarray:
+) -> Rotation:
     """Compute the axis of the local reference frame given the sensor's positions and velocities.
 
     Parameters
@@ -215,8 +211,8 @@ def compute_sensor_local_axis(
 
     Returns
     -------
-    np.ndarray
-        sensor's local axis, with shape (3, 3) or (N, 3, 3)
+    Rotation
+        sensor's local axis as a Rotation object
 
     Examples
     --------
@@ -226,7 +222,7 @@ def compute_sensor_local_axis(
     >>> print(position.shape)
     (3,)
     >>> axis = compute_sensor_local_axis(position, velocity, ReferenceFrame.zero_doppler)
-    >>> print(axis.shape)
+    >>> print(axis.as_matrix().shape)
     (3, 3)
 
     multiple position and velocity
@@ -234,7 +230,7 @@ def compute_sensor_local_axis(
     >>> print(positions.shape)
     (10, 3)
     >>> axes = compute_sensor_local_axis(positions, velocities, ReferenceFrame.zero_doppler)
-    >>> print(axes.shape)
+    >>> print(axes.as_matrix().shape)
     (10, 3, 3)
 
     reference frame as string
@@ -245,13 +241,13 @@ def compute_sensor_local_axis(
     reference_frame = ReferenceFrame(reference_frame)
 
     if reference_frame == ReferenceFrame.ZERO_DOPPLER:
-        return compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities)
+        return Rotation.from_matrix(compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities))
 
     if reference_frame == ReferenceFrame.GEOCENTRIC:
-        return compute_geocentric_reference_frame(sensor_positions, sensor_velocities)
+        return Rotation.from_matrix(compute_geocentric_reference_frame(sensor_positions, sensor_velocities))
 
     if reference_frame == ReferenceFrame.GEODETIC:
-        return compute_geodetic_reference_frame(sensor_positions, sensor_velocities)
+        return Rotation.from_matrix(compute_geodetic_reference_frame(sensor_positions, sensor_velocities))
 
 
 def compute_inertial_velocity(sensor_positions: np.ndarray, sensor_velocities: np.ndarray) -> np.ndarray:
@@ -402,7 +398,7 @@ def _ze(x: float, y: float) -> float:
 
 
 def _ze_x(x: float, y: float) -> float:
-    return -WGS84.semi_axes_ratio_min_max * x / _ze(x, y)
+    return -_semi_axes_ratio_min_max * x / _ze(x, y)
 
 
 def _ze_xy(x: float, y: float) -> float:

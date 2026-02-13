@@ -14,6 +14,9 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 
+class ExtrapolationNotAllowed(ValueError):
+    """Extrapolation outside of boundaries is not allowed"""
+
 @runtime_checkable
 class TwiceDifferentiable3DCurve(Protocol):
     """Custom 3D curve container with evaluation method for curve and first two derivatives.
