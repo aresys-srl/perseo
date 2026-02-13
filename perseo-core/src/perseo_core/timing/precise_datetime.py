@@ -183,51 +183,45 @@ def _isoformat_time(hour, minute, second, picosecond, timespec="auto"):
 
 @functools.total_ordering
 class PreciseDateTime:
-    """Precise Date Time class
+    """Precise Date Time format specification.
 
     .. list-table::
-       :widths: auto
+       :widths: 25 35 40
+       :header-rows: 1
 
+       * - Field
+         - Value / Format
+         - Description
        * - Precision
-         - 1e-12s (picoseconds)
-         -
-
+         - 1e-12 s
+         - Picosecond precision
        * - Standard format
          - ``"DD-MMM-YYYY hh:mm:ss.pppppppppppp"``
-         -
-
+         - Default string representation
        * - Standard reference date
-         - |PRECISEDATETIME_REFERENCE_TIME|
-         -
-
-       * -
-         - DD
-         - day
-
-       * -
-         - MMM
-         - month (``JAN``, ``FEB``, ``MAR``, ``APR``, ``MAY``, ``JUN``, ``JUL``, ``AUG``, ``SEP``, ``OCT``, ``NOV``,
-         ``DEC``)
-
-       * -
-         - YYYY
-         - year
-
-       * -
-         - hh
-         - hours (00->23)
-
-       * -
-         - mm
-         - minutes (00->59)
-
-       * -
-         - ss
-         - seconds (00->59)
-
-       * -
-         - pppppppppppp
-         - picoseconds
+         - PRECISEDATETIME_REFERENCE_TIME
+         - Reference epoch
+       * - DD
+         - —
+         - Day
+       * - MMM
+         - ``JAN``, ``FEB``, ``MAR``, ``APR``, ``MAY``, ``JUN``, ``JUL``, ``AUG``, ``SEP``, ``OCT``, ``NOV``, ``DEC``
+         - Month (three-letter uppercase abbreviation)
+       * - YYYY
+         - —
+         - Year (4 digits)
+       * - hh
+         - 00-23
+         - Hours (24-hour format)
+       * - mm
+         - 00-59
+         - Minutes
+       * - ss
+         - 00-59
+         - Seconds
+       * - pppppppppppp
+         - 12 digits
+         - Picoseconds
     """
 
     _MONTH_ABBREVIATED_NAME_DIRECTIVE = "%b"
@@ -282,7 +276,7 @@ class PreciseDateTime:
         Raises
         ------
         ValueError
-            if the time point would be prior to |PRECISEDATETIME_REFERENCE_TIME|
+            if the time point would be prior to PRECISEDATETIME_REFERENCE_TIME
         """
         seconds_fraction = seconds - int(seconds)
         picoseconds_in_seconds_fraction = seconds_fraction / self._PRECISION
@@ -528,7 +522,7 @@ class PreciseDateTime:
 
     @property
     def sec85(self) -> float:
-        """Time distance in seconds from |PRECISEDATETIME_1985| to the current time point."""
+        """Time distance in seconds from PRECISEDATETIME_1985 to the current time point."""
         return self._TIME_DIFF_REFERENCE_FROM_1985.total_seconds() + self._seconds + self._picoseconds * self._PRECISION
 
     @classmethod
@@ -562,12 +556,12 @@ class PreciseDateTime:
 
     @classmethod
     def from_sec85(cls, seconds: float) -> PreciseDateTime:
-        """Create an object with the time point defined by adding the specified input seconds to |PRECISEDATETIME_1985|
+        """Create an object with the time point defined by adding the specified input seconds to PRECISEDATETIME_1985
 
         Parameters
         ----------
         seconds : float
-            number of seconds from |PRECISEDATETIME_1985|
+            number of seconds from PRECISEDATETIME_1985
 
         Returns
         -------
@@ -577,7 +571,7 @@ class PreciseDateTime:
         return cls(seconds - cls._TIME_DIFF_REFERENCE_FROM_1985.total_seconds(), 0)
 
     def set_from_sec85(self, seconds: float) -> PreciseDateTime:
-        """Set the object to the time point defined by adding the specified input seconds to |PRECISEDATETIME_1985|
+        """Set the object to the time point defined by adding the specified input seconds to PRECISEDATETIME_1985
 
         .. deprecated:: v1.2.0
             use :func:`PreciseDateTime.from_sec85` instead.
@@ -585,7 +579,7 @@ class PreciseDateTime:
         Parameters
         ----------
         seconds : float
-            number of seconds from |PRECISEDATETIME_1985|
+            number of seconds from PRECISEDATETIME_1985
 
         Returns
         -------
