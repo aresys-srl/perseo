@@ -8,7 +8,8 @@ import sys
 from pathlib import Path
 
 from sct_aresys_reader.protocol_implementation import ProductFolderManagerExtended
-
+from sct_sentinel1_reader.protocol_implementation import Sentinel1ProductManager
+from sct.io.point_target_manager import extract_point_target_data_from_source, convert_df_to_nominal_point_target
 from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.logger import quality_logger
 from perseo_quality.spectral_analysis.analysis import (
@@ -19,29 +20,19 @@ from perseo_quality.spectral_analysis.graphical_output import spectral_graphs
 
 from arepytools.io.point_target_binary import PointSetProduct
 
+from perseo_quality.spectral_analysis.support import spectral_analysis_profiles_to_netcdf
+
 if __name__ == "__main__":
     # setup custom logger
     quality_logger.addHandler(logging.StreamHandler(sys.stdout))
 
-    product_path = r"C:\Users\giorgio.parma\Aresys_DATA\quality_data\demo_topsar\SLC"
-    point_targets_file = r"C:\Users\giorgio.parma\Aresys_DATA\quality_data\demo_topsar\demo_topsar_point_targets_binary"
-    output_dir = r"C:\Users\giorgio.parma\Desktop\temporary_outputs\test"
+    product_path = r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\SLC_PT_SPECTRAL.SAFE"
+    point_targets_file = r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\dlr_calibration_site_germany.csv"
+    output_dir = r"C:\ARESYS_PROJ\perseo\perseo-quality\scripts\out"
 
-    pts = PointSetProduct(point_targets_file)
-    coords, rcs = pts.read_data()
-    pt_list = []
-    for pt in range(coords.shape[0]):
-        pt_list.append(PointTarget(
-            delay=0,
-            name=f"pt{pt}",
-            xyz_coordinates=coords[pt, :],
-            rcs_hh=rcs[pt, 0],
-            rcs_hv=rcs[pt, 1],
-            rcs_vh=rcs[pt, 2],
-            rcs_vv=rcs[pt, 3],
-        ))
-
-    product = ProductFolderManagerExtended(product_path)
+    product = Sentinel1ProductManager(product_path)
+    pt = extract_point_target_data_from_source(source=point_targets_file)
+    pt_list = convert_df_to_nominal_point_target(data_df=pt)
 
     print("")
     quality_logger.info("PT Spectral Analysis")
@@ -50,13 +41,6 @@ if __name__ == "__main__":
     spectral_data = point_target_spectral_analysis(
         product=product, point_targets=pt_list, cropping_size=(256, 256)
     )
+    # spectral_data = block_wise_distributed_spectral_analysis(product=product)
     spectral_graphs(data=spectral_data, output_dir=output_dir)
-
-    # print("")
-    # print("Distributed Spectral Analysis")
-    # print("")
-
-    # product = ProductFolderManagerExtended(product_path)
-
-    # spectral_data =block_wise_distributed_spectral_analysis(product=product)
-    # spectral_graphs(data=spectral_data, output_dir=output_dir)
+    spectral_analysis_profiles_to_netcdf(data=spectral_data, out_path=output_dir)

@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import numpy as np
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
 from scipy.fft import fft2, fftshift
@@ -20,11 +22,13 @@ from perseo_quality.spectral_analysis.custom_dataclasses import (
     DistributedSpectraDataOutput,
     PointTargetSpectraDataOutput,
     SpectralAnalysisBlockInfo,
+    SpectralAnalysisProductGeneralInfo,
     SpectralAnalysisTargetInfo,
 )
 from perseo_quality.spectral_analysis.support import (
     compute_polynomial_fit,
     compute_spectrogram_db,
+    compute_spectrum_boundaries,
     data_deramping,
     extract_abs_profiles,
     extract_phase_profiles,
@@ -73,16 +77,30 @@ def point_target_spectral_analysis(
 
         # recovering metadata for the current channel
         channel_data = product.get_channel_data(channel_id=channel)
-        log.info(f"Channel Data acquisition mode is: {channel_data.acquisition_mode.name}")
+        log.info(f"Channel acquisition mode: {channel_data.acquisition_mode.name}")
 
         # recovering only targets visible by this channel
         targets_visible_by_channel = visible_targets[visible_targets["channel"] == channel]["id"]
 
         output_results = PointTargetSpectraDataOutput(
-            product_name=product.name,
-            channel=channel,
-            swath=channel_data.swath_name,
-            polarization=channel_data.polarization,
+            general_info=SpectralAnalysisProductGeneralInfo(
+                product=product.name,
+                channel=str(channel),
+                swath=channel_data.swath_name,
+                acquisition_mode=channel_data.acquisition_mode.name,
+                orbit_direction=channel_data.orbit_direction.name,
+                polarization=channel_data.polarization.name,
+                product_type=channel_data.image_type.name,
+                sensor=channel_data.sensor_name,
+                acquisition_start_time=datetime(
+                    year=channel_data.azimuth_axis[0].year,
+                    month=channel_data.azimuth_axis[0].month,
+                    day=channel_data.azimuth_axis[0].day_of_the_month,
+                    hour=channel_data.azimuth_axis[0].hour_of_day,
+                    minute=channel_data.azimuth_axis[0].minute_of_hour,
+                    second=channel_data.azimuth_axis[0].second_of_minute,
+                ),
+            )
         )
 
         targets_info = []
@@ -163,15 +181,29 @@ def point_target_spectral_analysis(
                 range_frequency_axis = np.linspace(-0.5, 0.5, data_fft.shape[0])
                 # absolute (dB) profiles and data
                 range_profiles_db, azimuth_profiles_db = extract_abs_profiles(data_fft)
+                rng_spectrum_boundaries = compute_spectrum_boundaries(range_profiles_db[1])
+                az_spectrum_boundaries = compute_spectrum_boundaries(azimuth_profiles_db[1])
                 spectrogram_db, spectrogram_frequencies, spectrogram_times = compute_spectrogram_db(data)
                 # phase (deg) profiles and data
                 range_profiles_deg, azimuth_profiles_deg = extract_phase_profiles(data_fft)
+                target_phase_value_deg = range_profiles_deg[1][data.shape[0] // 2 - 1]  # phase at spectrum center
+                norm_range_profiles_deg = [
+                    np.angle(np.exp(1j * np.deg2rad(p - target_phase_value_deg)), deg=True) for p in range_profiles_deg
+                ]
+                norm_azimuth_profiles_deg = [
+                    np.angle(np.exp(1j * np.deg2rad(p - target_phase_value_deg)), deg=True)
+                    for p in azimuth_profiles_deg
+                ]
                 # only for the central profile, the one passing through the point target
                 range_polynomial_fit = compute_polynomial_fit(
-                    profile=range_profiles_deg[1], freq_axis=range_frequency_axis
+                    profile=norm_range_profiles_deg[1],
+                    freq_axis=range_frequency_axis,
+                    boundaries=rng_spectrum_boundaries,
                 )
                 azimuth_polynomial_fit = compute_polynomial_fit(
-                    profile=azimuth_profiles_deg[1], freq_axis=azimuth_frequency_axis
+                    profile=norm_azimuth_profiles_deg[1],
+                    freq_axis=azimuth_frequency_axis,
+                    boundaries=az_spectrum_boundaries,
                 )
                 targets_info.append(
                     SpectralAnalysisTargetInfo(
@@ -193,9 +225,17 @@ def point_target_spectral_analysis(
                         spectrogram_times=spectrogram_times,
                         spectrum_deg=np.angle(data_fft, deg=True),
                         range_profiles_deg=range_profiles_deg,
+                        range_profiles_norm_deg=norm_range_profiles_deg,
                         azimuth_profiles_deg=azimuth_profiles_deg,
+                        azimuth_profiles_norm_deg=norm_azimuth_profiles_deg,
+                        target_phase_value_deg=target_phase_value_deg,
+                        target_doppler_centroid_Hz=channel_data.doppler_centroid.evaluate(
+                            azimuth_time=az_rng_coords.azimuth, range_time=az_rng_coords.range
+                        ),
                         range_polynomial_fit=range_polynomial_fit,
                         azimuth_polynomial_fit=azimuth_polynomial_fit,
+                        rng_spectrum_boundaries=rng_spectrum_boundaries,
+                        az_spectrum_boundaries=az_spectrum_boundaries,
                     )
                 )
 
@@ -236,7 +276,7 @@ def block_wise_distributed_spectral_analysis(
             f"Analyzing Channel {channel}, Swath {channel_data.swath_name},"
             + f" Polarization {channel_data.polarization.name}..."
         )
-        log.info(f"Channel Data acquisition mode is: {channel_data.acquisition_mode.name}")
+        log.info(f"Channel acquisition mode: {channel_data.acquisition_mode.name}")
 
         log.info("Defining blocks partitioning of the whole scene.")
         # defining scene partitioning by blocks
@@ -248,10 +288,24 @@ def block_wise_distributed_spectral_analysis(
         )
 
         output_results = DistributedSpectraDataOutput(
-            product_name=product.name,
-            channel=channel,
-            swath=channel_data.swath_name,
-            polarization=channel_data.polarization,
+            general_info=SpectralAnalysisProductGeneralInfo(
+                product=product.name,
+                channel=str(channel),
+                swath=channel_data.swath_name,
+                acquisition_mode=channel_data.acquisition_mode.name,
+                orbit_direction=channel_data.orbit_direction.name,
+                polarization=channel_data.polarization.name,
+                product_type=channel_data.image_type.name,
+                sensor=channel_data.sensor_name,
+                acquisition_start_time=datetime(
+                    year=channel_data.azimuth_axis[0].year,
+                    month=channel_data.azimuth_axis[0].month,
+                    day=channel_data.azimuth_axis[0].day_of_the_month,
+                    hour=channel_data.azimuth_axis[0].hour_of_day,
+                    minute=channel_data.azimuth_axis[0].minute_of_hour,
+                    second=channel_data.azimuth_axis[0].second_of_minute,
+                ),
+            )
         )
 
         blocks_info = []
@@ -270,6 +324,10 @@ def block_wise_distributed_spectral_analysis(
                 range_index=center[1],
                 cropping_size=cropping_size,
                 output_radiometric_quantity=channel_data.radiometric_quantity,
+            )
+            doppler_centroid_mid_block = channel_data.doppler_centroid.evaluate(
+                azimuth_time=channel_data.azimuth_axis[center[0]],
+                range_time=channel_data.slant_range_axis[center[1]],
             )
 
             if channel_data.acquisition_mode in (SARAcquisitionMode.TOPSAR, SARAcquisitionMode.SCANSAR):
@@ -290,6 +348,7 @@ def block_wise_distributed_spectral_analysis(
                     first_az_line_block=int(center[0] - np.floor(cropping_size[1] / 2)),
                     lines_block=target_area.shape[1],
                     samples_block=target_area.shape[0],
+                    doppler_centroid_mid_block=doppler_centroid_mid_block,
                     azimuth_frequency_axis=np.linspace(-0.5, 0.5, data_fft.shape[1]),
                     range_frequency_axis=np.linspace(-0.5, 0.5, data_fft.shape[0]),
                     spectrum_db=convert_to_db(np.abs(data_fft) ** 2),

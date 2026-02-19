@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Literal, get_args
 
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.gridspec import GridSpec
 
 from perseo_quality.logger import quality_logger as log
@@ -88,8 +89,24 @@ def spectral_graph_core(
         az_profiles = item.azimuth_profiles_db
         if graph_mode == "PHASE":
             spectrum = item.spectrum_deg
-            rng_profiles = item.range_profiles_deg
-            az_profiles = item.azimuth_profiles_deg
+            rng_profiles = [
+                np.where(
+                    (np.arange(p.size) >= item.rng_spectrum_boundaries[0])
+                    & (np.arange(p.size) < item.rng_spectrum_boundaries[1]),
+                    p,
+                    np.nan,
+                )
+                for p in item.range_profiles_norm_deg
+            ]
+            az_profiles = [
+                np.where(
+                    (np.arange(p.size) >= item.az_spectrum_boundaries[0])
+                    & (np.arange(p.size) < item.az_spectrum_boundaries[1]),
+                    p,
+                    np.nan,
+                )
+                for p in item.azimuth_profiles_norm_deg
+            ]
 
         # frequency spectrum & cuts
         ax = fig.add_subplot(grid[0, 0])
@@ -165,9 +182,15 @@ def spectral_graph_core(
             ax = fig.add_subplot(grid[1, 0])
             ax.axis("off")
             ax.text(0, 0.8, "Range Phase Profile Polynomial:", fontdict={"weight": "bold", "fontsize": 14})
-            ax.text(0, 0.7, f"phase [deg] = {item.range_polynomial_fit}")
+            ax.text(0, 0.7, f"phase [deg] = {item.range_polynomial_fit.convert()}")
             ax.text(0, 0.5, "Azimuth Phase Profile Polynomial:", fontdict={"weight": "bold", "fontsize": 14})
-            ax.text(0, 0.4, f"phase [deg] = {item.azimuth_polynomial_fit}")
+            ax.text(0, 0.4, f"phase [deg] = {item.azimuth_polynomial_fit.convert()}")
+            ax.text(
+                0,
+                0.2,
+                r"$\mathbf{Phase\ value\ at\ target\ position:}$" + f" {round(item.target_phase_value_deg)} deg",
+                fontdict={"fontsize": 12},
+            )
         else:
             # spectrogram
             ax = fig.add_subplot(grid[1, 0])
@@ -185,20 +208,22 @@ def spectral_graph_core(
             ax.set_ylabel("Frequency")
             ax.set_xlabel("Azimuth [lines]")
 
-        title_str = "Point Target" if is_pt_graph else "Distributed Target"
         fig.suptitle(
-            f"{title_str} Spectral Analysis - {graph_mode.capitalize()}",
+            f"{'PT ' if is_pt_graph else ''}Spectral Analysis [Normalized Frequencies] - {graph_mode.capitalize()}",
             weight="bold",
             fontsize=16,
         )
         txt_str = (
-            f"Product: {data.product_name}   Channel: {data.channel}  Polarization: {data.polarization.name}"
-            + f"   Swath: {data.swath}   "
+            f"Channel: {data.general_info.channel}  Polarization: {data.general_info.polarization}"
+            + f"   Swath: {data.general_info.swath}   "
         )
         if is_pt_graph:
-            txt_str += f"Burst: {item.burst}   Target: {item.target_name}   [Normalized Frequencies]"
+            txt_str += (
+                f"Burst: {item.burst}   Target: {item.target_name}   "
+                + f"DC @ Target: {round(item.target_doppler_centroid_Hz, 1)} Hz"
+            )
         else:
-            txt_str += f"Block: {item.block_num}   [Normalized Frequencies]"
+            txt_str += f"Block: {item.block_num}"
         fig.text(
             0.5,
             0.93,
@@ -210,10 +235,10 @@ def spectral_graph_core(
             [
                 graph_name,
                 graph_mode.lower(),
-                data.product_name,
-                f"ch{data.channel}",
-                data.swath,
-                data.polarization.name,
+                data.general_info.product,
+                f"ch{data.general_info.channel}",
+                data.general_info.swath,
+                data.general_info.polarization,
             ]
         )
         if is_pt_graph:

@@ -7,6 +7,12 @@ v1.0.10
 **Bug Fixes**
 
 - Fixing bug in Point Target Analysis channel name output type, now properly converted to string
+- Spectral Analysis: fixing bug in deramping time axis computation
+
+**Other Changes**
+
+- Spectral Analysis: adding netcdf output for point target and distributed spectral analysis
+- Spectral Analysis: improving plots and graphs
 
 v1.0.9
 ------
