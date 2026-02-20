@@ -4,6 +4,10 @@ Changelog
 v1.0.10
 -------
 
+**Incompatible Changes**
+
+- Dropping support for Python 3.10
+
 **Bug Fixes**
 
 - Fixing bug in Point Target Analysis channel name output type, now properly converted to string
