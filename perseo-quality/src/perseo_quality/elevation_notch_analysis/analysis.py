@@ -120,7 +120,7 @@ def elevation_notch_analysis(
 
             # TODO: these two protocol methods are specific for this analysis, they should be generalized better
             altitude_m = channel_data.get_altitude_m(channel_data.azimuth_axis[center[0]])
-            roll_rad = np.deg2rad(channel_data.get_roll_angle_deg(channel_data.azimuth_axis[center[0]]))
+            roll_rad = np.deg2rad(channel_data.get_roll_angle_deg(channel_data.azimuth_axis[center[0]]))[0]
             if roll_rad is None:
                 log.critical("Roll angle is not available.")
                 raise RuntimeError("Roll angle is not available.")
@@ -190,7 +190,7 @@ def elevation_notch_analysis(
                     swath=channel_data.swath_name,
                     polarization=channel_data.polarization.name,
                 )
-                min_antenna_pos = abs(valid_antenna_pattern["elevation_angles"]).argmin().data
+                min_antenna_pos = int(abs(valid_antenna_pattern["elevation_angles"]).data.argmin())
                 _, delta_min_pos = parabolic_interp_by_3_closest_samples(
                     valid_antenna_pattern["gain"].data.squeeze()[min_antenna_pos - 1 : min_antenna_pos + 2]
                 )
@@ -356,7 +356,9 @@ def antenna_pattern_normalization(
         antenna_pattern["elevation_angles"] < np.rad2deg(antenna_angles_rad.max())
     )
     masked_gain = antenna_pattern["gain"].where(mask, drop=True)
-    elevation_angle_at_max_pos = antenna_pattern["elevation_angles"].where(mask, drop=True)[masked_gain.argmax()]
+    elevation_angle_at_max_pos = antenna_pattern["elevation_angles"].where(mask, drop=True)[
+        int(masked_gain.data.argmax())
+    ]
     antenna_pattern_data_region_max_lin = 10 ** (masked_gain.max() / 20)
 
     # normalizing full pattern to data region maximum

@@ -18,42 +18,12 @@ from perseo_quality.elevation_notch_analysis.analysis import (
     elevation_notch_analysis,
 )
 from netCDF4 import Dataset
-
-def read_antenna_model_netcdf(path: Path) -> dict[str, dict[str, xr.Dataset]]:
-    """Reading an antenna model NetCDF file and returning a dictionary containing the antenna pattern data."""
-    am_ds = Dataset(path, mode="r")
-    antenna_pattern_datasets = {}
-    for swath, pol_groups in am_ds.groups.items():
-        antenna_pattern_datasets[swath] = {}
-        for pol, pol_group in pol_groups.groups.items():
-            ds = xr.Dataset(
-                {
-                    "gain": (
-                        ["azimuth_angles", "elevation_angles"],
-                        pol_group["gain"][:].data,
-                    ),
-                    "phase": (
-                        ["azimuth_angles", "elevation_angles"],
-                        pol_group["phase"][:].data,
-                    ),
-                },
-                coords={
-                    "azimuth_angles": pol_group["azimuth_angles"][:].data,
-                    "elevation_angles": pol_group["elevation_angles"][:].data,
-                },
-            )
-            ds["gain"].attrs["units"] = pol_group["gain"].units
-            ds["phase"].attrs["units"] = pol_group["phase"].units
-            ds["azimuth_angles"].attrs["units"] = pol_group["azimuth_angles"].units
-            ds["elevation_angles"].attrs["units"] = pol_group["elevation_angles"].units
-            antenna_pattern_datasets[swath][pol] = ds
-    return antenna_pattern_datasets
-
+from sct.io.antenna_pattern_manager import read_antenna_pattern_netcdf
 
 if __name__ == "__main__":
     # setup custom logger
     quality_logger.addHandler(logging.StreamHandler(sys.stdout))
-    output_dir = Path(r"C:\Users\giorgio.parma\Desktop\temporary_outputs\notch")
+    output_dir = Path(r"C:\ARESYS_PROJ\perseo\perseo-quality\scripts\out")
     graphs_dir = output_dir.joinpath("graphs")
     graphs_dir.mkdir(exist_ok=True)
 
@@ -64,10 +34,10 @@ if __name__ == "__main__":
     # ds_0, ds_200 = root_0["EN"]["HH"], root_200["EN"]["HH"]
     # ...
 
-    product_path = r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\S1D_EN_SLC__1SDV_20251217T100405_20251217T100437_000620_00050E_1B87_ElNotch.SAFE"
+    product_path = r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\SLC_EN_25.SAFE"
     product = Sentinel1ProductManager(product_path)
     config = ElevationNotchConfig(range_pixel_margin=2927)
-    am_pattern = read_antenna_model_netcdf(Path(r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\antenna_pattern_TW_EN.nc"))
+    am_pattern = read_antenna_pattern_netcdf(Path(r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\antenna_pattern_TW_EN.nc"))
     # am_pattern = None
     results = elevation_notch_analysis(product, config=config, antenna_pattern=am_pattern)
     # import pickle

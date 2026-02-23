@@ -12,6 +12,7 @@ v1.0.10
 
 - Fixing bug in Point Target Analysis channel name output type, now properly converted to string
 - Spectral Analysis: fixing bug in deramping time axis computation
+- Elevation Notch: fixing bug and warning for Numpy and XArray latest releases
 
 **Other Changes**
 
