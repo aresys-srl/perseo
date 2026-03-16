@@ -51,7 +51,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
         dir_inputs = [self.looking_direction, self.looking_direction.reshape((1, 3))]
 
         for origin, direction in itertools.product(position_inputs, dir_inputs):
-            point = direct_geocoding_with_looking_direction(origin, direction, geodetic_altitude=geodetic_altitude)
+            point = direct_geocoding_with_looking_direction(origin, direction, altitude=geodetic_altitude)
 
             self.assertEqual(point.shape, np.broadcast_shapes(origin.shape, direction.shape))
             np.testing.assert_allclose(point, reference_point.reshape(point.shape), atol=self.tolerance, rtol=0)
@@ -72,7 +72,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
         points = direct_geocoding_with_looking_direction(
             self.sensor_position,
             directions,
-            geodetic_altitude=geodetic_altitude,
+            altitude=geodetic_altitude,
         )
 
         np.testing.assert_allclose(points[0:5], np.tile(reference_point, (5, 1)), atol=self.tolerance, rtol=0)
@@ -81,7 +81,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
         points = direct_geocoding_with_looking_direction(
             np.tile(self.sensor_position, (2, 1)),
             self.looking_direction,
-            geodetic_altitude=geodetic_altitude,
+            altitude=geodetic_altitude,
         )
 
         np.testing.assert_allclose(points, np.tile(reference_point, (2, 1)), atol=self.tolerance, rtol=0)
@@ -89,7 +89,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
         points = direct_geocoding_with_looking_direction(
             np.tile(self.sensor_position, (2, 1)),
             np.tile(self.looking_direction, (2, 1)),
-            geodetic_altitude=geodetic_altitude,
+            altitude=geodetic_altitude,
         )
 
         np.testing.assert_allclose(points, np.tile(reference_point, (2, 1)), atol=self.tolerance, rtol=0)
@@ -120,7 +120,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
             self.sensor_velocity,
             "ZERODOPPLER",
             look_angles,
-            geodetic_altitude=altitude,
+            altitude=altitude,
         )
 
         np.testing.assert_allclose(points, self.expected_ground_points_for_look_angles, atol=self.tolerance, rtol=0)
@@ -134,7 +134,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
             self.sensor_velocity.reshape(1, 3),
             "ZERODOPPLER",
             look_angles,
-            geodetic_altitude=altitude,
+            altitude=altitude,
         )
 
         np.testing.assert_allclose(points, self.expected_ground_points_for_look_angles, atol=self.tolerance, rtol=0)
@@ -148,7 +148,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
             self.sensor_velocity,
             "ZERODOPPLER",
             look_angles[0],
-            geodetic_altitude=altitude,
+            altitude=altitude,
         )
 
         np.testing.assert_allclose(point, self.expected_ground_points_for_look_angles[0], atol=self.tolerance, rtol=0)
@@ -162,7 +162,7 @@ class DirectGeocodingWithLooksTest(unittest.TestCase):
             np.tile(self.sensor_velocity, (10, 1)),
             "ZERODOPPLER",
             np.tile(look_angles[0], (10,)),
-            geodetic_altitude=altitude,
+            altitude=altitude,
         )
 
         np.testing.assert_allclose(
@@ -228,10 +228,10 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
         """Testing direct_geocoding_with_pointing, single position"""
         points = direct_geocoding_with_pointing(
             sensor_positions=self._sensor_positions[3, :],
-            antenna_reference_frame=Rotation.from_matrix(self._arf),
+            antenna_reference_frames=Rotation.from_matrix(self._arf),
             azimuth_antenna_angles=-0.08726646259971647,
             elevation_antenna_angles=-0.05235987755982989,
-            geodetic_altitude=0,
+            altitude=0,
         )
         np.testing.assert_allclose(points, self._expected_results[0], atol=self._tolerance, rtol=0)
 
@@ -254,10 +254,10 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
                 arf = np.tile(self._arf, (sensor_pos.shape[0], 1, 1))
             points = direct_geocoding_with_pointing(
                 sensor_positions=sensor_pos,
-                antenna_reference_frame=Rotation.from_matrix(arf),
+                antenna_reference_frames=Rotation.from_matrix(arf),
                 azimuth_antenna_angles=az,
                 elevation_antenna_angles=el,
-                geodetic_altitude=height,
+                altitude=height,
             )
             expected_shape = (3,)
             if not (sensor_pos.size == 3 and isinstance(az, float) and isinstance(el, float)):
@@ -277,7 +277,7 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             direct_geocoding_with_pointing(
                 sensor_positions=self._sensor_positions[3, :],
-                antenna_reference_frame=Rotation.from_matrix([self._arf, self._arf]),
+                antenna_reference_frames=Rotation.from_matrix([self._arf, self._arf]),
                 azimuth_antenna_angles=-0.08726646259971647,
                 elevation_antenna_angles=-0.05235987755982989,
             )
@@ -287,7 +287,7 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             direct_geocoding_with_pointing(
                 sensor_positions=self._sensor_positions,
-                antenna_reference_frame=Rotation.from_matrix(self._arf),
+                antenna_reference_frames=Rotation.from_matrix(self._arf),
                 azimuth_antenna_angles=-0.08726646259971647,
                 elevation_antenna_angles=-0.05235987755982989,
             )
@@ -297,7 +297,7 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             direct_geocoding_with_pointing(
                 sensor_positions=self._sensor_positions,
-                antenna_reference_frame=Rotation.from_matrix([self._arf, self._arf]),
+                antenna_reference_frames=Rotation.from_matrix([self._arf, self._arf]),
                 azimuth_antenna_angles=-0.08726646259971647,
                 elevation_antenna_angles=-0.05235987755982989,
             )
@@ -307,7 +307,7 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             direct_geocoding_with_pointing(
                 sensor_positions=self._sensor_positions[3, :],
-                antenna_reference_frame=Rotation.from_matrix(self._arf),
+                antenna_reference_frames=Rotation.from_matrix(self._arf),
                 azimuth_antenna_angles=[-0.08726646259971647, -0.08726646259971647],
                 elevation_antenna_angles=[-0.05235987755982989, -0.05235987755982989, -0.05235987755982989],
             )
@@ -317,7 +317,7 @@ class DirectGeocodingWithPointingTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             direct_geocoding_with_pointing(
                 sensor_positions=self._sensor_positions[3:5, :],
-                antenna_reference_frame=Rotation.from_matrix([self._arf, self._arf]),
+                antenna_reference_frames=Rotation.from_matrix([self._arf, self._arf]),
                 azimuth_antenna_angles=[-0.08726646259971647, -0.08726646259971647],
                 elevation_antenna_angles=[-0.05235987755982989, -0.05235987755982989, -0.05235987755982989],
             )

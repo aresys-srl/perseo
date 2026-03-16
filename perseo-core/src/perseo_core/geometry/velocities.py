@@ -81,7 +81,7 @@ def compute_ground_velocity(
                 sensor_velocities=sensor_velocities,
                 reference_frame=reference_frame,
                 look_angles=angle,
-                geodetic_altitude=geodetic_altitude,
+                altitude=geodetic_altitude,
             )
         )
     # computing ground velocity components (as ground points coordinates diff) for each time interval, for each

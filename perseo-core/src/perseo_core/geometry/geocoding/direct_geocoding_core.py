@@ -6,67 +6,59 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.utilities.ellipsoid import WGS84
-from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
 
 
 def direct_geocoding_monostatic_core(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
-    range_times: float | FloatArrayType,
-    frequencies_doppler_centroid: float | FloatArrayType,
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
-    geodetic_altitude: float,
-    initial_guesses: CoordinatesArrayType,
-) -> CoordinatesArrayType:
-    """Core computation of direct geocoding for monostatic systems.
+    altitude: float,
+    initial_guesses: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
+    """Compute ground points via monostatic direct geocoding.
+
+    It supports N different sensor positions and M different range time values.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
-        sensor position array, with shape (3,) or (N, 3)
-    sensor_velocities : CoordinatesArrayType
-        sensor velocity array, with shape (3,) or (N, 3)
-    range_times : float | FloatArrayType
-        range times at which evaluate the geocoding equation, with shape float or (M,)
-    frequencies_doppler_centroid : float | FloatArrayType
-        frequency_doppler_centroid value, single value or array (M,), if a single value is passed and there is more
-        than 1 range times, it is broadcasted to all of them
+    sensor_positions : npt.NDArray[np.floating]
+        sensor positions with shape (3,) or (N, 3)
+    sensor_velocities : npt.NDArray[np.floating]
+        sensor velocities with shape (3,) or (N, 3)
+    range_times : float | npt.NDArray[np.floating]
+        range times with shape float or (M,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        frequency_doppler_centroid value, single value or array (M,)
     wavelength : float
         carrier signal wavelength
-    geodetic_altitude : float
-        geodetic altitude with respect to WGS84 ellipsoid
-    initial_guesses : np.ndarray
-        initial guess for the Newton method, with shape (3,) or (N, 3) or (M, 3) if 1 position and
-        M range times
+    altitude : float
+        altitude with respect to WGS84 ellipsoid
+    initial_guesses : npt.NDArray[np.floating]
+        initial guess for the Newton method, with shape (3,) or (N, 3) or (M, 3)
 
     Returns
     -------
-    CoordinatesArrayType
-        ground points, solution to the Newton method for direct geocoding
-
-    Raises
-    ------
-    RuntimeError
-        if inputs shapes are ambiguous to match, this error is raised
+    npt.NDArray[np.floating]
+        ground points with shape (N, M, 3)
     """
-
-    range_times = np.asarray(range_times) if not isinstance(range_times, float) else np.asarray([range_times])
-
     try:
-        frequencies_doppler_centroid = np.broadcast_to(frequencies_doppler_centroid, range_times.shape)
+        doppler_frequencies = np.broadcast_to(doppler_frequencies, np.shape(range_times))
     except ValueError as exc:
         raise RuntimeError(
-            f"frequencies {frequencies_doppler_centroid.shape} != range times {range_times.shape}"
+            f"doppler frequencies {np.shape(doppler_frequencies)} != range times {np.shape(range_times)}"
         ) from exc
 
     try:
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
     except ValueError as exc:
         raise RuntimeError(
-            f"sensor position {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
+            f"sensor positions {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
         ) from exc
 
     try:
@@ -82,176 +74,149 @@ def direct_geocoding_monostatic_core(
             + f"vel {sensor_velocities.shape}, guess {initial_guesses.shape}"
         )
 
-    one_size_array_flag = 0
-    if sensor_positions.ndim == 2 and sensor_positions.size / 3 == 1:
-        one_size_array_flag = 1
-
-    ground_points = np.zeros((sensor_positions.size // 3, range_times.size, 3))
-    for id_rng, rng_freq in enumerate(zip(range_times, frequencies_doppler_centroid, strict=True)):
-        ground_points[..., id_rng, :] = _newton_for_direct_geocoding_monostatic(
+    ground_points = np.zeros((sensor_positions.size // 3, np.size(range_times), 3))
+    for range_index, (range_time, doppler_frequency) in enumerate(
+        zip(np.atleast_1d(range_times), np.atleast_1d(doppler_frequencies), strict=True)
+    ):
+        ground_points[..., range_index, :] = _direct_geocoding_monostatic_newton(
             sensor_positions=sensor_positions,
             sensor_velocities=sensor_velocities,
             initial_guesses=initial_guesses,
-            range_time=rng_freq[0],
-            frequency_doppler_centroid=rng_freq[1],
-            geodetic_altitude=geodetic_altitude,
+            range_time=range_time,
+            doppler_frequency=doppler_frequency,
+            altitude=altitude,
             wavelength=wavelength,
         )
 
+    one_size_array_flag = sensor_positions.ndim == 2 and sensor_positions.size / 3 == 1
     return ground_points.squeeze() if not one_size_array_flag else ground_points.squeeze(axis=0)
 
 
 def direct_geocoding_bistatic_core(
-    sensor_positions_rx: CoordinatesArrayType,
-    sensor_velocities_rx: CoordinatesArrayType,
-    sensor_positions_tx: CoordinatesArrayType,
-    sensor_velocities_tx: CoordinatesArrayType,
-    range_times: float | FloatArrayType,
-    frequencies_doppler_centroid: float | FloatArrayType,
+    sensor_positions_rx: npt.NDArray[np.floating],
+    sensor_velocities_rx: npt.NDArray[np.floating],
+    sensor_positions_tx: npt.NDArray[np.floating],
+    sensor_velocities_tx: npt.NDArray[np.floating],
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
-    geodetic_altitude: float,
-    initial_guesses: CoordinatesArrayType,
-) -> CoordinatesArrayType:
-    """Core computation of direct geocoding for bistatic systems.
+    altitude: float,
+    initial_guesses: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
+    """Compute ground points via bistatic direct geocoding.
 
     Parameters
     ----------
-    sensor_positions_rx : CoordinatesArrayType
-        position of the sensor rx, with shape (3,) or (N, 3)
-    sensor_velocities_rx : CoordinatesArrayType
-        velocity of the sensor rx, with shape (3,) or (N, 3)
-    sensor_positions_tx : CoordinatesArrayType
-        position of the sensor tx, with shape (3,) or (M, 3), where M is the number of range times
-    sensor_velocities_tx : CoordinatesArrayType
-        velocity of the sensor tx, with shape (3,) or (M, 3), where M is the number of range times
-    range_times : float | FloatArrayType
-        range times where to evaluate the direct geocoding, with shape float or (M,)
-    frequencies_doppler_centroid : float | FloatArrayType
-        frequency_doppler_centroid value, single value or array (M,), if a single value is passed and there is more
-        than 1 range times, it is broadcasted to all of them
+    sensor_positions_rx : npt.NDArray[np.floating]
+        position of the receiver, with shape (3,) or (N, 3)
+    sensor_velocities_rx : npt.NDArray[np.floating]
+        velocities of the receiver, with shape (3,) or (N, 3)
+    sensor_positions_tx : npt.NDArray[np.floating]
+        position of the transmitter, with shape (3,) or (M, 3), where M is the number of range times
+    sensor_velocities_tx : npt.NDArray[np.floating]
+        velocities of the stransmitter, with shape (3,) or (M, 3), where M is the number of range times
+    range_times : float | npt.NDArray[np.floating]
+        range times with shape float or (M,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        frequency_doppler_centroid value, single value or array (M,)
     wavelength : float
         carrier signal wavelength
-    geodetic_altitude : float
-        altitude with respect to the WGS84 ellipsoid
-    initial_guesses : CoordinatesArrayType
-        initial guess for Newton method, with shape (3,), (N, 3) or (M, 3) if just 1 position and M range times
+    altitude : float
+        altitude with respect to WGS84 ellipsoid
+    initial_guesses : npt.NDArray[np.floating]
+        initial guess for Newton method, with shape (3,), (N, 3) or (M, 3)
 
     Returns
     -------
-    CoordinatesArrayType
-        ground points for each input time and position rx value
-
-    Raises
-    ------
-    RuntimeError
-        if inputs shapes are ambiguous to match, this error is raised
+    npt.NDArray[np.floating]
+        ground points with shape (N, M, 3)
     """
-
-    range_times = np.asarray(range_times) if not isinstance(range_times, float) else np.asarray([range_times])
-
     try:
-        frequencies_doppler_centroid = np.broadcast_to(frequencies_doppler_centroid, range_times.shape)
+        doppler_frequencies = np.broadcast_to(doppler_frequencies, np.shape(range_times))
     except ValueError as exc:
         raise RuntimeError(
-            f"frequencies {frequencies_doppler_centroid.shape} != range times {range_times.shape}"
+            f"doppler frequencies {np.shape(doppler_frequencies)} != range times {np.shape(range_times)}"
         ) from exc
 
-    one_size_array_flag = 0
-    if (sensor_positions_rx.ndim == 2 and sensor_positions_rx.size / 3 == 1) or (
-        sensor_positions_tx.ndim == 2 and sensor_positions_tx.size / 3 == 1 and sensor_positions_rx.size / 3 == 1
+    ground_points = np.zeros((sensor_positions_rx.size // 3, np.size(range_times), 3))
+    for id_rng, items in enumerate(
+        zip(
+            np.atleast_1d(range_times),
+            np.atleast_1d(doppler_frequencies),
+            np.atleast_2d(sensor_positions_tx),
+            np.atleast_2d(sensor_velocities_tx),
+            strict=True,
+        )
     ):
-        one_size_array_flag = 1
-
-    if sensor_positions_tx.ndim == sensor_velocities_tx.ndim == 1 and sensor_positions_tx.size // 3 == 1:
-        sensor_positions_tx = sensor_positions_tx.reshape(1, sensor_positions_tx.size)
-        sensor_velocities_tx = sensor_velocities_tx.reshape(1, sensor_velocities_tx.size)
-
-    ground_points = np.zeros((sensor_positions_rx.size // 3, range_times.size, 3))
-    looping_items = zip(
-        range_times, frequencies_doppler_centroid, sensor_positions_tx, sensor_velocities_tx, strict=True
-    )
-    for id_rng, items in enumerate(looping_items):
-        ground_points[..., id_rng, :] = _newton_for_direct_geocoding_bistatic(
+        ground_points[..., id_rng, :] = _direct_geocoding_bistatic_newton(
             sensor_positions_rx=sensor_positions_rx,
             sensor_velocities_rx=sensor_velocities_rx,
             initial_guesses=initial_guesses,
             sensor_position_tx=items[2],
             sensor_velocity_tx=items[3],
             range_time=items[0],
-            frequency_doppler_centroid=items[1],
-            geodetic_altitude=geodetic_altitude,
+            doppler_frequency=items[1],
+            altitude=altitude,
             wavelength=wavelength,
         )
 
+    one_size_array_flag = (sensor_positions_rx.ndim == 2 and sensor_positions_rx.size / 3 == 1) or (
+        sensor_positions_tx.ndim == 2 and sensor_positions_tx.size / 3 == 1 and sensor_positions_rx.size / 3 == 1
+    )
     return ground_points.squeeze() if not one_size_array_flag else ground_points.squeeze(axis=0)
 
 
-def _newton_for_direct_geocoding_monostatic(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
-    initial_guesses: CoordinatesArrayType,
+def _direct_geocoding_monostatic_newton(
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
+    initial_guesses: npt.NDArray[np.floating],
     range_time: float,
-    frequency_doppler_centroid: float,
+    doppler_frequency: float,
     wavelength: float,
-    geodetic_altitude: float,
-    max_iter: int = 8,
-    tolerance: float = 1e-5,
-) -> CoordinatesArrayType:
-    """Newton solving method for direct geocoding monostatic.
+    altitude: float,
+    max_iterations: int = 8,
+    increment_tolerance: float = 1e-5,
+) -> npt.NDArray[np.floating]:
+    """Solve direct geocoding monostatic equations with Newton iterations.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
-        sensor position array, with shape (3,) or (N,3)
-    sensor_velocities : CoordinatesArrayType
-        sensor velocities array, with shape (3,) or (N,3)
-    initial_guesses : CoordinatesArrayType
-        initial guesses array, with shape (3,) or (N,3)
+    sensor_positions : npt.NDArray[np.floating]
+        sensor positions with shape (3,) or (N, 3)
+    sensor_velocities : npt.NDArray[np.floating]
+        sensor velocities with shape (3,) or (N, 3)
+    initial_guesses : npt.NDArray[np.floating]
+        initial guesses with shape (3,) or (N, 3)
     range_time : float
-        range time at which compute the geocoding equation
-    frequency_doppler_centroid : float
-        frequency doppler centroid at which compute the geocoding equation
+        range time
+    doppler_frequency : float
+        doppler frequency
     wavelength : float
         carrier signal wavelength
-    geodetic_altitude : float
-        geodetic altitude with respect to WGS84 ellipse
-    max_iter : int, optional
-        maximum iterations for Newton method, by default 8
-    tolerance : float, optional
-        tolerance below which assert Newton convergence in meters, by default 1E-5
+    altitude : float
+        altitude with respect to WGS84 ellipsoid
+    max_iterations : int, optional
+        maximum number of iterations for Newton method, by default 8
+    increment_tolerance : float, optional
+        tolerance for Newton convergence in meters, by default 1e-5
 
     Returns
     -------
-    CoordinatesArrayType
-        ground points at a given range value
-
-    Raises
-    ------
-    RuntimeError
-        raised if Newton method did not converge after max_iterations
+    npt.NDArray[np.floating]
+        ground points with shape (3,) or (N, 3)
     """
 
-    tolerance_squared = tolerance * tolerance
+    tolerance_squared = increment_tolerance * increment_tolerance
 
-    # variables and constants computation
     range_distance_square = (speed_of_light * range_time / 2.0) ** 2
-    geoid_r_min = WGS84.b + geodetic_altitude
-    geoid_r_max = WGS84.a + geodetic_altitude
+    geoid_r_min = WGS84.b + altitude
+    geoid_r_max = WGS84.a + altitude
     r_ep2 = geoid_r_min**2
     r_ee2 = geoid_r_max**2
 
-    # input arguments array conversion
     ground_points_guess = initial_guesses.copy()
 
-    array_size_one_flag = 0
-    if ground_points_guess.ndim == sensor_positions.ndim == sensor_velocities.ndim == 1:
-        array_size_one_flag = 1
-        ground_points_guess = ground_points_guess.reshape(1, ground_points_guess.size)
-        sensor_positions = sensor_positions.reshape(1, sensor_positions.size)
-        sensor_velocities = sensor_velocities.reshape(1, sensor_velocities.size)
-
-    # Newton method for direct geocoding
-    for _ in range(max_iter):
+    for _ in range(max_iterations):
         line_of_sight = sensor_positions - ground_points_guess
         distance_square = np.sum(line_of_sight * line_of_sight, axis=-1)
         distance = np.sqrt(distance_square)
@@ -262,20 +227,19 @@ def _newton_for_direct_geocoding_monostatic(
 
         doppler_equation, grad_doppler_equation = _doppler_equation(
             pv_scalar=los_vel_product,
-            sat2point=line_of_sight,
-            sat_velocity=sensor_velocities,
+            los=line_of_sight,
+            sensor_velocity=sensor_velocities,
             distance=distance,
             wavelength=wavelength,
-            frequency_doppler_centroid=frequency_doppler_centroid,
+            doppler_frequency=doppler_frequency,
         )
 
-        # assembling system of equations to be solved using Newton method
-        functions_to_be_solved = [
+        residuals = [
             range_equation,
             _ellipse_equation(ground_points_guess, r_ee2, r_ep2),
             doppler_equation,
         ]
-        functions_jacobians = [
+        jacobians = [
             [
                 grad_range_equation[..., k],
                 _der_ellipse_equation_xi(ground_points_guess, k, r_ee2, r_ep2),
@@ -284,33 +248,35 @@ def _newton_for_direct_geocoding_monostatic(
             for k in range(3)
         ]
 
-        delta_err = -_inv_3x3_transpose(functions_jacobians, functions_to_be_solved).squeeze().T
+        delta_err = -_inv_3x3_transpose(jacobians, residuals)
         ground_points_guess = ground_points_guess + delta_err
 
-        err_for_convergence = np.sum(delta_err * delta_err, axis=-1)
-        if np.max(np.abs(err_for_convergence)) <= tolerance_squared:
+        increment_squared = np.sum(delta_err * delta_err, axis=-1)
+        if np.max(np.abs(increment_squared)) <= tolerance_squared:
             break
     else:
         raise RuntimeError(
-            f"Newton did not converge: maximum number of iterations {max_iter} reached. Residual error {delta_err}"
+            f"Newton did not converge: maximum number of iterations {max_iterations} reached."
+            + f"Residual error {delta_err}"
         )
 
+    array_size_one_flag = ground_points_guess.ndim == sensor_positions.ndim == sensor_velocities.ndim == 1
     return ground_points_guess if not array_size_one_flag else ground_points_guess.squeeze()
 
 
-def _newton_for_direct_geocoding_bistatic(
-    sensor_positions_rx: CoordinatesArrayType,
-    sensor_velocities_rx: CoordinatesArrayType,
-    initial_guesses: CoordinatesArrayType,
-    sensor_position_tx: CoordinatesArrayType,
-    sensor_velocity_tx: CoordinatesArrayType,
+def _direct_geocoding_bistatic_newton(
+    sensor_positions_rx: npt.NDArray[np.floating],
+    sensor_velocities_rx: npt.NDArray[np.floating],
+    initial_guesses: npt.NDArray[np.floating],
+    sensor_position_tx: npt.NDArray[np.floating],
+    sensor_velocity_tx: npt.NDArray[np.floating],
     range_time: float,
-    frequency_doppler_centroid: float,
+    doppler_frequency: float,
     wavelength: float,
-    geodetic_altitude: float,
-    max_iter: int = 8,
+    altitude: float,
+    max_iterations: int = 8,
     tolerance: float = 1e-5,
-) -> CoordinatesArrayType:
+) -> npt.NDArray[np.floating]:
     """Newton solving method for direct geocoding bistatic.
 
     Parameters
@@ -326,97 +292,79 @@ def _newton_for_direct_geocoding_bistatic(
     sensor_velocity_tx : CoordinatesArrayType
         sensor tx velocity, with shape (3,)
     range_time : float
-        range time at which compute the geocoding equation
-    frequency_doppler_centroid : float
-        frequency doppler centroid at which compute the geocoding equation
+        range time
+    doppler_frequency : float
+        doppler frequency
     wavelength : float
         carrier signal wavelength
-    geodetic_altitude : float
-        geodetic altitude with respect to WGS84 ellipse
-    max_iter : int, optional
-        maximum iterations for Newton method, by default 8
-    tolerance : float, optional
-        tolerance below which assert Newton convergence in meters, by default 1E-5
+    altitude : float
+        altitude with respect to WGS84 ellipsoid
+    max_iterations : int, optional
+        maximum number of iterations for Newton method, by default 8
+    increment_tolerance : float, optional
+        tolerance for Newton convergence in meters, by default 1e-5
 
     Returns
     -------
-    CoordinatesArrayType
-        earth points at a given range value
-
-    Raises
-    ------
-    RuntimeError
-        raised if Newton method did not converge after max_iterations
+    npt.NDArray[np.floating]
+        ground points with shape (3,) or (N, 3)
     """
 
     tolerance_squared = tolerance * tolerance
 
-    # variables and constants computation
-    range_distance_square = (speed_of_light * range_time) ** 2  # two-way distance
-    geoid_r_min = WGS84.b + geodetic_altitude
-    geoid_r_max = WGS84.a + geodetic_altitude
+    range_distance_square = (speed_of_light * range_time) ** 2
+    geoid_r_min = WGS84.b + altitude
+    geoid_r_max = WGS84.a + altitude
     r_ep2 = geoid_r_min**2
     r_ee2 = geoid_r_max**2
 
-    # input arguments array conversion
-    sensor_positions_rx = np.atleast_2d(sensor_positions_rx)
-    sensor_velocities_rx = np.atleast_2d(sensor_velocities_rx)
-    sensor_position_tx = np.atleast_2d(sensor_position_tx)
-    sensor_velocity_tx = np.atleast_2d(sensor_velocity_tx)
     ground_points_guess = initial_guesses.copy()
 
-    # Newton method for direct geocoding
-    for _ in range(max_iter):
-        # first sensor data
+    for _ in range(max_iterations):
         line_of_sight_rx = sensor_positions_rx - ground_points_guess
         distance_square_rx = np.sum(line_of_sight_rx * line_of_sight_rx, axis=-1)
         distance_rx = np.sqrt(distance_square_rx)
         los_vel_product_rx = np.sum(sensor_velocities_rx * line_of_sight_rx, axis=-1)
 
-        # second sensor data
         line_of_sight_tx = sensor_position_tx - ground_points_guess
         distance_square_tx = np.sum(line_of_sight_tx * line_of_sight_tx, axis=-1)
         distance_tx = np.sqrt(distance_square_tx)
         los_vel_product_tx = np.sum(sensor_velocity_tx * line_of_sight_tx, axis=-1)
 
-        # range equation
         distance = distance_rx + distance_tx
         range_equation = distance**2 - range_distance_square
         grad_range_equation = (
             -2
-            * distance[:, np.newaxis]
-            * (line_of_sight_rx / distance_rx[:, np.newaxis] + line_of_sight_tx / distance_tx[:, np.newaxis])
+            * distance[..., np.newaxis]
+            * (line_of_sight_rx / distance_rx[..., np.newaxis] + line_of_sight_tx / distance_tx[..., np.newaxis])
         )
 
-        # doppler equations
         doppler_equation_rx, grad_doppler_equation_rx = _doppler_equation(
             wavelength=wavelength,
             pv_scalar=los_vel_product_rx,
             distance=distance_rx,
-            frequency_doppler_centroid=frequency_doppler_centroid,
-            sat_velocity=sensor_velocities_rx,
-            sat2point=line_of_sight_rx,
+            doppler_frequency=doppler_frequency,
+            sensor_velocity=sensor_velocities_rx,
+            los=line_of_sight_rx,
         )
         doppler_equation_tx, grad_doppler_equation_tx = _doppler_equation(
             wavelength=wavelength,
             pv_scalar=los_vel_product_tx,
             distance=distance_tx,
-            frequency_doppler_centroid=frequency_doppler_centroid,
-            sat_velocity=sensor_velocity_tx,
-            sat2point=line_of_sight_tx,
+            doppler_frequency=doppler_frequency,
+            sensor_velocity=sensor_velocity_tx,
+            los=line_of_sight_tx,
         )
 
-        # assembling doppler equations and their gradients
         doppler_equation = (doppler_equation_rx + doppler_equation_tx) / 2
         grad_doppler_equation = (grad_doppler_equation_rx + grad_doppler_equation_tx) / 2
 
-        # assembling system of equations to be solved using Newton method
-        functions_to_be_solved = [
+        residuals = [
             range_equation,
             _ellipse_equation(ground_points_guess, r_ee2, r_ep2),
             doppler_equation,
         ]
-        functions_jacobians = [
+        jacobians = [
             [
                 grad_range_equation[..., k],
                 _der_ellipse_equation_xi(ground_points_guess, k, r_ee2, r_ep2),
@@ -425,35 +373,25 @@ def _newton_for_direct_geocoding_bistatic(
             for k in range(3)
         ]
 
-        delta_err = -_inv_3x3_transpose(functions_jacobians, functions_to_be_solved).squeeze()
-        ground_points_guess = ground_points_guess + delta_err.T
+        delta_err = -_inv_3x3_transpose(jacobians, residuals)
+        ground_points_guess = ground_points_guess + delta_err
 
-        err_for_convergence = np.dot(delta_err, delta_err.T)
-        if np.max(np.abs(err_for_convergence)) <= tolerance_squared:
+        increment_squared = np.sum(delta_err * delta_err, axis=-1)
+        if np.max(np.abs(increment_squared)) <= tolerance_squared:
             break
     else:
         raise RuntimeError(
-            f"Newton did not converge: maximum number of iterations {max_iter} reached. Residual error {delta_err}"
+            f"Newton did not converge: maximum number of iterations {max_iterations} reached."
+            + f"Residual error {delta_err}"
         )
 
     return ground_points_guess
 
 
-def _inv_3x3_transpose(jac: np.ndarray, func: np.ndarray) -> np.ndarray:
-    """Performing inverse of 3x3 matrix using explicit form.
-
-    Parameters
-    ----------
-    jac : np.ndarray
-        jacobians array
-    func : np.ndarray
-        functions array
-
-    Returns
-    -------
-    np.ndarray
-        inverse of input func matrix
-    """
+def _inv_3x3_transpose(
+    jac: list[list[npt.NDArray[np.floating]]], func: list[npt.NDArray[np.floating]]
+) -> npt.NDArray[np.floating]:
+    """Perform inverse of 3x3 matrix using explicit form."""
     det = (
         +jac[0][0] * (jac[2][2] * jac[1][1] - jac[2][1] * jac[1][2])
         - jac[1][0] * (jac[2][2] * jac[0][1] - jac[2][1] * jac[0][2])
@@ -478,16 +416,16 @@ def _inv_3x3_transpose(jac: np.ndarray, func: np.ndarray) -> np.ndarray:
         + func[2] * (jac[0][0] * jac[1][1] - jac[1][0] * jac[0][1])
     )
 
-    return np.asarray([x_val, y_val, z_val]) / det
+    return (np.stack([x_val, y_val, z_val], axis=-1) / det[..., np.newaxis]).squeeze()
 
 
-def _ellipse_equation(coords: np.ndarray, r_ee2: float, r_ep2: float) -> float:
-    """3D Ellipse generic equation.
+def _ellipse_equation(coords: npt.NDArray[np.floating], r_ee2: float, r_ep2: float) -> npt.NDArray[np.floating]:
+    """Evaluate ellipsoid equation residual.
 
     Parameters
     ----------
-    x : np.ndarray
-        x, y, z coordinates array where to evaluate the ellipse
+    coords : npt.NDArray[np.floating]
+        coords shape (3,) or (N, 3)
     r_ee2 : float
         radius square along x and y directions
     r_ep2 : float
@@ -495,8 +433,8 @@ def _ellipse_equation(coords: np.ndarray, r_ee2: float, r_ep2: float) -> float:
 
     Returns
     -------
-    float
-        value of the ellipse at the input coordinate
+    npt.NDArray[np.floating]
+        residuals scalar or with shape (N, 3)
     """
     return (
         (coords[..., 0] * coords[..., 0] + coords[..., 1] * coords[..., 1]) / r_ee2
@@ -505,15 +443,17 @@ def _ellipse_equation(coords: np.ndarray, r_ee2: float, r_ep2: float) -> float:
     )
 
 
-def _der_ellipse_equation_xi(coords: np.ndarray, i_coord: int, r_ee2: float, r_ep2: float) -> float:
-    """Derivative of ellipse equation.
+def _der_ellipse_equation_xi(
+    coords: npt.NDArray[np.floating], i_coord: int, r_ee2: float, r_ep2: float
+) -> npt.NDArray[np.floating]:
+    """Evaluate ellipsoid equation partial derivative w.r.t. to i_coord.
 
     Parameters
     ----------
-    x : np.ndarray
-        x, y, z array coordinate where to evaluate the derivative
+    coords : npt.NDArray[np.floating]
+        coords shape (3,) or (N, 3)
     i_coord : int
-        direction index where to evaluate the derivative
+        direction index of the partial derivative dx_i
     r_ee2 : float
         radius square along x and y directions
     r_ep2 : float
@@ -521,8 +461,8 @@ def _der_ellipse_equation_xi(coords: np.ndarray, i_coord: int, r_ee2: float, r_e
 
     Returns
     -------
-    float
-        derivative value along the selected direction at the selected coordinate
+    npt.NDArray[np.floating]
+        derivative along the selected direction scalar or with shape (N, 3)
     """
 
     radius_square = r_ee2 if i_coord < 2 else r_ep2
@@ -532,39 +472,39 @@ def _der_ellipse_equation_xi(coords: np.ndarray, i_coord: int, r_ee2: float, r_e
 
 def _doppler_equation(
     wavelength: float,
-    pv_scalar: float,
-    distance: float,
-    frequency_doppler_centroid: float,
-    sat_velocity: np.ndarray,
-    sat2point: np.ndarray,
-) -> tuple[float, np.ndarray]:
+    pv_scalar: float | npt.NDArray[np.floating],
+    distance: float | npt.NDArray[np.floating],
+    doppler_frequency: float | npt.NDArray[np.floating],
+    sensor_velocity: npt.NDArray[np.floating],
+    los: npt.NDArray[np.floating],
+) -> tuple[float | npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Doppler equation solver.
 
     Parameters
     ----------
     wavelength : float
         carrier signal wavelength
-    pv_scalar : float
-        scalar product between sensor velocity and line of sight
+    pv_scalar : float | npt.NDArray[np.floating],
+        scalar product between sensor velocity and line of sight scalar or shape (N,)
     distance : float
-        ground point - sensor distance
-    frequency_doppler_centroid : float
-        frequency doppler centroid
-    sat_velocity : np.ndarray
-        sensor velocity
-    sat2point : np.ndarray
-        line of sight
+        ground point - sensor position distance scalar or shape (N,)
+    doppler_frequency : float
+        doppler frequency scalar or shape (N,)
+    sensor_velocity : npt.NDArray[np.floating]
+        sensor velocity (3,) or shape (N, 3)
+    los : npt.NDArray[np.floating]
+        ground point - sensor position (3,) or shape (N, 3)
 
     Returns
     -------
-    float
-        doppler equation solution
-    np.ndarray
-        doppler equation gradient
+    float | npt.NDArray[np.floating]
+        doppler equation solution scalar or shape (N,)
+    npt.NDArray[np.floating]
+        doppler equation gradient (3,) or shape (N, 3)
     """
 
     c_factor = 2.0 / wavelength / distance
-    doppler_equation = c_factor * pv_scalar + frequency_doppler_centroid
+    doppler_equation = c_factor * pv_scalar + doppler_frequency
     norm_pv = pv_scalar / distance**2
-    grad_doppler_equation = (c_factor * (-sat_velocity + (norm_pv * sat2point.T).T).T).T
+    grad_doppler_equation = (c_factor * (-sensor_velocity + (norm_pv * los.T).T).T).T
     return doppler_equation, grad_doppler_equation

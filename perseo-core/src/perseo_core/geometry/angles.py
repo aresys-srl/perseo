@@ -94,10 +94,10 @@ def compute_incidence_angles(
         sensor_positions=sensor_position,
         sensor_velocities=sensor_velocity,
         range_times=range_times,
-        frequencies_doppler_centroid=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
+        doppler_frequencies=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
         wavelength=carrier_wavelength if carrier_wavelength is not None else 1,
         look_direction=SensorLookDirection(look_direction),
-        geodetic_altitude=geodetic_altitude if geodetic_altitude is not None else 0,
+        altitude=geodetic_altitude if geodetic_altitude is not None else 0,
     )
     angles = compute_incidence_angles_core(sensor_positions=sensor_position, ground_points=ground_points)
     if not radians:
@@ -147,10 +147,10 @@ def compute_look_angles(
         sensor_positions=sensor_position,
         sensor_velocities=sensor_velocity,
         range_times=range_times,
-        frequencies_doppler_centroid=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
+        doppler_frequencies=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
         wavelength=carrier_wavelength if carrier_wavelength is not None else 1,
         look_direction=SensorLookDirection(look_direction),
-        geodetic_altitude=geodetic_altitude if geodetic_altitude is not None else 0,
+        altitude=geodetic_altitude if geodetic_altitude is not None else 0,
     )
     angles = compute_look_angles_core(sensor_positions=sensor_position, ground_points=ground_points)
     if not radians:

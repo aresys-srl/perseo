@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy import typing as npt
 from scipy.constants import speed_of_light
 from scipy.spatial.transform import Rotation
 
@@ -25,15 +26,14 @@ from perseo_core.geometry.utilities.reference_frames import (
 )
 from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
 from perseo_core.models.enums import SensorLookDirection
-from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
 
 
 def direct_geocoding_with_looking_direction(
-    sensor_positions: CoordinatesArrayType,
-    looking_direction: CoordinatesArrayType,
-    geodetic_altitude: float = 0.0,
-) -> CoordinatesArrayType:
-    """Computes the ground points seen with the given looking directions.
+    sensor_positions: npt.NDArray[np.floating],
+    looking_directions: npt.NDArray[np.floating],
+    altitude: float = 0.0,
+) -> npt.NDArray[np.floating]:
+    """Compute the ground points seen with the given looking directions.
 
     The looking direction defines a line: its norm and sign do not matter.
 
@@ -41,27 +41,27 @@ def direct_geocoding_with_looking_direction(
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
-        sensor positions, with shape (3,) or (N, 3)
-    looking_direction : CoordinatesArrayType
-        vectors aligned with a looking direction, with shape (3,) or (N, 3)
-    geodetic_altitude : float, optional
-        altitude over the WGS84 ellipsoid, by default 0.0
+    sensor_positions : npt.NDArray[np.floating]
+        sensor positions with shape (3,) or (N, 3)
+    looking_directions : npt.NDArray[np.floating]
+        vectors aligned with a looking direction with shape (3,) or (N, 3)
+    altitude : float, optional
+        altitude with respect to WGS84 ellipsoid, by default 0.0
 
     Returns
     -------
-    CoordinatesArrayType
-        ground points, with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
+    npt.NDArray[np.floating]
+        ground points with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
     """
-    inflated_ellipsoid = create_inflated_WGS84_ellipsoid(geodetic_altitude)
+    inflated_ellipsoid = create_inflated_WGS84_ellipsoid(altitude)
 
     intersections = compute_line_ellipsoid_intersections(
-        line_directions=looking_direction,
+        line_directions=looking_directions,
         line_origins=sensor_positions,
         ellipsoid=inflated_ellipsoid,
     )
 
-    points = np.empty(np.broadcast_shapes(np.shape(looking_direction), np.shape(sensor_positions)))
+    points = np.empty(np.broadcast_shapes(np.shape(looking_directions), np.shape(sensor_positions)))
 
     if points.ndim == 1:
         intersections = (intersections,)
@@ -73,33 +73,33 @@ def direct_geocoding_with_looking_direction(
 
 
 def direct_geocoding_with_look_angles(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
     reference_frame: ReferenceFrameLike,
-    look_angles: float | FloatArrayType,
-    geodetic_altitude: float = 0.0,
-) -> CoordinatesArrayType:
-    """Computes the points at a given altitude over WGS84 ellipsoid seen with the given look angles.
+    look_angles: float | npt.NDArray[np.floating],
+    altitude: float = 0.0,
+) -> npt.NDArray[np.floating]:
+    """Compute the points at a given altitude over WGS84 ellipsoid seen with the given look angles.
 
     Based on :meth:`perseo.geometry.geocoding.direct_geocoding.direct_geocoding_with_looking_direction`
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
-        sensor positions, with shape (3,) or (N, 3)
-    sensor_velocities : CoordinatesArrayType
-        sensor velocity, with shape (3,) or (N, 3)
+    sensor_positions : npt.NDArray[np.floating]
+        sensor positions with shape (3,) or (N, 3)
+    sensor_velocities : npt.NDArray[np.floating]
+        sensor velocities with shape (3,) or (N, 3)
     reference_frame : ReferenceFrameLike
-        which reference frame to assume
-    look_angles : float | FloatArrayType
+        reference frames oriented so that look angles are measured relative to the nadir direction
+    look_angles : float | npt.NDArray[np.floating]
         look angles in radians, scalar or (N,)
-    geodetic_altitude : float, optional
-        altitude over the WGS84 ellipsoid, by default 0.0
+    altitude : float, optional
+        altitude with respect to WGS84 ellipsoid, by default 0.0
 
     Returns
     -------
-    CoordinatesArrayType
-        ground points, with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
+    npt.NDArray[np.floating]
+        ground points with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
     """
     local_axis = compute_sensor_local_axis(
         sensor_positions=sensor_positions, sensor_velocities=sensor_velocities, reference_frame=reference_frame
@@ -117,110 +117,95 @@ def direct_geocoding_with_look_angles(
     pointing = (local_axis * rotation).as_matrix().squeeze()[..., 2]
 
     return direct_geocoding_with_looking_direction(
-        sensor_positions=sensor_positions, looking_direction=pointing, geodetic_altitude=geodetic_altitude
+        sensor_positions=sensor_positions, looking_directions=pointing, altitude=altitude
     )
 
 
 def direct_geocoding_with_pointing(
-    sensor_positions: CoordinatesArrayType,
-    antenna_reference_frame: Rotation,
-    azimuth_antenna_angles: FloatArrayType,
-    elevation_antenna_angles: FloatArrayType,
-    geodetic_altitude: float = 0.0,
-) -> CoordinatesArrayType:
+    sensor_positions: npt.NDArray[np.floating],
+    antenna_reference_frames: Rotation,
+    azimuth_antenna_angles: float | npt.NDArray[np.floating],
+    elevation_antenna_angles: float | npt.NDArray[np.floating],
+    altitude: float = 0.0,
+) -> npt.NDArray[np.floating]:
     """Compute ground points illuminated with the given antenna patterns angles
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         sensor positions, with shape (3,) or (N, 3)
-    antenna_reference_frame : Rotation
-        antenna reference frame for the sensor as a Rotation object, with 1 or N rotations, same numerosity as
-        sensor_positions
-    azimuth_angles : FloatArrayType
-        scalar or (N,) array like, in radians
-    elevation_angles : FloatArrayType
-        scalar or (N,) array like, in radians
-    geodetic_altitude : float, optional
-        altitude over the WGS84 ellipsoid, by default 0.0
+    antenna_reference_frames : Rotation
+        antenna reference frames as a Rotation object, with 1 or N rotations
+    azimuth_antenna_angles : float | npt.NDArray[np.floating]
+        scalar or (N,), in radians
+    elevation_antenna_angles : float | npt.NDArray[np.floating]
+        scalar or (N,), in radians
+    altitude : float, optional
+        altitude with respect to WGS84 ellipsoid, by default 0.0
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         ground points (3,) or (N, 3) numpy array
-
-    Raises
-    ------
-    ValueError
-        in case of mismatching input dimensions
     """
-    try:
-        arf_num = len(antenna_reference_frame)
-    except TypeError:
-        arf_num = 1
-    pos_num = np.size(sensor_positions) // 3
 
-    if arf_num != pos_num:
+    arf_num = len(antenna_reference_frames) if len(antenna_reference_frames.shape) == 1 else 1
+    if arf_num != np.size(sensor_positions) // 3:
         raise ValueError(
-            f"input shape mismatch: antenna reference frame {arf_num} != sensor positions {sensor_positions.shape}"
+            f"input shape mismatch: antenna reference frames {arf_num} != sensor positions {sensor_positions.shape}"
         )
 
-    # TODO: looking direction computed this way could be simply provided as input and avoid the computation inside
     return direct_geocoding_with_looking_direction(
         sensor_positions=sensor_positions,
-        looking_direction=compute_pointing_directions(
-            antenna_reference_frame=antenna_reference_frame,
+        looking_directions=compute_pointing_directions(
+            antenna_reference_frame=antenna_reference_frames,
             azimuth_antenna_angles=azimuth_antenna_angles,
             elevation_antenna_angles=elevation_antenna_angles,
         ),
-        geodetic_altitude=geodetic_altitude,
+        altitude=altitude,
     )
 
 
 def direct_geocoding_monostatic(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
-    range_times: float | FloatArrayType,
-    frequencies_doppler_centroid: float | FloatArrayType,
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     look_direction: str | SensorLookDirection,
-    geodetic_altitude: float,
-    initial_guesses: CoordinatesArrayType | None = None,
-) -> CoordinatesArrayType:
-    """Perform direct geocoding for monostatic sensor.
+    altitude: float,
+    initial_guesses: npt.NDArray[np.floating] | None = None,
+) -> npt.NDArray[np.floating]:
+    """Perform monostatic direct geocoding.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
-        position of the sensor, with shape (3,) or (N, 3)
-    sensor_velocities : CoordinatesArrayType
-        velocity of the sensor, with shape (3,) or (N, 3)
-    range_times : float | FloatArrayType
-        range times, float or (M,)
-    frequencies_doppler_centroid : float | FloatArrayType
-        frequency_doppler_centroid value, single value or array (M,), if a single value is passed and there is more
-        than 1 range times, it is broadcasted to all of them
+    sensor_positions : npt.NDArray[np.floating]
+        position of the sensor with shape (3,) or (N, 3)
+    sensor_velocities : npt.NDArray[np.floating]
+        velocity of the sensor with shape (3,) or (N, 3)
+    range_times : float | npt.NDArray[np.floating]
+        range times scalar or (M,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        doppler frequencies scalar or array (M,)
     wavelength : float
         carrier signal wavelength
     look_direction : str | SensorLookDirection
-        side where to perform geocoding
-    geodetic_altitude : float
-        the altitude over wgs84
-    initial_guesses : CoordinatesArrayType | None, optional
+        geocoding side
+    altitude : float
+        altitude with respect to WGS84 ellipsoid
+    initial_guesses : npt.NDArray[np.floating] | None, optional
         initial guess for Newton method. If not provided a guess will be computed, by default None
 
     Returns
     -------
-    CoordinatesArrayType
-        geocoded position for each input time and position value
+    npt.NDArray[np.floating]
+        ground points with shape (N, M, 3)
     """
-
     look_direction = SensorLookDirection(look_direction)
 
-    # computation of initial guesses, if not provided
     if initial_guesses is None:
-        # computing mid range distance
-        average_input_range = np.median(range_times) * speed_of_light / 2
+        average_input_range: float = np.median(range_times) * speed_of_light / 2
         initial_guesses = direct_geocoding_init(
             sensor_positions=sensor_positions,
             sensor_velocities=sensor_velocities,
@@ -228,69 +213,62 @@ def direct_geocoding_monostatic(
             look_direction=look_direction,
         )
 
-    # direct geocoding monostatic core
-    ground_points = direct_geocoding_monostatic_core(
+    return direct_geocoding_monostatic_core(
         initial_guesses=initial_guesses,
         sensor_positions=sensor_positions,
         sensor_velocities=sensor_velocities,
         range_times=range_times,
-        frequencies_doppler_centroid=frequencies_doppler_centroid,
+        doppler_frequencies=doppler_frequencies,
         wavelength=wavelength,
-        geodetic_altitude=geodetic_altitude,
+        altitude=altitude,
     )
-
-    return ground_points
 
 
 def direct_geocoding_bistatic(
-    sensor_positions_rx: CoordinatesArrayType,
-    sensor_velocities_rx: CoordinatesArrayType,
-    sensor_positions_tx: CoordinatesArrayType,
-    sensor_velocities_tx: CoordinatesArrayType,
-    range_times: float | FloatArrayType,
-    frequencies_doppler_centroid: float | FloatArrayType,
+    sensor_positions_rx: npt.NDArray[np.floating],
+    sensor_velocities_rx: npt.NDArray[np.floating],
+    sensor_positions_tx: npt.NDArray[np.floating],
+    sensor_velocities_tx: npt.NDArray[np.floating],
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     look_direction: str | SensorLookDirection,
-    geodetic_altitude: float,
-    initial_guesses: CoordinatesArrayType | None = None,
-) -> CoordinatesArrayType:
+    altitude: float,
+    initial_guesses: npt.NDArray[np.floating] | None = None,
+) -> npt.NDArray[np.floating]:
     """Perform direct geocoding for bistatic sensors.
 
     Parameters
     ----------
-    sensor_positions_rx : CoordinatesArrayType
-        position of the sensor rx, with shape (3,) or (N, 3)
-    sensor_velocities_rx : CoordinatesArrayType
-        velocity of the sensor rx, with shape (3,) or (N, 3)
-    sensor_positions_tx : CoordinatesArrayType
-        position of the sensor tx, with shape (3,) or (M, 3), where M is the number of range times
-    sensor_velocities_tx : CoordinatesArrayType
-        velocity of the sensor tx, with shape (3,) or (M, 3), where M is the number of range times
-    range_times : float | FloatArrayType
-        range times where to evaluate the direct geocoding, with shape float or (M,)
-    frequencies_doppler_centroid : float | FloatArrayType
-        frequency_doppler_centroid value, single value or array (M,), if a single value is passed and there is more
-        than 1 range times, it is broadcasted to all of them
+    sensor_positions_rx : npt.NDArray[np.floating]
+        position of the receiver with shape (3,) or (N, 3)
+    sensor_velocities_rx : npt.NDArray[np.floating]
+        velocity of the receiver with shape (3,) or (N, 3)
+    sensor_positions_tx : npt.NDArray[np.floating]
+        position of the transmitter with shape (3,) or (M, 3), where M is the number of range times
+    sensor_velocities_tx : npt.NDArray[np.floating]
+        velocity of the transmitter with shape (3,) or (M, 3), where M is the number of range times
+    range_times : float | npt.NDArray[np.floating]
+        range times scalar or shape (M,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        doppler frequencies scalar or shape (M,)
     wavelength : float
         carrier signal wavelength
     look_direction : str | SensorLookDirection
-        side where to perform geocoding
-    geodetic_altitude : float
+        geocoding side
+    altitude : float
         altitude with respect to the WGS84 ellipsoid
-    initial_guesses : CoordinatesArrayType | None, optional
-        initial guess for Newton method. If not provided a guess will be computed, by default None
+    initial_guesses : npt.NDArray[np.floating] | None, optional
+        initial guess for Newton iterations. If not provided a guess will be computed, by default None
 
     Returns
     -------
-    CoordinatesArrayType
-        ground points for each input time and position rx value
+    npt.NDArray[np.floating]
+        ground points with shape (N, M, 3)
     """
-
     look_direction = SensorLookDirection(look_direction)
 
-    # Optional initial guess
     if initial_guesses is None:
-        # computing mid range distance
         average_input_range = np.median(range_times) * speed_of_light / 2
         initial_guesses = direct_geocoding_init(
             sensor_positions=sensor_positions_rx,
@@ -299,8 +277,7 @@ def direct_geocoding_bistatic(
             look_direction=look_direction,
         )
 
-    # direct geocoding bistatic core
-    ground_points = direct_geocoding_bistatic_core(
+    return direct_geocoding_bistatic_core(
         initial_guesses=initial_guesses,
         sensor_positions_rx=sensor_positions_rx,
         sensor_velocities_rx=sensor_velocities_rx,
@@ -308,27 +285,25 @@ def direct_geocoding_bistatic(
         sensor_velocities_tx=sensor_velocities_tx,
         range_times=range_times,
         wavelength=wavelength,
-        frequencies_doppler_centroid=frequencies_doppler_centroid,
-        geodetic_altitude=geodetic_altitude,
+        doppler_frequencies=doppler_frequencies,
+        altitude=altitude,
     )
-
-    return ground_points
 
 
 def direct_geocoding_init(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
     range_distance: float,
     look_direction: str | SensorLookDirection,
-) -> CoordinatesArrayType:
-    """Computation of initial guesses for direct geocoding, monostatic approximation.
+) -> npt.NDArray[np.floating]:
+    """Computate initial guesses for direct geocoding, monostatic approximation.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
-        sensor positions, with shape (3,) or (N, 3)
-    sensor_velocities : CoordinatesArrayType
-        sensor velocity, with shape (3,) or (N, 3)
+    sensor_positions : npt.NDArray[np.floating]
+        sensor positions with shape (3,) or (N, 3)
+    sensor_velocities : npt.NDArray[np.floating]
+        sensor velocities with shape (3,) or (N, 3)
     range_distance : float
         range distance
     look_direction : str | SensorLookDirection
@@ -336,18 +311,11 @@ def direct_geocoding_init(
 
     Returns
     -------
-    CoordinatesArrayType
-        initial guess ground points
-
-    Raises
-    ------
-    RuntimeError
-        if range distance not compatible with sensor position and earth radius
+    npt.NDArray[np.floating]
+        guess ground points with shape (3,) or (N, 3)
     """
 
-    one_size_array_flag = 0
-    if sensor_velocities.ndim == sensor_positions.ndim == 1:
-        one_size_array_flag = 1
+    one_size_array_flag = sensor_velocities.ndim == sensor_positions.ndim == 1
 
     if sensor_positions.ndim < sensor_velocities.ndim:
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
@@ -357,10 +325,7 @@ def direct_geocoding_init(
 
     sensor_position_norm = np.linalg.norm(sensor_positions, axis=-1, keepdims=True)
     llh_sat = xyz2llh(sensor_positions)
-    if llh_sat.ndim == 1:
-        llh_sat[2] = 0.0
-    else:
-        llh_sat[:, 2] = 0.0
+    llh_sat[..., 2] = 0.0
     xyz_sat = llh2xyz(llh_sat)
     earth_radius = np.linalg.norm(xyz_sat, axis=-1, keepdims=True)
 

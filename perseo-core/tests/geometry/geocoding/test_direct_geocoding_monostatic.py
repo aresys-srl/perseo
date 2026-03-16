@@ -12,9 +12,9 @@ from scipy.constants import speed_of_light
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_init, direct_geocoding_monostatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
+    _direct_geocoding_monostatic_newton,
     _doppler_equation,
     _ellipse_equation,
-    _newton_for_direct_geocoding_monostatic,
     direct_geocoding_monostatic_core,
 )
 from perseo_core.geometry.utilities.ellipsoid import WGS84
@@ -55,11 +55,11 @@ def _doppler_equation_residual(
 
     doppler_residual, _ = _doppler_equation(
         pv_scalar=los_vel_prod,
-        sat2point=los,
-        sat_velocity=sensor_vel,
+        los=los,
+        sensor_velocity=sensor_vel,
         distance=distance,
         wavelength=wavelength,
-        frequency_doppler_centroid=doppler_freq,
+        doppler_frequency=doppler_freq,
     )
     return np.array(doppler_residual)
 
@@ -145,8 +145,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities,
             initial_guesses=self.initial_guesses,
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -194,8 +194,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
             initial_guesses=self.initial_guesses.reshape(1, 3),
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -243,8 +243,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities,
             initial_guesses=None,
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -292,8 +292,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
             initial_guesses=None,
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -341,8 +341,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=self.initial_guesses,
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -390,8 +390,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=self.initial_guesses.reshape(1, 3),
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -439,8 +439,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=np.full((self.N, 3), self.initial_guesses),
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -488,8 +488,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=None,
             range_times=self.range_times[0],
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -537,8 +537,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities,
             initial_guesses=self.initial_guesses,
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -586,8 +586,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
             initial_guesses=self.initial_guesses.reshape(1, 3),
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -635,8 +635,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities,
             initial_guesses=None,
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -684,8 +684,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities,
             initial_guesses=self.initial_guesses,
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freqs, self.M),
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -733,8 +733,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
             initial_guesses=self.initial_guesses.reshape(1, 3),
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freqs, self.M),
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -782,8 +782,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=self.initial_guesses,
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -831,8 +831,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=None,
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freqs,
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=self.doppler_freqs,
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -880,8 +880,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
             initial_guesses=self.initial_guesses,
             range_times=np.repeat(self.range_times[0], self.M),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freqs, self.M),
-            geodetic_altitude=self.geodetic_altitude,
+            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
+            altitude=self.geodetic_altitude,
             look_direction=self.look_direction,
             wavelength=self.wavelength,
         )
@@ -930,8 +930,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
                 sensor_velocities=np.full((self.M, 3), self.scaled_arf_velocities),
                 initial_guesses=np.full((self.N, 3), self.initial_guesses),
                 range_times=np.repeat(self.range_times[0], self.M),
-                frequencies_doppler_centroid=self.doppler_freqs,
-                geodetic_altitude=self.geodetic_altitude,
+                doppler_frequencies=self.doppler_freqs,
+                altitude=self.geodetic_altitude,
                 look_direction=self.look_direction,
                 wavelength=self.wavelength,
             )
@@ -946,8 +946,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
                 sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
                 initial_guesses=np.full((self.N // 2, 3), self.initial_guesses),
                 range_times=np.repeat(self.range_times[0], self.M),
-                frequencies_doppler_centroid=self.doppler_freqs,
-                geodetic_altitude=self.geodetic_altitude,
+                doppler_frequencies=self.doppler_freqs,
+                altitude=self.geodetic_altitude,
                 look_direction=self.look_direction,
                 wavelength=self.wavelength,
             )
@@ -962,8 +962,8 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
                 sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
                 initial_guesses=np.full((self.N, 3), self.initial_guesses),
                 range_times=np.repeat(self.range_times[0], self.N),
-                frequencies_doppler_centroid=np.repeat(self.doppler_freqs, self.M),
-                geodetic_altitude=self.geodetic_altitude,
+                doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
+                altitude=self.geodetic_altitude,
                 look_direction=self.look_direction,
                 wavelength=self.wavelength,
             )
@@ -1001,9 +1001,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=self.velocity,
             initial_guesses=self.initial_guess,
             range_times=self.range_time[0],
-            frequencies_doppler_centroid=self.doppler_freq,
+            doppler_frequencies=self.doppler_freq,
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 1)
@@ -1019,9 +1019,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=self.velocity.reshape(1, 3),
             initial_guesses=self.initial_guess.reshape(1, 3),
             range_times=self.range_time[0],
-            frequencies_doppler_centroid=self.doppler_freq,
+            doppler_frequencies=self.doppler_freq,
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1037,9 +1037,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=self.velocity,
             initial_guesses=self.initial_guess,
             range_times=np.repeat(self.range_time[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freq,
+            doppler_frequencies=self.doppler_freq,
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1055,9 +1055,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=self.velocity.reshape(1, 3),
             initial_guesses=self.initial_guess.reshape(1, 3),
             range_times=np.repeat(self.range_time[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freq,
+            doppler_frequencies=self.doppler_freq,
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1073,9 +1073,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=self.velocity,
             initial_guesses=self.initial_guess,
             range_times=np.repeat(self.range_time[0], self.M),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
+            doppler_frequencies=np.repeat(self.doppler_freq, self.M),
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1091,9 +1091,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=self.velocity.reshape(1, 3),
             initial_guesses=self.initial_guess.reshape(1, 3),
             range_times=np.repeat(self.range_time[0], self.M),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
+            doppler_frequencies=np.repeat(self.doppler_freq, self.M),
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1109,9 +1109,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.velocity),
             initial_guesses=np.full((self.N, 3), self.initial_guess),
             range_times=self.range_time[0],
-            frequencies_doppler_centroid=self.doppler_freq,
+            doppler_frequencies=self.doppler_freq,
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1127,9 +1127,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.velocity),
             initial_guesses=np.full((self.N, 3), self.initial_guess),
             range_times=np.repeat(self.range_time[0], self.M),
-            frequencies_doppler_centroid=self.doppler_freq,
+            doppler_frequencies=self.doppler_freq,
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 3)
@@ -1145,9 +1145,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
             sensor_velocities=np.full((self.N, 3), self.velocity),
             initial_guesses=np.full((self.N, 3), self.initial_guess),
             range_times=np.repeat(self.range_time[0], self.M),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
+            doppler_frequencies=np.repeat(self.doppler_freq, self.M),
             wavelength=self.wavelength,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
         )
 
         self.assertEqual(out.ndim, 3)
@@ -1165,9 +1165,9 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
                 sensor_velocities=np.full((self.N, 3), self.velocity),
                 initial_guesses=np.full((self.N, 3), self.initial_guess),
                 range_times=np.repeat(self.range_time[0], self.M),
-                frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.N),
+                doppler_frequencies=np.repeat(self.doppler_freq, self.N),
                 wavelength=self.wavelength,
-                geodetic_altitude=self.geodetic_altitude,
+                altitude=self.geodetic_altitude,
             )
 
 
@@ -1188,14 +1188,14 @@ class NewtonForDirectGeocodingMonostaticTest(unittest.TestCase):
 
     def test_newton_for_geocoding_array_case0a(self) -> None:
         """Testing Newton for geocoding for array input, case 0a"""
-        out = _newton_for_direct_geocoding_monostatic(
+        out = _direct_geocoding_monostatic_newton(
             sensor_positions=self.position,
             sensor_velocities=self.velocity,
             initial_guesses=self.init_guess,
             range_time=self.range_time,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
             wavelength=self.wavelength,
-            frequency_doppler_centroid=self.doppler_frequency,
+            doppler_frequency=self.doppler_frequency,
         )
 
         self.assertEqual(out.ndim, 1)
@@ -1204,14 +1204,14 @@ class NewtonForDirectGeocodingMonostaticTest(unittest.TestCase):
 
     def test_newton_for_geocoding_array_case0b(self) -> None:
         """Testing Newton for geocoding for array input, case 0b"""
-        out = _newton_for_direct_geocoding_monostatic(
+        out = _direct_geocoding_monostatic_newton(
             sensor_positions=self.position.reshape(1, 3),
             sensor_velocities=self.velocity.reshape(1, 3),
             initial_guesses=self.init_guess.reshape(1, 3),
             range_time=self.range_time,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
             wavelength=self.wavelength,
-            frequency_doppler_centroid=self.doppler_frequency,
+            doppler_frequency=self.doppler_frequency,
         )
 
         self.assertEqual(out.ndim, 2)
@@ -1220,14 +1220,14 @@ class NewtonForDirectGeocodingMonostaticTest(unittest.TestCase):
 
     def test_newton_for_geocoding_array_case1(self) -> None:
         """Testing Newton for geocoding for array input, case 0b"""
-        out = _newton_for_direct_geocoding_monostatic(
+        out = _direct_geocoding_monostatic_newton(
             sensor_positions=np.full((4, 3), self.position),
             sensor_velocities=np.full((4, 3), self.velocity),
             initial_guesses=np.full((4, 3), self.init_guess),
             range_time=self.range_time,
-            geodetic_altitude=self.geodetic_altitude,
+            altitude=self.geodetic_altitude,
             wavelength=self.wavelength,
-            frequency_doppler_centroid=self.doppler_frequency,
+            doppler_frequency=self.doppler_frequency,
         )
 
         self.assertEqual(out.ndim, 2)
