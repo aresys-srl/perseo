@@ -12,7 +12,6 @@ from scipy.constants import speed_of_light
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_init, direct_geocoding_monostatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
-    AmbiguousInputCorrelation,
     _doppler_equation,
     _ellipse_equation,
     _newton_for_direct_geocoding_monostatic,
@@ -925,7 +924,7 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
         """Testing direct geocoding monostatic function, case 4"""
 
         # case 4: N pos (N,3), M vel (M,3), raising error mismatch position/velocity
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             direct_geocoding_monostatic(
                 sensor_positions=np.full((self.N, 3), self.positions),
                 sensor_velocities=np.full((self.M, 3), self.scaled_arf_velocities),
@@ -941,7 +940,7 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
         """Testing direct geocoding monostatic function, case 5"""
 
         # case 5: N pos (N,3), M init guesses (M,3), raising error mismatch position/init guesses
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             direct_geocoding_monostatic(
                 sensor_positions=np.full((self.N, 3), self.positions),
                 sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
@@ -957,7 +956,7 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
         """Testing direct geocoding monostatic function, case 6"""
 
         # case 6: N range (N,), M freqs (M,), raising error mismatch frequency/ranges
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             direct_geocoding_monostatic(
                 sensor_positions=np.full((self.N, 3), self.positions),
                 sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
@@ -1160,7 +1159,7 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
 
         # case 2: N pos (N,3), N vel (N,3), N guesses (N,3), M rng times, N doppler freqs
         # assert error raising
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             direct_geocoding_monostatic_core(
                 sensor_positions=np.full((self.N, 3), self.position),
                 sensor_velocities=np.full((self.N, 3), self.velocity),

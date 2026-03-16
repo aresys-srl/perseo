@@ -13,7 +13,6 @@ from scipy.constants import speed_of_light
 from perseo_core.geometry.doppler import doppler_equation_bistatic_residuals
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_bistatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
-    AmbiguousInputCorrelation,
     _ellipse_equation,
     _newton_for_direct_geocoding_bistatic,
     direct_geocoding_bistatic_core,
@@ -1149,7 +1148,7 @@ class DirectGeocodingBistaticCoreTest(unittest.TestCase):
         # case 5: N pos rx (N,3), N vel rx (N,3), N init guess (N,3),
         # M pos tx (M,3), M vel tx (M,3), M rng times, N doppler freqs
         # raising ambiguous input correlation error: mismatch range times / frequencies
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             direct_geocoding_bistatic_core(
                 sensor_positions_rx=np.full((self.N, 3), self.position),
                 sensor_velocities_rx=np.full((self.N, 3), self.velocity),

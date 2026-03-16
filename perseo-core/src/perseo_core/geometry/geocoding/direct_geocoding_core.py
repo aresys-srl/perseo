@@ -8,10 +8,6 @@ from __future__ import annotations
 import numpy as np
 from scipy.constants import speed_of_light
 
-from perseo_core.geometry.geocoding.errors import (
-    AmbiguousInputCorrelation,
-    NewtonMethodConvergenceError,
-)
 from perseo_core.geometry.utilities.ellipsoid import WGS84
 from perseo_core.models.types import CoordinatesArrayType, FloatArrayType
 
@@ -53,7 +49,7 @@ def direct_geocoding_monostatic_core(
 
     Raises
     ------
-    AmbiguousInputCorrelation
+    RuntimeError
         if inputs shapes are ambiguous to match, this error is raised
     """
 
@@ -62,27 +58,26 @@ def direct_geocoding_monostatic_core(
     try:
         frequencies_doppler_centroid = np.broadcast_to(frequencies_doppler_centroid, range_times.shape)
     except ValueError as exc:
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             f"frequencies {frequencies_doppler_centroid.shape} != range times {range_times.shape}"
         ) from exc
 
     try:
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
     except ValueError as exc:
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             f"sensor position {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
         ) from exc
 
     try:
         initial_guesses = np.broadcast_to(initial_guesses, sensor_positions.shape)
     except ValueError as exc:
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             f"sensor position {sensor_positions.shape} != initial guesses {initial_guesses.shape}"
         ) from exc
 
     if not sensor_positions.shape == sensor_velocities.shape == initial_guesses.shape:
-        # case: different shapes between inputs
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             f"Mismatch between input shapes: pos {sensor_positions.shape},"
             + f"vel {sensor_velocities.shape}, guess {initial_guesses.shape}"
         )
@@ -148,7 +143,7 @@ def direct_geocoding_bistatic_core(
 
     Raises
     ------
-    AmbiguousInputCorrelation
+    RuntimeError
         if inputs shapes are ambiguous to match, this error is raised
     """
 
@@ -157,7 +152,7 @@ def direct_geocoding_bistatic_core(
     try:
         frequencies_doppler_centroid = np.broadcast_to(frequencies_doppler_centroid, range_times.shape)
     except ValueError as exc:
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             f"frequencies {frequencies_doppler_centroid.shape} != range times {range_times.shape}"
         ) from exc
 
@@ -232,7 +227,7 @@ def _newton_for_direct_geocoding_monostatic(
 
     Raises
     ------
-    NewtonMethodConvergenceError
+    RuntimeError
         raised if Newton method did not converge after max_iterations
     """
 
@@ -296,7 +291,7 @@ def _newton_for_direct_geocoding_monostatic(
         if np.max(np.abs(err_for_convergence)) <= tolerance_squared:
             break
     else:
-        raise NewtonMethodConvergenceError(
+        raise RuntimeError(
             f"Newton did not converge: maximum number of iterations {max_iter} reached. Residual error {delta_err}"
         )
 
@@ -350,7 +345,7 @@ def _newton_for_direct_geocoding_bistatic(
 
     Raises
     ------
-    NewtonMethodConvergenceError
+    RuntimeError
         raised if Newton method did not converge after max_iterations
     """
 
@@ -437,7 +432,7 @@ def _newton_for_direct_geocoding_bistatic(
         if np.max(np.abs(err_for_convergence)) <= tolerance_squared:
             break
     else:
-        raise NewtonMethodConvergenceError(
+        raise RuntimeError(
             f"Newton did not converge: maximum number of iterations {max_iter} reached. Residual error {delta_err}"
         )
 

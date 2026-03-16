@@ -10,11 +10,6 @@ from scipy.constants import speed_of_light
 from scipy.interpolate import interp1d
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
-from perseo_core.geometry.geocoding.errors import (
-    AmbiguousInputCorrelation,
-    NewtonMethodConvergenceError,
-    OrbitsNotOverlappedError,
-)
 from perseo_core.models.protocols import TwiceDifferentiable3DCurve
 from perseo_core.models.types import (
     CoordinatesArrayType,
@@ -82,11 +77,11 @@ def inverse_geocoding_monostatic_core(
 
     Raises
     ------
-    AmbiguousInputCorrelation
+    RuntimeError
         ambiguous association between N ground points and M init guesses
-    AmbiguousInputCorrelation
+    RuntimeError
         ambiguous association between N ground points and M frequencies
-    NewtonMethodConvergenceError
+    RuntimeError
         Newton method could not converge
     """
 
@@ -106,7 +101,7 @@ def inverse_geocoding_monostatic_core(
     if np.size(initial_guesses) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(initial_guesses) == 1
     ):
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             "Ambiguous matching between initial guess times "
             + f"{initial_guesses.shape} and "
             + f"ground points {ground_points.shape}"
@@ -115,7 +110,7 @@ def inverse_geocoding_monostatic_core(
     if np.size(frequencies_doppler_centroid) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(frequencies_doppler_centroid) == 1
     ):
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
             + f"{frequencies_doppler_centroid.shape} and "
             + f"ground points {ground_points.shape}"
@@ -159,7 +154,7 @@ def inverse_geocoding_monostatic_core(
             break
 
     else:
-        raise NewtonMethodConvergenceError(
+        raise RuntimeError(
             "Newton did not converge: maximum number of iterations" + f"{max_iter} reached. Residual error {delta_err}"
         )
 
@@ -226,11 +221,11 @@ def inverse_geocoding_bistatic_core(
 
     Raises
     ------
-    AmbiguousInputCorrelation
+    RuntimeError
         ambiguous association between N ground points and M init guesses
-    AmbiguousInputCorrelation
+    RuntimeError
         ambiguous association between N ground points and M frequencies
-    NewtonMethodConvergenceError
+    RuntimeError
         Newton method could not converge
     """
 
@@ -259,7 +254,7 @@ def inverse_geocoding_bistatic_core(
     if np.size(initial_guesses) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(initial_guesses) == 1
     ):
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             "Ambiguous matching between initial guess times "
             + f"{initial_guesses.shape} and "
             + f"ground points {ground_points.shape}"
@@ -268,7 +263,7 @@ def inverse_geocoding_bistatic_core(
     if np.size(frequencies_doppler_centroid) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(frequencies_doppler_centroid) == 1
     ):
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
             + f"{frequencies_doppler_centroid.shape} and "
             + f"ground points {ground_points.shape}"
@@ -385,7 +380,7 @@ def inverse_geocoding_bistatic_core(
             break
 
     else:
-        raise NewtonMethodConvergenceError(
+        raise RuntimeError(
             "Newton did not converge: maximum number of iterations" + f"{max_iter} reached. Residual error {delta_err}"
         )
 
@@ -522,9 +517,9 @@ def inverse_geocoding_bistatic_init_core(
 
     Raises
     ------
-    AmbiguousInputCorrelation
+    RuntimeError
         ambiguous association between N ground points and M frequencies
-    OrbitsNotOverlappedError
+    RuntimeError
         if orbit rx and orbit tx are not overlapped
     """
 
@@ -544,7 +539,7 @@ def inverse_geocoding_bistatic_init_core(
     if np.size(frequencies_doppler_centroid) != points.size // 3 and not (
         points.size // 3 == 1 or np.size(frequencies_doppler_centroid) == 1
     ):
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
             + f"{frequencies_doppler_centroid.shape} and "
             + f"ground points {points.shape}"
@@ -562,7 +557,7 @@ def inverse_geocoding_bistatic_init_core(
     axis_length = axis_end_time - axis_start_time
 
     if axis_length < 0:
-        raise OrbitsNotOverlappedError
+        raise RuntimeError("Orbits are not overlapped")
 
     common_time_axis = axis_start_time + np.arange(axis_length / d_t) * d_t
     relative_time_axis = (common_time_axis - axis_start_time).astype(float)
@@ -663,9 +658,9 @@ def inverse_geocoding_attitude_core(
 
     Raises
     ------
-    AmbiguousInputCorrelation
+    RuntimeError
         ambiguous association between N input guesses and M earth points
-    NewtonMethodConvergenceError
+    RuntimeError
         Newton method could not converge
     """
 
@@ -674,7 +669,7 @@ def inverse_geocoding_attitude_core(
     if np.size(initial_guesses) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(initial_guesses) == 1
     ):
-        raise AmbiguousInputCorrelation(
+        raise RuntimeError(
             "Ambiguous matching between initial guess times "
             + f"{np.shape(initial_guesses)} and "
             + f"ground points {ground_points.shape}"
@@ -715,7 +710,7 @@ def inverse_geocoding_attitude_core(
         if np.max(np.abs(delta_err)) <= abs_time_tolerance:
             break
     else:
-        raise NewtonMethodConvergenceError(
+        raise RuntimeError(
             "Newton did not converge: maximum number of iterations" + f"{max_iter} reached. Residual error {delta_err}"
         )
 

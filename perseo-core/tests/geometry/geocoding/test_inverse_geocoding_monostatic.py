@@ -15,7 +15,6 @@ from perseo_core.geometry.geocoding.inverse_geocoding import (
     inverse_geocoding_monostatic_init,
 )
 from perseo_core.geometry.geocoding.inverse_geocoding_core import (
-    AmbiguousInputCorrelation,
     inverse_geocoding_monostatic_core,
 )
 from perseo_core.models.protocols import TwiceDifferentiable3DCurve
@@ -467,7 +466,7 @@ class InverseGeocodingMonostaticCoreTest(unittest.TestCase):
         """Testing inverse_geocoding_monostatic_core, case 4a"""
 
         # case4a: N ground points (N, 3), 1 doppler freq, M init guess (M,)
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             _, _ = inverse_geocoding_monostatic_core(
                 trajectory=self.trajectory,
                 ground_points=np.full((self.N, 3), self.ground_point),
@@ -480,7 +479,7 @@ class InverseGeocodingMonostaticCoreTest(unittest.TestCase):
         """Testing inverse_geocoding_monostatic_core, case 4b"""
 
         # case4b: N ground points (N, 3), M doppler freqs (M,), 1 init guess
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             _, _ = inverse_geocoding_monostatic_core(
                 trajectory=self.trajectory,
                 ground_points=np.full((self.N, 3), self.ground_point),

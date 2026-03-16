@@ -11,7 +11,6 @@ import numpy as np
 
 from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_bistatic
 from perseo_core.geometry.geocoding.inverse_geocoding_core import (
-    AmbiguousInputCorrelation,
     inverse_geocoding_bistatic_init_core,
 )
 from perseo_core.timing.precise_datetime import PreciseDateTime
@@ -771,7 +770,7 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
         """Testing inverse_geocoding_bistatic, case 4a"""
 
         # case4a: N ground point (N,3), 1 doppler freq, M init guesses (M,)
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             _, _ = inverse_geocoding_bistatic(
                 trajectory_rx=self.trajectory,
                 trajectory_tx=self.trajectory,
@@ -785,7 +784,7 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
         """Testing inverse_geocoding_bistatic, case 4b"""
 
         # case4b: N ground point (N,3), M doppler freqs (M,), 1 init guess
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             _, _ = inverse_geocoding_bistatic(
                 trajectory_rx=self.trajectory,
                 trajectory_tx=self.trajectory,
@@ -1099,7 +1098,7 @@ class InverseGeocodingBistaticInitTest(unittest.TestCase):
         """Testing inverse geocoding bistatic init, case 3"""
 
         # case 3: N ground point (N, 3), M doppler freq
-        with self.assertRaises(AmbiguousInputCorrelation):
+        with self.assertRaises(RuntimeError):
             inverse_geocoding_bistatic_init_core(
                 trajectory_rx=self.trajectory,
                 trajectory_tx=self.trajectory,
