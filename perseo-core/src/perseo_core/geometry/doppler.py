@@ -13,7 +13,6 @@ from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
 from perseo_core.models.protocols import TwiceDifferentiable3DCurve
-from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType, FloatArrayType
 
 
 # TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
@@ -22,9 +21,9 @@ def doppler_equation(
     pv_scalar: float,
     distance: float,
     frequency_doppler_centroid: float,
-    sensor_velocity: CoordinatesArrayType,
+    sensor_velocity: npt.NDArray[np.floating],
     los: np.ndarray,
-) -> tuple[float, FloatArrayType]:
+) -> tuple[float, npt.NDArray[np.floating]]:
     """Doppler equation solver.
 
     Parameters
@@ -37,7 +36,7 @@ def doppler_equation(
         ground point - sensor distance
     frequency_doppler_centroid : float
         frequency doppler centroid
-    sensor_velocity : CoordinatesArrayType
+    sensor_velocity : npt.NDArray[np.floating]
         sensor velocity
     los : np.ndarray
         line of sight
@@ -46,7 +45,7 @@ def doppler_equation(
     -------
     float
         doppler equation solution
-    FloatArrayType
+    npt.NDArray[np.floating]
         doppler equation gradient
     """
 
@@ -58,12 +57,12 @@ def doppler_equation(
 
 
 def doppler_equation_monostatic_residuals(
-    ground_point: CoordinatesArrayType,
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
+    ground_point: npt.NDArray[np.floating],
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
     frequency_doppler_centroid: float,
     wavelength: float,
-) -> FloatArrayType:
+) -> npt.NDArray[np.floating]:
     """Evaluate SAR doppler equation residual, assuming monostatic approximation.
 
     *Doppler Equation*
@@ -83,11 +82,11 @@ def doppler_equation_monostatic_residuals(
 
     Parameters
     ----------
-    ground_point : CoordinatesArrayType
+    ground_point : npt.NDArray[np.floating]
         ground point in ECEF coordinates, with shape (3,)
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         sensor positions, with shape (N, 3)
-    sensor_velocities : CoordinatesArrayType
+    sensor_velocities : npt.NDArray[np.floating]
         sensor velocities, with shape (N, 3)
     frequency_doppler_centroid : float
         frequency doppler centroid
@@ -96,7 +95,7 @@ def doppler_equation_monostatic_residuals(
 
     Returns
     -------
-    FloatArrayType
+    npt.NDArray[np.floating]
         doppler equation residual (Hz) for each input sensor position, (N,)
     """
 
@@ -122,27 +121,27 @@ def doppler_equation_monostatic_residuals(
 
 
 def doppler_equation_bistatic_residuals(
-    sensor_pos_rx: CoordinatesArrayType,
-    sensor_pos_tx: CoordinatesArrayType,
-    sensor_vel_rx: CoordinatesArrayType,
-    sensor_vel_tx: CoordinatesArrayType,
-    ground_points: CoordinatesArrayType,
+    sensor_pos_rx: npt.NDArray[np.floating],
+    sensor_pos_tx: npt.NDArray[np.floating],
+    sensor_vel_rx: npt.NDArray[np.floating],
+    sensor_vel_tx: npt.NDArray[np.floating],
+    ground_points: npt.NDArray[np.floating],
     wavelength: float,
     doppler_freq: float,
-) -> FloatArrayType:
+) -> npt.NDArray[np.floating]:
     """Evaluating doppler equation residual for bistatic sensors.
 
     Parameters
     ----------
-    sensor_pos_rx : CoordinatesArrayType
+    sensor_pos_rx : npt.NDArray[np.floating]
         sensor rx position, (3,) or (N, 3)
-    sensor_pos_tx : CoordinatesArrayType
+    sensor_pos_tx : npt.NDArray[np.floating]
         sensor tx position, (3,) or (N, 3)
-    sensor_vel_rx : CoordinatesArrayType
+    sensor_vel_rx : npt.NDArray[np.floating]
         sensor rx velocity, (3,) or (N, 3)
-    sensor_vel_tx : CoordinatesArrayType
+    sensor_vel_tx : npt.NDArray[np.floating]
         sensor tx velocity, (3,) or (N, 3)
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         ground points from direct geocoding solution, (3,) or (N, 3)
     wavelength : float
         carrier signal wavelength
@@ -151,7 +150,7 @@ def doppler_equation_bistatic_residuals(
 
     Returns
     -------
-    FloatArrayType
+    npt.NDArray[np.floating]
         doppler equation residual
     """
 
@@ -184,20 +183,20 @@ def doppler_equation_bistatic_residuals(
 
 
 def get_geometric_doppler_centroid(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
-    ground_points: CoordinatesArrayType,
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
+    ground_points: npt.NDArray[np.floating],
     wavelength: float,
 ) -> float:
     """Calculating doppler centroid (geometrically) from squint angle.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         sensor positions array, in the form (3,) or (N, 3)
-    sensor_velocities : CoordinatesArrayType
+    sensor_velocities : npt.NDArray[np.floating]
         sensor velocities array, in the form (3,) or (N, 3)
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         ground points array, in the form (3,) or (N, 3)
     wavelength : int
         carrier signal wavelength in meters
