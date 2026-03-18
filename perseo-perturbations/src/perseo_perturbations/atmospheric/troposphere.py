@@ -101,19 +101,19 @@ class TroposphericGridInterpolationMethod(Enum):
     CUBIC = auto()
 
 
-# custom support functions
-# barometric formula
 def _troposphere_barometric_formula(height: float) -> float:
     """Computing the barometric formula (pressure variation with altitude) for the troposphere ISA level.
 
-    Implemented formula (latex):
+    Implemented formula:
 
-    .. math::
+    $$
+    P = P_0 \\cdot \\left[1 - \\frac{L_t}{T_t} \\cdot (h-h_t)\\right]^\\left(\\frac{g_0\\cdot M}{L_t \\cdot
+    R^{\\prime}}\\right)
+    $$
 
-        P = P_0 \\cdot \\left[1 - \\frac{L_t}{T_t} \\cdot (h-h_t)\\right]^\\left(\\frac{g_0\\cdot M}{L_t \\cdot R^{\\prime}}\\right)
-
-    where t subscript denotes the troposphere ISA level, L is the temperature lapse rate, T the reference temperature,
-    h the height, g_0 the gravitational acceleration constant, M the air molar mass and R' the universal gas constant.
+    where $t$ subscript denotes the troposphere ISA level, $L$ is the temperature lapse rate, $T$ the reference
+    temperature, $h$ the height, $g_0$ the gravitational acceleration constant, $M$ the air molar mass and
+    $R^{\\prime}}$ the universal gas constant.
 
     Parameters
     ----------
@@ -124,7 +124,7 @@ def _troposphere_barometric_formula(height: float) -> float:
     -------
     float
         pressure at that height
-    """  # noqa: E501
+    """
 
     exponent = GRAVITATIONAL_ACCELERATION * MOLAR_MASS_AIR / UNIVERSAL_GAS_CONSTANT / TROPOSPHERE_TEMP_LAPSE_RATE
     pressure = (
@@ -160,8 +160,9 @@ def generate_tropospheric_map_name_for_vmf_data(
 
     Returns
     -------
-    tuple[list[str], list[PreciseDateTime]]
-        list of file names,
+    list[str]
+        list of file names
+    list[PreciseDateTime]
         list of file dates in PreciseDatetime form
     """
 
@@ -242,14 +243,16 @@ class TroposphericDelayEstimator:
     modelling. Closely linked to topography, reflector height has to be taken into account.
     - wet component undergoes rapid changes due to the high spatiotemporal variability of water vapor.
 
-    The equation to be solved is the following (latex):
+    The equation to be solved is the following:
 
-    .. math::
-        \\Delta L (\\epsilon) = \\Delta L_h^Z \\cdot mf_h(\\epsilon) +  \\Delta L_w^Z \\cdot mf_w(\\epsilon)
+    $$
+    \\Delta L (\\epsilon) = \\Delta L_h^Z \\cdot mf_h(\\epsilon) +  \\Delta L_w^Z \\cdot mf_w(\\epsilon)
+    $$
 
-    where ΔL(ε) is the total delay time and it is composed by an hydrostatic component (h) and a wet component (w).
-    mf(ε) are the wet and hydrostatic mapping functions generated in this algorithm starting from the Vienna Mapping
-    Function 3 data and the spherical harmonics Legendre polynomials.
+    where $\\Delta L(\\epsilon)$ is the total delay time and it is composed by an hydrostatic component $h$ and a wet
+    component $w$.
+    $mf(\\epsilon)$ are the wet and hydrostatic mapping functions generated in this algorithm starting from the Vienna
+    Mapping Function 3 data and the spherical harmonics Legendre polynomials.
     """
 
     def __init__(
@@ -445,10 +448,11 @@ class TroposphericDelayEstimator:
 
         Hydrostatic and wet mapping functions are evaluated in the form (latex):
 
-        .. math::
-            mf = \\frac{1+\\frac{a}{1+\\frac{b}{1+c}}}{\\sin(\\epsilon)+\\frac{a}{\\sin(\\epsilon)+\\frac{b}{\\sin(\\epsilon) + c}}}
+        $$
+        mf = \\frac{1+\\frac{a}{1+\\frac{b}{1+c}}}{\\sin(\\epsilon)+\\frac{a}{\\sin(\\epsilon)+\\frac{b}{\\sin(\\epsilon) + c}}}
+        $$
 
-        where ε is the elevation angle (incidence angle in this case).
+        where $\\epsilon$ is the elevation angle (incidence angle in this case).
 
         Parameters
         ----------
@@ -663,15 +667,16 @@ class TroposphericDelayEstimator:
 
         Saastamoinen J. formula, hydrostatic delay
 
-        .. math::
-
-            \\Delta L_h^Z(h) = \\frac{0.0022768 \\cdot P}{1-0.00266 \\cdot \\cos(2\\phi) -0.28 \\cdot 10^{-6} \\cdot h_{ell}}
+        $$
+        \\Delta L_h^Z(h) = \\frac{0.0022768 \\cdot P}{1-0.00266 \\cdot \\cos(2\\phi) -0.28 \\cdot 10^{-6} \\cdot
+        h_{ell}}
+        $$
 
         wet delay exponential empirical decay correction by height
 
-        .. math::
-
-            \\Delta L_{w_s}^Z(h) = \\Delta L_{w_g}^Z(h) \\cdot e^{-\\frac{h_s - h_g}{2000}}
+        $$
+        \\Delta L_{w_s}^Z(h) = \\Delta L_{w_g}^Z(h) \\cdot e^{-\\frac{h_s - h_g}{2000}}
+        $$
 
         Parameters
         ----------
@@ -682,8 +687,9 @@ class TroposphericDelayEstimator:
 
         Returns
         -------
-        tuple[np.ndarray, np.ndarray]
-            array of estimated hydrostatic delay, one for each point target,
+        np.ndarray
+            array of estimated hydrostatic delay, one for each point target
+        np.ndarray
             array of estimated wet delay, one for each point target
 
         Raises
@@ -850,8 +856,9 @@ def compute_delay(
 
     Returns
     -------
-    tuple[np.ndarray, np.ndarray]
-        array of estimated hydrostatic delay [one for each point target],
+    np.ndarray
+        array of estimated hydrostatic delay [one for each point target]
+    np.ndarray
         array of estimated wet delay [one for each point target]
     """
     # instantiating class

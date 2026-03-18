@@ -94,7 +94,7 @@ def compute_solid_earth_tides(
 
     Solid does not contain ocean loading, atmospheric loading, or deformation due to polar motion.
 
-    Ref: 'http://geodesyworld.github.io/SOFTS/solid.htm'
+    Ref: [http://geodesyworld.github.io/SOFTS/solid.htm](http://geodesyworld.github.io/SOFTS/solid.htm)
 
     Parameters
     ----------
@@ -111,8 +111,9 @@ def compute_solid_earth_tides(
 
     Returns
     -------
-    tuple[np.ndarray, np.ndarray]
-        time axis corresponding to a whole day with 60 seconds steps,
+    np.ndarray
+        time axis corresponding to a whole day with 60 seconds steps
+    np.ndarray
         displacement array, of shape (N, 3), with columns being north, east and up components
 
     Raises

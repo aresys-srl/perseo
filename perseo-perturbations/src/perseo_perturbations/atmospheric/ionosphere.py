@@ -213,19 +213,22 @@ class IonosphericDelayEstimator:
 
     The ionosphere is the zone of the terrestrial atmosphere that contains a partially ionised medium, as result of the
     X and UV rays of Solar Radiation and the incidence of charged particles.
+
     The propagation speed of the electromagnetic signals in the ionosphere depends on its electron density:
+
     - during the day, sun radiation causes ionisation of neutral atoms producing free electrons and ions (TEC)
     - during the night, the recombination process prevails, where free electrons and ions are recombined, lowering TEC
 
-    Ionosphere is a dispersive media, with the following Relation of Dispersion between ω and k of the incoming wave:
+    Ionosphere is a dispersive media, with the following Relation of Dispersion between $\\omega$ and $k$ of the
+    incoming wave:
 
-    .. math::
+    $$
+    \\omega^2 = c^2 \\cdot k^2 + \\omega_p^2
+    $$
 
-        \\omega^2 = c^2 \\cdot k^2 + \\omega_p^2
-
-    where ω_p is the critical frequency of the ionospheric plasma, meaning that only signals with ω > ω_p can pass
-    through the ionized plasma medium. Therefore, ionosphere causes a frequency dependent path delay for microwave
-    signals.
+    where $\\omega_p$ is the critical frequency of the ionospheric plasma, meaning that only signals with
+    $\\omega > \\omega_p$ through the ionized plasma medium. Therefore, ionosphere causes a frequency dependent path
+    delay for microwave signals.
     """
 
     def __init__(
@@ -310,8 +313,9 @@ class IonosphericDelayEstimator:
 
         Returns
         -------
-        tuple[list, list]
-            list of timestamps for each tec map,
+        list
+            list of timestamps for each tec map
+        list
             list of data arrays for each tec map
 
         Raises
@@ -376,9 +380,11 @@ class IonosphericDelayEstimator:
 
         Returns
         -------
-        tuple[np.ndarray, np.ndarray, list[np.ndarray]]
-            latitude coordinates of pierce points [deg],
-            longitude coordinates of pierce points [deg],
+        np.ndarray
+            latitude coordinates of pierce points [deg]
+        np.ndarray
+            longitude coordinates of pierce points [deg]
+        list[np.ndarray]
             list of ionospheric pierce points xyz coordinates
         """
 
@@ -469,10 +475,13 @@ class IonosphericDelayEstimator:
 
         Returns
         -------
-        tuple[list, list, np.ndarray, np.ndarray]
-            list of tec data arrays for each lat/lon,
-            list of recording hours,
-            latitude axis (monotonically increasing),
+        list
+            list of tec data arrays for each lat/lon
+        list
+            list of recording hours
+        np.ndarray
+            latitude axis (monotonically increasing)
+        np.ndarray
             longitude axis (monotonically increasing)
         """
 
@@ -533,8 +542,9 @@ class IonosphericDelayEstimator:
 
         The equation used is the following (latex):
 
-        .. math::
-            \\Delta L = \\frac{40.3 \\cdot 10^{16}}{f_c} \\cdot MF(z) \\cdot v_{TEC}
+        $$
+        \\Delta L = \\frac{40.3 \\cdot 10^{16}}{f_c} \\cdot MF(z) \\cdot v_{TEC}
+        $$
 
         where f_c is the carrier frequency of the signal piercing through the ionosphere, MF(z) is the mapping function
         mapping function for conversion into slant delay using the zenith angle z, and vTEC is the vertical total
