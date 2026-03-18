@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 import glob
 import os
 import shutil
@@ -118,34 +119,6 @@ def wheel_builder(session: nox.Session) -> None:
     session.run("python", "-m", "build", "--wheel", silent=True)
 
 
-def doc_builder(session: nox.Session, project: str) -> None:
-    """Documentation building function.
-
-    Parameters
-    ----------
-    session : nox.Session
-        nox session
-    project_source : str
-        project name, with "-" as separator for namespace sub-packages
-    """
-    if tag := os.getenv("CI_COMMIT_TAG"):
-        build_dir = f"docs/build/{project}-{tag}-html-doc"
-    elif sha := os.getenv("CI_COMMIT_SHORT_SHA"):
-        build_dir = f"docs/build/{project}-{sha}-html-doc"
-    else:
-        build_dir = "docs/build/"
-
-    session.install("-e", ".[docs]")
-
-    session.run("python", "-m", "sphinx", "-M", "clean", "docs/source", build_dir)
-    session.run("python", "-m", "sphinx", "-b", "html", "docs/source", build_dir)
-
-    if os.getenv("CI") == "true":
-        session.log(f"compressing '{build_dir}'")
-        root_dir, base_dir = Path(build_dir).parent, Path(build_dir).name
-        shutil.make_archive(build_dir, "zip", root_dir=root_dir, base_dir=base_dir)
-
-
 def unittest_executor(session: nox.Session, project: str) -> None:
     """Executor of unittest from nox session.
 
@@ -256,5 +229,44 @@ def unittest(session: nox.Session):
 @nox.session()
 def build_doc(session: nox.Session):
     """Building documentation"""
-    cwd = Path.cwd()
-    doc_builder(session, project=cwd.name)
+
+    if Path("site").exists():
+        shutil.rmtree("site")
+
+    tag = os.getenv("CI_COMMIT_TAG", "dev")
+    sha = os.getenv("CI_COMMIT_SHORT_SHA")
+    date = datetime.now().strftime("%Y-%m-%d")
+
+    if sha is None:
+        try:
+            sha = session.run(
+                "git", "rev-parse", "--short", "HEAD", external=True, silent=True
+            ).strip()
+        except Exception:
+            sha = ""
+
+    doc_name = f"{date}-{tag}-{sha}-html-doc"
+
+    session.log("Adding build info to documentation section")
+    build_info_file = Path("docs/about/build.template.md")
+    build_info = build_info_file.read_text()
+    build_info = (
+        build_info.replace("__SHA__", sha)
+        .replace("__TAG__", tag)
+        .replace("__DATE__", date)
+    )
+    build_info_file.parent.joinpath("build.md").write_text(build_info)
+    build_info_file.unlink()
+
+    session.log(f"Current dir: {Path.cwd()}")
+    session.log(f"Building documentation: {doc_name}")
+
+    session.install("zensical", "mkdocstrings-python")
+    session.run("pip", "list")
+    session.run("zensical", "build", "-f", str(Path.cwd() / "zensical.toml"))
+
+    if os.getenv("CI") == "true":
+        session.log("compressing documentation")
+        shutil.make_archive(
+            f"documentation-{doc_name}", "zip", root_dir=".", base_dir="site"
+        )

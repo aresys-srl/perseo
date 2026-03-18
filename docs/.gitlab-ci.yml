@@ -1,0 +1,51 @@
+stages:
+  - build
+  - deploy
+
+workflow:
+  rules:
+    - when: always
+
+variables:
+  GIT_DEPTH: 1
+
+.tags_manylinux_2_28_std:
+  tags: ["manylinux_2_28"]
+
+.tags_deploy:
+  tags: ["eo", "deploy"]
+
+# === build ==================================================================
+# ============================================================================
+build_docs:
+  stage: build
+  extends:
+    - .tags_manylinux_2_28_std
+  script:
+    - python3.12 -m pip install nox
+    - python3.12 -m nox -f ./nox_common.py -s build_doc
+  artifacts:
+    expire_in: 2 weeks
+    paths:
+      - ./documentation*.zip
+
+# === deploy =================================================================
+# ============================================================================
+deploy_doc:
+  stage: deploy
+  extends: .tags_deploy
+  rules:
+    - if: "$CI_COMMIT_TAG"
+    - if: '$DEPLOY_DOC == "true"'
+  script:
+    - eval "$(ssh-agent)"
+    - cat "$DASHBOARD_PRIVATE_KEY" | base64 -d | ssh-add -
+    - for file in ./*.zip; do
+      eo_pgp-signme ${file} > ${file}.asc &&
+      ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/docs/archive &&
+      ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/docs/archive;
+      done
+    - unzip *.zip
+    - mv site ${CI_COMMIT_TAG}
+    - rsync --stats -r ${CI_COMMIT_TAG} sardashboard@intranet.aresys.it:develop/perseo/docs/docs
+    - ssh sardashboard@intranet.aresys.it "cd develop/perseo/docs/docs && rm latest && ln -s ${CI_COMMIT_TAG} latest"
