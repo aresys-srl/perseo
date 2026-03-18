@@ -72,7 +72,7 @@ python_package_linux:
     - python${PYTHON} -m nox -s build_python_package -p ${PYTHON}
   parallel:
     matrix:
-      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13"]
   extends: .tags_manylinux_2_28
   needs: []
   artifacts:
@@ -89,27 +89,13 @@ python_package_win:
     - python -m nox -s build_python_package -p ${PYTHON}
   parallel:
     matrix:
-      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13"]
   extends: .tags_win10
   needs: []
   artifacts:
     expire_in: 2 weeks
     paths:
       - ${SUBPROJECT}/dist/*.whl
-
-doc:
-  stage: build
-  extends:
-    - .tags_manylinux_2_28
-  script:
-    - yum install -y pandoc
-    - python3.12 -m pip install nox
-    - python3.12 -m nox -s build_doc
-  needs: []
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - ${SUBPROJECT}/docs/build/*.zip
 
 # === test wheel =============================================================
 # ============================================================================
@@ -160,24 +146,3 @@ deploy_package:
       ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/perturbations/archive &&
       ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/perturbations/archive;
       done
-
-deploy_doc:
-  stage: deploy
-  extends: .tags_deploy
-  rules:
-    - if: "$CI_COMMIT_TAG"
-    - if: '$DEPLOY_DOC == "true"'
-  before_script:
-    - export PACKAGE_VERSION=v$(grep "__version__" $SUBPROJECT/src/perseo_perturbations/__init__.py | awk -F '"' '{print $2}')
-  script:
-    - eval "$(ssh-agent)"
-    - cat "$DASHBOARD_PRIVATE_KEY" | base64 -d | ssh-add -
-    - for file in ${SUBPROJECT}/docs/build/*.zip; do
-      eo_pgp-signme ${file} > ${file}.asc &&
-      ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/perturbations/archive &&
-      ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/perturbations/archive;
-      done
-    - unzip ${SUBPROJECT}/docs/build/*.zip
-    - mv *perseo-perturbations*-html-doc ${PACKAGE_VERSION}
-    - rsync --stats -r ${PACKAGE_VERSION} sardashboard@intranet.aresys.it:develop/perseo/perturbations/docs
-    - ssh sardashboard@intranet.aresys.it "cd develop/perseo/perturbations/docs && rm latest && ln -s ${PACKAGE_VERSION} latest"

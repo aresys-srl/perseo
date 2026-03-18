@@ -3,9 +3,7 @@
 
 """Automating python testing, PERSEO Perturbations Package"""
 
-import os
 import re
-import shutil
 import sys
 from pathlib import Path
 
@@ -54,60 +52,11 @@ def unittest_executor(session: nox.Session, project: str) -> None:
     )
 
 
-def doc_builder(session: nox.Session, project: str) -> None:
-    """Documentation building function.
-
-    Parameters
-    ----------
-    session : nox.Session
-        nox session
-    project_source : str
-        project name, with "-" as separator for namespace sub-packages
-    """
-    if tag := os.getenv("CI_COMMIT_TAG"):
-        build_dir = f"docs/build/{project}-{tag}-html-doc"
-    elif sha := os.getenv("CI_COMMIT_SHORT_SHA"):
-        build_dir = f"docs/build/{project}-{sha}-html-doc"
-    else:
-        build_dir = "docs/build/"
-
-    session.install(
-        "numpy>2",
-        "ninja",
-        "meson-python",
-        "meson",
-        "build",
-        "ipython",
-        "nbsphinx",
-        "sphinx",
-        "sphinx-design",
-        "pydata-sphinx-theme",
-        "sphinx-copybutton",
-    )
-
-    session.run("python", "-m", "pip", "install", ".")
-
-    session.run("python", "-m", "sphinx", "-M", "clean", "docs/source", build_dir)
-    session.run("python", "-m", "sphinx", "-b", "html", "docs/source", build_dir)
-
-    if os.getenv("CI") == "true":
-        session.log(f"compressing '{build_dir}'")
-        root_dir, base_dir = Path(build_dir).parent, Path(build_dir).name
-        shutil.make_archive(build_dir, "zip", root_dir=root_dir, base_dir=base_dir)
-
-
 @nox.session(python=nox_common.PY_VERSIONS)
 def unittest(session: nox.Session):
     """Module testing with unittest"""
     cwd = Path.cwd()
     unittest_executor(session, project=cwd.name)
-
-
-@nox.session()
-def build_doc(session: nox.Session):
-    """Building documentation"""
-    cwd = Path.cwd()
-    doc_builder(session, project=cwd.name)
 
 
 @nox.session()
