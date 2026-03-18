@@ -152,20 +152,6 @@ wheel:
     paths:
       - ${SUBPROJECT}/dist/*.whl
 
-doc:
-  stage: build
-  extends:
-    - .tags_manylinux_2_28_std
-  script:
-    - yum install -y pandoc
-    - python3.12 -m pip install nox
-    - python3.12 -m nox -s build_doc
-  needs: []
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - ${SUBPROJECT}/docs/build/*.zip
-
 # === deploy =================================================================
 # ============================================================================
 deploy_package:
@@ -181,24 +167,3 @@ deploy_package:
       ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/quality/archive &&
       ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/quality/archive;
       done
-
-deploy_doc:
-  stage: deploy
-  extends: .tags_deploy
-  rules:
-    - if: "$CI_COMMIT_TAG"
-    - if: '$DEPLOY_DOC == "true"'
-  before_script:
-    - export PACKAGE_VERSION=v$(grep "__version__" $SUBPROJECT/src/perseo_quality/__init__.py | awk -F '"' '{print $2}')
-  script:
-    - eval "$(ssh-agent)"
-    - cat "$DASHBOARD_PRIVATE_KEY" | base64 -d | ssh-add -
-    - for file in ${SUBPROJECT}/docs/build/*.zip; do
-      eo_pgp-signme ${file} > ${file}.asc &&
-      ./.gitlab/ci/dashboard-copy.sh ${file} develop/perseo/quality/archive &&
-      ./.gitlab/ci/dashboard-copy.sh ${file}.asc develop/perseo/quality/archive;
-      done
-    - unzip ${SUBPROJECT}/docs/build/*.zip
-    - mv *perseo-quality*-html-doc ${PACKAGE_VERSION}
-    - rsync --stats -r ${PACKAGE_VERSION} sardashboard@intranet.aresys.it:develop/perseo/quality/docs
-    - ssh sardashboard@intranet.aresys.it "cd develop/perseo/quality/docs && rm latest && ln -s ${PACKAGE_VERSION} latest"
