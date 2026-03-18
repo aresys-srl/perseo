@@ -124,7 +124,7 @@ test_wheel_linux:
     - python -m unittest perseo_perturbations.tests
   parallel:
     matrix:
-      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13"]
   extends: .tags_manylinux_2_28
   needs:
     - job: python_package_linux
@@ -140,7 +140,7 @@ test_wheel_win10:
     - python -m unittest perseo_perturbations.tests
   parallel:
     matrix:
-      - PYTHON: ["3.10", "3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13"]
   extends: .tags_win10
   needs:
     - job: python_package_win

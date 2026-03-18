@@ -2,7 +2,7 @@
 name = "perseo-perturbations"
 description = "Python Ecosystem for Remote Sensing & Earth Observation: computing geodynamics displacements and atmospheric delays for SAR products."
 authors = [{ name = "Aresys S.R.L.", email = "info@aresys.it" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = { file = "LICENSE.txt" }
 dependencies = [
