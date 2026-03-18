@@ -255,8 +255,8 @@ def extract_target_area(
 
     Parameters
     ----------
-    product : ProductManager
-        aresys product manager instance
+    channel_data : ChannelData
+        product channel data instance
     azimuth_range_coordinates : dtc.SARCoordinates
         azimuth and range coordinates SARCoordinates dataclass
     ale_limits : tuple[float, float] | None, optional

@@ -126,22 +126,25 @@ def compute_elevation_azimuth_wrt_enu(pos_cr: np.ndarray, pos_sat: np.ndarray) -
     e, n, and u, the unit vectors of the ENU reference frame local to the corner reflector, then the elevation angle and
     azimuth angle are, respectively:
 
-    .. math::
-        E=\\arcsin(\\hat {\\boldsymbol \\rho}\\cdot \\hat{\\mathbf u})
-
-        A=\\arctan \\left (\\frac{\\hat {\\boldsymbol \\rho}\\cdot \\hat{\\mathbf e}}{\\hat {\\boldsymbol \\rho}\\cdot
-        \\hat{\\mathbf n}}\\right )
+    $$
+    \\begin{aligned}
+    & E=\\arcsin(\\hat {\\boldsymbol \\rho}\\cdot \\hat{\\mathbf u}) \\\\[10pt]
+    & A=\\arctan \\left (\\frac{\\hat {\\boldsymbol \\rho}\\cdot \\hat{\\mathbf e}}{\\hat {\\boldsymbol \\rho}\\cdot
+    \\hat{\\mathbf n}}\\right )
+    \\end{aligned}
+    $$
 
     N.B. elevation and azimuth here computed are expressed wrt local ENU reference frame, not wrt boresight
 
-    See https://gssc.esa.int/navipedia/index.php/Transformations_between_ECEF_and_ENU_coordinates
+    See [https://gssc.esa.int/navipedia/index.php/Transformations_between_ECEF_and_ENU_coordinates](https://gssc.esa.
+    int/navipedia/index.php/Transformations_between_ECEF_and_ENU_coordinates)
 
     Parameters
     ----------
     pos_cr : np.ndarray
-        (3, ) numpy array, expressing the 3D Cartesian position of a corner reflector on ground
+        numpy array, expressing the 3D Cartesian position of a corner reflector on ground, with shape (3,)
     pos_sat : np.ndarray
-        (3, ) numpy array, expressing the 3D Cartesian position of a satellite observing the corner reflector
+        numpy array, expressing the 3D Cartesian position of a satellite observing the corner reflector, with shape (3,)
 
     Returns
     -------

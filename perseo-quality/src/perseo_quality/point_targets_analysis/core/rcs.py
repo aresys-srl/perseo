@@ -157,7 +157,7 @@ def compute_additional_rcs_values(
         polarization value [V/V, H/H, H/V, V/H]
     target_info : PointTarget
         target info as PointTarget
-    sat_position : np.ndarray
+    sensor_position : np.ndarray
         satellite position at given azimuth time
     fc_hz : float
         carrier frequency

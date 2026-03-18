@@ -47,26 +47,26 @@ def elevation_notch_analysis(
 
         Data must be provided in the following format:
 
-        .. code-block:: python
-
-             {
-                 "swath": {
-                     "polarization": xr.Dataset(
-                         {
-                             "gain": (
-                                 ["azimuth_angles", "elevation_angles"],
-                                 gain_data,  # in dB
-                             ),
-                             ...
-                         },
-                         coords={
-                             "elevation_angles": elevation_angles_axis,  # in deg
-                             "azimuth_angles": azimuth_angles_axis,  # in deg
-                             ...
-                         },
-                     )
-                 }
-             }
+        ```python
+        {
+            "swath": {
+                "polarization": xr.Dataset(
+                    {
+                        "gain": (
+                            ["azimuth_angles", "elevation_angles"],
+                            gain_data,  # in dB
+                        ),
+                        ...
+                    },
+                    coords={
+                        "elevation_angles": elevation_angles_axis,  # in deg
+                        "azimuth_angles": azimuth_angles_axis,  # in deg
+                        ...
+                    },
+                )
+            }
+        }
+        ```
 
     config : ElevationNotchConfig | None, optional
         ElevationNotchConfig configuration dataclass, by default None
@@ -408,17 +408,17 @@ def residuals(
 ) -> np.ndarray:
     """Residuals function for the Least Squares optimization. It represents the difference between the data extracted
     profile and the antenna model profile, to be minimized. Parameters of optimization are
-    :math:`\\theta_{\\text{mis}})` (mispointing angle), :math:`k` (gain) and :math:`f(\\theta_{\\text{off}})` (noise
+    $\\theta_{\\text{mis}})$ (mispointing angle), $k$ (gain) and $f(\\theta_{\\text{off}})$ (noise
     floor).
 
-    .. math::
-
-        data_profile - k \\dot p(\\theta_{\\text{off}} - \\theta_{\\text{mis}}) + noise \\dot f(\theta_{\text{off}})
+    $$
+    data_profile - k \\dot p(\\theta_{\\text{off}} - \\theta_{\\text{mis}}) + noise \\dot f(\theta_{\text{off}})
+    $$
 
     Parameters
     ----------
-    params : _type_
-        _description_
+    params : list[float, float, float]
+        model parameters residuals
     data_profile : np.ndarray
         profile pattern extracted from data
     antenna_pattern : xr.Dataset

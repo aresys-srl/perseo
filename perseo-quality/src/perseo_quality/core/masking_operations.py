@@ -461,8 +461,6 @@ def pslr_masking(
         peak position as max row [0] and max col [0] in input array
     side_lobes_directions : SideLobesDirections
         range and azimuth cuts angular coefficients in samples
-    interp_factor : int, optional
-        interpolation factor, by default 16
     number_res_cells_az : int, optional
         number of resolution cells to be taken for the mask size. this determines the extent of the mask and therefore
         the number of lobes selected in azimuth direction, by default 10
@@ -879,7 +877,7 @@ def sslr_profile_cutting(
     ----------
     masked_data : np.ndarray
         masked 2D array
-    side_lobe_directions : np.ndarray
+    side_lobes_directions : np.ndarray
         range and azimuth cuts angular coefficients in samples
     peak_pos : tuple[int, int]
         peak position as max row [0] and max col [0] in input array

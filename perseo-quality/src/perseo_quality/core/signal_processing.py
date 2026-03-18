@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Signal Processing module containing all the related functions"""
+"""Module containing all the signal processing related functions"""
 
 from __future__ import annotations
 
@@ -399,25 +399,29 @@ def parabolic_interp_by_3_closest_samples(array: np.ndarray) -> tuple[float, flo
 
     Considering a parabola written with explicit dependency from the position of its interpolated peak location in bins
 
-    .. math::
-
-        y(x)\\overset{\\Delta}{=}a(x-p)^2+b
+    $$
+    y(x)\\overset{\\Delta}{=}a(x-p)^2+b
+    $$
 
     at the three samples nearest the peak, considering their bins as -1 (before), 0 (peak), 1 (after) we have:
 
-    .. math::
-
-        y(-1) = ap^2+2ap+a+b = \\alpha
-        y(0) = ap^2+b = \\beta
-        y(1) = ap^2-2ap+a+b = \\gamma
+    $$
+    \\begin{aligned}
+    & y(-1) = ap^2+2ap+a+b = \\alpha \\\\[10pt]
+    & y(0) = ap^2+b = \\beta \\\\[10pt]
+    & y(1) = ap^2-2ap+a+b = \\gamma
+    \\end{aligned}
+    $$
 
     meaning that:
 
-    .. math::
-
-        \\alpha - \\gamma = 4ap
-        p = \\frac{\\alpha - \\gamma}{4a}
-        p = \\frac{\\alpha - \\gamma}{2(\\alpha -2\\beta +\\gamma)}
+    $$
+    \\begin{aligned}
+    & \\alpha - \\gamma = 4ap \\\\[10pt]
+    & p = \\frac{\\alpha - \\gamma}{4a} \\\\[10pt]
+    & p = \\frac{\\alpha - \\gamma}{2(\\alpha -2\\beta +\\gamma)}
+    \\end{aligned}
+    $$
 
     Parameters
     ----------
@@ -532,7 +536,7 @@ def interp2_modulated_data(
         2D array
     interp_factor_az : int
         interpolation factor along azimuth direction
-    interp_factor_rg : int
+    interp_factor_rng : int
         interpolation factor along range direction
     demod_flag_az : bool, optional
         if True demodulation frequency for azimuth is estimated and data are demodulate before interpolating them.
@@ -1151,9 +1155,9 @@ def compute_point_target_ambiguity_ratio_db(
 
     This parameter is computed using the following formula:
 
-    .. math::
-
-        PTAR = 20\\log_{10}\\left(\\frac{{|I_{amb_{left}}| + |I_{amb_{right}}|}}{2|I_{pt}|}\\right)
+    $$
+    PTAR = 20\\log_{10}\\left(\\frac{{|I_{amb_{left}}| + |I_{amb_{right}}|}}{2|I_{pt}|}\\right)
+    $$
 
     Parameters
     ----------
@@ -1191,9 +1195,9 @@ def compute_distributed_target_ambiguity_ratio_db(
 
     This parameter is computed using the following formula:
 
-    .. math::
-
-        DTAR = \\frac{E(\\Sigma |amb_{left}|^2) + E(\\Sigma |amb_{right}|^2)}{2*E(\\Sigma |target|^2)}
+    $$
+    DTAR = \\frac{E(\\Sigma |amb_{left}|^2) + E(\\Sigma |amb_{right}|^2)}{2*E(\\Sigma |target|^2)}
+    $$
 
     Parameters
     ----------
@@ -1222,9 +1226,9 @@ def compute_distributed_target_ambiguity_ratio_db(
 def compute_equivalent_number_of_looks(intensity_data: np.ndarray) -> float:
     """Computing Equivalent Number of Looks (ENL) from input roi data.
 
-    .. math::
-
-        ENL = \\frac{I_{mean}^2}{I_{std}^2}
+    $$
+    ENL = \\frac{I_{mean}^2}{I_{std}^2}
+    $$
 
     Parameters
     ----------

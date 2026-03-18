@@ -150,9 +150,9 @@ def coherence_computation_interferogram_core(data: np.ndarray, kernel_size: int 
     Coherence is defined as the ratio between the interferogram convolution with a boxcar filter of the complex data
     (with phase information) and the same convolution performed on the absolute of the input data.
 
-    .. math::
-
-        \\hat\\gamma = \\frac{\\sum_{i=1}^{N} u_i}{\\sum_{i=1}^{N} |u_i|}
+    $$
+    \\hat\\gamma = \\frac{\\sum_{i=1}^{N} u_i}{\\sum_{i=1}^{N} |u_i|}
+    $$
 
     Parameters
     ----------
@@ -197,14 +197,14 @@ def coherence_computation_co_registered_core(
     Coherence is defined as the ratio between the interferogram convolution with a boxcar filter of the complex data
     (with phase information) and the square root of the product of the two input data squared and convoluted.
 
-    .. math::
+    $$
+    \\hat\\gamma = \\frac{\\sum_{i=1}^{N} u_i v_i^*}{\\sqrt{\\sum_{i=1}^{N} |u_i|^2 \\sum_{i=1}^{N} |v_i|^2}}
+    $$
 
-        \\hat\\gamma = \\frac{\\sum_{i=1}^{N} u_i v_i^*}{\\sqrt{\\sum_{i=1}^{N} |u_i|^2 \\sum_{i=1}^{N} |v_i|^2}}
-
-    where :math:`\\hat\\gamma` is the coherence, :math:`u` is the first product data and :math:`v` is the second co-registered
+    where $\\hat\\gamma$ is the coherence, $u$ is the first product data and $v$ is the second co-registered
     data.
 
-    Reference: `https://www.esa.int/esapub/tm/tm19/TM-19_ptC.pdf <https://www.esa.int/esapub/tm/tm19/TM-19_ptC.pdf>`_
+    Reference: [https://www.esa.int/esapub/tm/tm19/TM-19_ptC.pdf](https://www.esa.int/esapub/tm/tm19/TM-19_ptC.pdf)
 
     Parameters
     ----------

@@ -107,13 +107,14 @@ def compute_deramping_phase_exponential(
     """Computing deramping exponential phase function. It can be used both for Scansar and Topsar acquisition modes,
     providing the azimuth steering rate for Topsar mode.
 
-    .. math::
-
-        \\begin{align}exp \\left( \\pi i \\cdot coeff \\cdot \\left(t_{burst}^{rel} - \\left(t_{mid\\_burst}^{rel} -
-        \\frac{(f_{DC} - f_{DC_{mid}})}{k_D} \\right) \\right)^2 \\right)\\
-        coeff_{topsar} = -\\frac{-k_D \\cdot a_r}{a_r - k_D}\\
-        coeff_{scansar} = k_D\\
-        \\end{align}
+    $$
+    \\begin{aligned}
+    & exp \\left( \\pi i \\cdot coeff \\cdot \\left(t_{burst}^{rel} - \\left(t_{mid\\_burst}^{rel} -
+    \\frac{(f_{DC} - f_{DC_{mid}})}{k_D} \\right) \\right)^2 \\right) \\\\[10pt]
+    & coeff_{topsar} = -\\frac{-k_D \\cdot a_r}{a_r - k_D}  \\\\[10pt]
+    & coeff_{scansar} = k_D \\\\[10pt]
+    \\end{aligned}
+    $$
 
     Parameters
     ----------
@@ -121,16 +122,12 @@ def compute_deramping_phase_exponential(
         lines per burst
     lines_step : float
         lines step in seconds
-    sensor_velocity_norm_mid_burst : float
-        sensor velocity norm computed at burst mid azimuth time
-    carrier_frequency : float
-        signal carrier frequency
     doppler_centroid_axis : np.ndarray
         doppler centroid frequency axis, computed for each range sample, with shape (samples,)
     doppler_rate_axis : np.ndarray
         doppler rate axis, computed for each range sample, with shape (samples,)
-    azimuth_steering_rate_axis : np.ndarray
-        azimuth steering rate axis, computed for each range sample, with shape (samples,)
+    steering_rate_factor : np.ndarray
+        azimuth steering rate contribution, computed for each range sample, with shape (samples,)
 
     Returns
     -------
@@ -157,9 +154,9 @@ def compute_deramping_azimuth_axis(
 ) -> np.ndarray:
     """Computing deramping phase burst azimuth relative axis.
 
-    .. math::
-
-        t_{burst}^{rel} - \\left(t_{mid\\_burst}^{rel} - \\frac{(f_{DC} - f_{DC_{mid}})}{k_D}\\right)
+    $$
+    t_{burst}^{rel} - \\left(t_{mid\\_burst}^{rel} - \\frac{(f_{DC} - f_{DC_{mid}})}{k_D}\\right)
+    $$
 
     Parameters
     ----------
@@ -194,9 +191,9 @@ def compute_demodulation_phase_exponential(
 ) -> np.ndarray:
     """Computing demodulation exponential phase function.
 
-    .. math::
-
-        exp \\left( -2 \\pi i \\cdot f_{DC} t_{burst}^{rel} \\right)
+    $$
+    exp \\left( -2 \\pi i \\cdot f_{DC} t_{burst}^{rel} \\right)
+    $$
 
     Parameters
     ----------

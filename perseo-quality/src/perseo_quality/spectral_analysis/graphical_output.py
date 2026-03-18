@@ -56,10 +56,8 @@ def spectral_graph_core(
 
     Parameters
     ----------
-    item : PointTargetSpectraDataOutput | DistributedSpectraDataOutput
+    data : PointTargetSpectraDataOutput | DistributedSpectraDataOutput
         spectral profiles and data portions to be plotted for a given swath id, block or target
-    graph_type : SpectralGraphType
-        type of graphs to be generated, Point Target or Distributed
     graph_mode : GraphType
         graph mode, absolute or phase plots
     out_dir : Path

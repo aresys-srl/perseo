@@ -53,8 +53,8 @@ def get_doppler_centroid(channel_data: ChannelData, azimuth_time: PreciseDateTim
         ChannelManager instance
     azimuth_time : PreciseDateTime
         azimuth time at which compute doppler centroid frequency
-    squint_angle : float
-        sensor squint angle at that time
+    ground_point : np.ndarray
+        ground point seen by the sensor at the provided azimuth time
 
     Returns
     -------

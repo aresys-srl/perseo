@@ -259,7 +259,7 @@ def compute_sslr_2d(
         input 2D array to compute SSLR onto, with shape (n_rng, n_az)
     resolution : tuple[float, float]
         range [0] and azimuth [1] resolutions
-    side_lobe_directions : SideLobesDirections
+    side_lobes_directions : SideLobesDirections
         range and azimuth cuts angular coefficients in samples
 
     Returns
