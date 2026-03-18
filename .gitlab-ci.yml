@@ -33,18 +33,18 @@ perseo-perturbations:
         - perseo-perturbations/*
         - perseo-perturbations/**/*
 
-perseo-core:
-  extends: .subproject
-  trigger:
-    include: perseo-core/.gitlab-ci.yml
-    strategy: depend
-  rules:
-    - if: "$CI_COMMIT_TAG =~ /^perseo-core.*/"
-    - if: "$CI_COMMIT_TAG == null"
-      changes:
-        - .gitlab-ci.yml
-        - perseo-core/*
-        - perseo-core/**/*
+# perseo-core:
+#   extends: .subproject
+#   trigger:
+#     include: perseo-core/.gitlab-ci.yml
+#     strategy: depend
+#   rules:
+#     - if: "$CI_COMMIT_TAG =~ /^perseo-core.*/"
+#     - if: "$CI_COMMIT_TAG == null"
+#       changes:
+#         - .gitlab-ci.yml
+#         - perseo-core/*
+#         - perseo-core/**/*
 
 docs:
   extends: .subproject
