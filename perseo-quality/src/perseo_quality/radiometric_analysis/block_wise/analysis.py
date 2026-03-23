@@ -47,6 +47,7 @@ def nesz_profiles(
         kpi_estimator_func=KPI_ESTIMATORS_REGISTRY["nesz"],
         output_quantity=output_quantity,
         config=config,
+        add_noise_vectors=True,
     )
 
 

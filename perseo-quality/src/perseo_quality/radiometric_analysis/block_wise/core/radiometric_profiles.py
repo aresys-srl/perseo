@@ -45,6 +45,7 @@ def radiometric_profiles(
     direction: RadiometricAnalysisDirection = RadiometricAnalysisDirection.RANGE,
     output_quantity: SARRadiometricQuantity = SARRadiometricQuantity.GAMMA_NOUGHT,
     config: RadiometricProfilesConfig | None = None,
+    add_noise_vectors: bool = False,
 ) -> list[RadiometricProfilesOutput]:
     """Block-wise Radiometric profiles computation.
 
@@ -62,6 +63,8 @@ def radiometric_profiles(
         desired radiometric output quantity, by default SARRadiometricQuantity.GAMMA_NOUGHT
     config : RadiometricProfilesConfig | None, optional
         RadiometricProfiles configuration dataclass, by default None
+    add_noise_vectors : bool, optional
+        if True, noise vectors are added to the output, by default False
 
     Returns
     -------
@@ -114,6 +117,7 @@ def radiometric_profiles(
         look_angles_array = []
         incidence_angles_array = []
         az_rel_times = []
+        noise_vectors = []
         for bc_num, center in enumerate(blocks_centers_px):
             log.info(f"Processing block {bc_num + 1} of {blocks_num}")
 
@@ -150,6 +154,16 @@ def radiometric_profiles(
                 az_block_axis = channel_data.azimuth_axis[az_axis_start_idx : az_axis_start_idx + az_block_size]
                 az_rel_times.append(az_block_axis - channel_data.azimuth_axis[0])
 
+            noise_vector = None
+            if add_noise_vectors:
+                # getting noise vectors
+                if hasattr(channel_data, "get_noise_vector"):
+                    noise_vector = channel_data.get_noise_vector(azimuth_index=center[0])
+                    if noise_vector is not None:
+                        noise_vector = noise_vector[config.range_pixel_margin : -config.range_pixel_margin]
+            else:
+                log.debug("'get_noise_vector' method not defined for the current plugin")
+
             # NOTE: use incidence angles from product when available
             incidence_angles_mid_block_rad = compute_incidence_angles(sensor_positions=sensor_pos, points=ground_points)
             incidence_angles_array.append(np.rad2deg(incidence_angles_mid_block_rad))
@@ -166,6 +180,20 @@ def radiometric_profiles(
                     output_quantity=output_quantity,
                     exp_power=1,  # NOTE: power data is processed with 1 as exponent
                 )
+                if add_noise_vectors:
+                    if noise_vector is not None:
+                        noise_vector = radiometric_correction(
+                            data=noise_vector.reshape(-1, 1),
+                            incidence_angle=incidence_angles_mid_block_rad,
+                            input_quantity=channel_data.radiometric_quantity,
+                            output_quantity=output_quantity,
+                            exp_power=0.5,
+                        ).squeeze()
+
+            if add_noise_vectors:
+                if noise_vector is not None:
+                    noise_vector = 10 * np.log10(abs(noise_vector) ** 2)
+                noise_vectors.append(noise_vector)
 
             # replacing all zeroes with NaNs
             log.debug("Replacing all zeroes with NaNs.")
@@ -201,6 +229,8 @@ def radiometric_profiles(
             x_axis=hist_axis,
             config=config.histogram_parameters,
         )
+        if noise_vectors:
+            noise_vectors = np.ma.stack(noise_vectors)
 
         # storing results
         output_results.append(
@@ -231,6 +261,7 @@ def radiometric_profiles(
                 range_block_centers=channel_data.slant_range_axis[[t[1] for t in blocks_centers_px]],
                 blocks_num=blocks_num,
                 profiles=profiles,
+                noise_vectors=noise_vectors if isinstance(noise_vectors, np.ndarray) else None,
                 block_azimuth_times=az_rel_times,
                 look_angles=look_angles_array,
                 incidence_angles=incidence_angles_array,

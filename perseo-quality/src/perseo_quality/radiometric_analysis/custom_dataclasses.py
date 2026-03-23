@@ -50,6 +50,7 @@ class RadiometricProfilesOutput:
     blocks_num: int | None = None
     azimuth_start_time: PreciseDateTime | None = None
     profiles: np.ndarray | None = None
+    noise_vectors: np.ndarray | None = None
     look_angles: np.ndarray | None = None
     incidence_angles: np.ndarray | None = None
     block_azimuth_times: np.ndarray | None = None

@@ -359,6 +359,20 @@ class ExtendedChannelData(ChannelData, Protocol):
             altitude over WGS84 ellipsoid in meters
         """
 
+    def get_noise_vector(self, azimuth_index: int) -> np.ndarray | None:
+        """Compute noise vector at a given azimuth index.
+
+        Parameters
+        ----------
+        azimuth_index : int
+            azimuth index
+
+        Returns
+        -------
+        np.ndarray | None
+            noise vector
+        """
+
     def times_to_burst_association(self, azimuth_times: ArrayLike) -> list[int]:
         """Associate the right burst to a given input time point. This function returns 1 association for each
         input time.

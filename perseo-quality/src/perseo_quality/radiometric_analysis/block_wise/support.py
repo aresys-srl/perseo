@@ -104,6 +104,12 @@ def radiometric_profiles_to_netcdf(
             data_axis.unit = "s"
             data_axis[:] = item.block_azimuth_times
 
+        if item.noise_vectors is not None and all(x is not None for x in item.noise_vectors):
+            # creating noise vectors variable
+            noise = pol_grp.createVariable("noise_vectors", item.profiles.dtype, ("azimuth_blocks", "samples"))
+            noise.unit = "dB"
+            noise[:] = item.noise_vectors
+
         # creating nesz profile variable
         profs = pol_grp.createVariable("radiometric_profiles", item.profiles.dtype, ("azimuth_blocks", "samples"))
         profs.unit = "dB"

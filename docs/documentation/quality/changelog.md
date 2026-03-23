@@ -8,6 +8,14 @@ tags:
 
 # Changelog
 
+## v1.0.11
+
+**Other Changes**
+
+- Adding ``get_noise_vector`` method to ``ExtendedChannelData`` input protocol
+- Processing noise vectors in NESZ if method is available for the instance of the input product
+- Adding noise vectors to Radiometry NetCDF output and to graphical output, if any
+
 ## v1.0.10
 
 **Incompatible Changes**

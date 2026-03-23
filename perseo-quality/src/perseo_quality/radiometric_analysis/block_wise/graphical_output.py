@@ -113,7 +113,11 @@ def radiometric_2D_hist_plot(
     ax.set_aspect(abs((extent[1] - extent[0]) / (extent[3] - extent[2])) / aspect)
 
     # ax.invert_yaxis()
-    plt.plot(mean_profile_axis, smoothed_profile, color="#F0F0F0")
+    plt.plot(mean_profile_axis, smoothed_profile, color="#F0F0F0", label="smoothed-data")
+    if data.noise_vectors is not None:
+        plt.plot(
+            mean_profile_axis, np.mean(data.noise_vectors, axis=0), color="#467A3E", linewidth=1.2, label="noise-vector"
+        )
 
     plt.locator_params(axis="x", nbins=10)
     plt.locator_params(axis="y", nbins=10)
@@ -126,6 +130,7 @@ def radiometric_2D_hist_plot(
     plt.ylabel("Power [dB]", fontdict={"size": 12})
     plt.title(title, fontdict={"size": 16, "weight": "bold"})
     plt.grid(color="#7EB4B4", alpha=0.4)
+    plt.legend(loc="upper right", fontsize="small")
 
     if not interactive:
         fig.savefig(graphs_dir.joinpath(f"radiometric_hist_{str(data.general_info.channel)}").with_suffix(".png"))

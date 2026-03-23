@@ -61,7 +61,7 @@ build-backend = "hatchling.build"
 path = "src/perseo_quality/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-only-include = ["src", "tests", "docs"]
+only-include = ["src", "tests"]
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -69,7 +69,7 @@ allow-direct-references = true
 [tool.ruff]
 line-length = 120
 output-format = "grouped"
-extend-exclude = [".venv", "docs", "scripts"]
+extend-exclude = [".venv", "scripts"]
 
 [tool.ruff.format]
 docstring-code-format = true
