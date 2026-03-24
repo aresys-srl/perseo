@@ -77,6 +77,40 @@ class RiverMaskingConfig:
     region_grow_iterations: int = 13
     relaxed_backscatter_threshold_percentile: float = 35
 
+    @classmethod
+    def from_dict(cls, arg: dict) -> RiverMaskingConfig:
+        """Creating a RiverMaskingConfig object by conversion from a dictionary.
+
+        Parameters
+        ----------
+        arg : dict
+            dictionary with keys equal to the RiverMaskingConfig ones
+
+        Returns
+        -------
+        RiverMaskingConfig
+            RiverMaskingConfig object
+
+        Raises
+        ------
+        ValueError
+            invalid dictionary structure
+        """
+        pf_obj = cls()
+
+        try:
+            for fld in fields(cls):
+                if fld.name in arg.keys():
+                    if fld.name == "river_masking_mode":
+                        setattr(pf_obj, fld.name, RiverMaskingMode[arg[fld.name]])
+                    else:
+                        setattr(pf_obj, fld.name, arg[fld.name])
+
+            return pf_obj
+
+        except Exception as err:
+            raise ValueError("Invalid dictionary structure.") from err
+
 
 @dataclass
 class ProfileExtractionParameters:
@@ -84,7 +118,7 @@ class ProfileExtractionParameters:
 
     outlier_removal: bool = False
     smoothening_filter: bool = False
-    river_masking: RiverMaskingConfig = RiverMaskingConfig
+    river_masking: RiverMaskingConfig = field(default_factory=RiverMaskingConfig)
     filtering_kernel_size: tuple[int, int] | None = None
     outliers_percentile_boundaries: tuple[int, int] = (20, 90)
     outliers_kernel_size: tuple[int, int] = (5, 5)
@@ -113,7 +147,9 @@ class ProfileExtractionParameters:
         try:
             for fld in fields(cls):
                 if fld.name in arg.keys():
-                    if isinstance(arg[fld.name], list):
+                    if fld.name == "river_masking":
+                        pf_obj.river_masking = RiverMaskingConfig.from_dict(arg[fld.name])
+                    elif isinstance(arg[fld.name], list):
                         setattr(pf_obj, fld.name, tuple(arg[fld.name]))
                     else:
                         setattr(pf_obj, fld.name, arg[fld.name])
