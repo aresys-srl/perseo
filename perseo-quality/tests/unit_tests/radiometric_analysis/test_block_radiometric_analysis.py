@@ -10,7 +10,7 @@ import unittest
 import numpy as np
 
 from perseo_quality.radiometric_analysis.block_wise import analysis
-from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters
+from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters, RiverMaskingConfig
 from perseo_quality.radiometric_analysis.block_wise.core.profile_extractors import PROFILE_EXTRACTORS_REGISTRY
 
 random_rng1 = np.random.default_rng(12345)
@@ -44,6 +44,11 @@ class MockParams:
     def outlier_removal(self) -> bool:
         """Mocking outlier removal flag"""
         return True
+
+    @property
+    def river_masking(self) -> RiverMaskingConfig:
+        """Mocking river masking mode"""
+        return RiverMaskingConfig
 
 
 class NESZProfileExtractorTest(unittest.TestCase):

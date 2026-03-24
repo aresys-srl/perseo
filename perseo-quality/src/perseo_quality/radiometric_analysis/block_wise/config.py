@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
+from enum import Enum, auto
 
 
 @dataclass
@@ -50,12 +51,40 @@ class Radiometric2DHistogramParameters:
             raise ValueError("Invalid dictionary structure.") from err
 
 
+class RiverMaskingMode(Enum):
+    """Describe how river masking is applied
+    DISABLED: no river masking is applied
+    FULL: full river masking algorithm is applied, it may take a while
+    FAST: faster but less accurate river masking is applied
+    """
+
+    DISABLED = auto()
+    FULL = auto()
+    FAST = auto()
+
+
+@dataclass
+class RiverMaskingConfig:
+    """Tunable parameters for river masking algorithm"""
+
+    river_masking_mode: RiverMaskingMode = RiverMaskingMode.DISABLED
+    local_stats_window: int = 10
+    backscatter_threshold_percentile: float = 25
+    cv_lower_threshold_percentile: float = 20
+    cv_upper_threshold_percentile: float = 90
+    morph_opening_radius: int = 3
+    min_river_area_px_percentile: float = 99
+    region_grow_iterations: int = 13
+    relaxed_backscatter_threshold_percentile: float = 35
+
+
 @dataclass
 class ProfileExtractionParameters:
     """Dataclass to store configuration parameters for Radiometric Analysis functions"""
 
     outlier_removal: bool = False
     smoothening_filter: bool = False
+    river_masking: RiverMaskingConfig = RiverMaskingConfig
     filtering_kernel_size: tuple[int, int] | None = None
     outliers_percentile_boundaries: tuple[int, int] = (20, 90)
     outliers_kernel_size: tuple[int, int] = (5, 5)

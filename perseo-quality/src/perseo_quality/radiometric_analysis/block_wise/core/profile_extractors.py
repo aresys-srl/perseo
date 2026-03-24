@@ -15,8 +15,12 @@ from scipy.signal import convolve2d, medfilt2d
 
 from perseo_quality.core.signal_processing import convert_to_db
 from perseo_quality.logger import quality_logger as log
-from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters
-from perseo_quality.radiometric_analysis.block_wise.support import masking_outliers_by_percentiles
+from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters, RiverMaskingMode
+from perseo_quality.radiometric_analysis.block_wise.core.common import (
+    fast_river_masking,
+    full_river_masking,
+    masking_outliers_by_percentiles,
+)
 
 # custom profile extractor callable type to be matched
 RadiometricProfileExtractorType = Callable[[np.ndarray, ProfileExtractionParameters], np.ndarray]
@@ -153,6 +157,14 @@ def average_elevation_profiles_extractor(data: np.ndarray, params: ProfileExtrac
             kernel=params.outliers_kernel_size,
             percentile_boundaries=params.outliers_percentile_boundaries,
         )
+
+    if params.river_masking.river_masking_mode == RiverMaskingMode.FULL:
+        log.info("Masking rivers...")
+        data = full_river_masking(data=data, config=params.river_masking)
+    elif params.river_masking.river_masking_mode == RiverMaskingMode.FAST:
+        # TODO: smarter ways?
+        log.info("Applying fast river masking...")
+        data = fast_river_masking(data=data, config=params.river_masking)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)

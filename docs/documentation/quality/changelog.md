@@ -15,6 +15,10 @@ tags:
 - Fixing bug in Noise Vectors saving in NESZ Radiometric Analysis output
 - Fixing ``radiometric_profiles_to_netcdf`` function to work with WAVE products
 
+**Other Changes**
+
+- Adding river masking in radiometric analysis
+
 ## v1.0.11
 
 **Other Changes**

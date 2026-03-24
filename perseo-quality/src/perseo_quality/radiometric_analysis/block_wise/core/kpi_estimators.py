@@ -12,7 +12,7 @@ import numpy as np
 from scipy.stats import kurtosis, mode, skew
 
 from perseo_quality.core.signal_processing import compute_equivalent_number_of_looks, convert_to_db
-from perseo_quality.radiometric_analysis.block_wise.support import compute_profile_variability_index
+from perseo_quality.radiometric_analysis.block_wise.core.common import compute_profile_variability_index
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
     AverageElevationRadiometricKPI,
     NESZRadiometricKPI,
