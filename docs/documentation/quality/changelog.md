@@ -8,6 +8,13 @@ tags:
 
 # Changelog
 
+## v1.0.12
+
+**Bug Fixes**
+
+- Fixing bug in Noise Vectors saving in NESZ Radiometric Analysis output
+- Fixing ``radiometric_profiles_to_netcdf`` function to work with WAVE products
+
 ## v1.0.11
 
 **Other Changes**

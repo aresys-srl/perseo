@@ -10,10 +10,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from netCDF4 import Dataset
+from netCDF4 import Dataset, Group
 from numpy.polynomial import Polynomial
 from scipy.signal import convolve2d
 
+from perseo_quality.core.generic_dataclasses import SARAcquisitionMode
 from perseo_quality.radiometric_analysis.block_wise.config import Radiometric2DHistogramParameters
 from perseo_quality.radiometric_analysis.custom_dataclasses import RadiometricProfilesOutput
 
@@ -73,51 +74,56 @@ def radiometric_profiles_to_netcdf(
             pol_grp = swath_grp.createGroup(item.general_info.polarization)
         else:
             pol_grp = swath_grp.groups[item.general_info.polarization]
-        pol_grp.swath = item.general_info.swath
-        pol_grp.channel = item.general_info.channel
-        pol_grp.polarization = item.general_info.polarization
-        pol_grp.azimuth_blocks_num = item.blocks_num
-        pol_grp.azimuth_block_centers = [str(d) for d in item.azimuth_block_centers]
-        pol_grp.range_block_centers = item.range_block_centers
-
-        # creating common dimensions
-        pol_grp.createDimension("samples", item.profiles.shape[1])
-        pol_grp.createDimension("azimuth_blocks", item.blocks_num)
-
-        # creating elevation angles variable
-        angles_axis = pol_grp.createVariable(
-            "incidence_angles", item.incidence_angles.dtype, ("azimuth_blocks", "samples")
-        )
-        angles_axis.unit = "deg"
-        angles_axis[:] = item.incidence_angles
-
-        # creating elevation angles variable
-        if item.look_angles is not None:
-            data_axis = pol_grp.createVariable("look_angles", item.look_angles.dtype, ("azimuth_blocks", "samples"))
-            data_axis.unit = "deg"
-            data_axis[:] = item.look_angles
-
-        if item.block_azimuth_times is not None:
-            data_axis = pol_grp.createVariable(
-                "azimuth_times", item.block_azimuth_times.dtype, ("azimuth_blocks", "samples")
-            )
-            data_axis.unit = "s"
-            data_axis[:] = item.block_azimuth_times
-
-        if item.noise_vectors is not None and all(x is not None for x in item.noise_vectors):
-            # creating noise vectors variable
-            noise = pol_grp.createVariable("noise_vectors", item.profiles.dtype, ("azimuth_blocks", "samples"))
-            noise.unit = "dB"
-            noise[:] = item.noise_vectors
-
-        # creating nesz profile variable
-        profs = pol_grp.createVariable("radiometric_profiles", item.profiles.dtype, ("azimuth_blocks", "samples"))
-        profs.unit = "dB"
-        profs[:] = item.profiles
+        if SARAcquisitionMode[item.general_info.acquisition_mode] == SARAcquisitionMode.WAVE:
+            channel_grp = pol_grp.createGroup(item.general_info.channel)
+            _fill_group(group=channel_grp, item=item)
+        else:
+            _fill_group(group=pol_grp, item=item)
 
     root.close()
 
     return output_file
+
+
+def _fill_group(group: Group, item: RadiometricProfilesOutput) -> None:
+    """Filling the input group with profiles info for the current channel"""
+    group.swath = item.general_info.swath
+    group.channel = item.general_info.channel
+    group.polarization = item.general_info.polarization
+    group.azimuth_blocks_num = item.blocks_num
+    group.azimuth_block_centers = [str(d) for d in item.azimuth_block_centers]
+    group.range_block_centers = item.range_block_centers
+
+    # creating common dimensions
+    group.createDimension("samples", item.profiles.shape[1])
+    group.createDimension("azimuth_blocks", item.blocks_num)
+
+    # creating elevation angles variable
+    angles_axis = group.createVariable("incidence_angles", item.incidence_angles.dtype, ("azimuth_blocks", "samples"))
+    angles_axis.unit = "deg"
+    angles_axis[:] = item.incidence_angles
+
+    # creating elevation angles variable
+    if item.look_angles is not None:
+        data_axis = group.createVariable("look_angles", item.look_angles.dtype, ("azimuth_blocks", "samples"))
+        data_axis.unit = "deg"
+        data_axis[:] = item.look_angles
+
+    if item.block_azimuth_times is not None:
+        data_axis = group.createVariable("azimuth_times", item.block_azimuth_times.dtype, ("azimuth_blocks", "samples"))
+        data_axis.unit = "s"
+        data_axis[:] = item.block_azimuth_times
+
+    if item.noise_vectors is not None and all(x is not None for x in item.noise_vectors):
+        # creating noise vectors variable
+        noise = group.createVariable("noise_vectors", item.profiles.dtype, ("azimuth_blocks", "samples"))
+        noise.unit = "dB"
+        noise[:] = item.noise_vectors
+
+    # creating nesz profile variable
+    profs = group.createVariable("radiometric_profiles", item.profiles.dtype, ("azimuth_blocks", "samples"))
+    profs.unit = "dB"
+    profs[:] = item.profiles
 
 
 def compute_2d_histogram(
