@@ -229,8 +229,10 @@ def radiometric_profiles(
             x_axis=hist_axis,
             config=config.histogram_parameters,
         )
-        if noise_vectors:
+        if not all(n is None for n in noise_vectors):
             noise_vectors = np.ma.stack(noise_vectors)
+        else:
+            noise_vectors = None
 
         # storing results
         output_results.append(
@@ -261,7 +263,7 @@ def radiometric_profiles(
                 range_block_centers=channel_data.slant_range_axis[[t[1] for t in blocks_centers_px]],
                 blocks_num=blocks_num,
                 profiles=profiles,
-                noise_vectors=noise_vectors if isinstance(noise_vectors, np.ndarray) else None,
+                noise_vectors=noise_vectors,
                 block_azimuth_times=az_rel_times,
                 look_angles=look_angles_array,
                 incidence_angles=incidence_angles_array,
