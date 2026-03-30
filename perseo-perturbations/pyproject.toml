@@ -39,14 +39,7 @@ classifiers = [
 build = ["meson-python", "meson", "ninja"]
 dev = ["ruff", "pylint", "nox"]
 test = ["unittest-xml-reporting", "coverage"]
-docs = [
-    "ipython",
-    "nbsphinx",
-    "sphinx",
-    "sphinx-design",
-    "sphinx-copybutton",
-    "pydata-sphinx-theme",
-]
+docs = ["zensical", "mkdocstrings-python"]
 
 [build-system]
 requires = ["meson-python", "wheel", "numpy>2"]
