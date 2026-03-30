@@ -7,7 +7,7 @@ tags:
 
 # Python Ecosystem for Remote Sensing & Earth Observation
 
-**P**ython **E**cosystem for **R**emote **S**ensing & **E**arth **O**bservation (**PERSEO**) is the Aresys is a modular
+**P**ython **E**cosystem for **R**emote **S**ensing & **E**arth **O**bservation (**PERSEO**) is the Aresys modular
 Python framework designed to simplify and standardize the handling, processing, and analysis of Synthetic Aperture Radar
 (SAR) products and their auxiliary data.
 

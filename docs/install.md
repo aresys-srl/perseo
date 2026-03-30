@@ -11,7 +11,7 @@ tags:
 
 !!! note "Requirements"
 
-    PERSEO projects requires a Python version **equal or higher than 3.11**.
+    PERSEO project requires a Python version **equal or higher than 3.11**.
 
 Each python package of the PERSEO framework can be installed using ``pip``:
 
