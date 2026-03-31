@@ -71,6 +71,29 @@ file.
 
 KPI are also estimated for each block.
 
+### River Masking
+
+A **River Masking algorithm** has been developed to identify and suppress structured artifacts, such as rivers and water pools,
+embedded within the almost homogeneous scattering background from the canopy. These artifacts exhibit local coherence, continuity,
+and intensity correlation over extended regions. The algorithm exploits these properties by analyzing neighborhood
+connectivity and directional consistency, segmenting pixels that belong to continuous, non-random structures.
+
+These regions are then masked out, preserving only the statistically homogeneous background. By removing such correlated
+contaminants prior to processing, the method prevents bias in profile estimation and avoids the introduction of
+structured artifacts, leading to cleaner and more reliable downstream analysis.
+
+<figure markdown="span">
+    ![Supporting Projects](../../../../assets/images/q/river_masking.png){ width="900" }
+    <figcaption>River masking on an amazonian rain forest scene, masking a river.</figcaption>
+</figure>
+
+<figure markdown="span">
+    ![Supporting Projects](../../../../assets/images/q/river_masking_1.png){ width="900" }
+    <figcaption>The masking algorithm works also on rain pools.</figcaption>
+</figure>
+
+Few parameters of this algorithm can be tweaked and tuned to optimize the masking process directly from configuration.
+
 ### Scalloping Profiles
 
 Scalloping profiles are extracted along the **AZIMUTH** direction, one for each azimuth partitioning block. The output radiometric
