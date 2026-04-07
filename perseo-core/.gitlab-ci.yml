@@ -110,19 +110,19 @@ wheel:
     paths:
       - ${SUBPROJECT}/dist/*.whl
 
-doc:
-  stage: build
-  extends:
-    - .tags_manylinux_2_28
-  script:
-    - yum install -y pandoc
-    - python3.12 -m pip install nox
-    - python3.12 -m nox -s build_doc
-  needs: []
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - ${SUBPROJECT}/docs/build/*.zip
+# doc:
+#   stage: build
+#   extends:
+#     - .tags_manylinux_2_28
+#   script:
+#     - yum install -y pandoc
+#     - python3.12 -m pip install nox
+#     - python3.12 -m nox -s build_doc
+#   needs: []
+#   artifacts:
+#     expire_in: 2 weeks
+#     paths:
+#       - ${SUBPROJECT}/docs/build/*.zip
 
 # === deploy =================================================================
 # ============================================================================
