@@ -9,10 +9,12 @@ Geometry - Doppler-related Utilities
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
 from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.types import ExtendedDatetimeType
 
 
 # TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
