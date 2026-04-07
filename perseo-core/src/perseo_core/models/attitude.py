@@ -14,7 +14,6 @@ from scipy.spatial.transform import Rotation, Slerp
 
 from perseo_core.geometry.utilities import RotationOrderLike
 from perseo_core.geometry.utilities.rotations import compute_slerp_derivative, euler_angles_to_rotation
-from perseo_core.models.protocols import ExtrapolationNotAllowed
 
 
 class Attitude:
@@ -39,11 +38,6 @@ class Attitude:
             Scipy Rotation object
         times : np.ndarray
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
-
-        Raises
-        ------
-        ExtrapolationNotAllowed
-            if one or more of the input times is not inside the time boundaries of attitude definition
         """
         self._rotations = rotations
         self._times = times
@@ -70,7 +64,6 @@ class Attitude:
 
     def _check_time_validity(self, times: ArrayLike) -> None:
         """Check input times validity with respect to the construction time validity boundaries.
-        Extrapolation is not allowed.
 
         Parameters
         ----------
@@ -79,11 +72,11 @@ class Attitude:
 
         Raises
         ------
-        ExtrapolationNotAllowed
+        RuntimeError
             if one or more of the input times is not inside the time boundaries of attitude definition
         """
         if np.any(times < self._time_origin) or np.any(times > self._last_time):
-            raise ExtrapolationNotAllowed("One (or more) of the input times is outside of attitude time boundaries")
+            raise RuntimeError("One (or more) of the input times is outside of attitude time boundaries")
 
     def _create_slerp(self) -> Slerp:
         """Generating the SLERP interpolator from given inputs.

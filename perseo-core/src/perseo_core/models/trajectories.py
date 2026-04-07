@@ -11,7 +11,6 @@ from __future__ import annotations
 import numpy as np
 from scipy.interpolate import CubicSpline
 
-from perseo_core.models.protocols import ExtrapolationNotAllowed
 from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeArrayType, ExtendedDatetimeType
 
 
@@ -84,7 +83,7 @@ class CubicSplineTrajectory:
         )
 
     def _check_time_validity(self, times: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> None:
-        """Check input times validity with respect to the time validity boundaries. Extrapolation is not allowed.
+        """Check input times validity with respect to the time validity boundaries.
 
         Parameters
         ----------
@@ -93,11 +92,11 @@ class CubicSplineTrajectory:
 
         Raises
         ------
-        ExtrapolationNotAllowed
+        RuntimeError
             if one or more of the input times is not inside the time boundaries of trajectory definition
         """
         if np.any(times < self._time_origin) or np.any(times > self._last_time):
-            raise ExtrapolationNotAllowed("One (or more) of the input times is outside of trajectory time boundaries")
+            raise RuntimeError("One (or more) of the input times is outside of trajectory time boundaries")
 
     def evaluate(self, coordinates: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
         """Evaluate x, y, z interpolated values at given times.

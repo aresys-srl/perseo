@@ -17,10 +17,6 @@ from scipy.spatial.transform import Rotation
 from perseo_core.models.types import ExtendedDatetimeType
 
 
-class ExtrapolationNotAllowed(ValueError):
-    """Extrapolation outside of boundaries is not allowed"""
-
-
 @runtime_checkable
 class RotationsDifferentiableSLERP(Protocol):
     """SLERP rotations interpolator wrapper with evaluation method for rotations and first derivatives"""

@@ -9,7 +9,7 @@ import numpy as np
 
 from perseo_core.geometry.angles import compute_incidence_angles, compute_look_angles
 from perseo_core.geometry.velocities import compute_ground_velocity
-from perseo_core.models.protocols import ExtrapolationNotAllowed, TwiceDifferentiable3DCurve
+from perseo_core.models.protocols import TwiceDifferentiable3DCurve
 from perseo_core.models.trajectories import CubicSplineTrajectory
 from tests.common import get_testing_state_vectors
 
@@ -118,11 +118,11 @@ class TrajectoryTest(unittest.TestCase):
             positions=self._state_vectors["sensor_positions"],
             velocities=self._state_vectors["sensor_velocities"],
         )
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate(self._times[0] - 2)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_first_derivatives(self._times[-1] + 12)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_second_derivatives(self._times[0] - 2)
 
     def test_trajectory_methods_extrapolation_error_2(self) -> None:
@@ -132,11 +132,11 @@ class TrajectoryTest(unittest.TestCase):
             positions=self._state_vectors["sensor_positions"],
             velocities=self._state_vectors["sensor_velocities"],
         )
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate(self._times - 200)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_first_derivatives(self._times + 200)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_second_derivatives(self._times - 200)
 
     def test_trajectory_methods_extrapolation_error_3(self) -> None:
@@ -148,11 +148,11 @@ class TrajectoryTest(unittest.TestCase):
         )
         test_times = self._times.copy()
         test_times[3] = self._times[0] + 18
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate(test_times)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_first_derivatives(test_times)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_second_derivatives(test_times)
 
     def test_trajectory_methods_extrapolation_error_4(self) -> None:
@@ -164,11 +164,11 @@ class TrajectoryTest(unittest.TestCase):
         )
         test_times = self._times.copy()
         test_times[2] = self._times[0] - 9
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate(test_times)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_first_derivatives(test_times)
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             trajectory.evaluate_second_derivatives(test_times)
 
 

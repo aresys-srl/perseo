@@ -11,7 +11,6 @@ from scipy.spatial.transform import Rotation, Slerp
 
 # Adjust imports to your actual package structure
 from perseo_core.models.attitude import Attitude
-from perseo_core.models.protocols import ExtrapolationNotAllowed
 
 
 class TestAttitude(unittest.TestCase):
@@ -48,11 +47,11 @@ class TestAttitude(unittest.TestCase):
         self.assertEqual(result.as_quat().shape[0], 3)
 
     def test_extrapolation_below_domain(self):
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             self.attitude.evaluate(np.array([-1.0]))
 
     def test_extrapolation_above_domain(self):
-        with self.assertRaises(ExtrapolationNotAllowed):
+        with self.assertRaises(RuntimeError):
             self.attitude.evaluate(np.array([9.0]))
 
     def test_first_derivative_shape(self):
