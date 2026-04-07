@@ -12,56 +12,8 @@ from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 from numpy.typing import ArrayLike
-from scipy.spatial.transform import Rotation
 
 from perseo_core.models.types import ExtendedDatetimeType
-
-
-@runtime_checkable
-class RotationsDifferentiableSLERP(Protocol):
-    """SLERP rotations interpolator wrapper with evaluation method for rotations and first derivatives"""
-
-    @property
-    def domain(self) -> tuple[Any, Any]:
-        """Interpolator domain boundaries, min and max values"""
-
-    def evaluate(
-        self,
-        times: ArrayLike,
-    ) -> Rotation:
-        """Evaluate interpolated rotations at given input times using SLERP interpolator.
-
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
-
-        Parameters
-        ----------
-        times : ArrayLike
-            time coordinates compatible with the time type used for building the interpolator
-
-        Returns
-        -------
-        Rotation
-            interpolated Scipy Rotation objects at each input time
-        """
-
-    def evaluate_first_derivatives(self, times: ArrayLike) -> Rotation:
-        """Evaluate interpolated rotations first derivative at given times. This computes the exact derivative
-        of the SLERP at the query times with piecewise constant angular velocity and discontinuous angular acceleration.
-
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
-
-        Parameters
-        ----------
-        times : ArrayLike
-            time coordinates compatible with the time type used for building the interpolator
-
-        Returns
-        -------
-        Rotation
-            interpolated SLERP first derivative at each input time expressed as a Scipy Rotation object
-        """
 
 
 # TODO: this could be generalized to a R -> R^n curve
@@ -113,53 +65,6 @@ class TwiceDifferentiable3DCurve(Protocol):
         -------
         np.ndarray
             values of the curve second derivatives at given input values, with shape (3,) or (N, 3)
-        """
-
-
-@runtime_checkable
-class RealTwiceDifferentiableFunction(Protocol):
-    """Generic protocol for a f: R -> R function twice differentiable with derivative evaluation methods implemented"""
-
-    def evaluate(self, coordinates: ArrayLike) -> ArrayLike:
-        """Evaluate function value at given coordinates.
-
-        Parameters
-        ----------
-        coordinates : ArrayLike
-            input coordinates where to evaluate the function
-
-        Returns
-        -------
-        ArrayLike
-            value of function at each input coordinate
-        """
-
-    def evaluate_first_derivative(self, coordinates: ArrayLike) -> ArrayLike:
-        """Evaluate function first derivative at given coordinates.
-
-        Parameters
-        ----------
-        coordinates : ArrayLike
-            input coordinates where to evaluate the function derivative
-
-        Returns
-        -------
-        ArrayLike
-            values of function first derivative at each input coordinate
-        """
-
-    def evaluate_second_derivative(self, coordinates: ArrayLike) -> ArrayLike:
-        """Evaluate function second derivative at given coordinates.
-
-        Parameters
-        ----------
-        coordinates : ArrayLike
-            input coordinates where to evaluate the function derivative
-
-        Returns
-        -------
-        ArrayLike
-            values of function second derivative at each input coordinate
         """
 
 
