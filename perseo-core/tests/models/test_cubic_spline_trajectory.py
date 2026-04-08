@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
-from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
 from tests.common import get_testing_state_vectors, get_testing_trajectory
 
 

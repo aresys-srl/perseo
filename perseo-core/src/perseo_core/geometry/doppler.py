@@ -13,7 +13,7 @@ import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
-from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
 from perseo_core.models.types import ExtendedDatetimeType
 
 

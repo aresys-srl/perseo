@@ -17,7 +17,7 @@ from perseo_core.geometry.geocoding.inverse_geocoding import (
 from perseo_core.geometry.geocoding.inverse_geocoding_core import (
     inverse_geocoding_monostatic_core,
 )
-from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
 from perseo_core.timing.precise_datetime import PreciseDateTime
 from tests.common import get_testing_trajectory
 

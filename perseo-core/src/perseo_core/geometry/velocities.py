@@ -12,7 +12,7 @@ import numpy as np
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_look_angles
 from perseo_core.geometry.utilities import ReferenceFrame, ReferenceFrameLike
-from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
 from perseo_core.models.types import ExtendedDatetimeType, FloatArrayType
 
 # TODO: add effective velocity computation

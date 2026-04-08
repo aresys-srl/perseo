@@ -13,7 +13,7 @@ import numpy as np
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
 from perseo_core.models.enums import SensorLookDirection
-from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
 from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType, FloatArrayType
 
 

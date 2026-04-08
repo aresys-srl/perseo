@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 
 import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
-from perseo_core.models.protocols import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
 from perseo_core.models.types import (
     CoordinatesArrayType,
     ExtendedDatetimeArrayType,
