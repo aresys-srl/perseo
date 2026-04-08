@@ -17,6 +17,7 @@ from perseo_core.geometry.angles import (
 )
 from perseo_core.models.trajectories import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
+from tests.common import get_testing_trajectory
 
 
 class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
@@ -1414,6 +1415,90 @@ class GeometricSquintTest(unittest.TestCase):
             np.deg2rad(squints),
             np.array([self.squint_ref_0, self.squint_ref_20]),
             atol=self.tolerance,
+            rtol=0,
+        )
+
+
+class AnglesComputationFromTrajectoryTest(unittest.TestCase):
+    """Testing angles computation from CubicSplineTrajectory object"""
+
+    def setUp(self) -> None:
+        self._trajectory = get_testing_trajectory()
+        self._range_times = np.array([0.00362255, 0.003623, 0.0036239, 0.003635, 0.003639, 0.003642, 0.003645])
+        self._azimuth_time = self._trajectory.domain[0] + 2
+        self._geocoding_side = "RIGHT"
+        # expected results
+        self._tolerance = 1e-9
+        self._expected_look_angles = np.array(
+            [
+                0.20348233735250404,
+                0.2040352825385317,
+                0.20513633655495583,
+                0.21822227400375235,
+                0.22273297530481562,
+                0.22605128004217567,
+                0.22931680025662243,
+            ]
+        )
+        self._expected_incidence_angles = np.array(
+            [
+                0.22003649511651838,
+                0.2206377522894163,
+                0.22183504499141393,
+                0.23606867691985423,
+                0.2409767142368985,
+                0.24458790669056735,
+                0.24814215077561505,
+            ]
+        )
+
+    def test_compute_look_angles_single_range(self) -> None:
+        """Testing compute_look_angles_from_trajectory with a single range value"""
+        look_angles = compute_look_angles(
+            trajectory=self._trajectory,
+            azimuth_time=self._azimuth_time,
+            range_times=self._range_times[0],
+            look_direction=self._geocoding_side,
+        )
+        np.testing.assert_allclose(look_angles, self._expected_look_angles[0], atol=self._tolerance, rtol=0)
+
+    def test_compute_look_angles_range_array(self) -> None:
+        """Testing compute_look_angles_from_trajectory with a range array"""
+        look_angles = compute_look_angles(
+            trajectory=self._trajectory,
+            azimuth_time=self._azimuth_time,
+            range_times=self._range_times,
+            look_direction=self._geocoding_side,
+        )
+        np.testing.assert_allclose(look_angles, self._expected_look_angles, atol=self._tolerance, rtol=0)
+
+    def test_compute_incidence_angles_single_range(self) -> None:
+        """Testing compute_incidence_angles_from_trajectory with a single range value"""
+        incidence_angles = compute_incidence_angles(
+            trajectory=self._trajectory,
+            azimuth_time=self._azimuth_time,
+            range_times=self._range_times[0],
+            look_direction=self._geocoding_side,
+        )
+        np.testing.assert_allclose(
+            incidence_angles,
+            self._expected_incidence_angles[0],
+            atol=self._tolerance,
+            rtol=0,
+        )
+
+    def test_compute_incidence_angles_range_array(self) -> None:
+        """Testing compute_incidence_angles_from_trajectory with a range array"""
+        incidence_angles = compute_incidence_angles(
+            trajectory=self._trajectory,
+            azimuth_time=self._azimuth_time,
+            range_times=self._range_times,
+            look_direction=self._geocoding_side,
+        )
+        np.testing.assert_allclose(
+            incidence_angles,
+            self._expected_incidence_angles,
+            atol=self._tolerance,
             rtol=0,
         )
 

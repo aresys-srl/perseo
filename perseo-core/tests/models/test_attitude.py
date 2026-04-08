@@ -9,7 +9,6 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation, Slerp
 
-# Adjust imports to your actual package structure
 from perseo_core.models.attitude import Attitude
 
 

@@ -5,13 +5,27 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from perseo_core.models.trajectories import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
-def get_testing_state_vectors() -> dict[str, np.ndarray]:
+@dataclass
+class TestingStateVectors:
+    """Testing state vectors dataclass"""
+
+    sensor_positions: np.ndarray
+    sensor_velocities: np.ndarray
+    time_axis_relative: np.ndarray
+    time_axis_origin: PreciseDateTime
+    time_axis: np.ndarray
+    dT: float
+
+
+def get_testing_state_vectors() -> TestingStateVectors:
     """Getting testing state vectors"""
     positions = np.array(
         [
@@ -64,23 +78,23 @@ def get_testing_state_vectors() -> dict[str, np.ndarray]:
     dT = 0.5
     time_axis_relative = np.asarray([dT * k for k in range(positions.size // 3)])
     time_axis_origin = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:56.000000")
-    return {
-        "sensor_positions": positions,
-        "sensor_velocities": velocities,
-        "time_axis_relative": time_axis_relative,
-        "time_axis_origin": time_axis_origin,
-        "time_axis": time_axis_relative + time_axis_origin,
-        "dT": dT,
-    }
+    return TestingStateVectors(
+        sensor_positions=positions,
+        sensor_velocities=velocities,
+        time_axis_relative=time_axis_relative,
+        time_axis_origin=time_axis_origin,
+        time_axis=time_axis_relative + time_axis_origin,
+        dT=dT,
+    )
 
 
 def get_testing_trajectory() -> CubicSplineTrajectory:
     """Getting a testing trajectory object"""
     state_vectors = get_testing_state_vectors()
     return CubicSplineTrajectory(
-        times=state_vectors["time_axis"],
-        positions=state_vectors["sensor_positions"],
-        velocities=state_vectors["sensor_velocities"],
+        times=state_vectors.time_axis,
+        positions=state_vectors.sensor_positions,
+        velocities=state_vectors.sensor_velocities,
     )
 
 
