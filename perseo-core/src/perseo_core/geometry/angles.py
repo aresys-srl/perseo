@@ -13,7 +13,7 @@ import numpy as np
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
 from perseo_core.models.enums import SensorLookDirection
-from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import Trajectory
 from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType, FloatArrayType
 
 
@@ -53,7 +53,7 @@ def get_geometric_squint_angle(
 
 
 def compute_incidence_angles(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
     range_times: float | FloatArrayType,
     look_direction: str | SensorLookDirection,
@@ -106,7 +106,7 @@ def compute_incidence_angles(
 
 
 def compute_look_angles(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
     range_times: float | FloatArrayType,
     look_direction: str | SensorLookDirection,

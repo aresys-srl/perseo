@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
-from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import Trajectory
 from tests.common import get_testing_state_vectors, get_testing_trajectory
 
 
@@ -17,7 +17,7 @@ class TrajectoryProtocolComplianceTest(unittest.TestCase):
 
     def test_trajectory_protocol_compliance(self) -> None:
         """Testing CubicSplineTrajectory protocol compliance"""
-        self.assertIsInstance(CubicSplineTrajectory, TwiceDifferentiable3DCurve)
+        self.assertIsInstance(CubicSplineTrajectory, Trajectory)
 
 
 class TrajectoryTest(unittest.TestCase):

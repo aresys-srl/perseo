@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 
 import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
-from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import Trajectory
 from perseo_core.models.types import (
     CoordinatesArrayType,
     ExtendedDatetimeArrayType,
@@ -18,7 +18,7 @@ from perseo_core.models.types import (
 
 
 def inverse_geocoding_monostatic(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     ground_points: CoordinatesArrayType,
     frequencies_doppler_centroid: float | FloatArrayType,
     wavelength: float,
@@ -92,7 +92,7 @@ def inverse_geocoding_monostatic(
 
 
 def inverse_geocoding_monostatic_init(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     ground_points: CoordinatesArrayType,
     time_axis: ExtendedDatetimeArrayType,
     frequencies_doppler_centroid: float | FloatArrayType,
@@ -149,8 +149,8 @@ def inverse_geocoding_monostatic_init(
 
 
 def inverse_geocoding_bistatic(
-    trajectory_rx: TwiceDifferentiable3DCurve,
-    trajectory_tx: TwiceDifferentiable3DCurve,
+    trajectory_rx: Trajectory,
+    trajectory_tx: Trajectory,
     ground_points: CoordinatesArrayType,
     frequencies_doppler_centroid: float | FloatArrayType,
     wavelength: float,

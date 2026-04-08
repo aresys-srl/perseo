@@ -17,13 +17,13 @@ from perseo_core.geometry.geocoding.inverse_geocoding import (
 from perseo_core.geometry.geocoding.inverse_geocoding_core import (
     inverse_geocoding_monostatic_core,
 )
-from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 from tests.common import get_testing_trajectory
 
 
 def _doppler_equation_residual(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     az_times: npt.ArrayLike,
     ground_points: np.ndarray,
     wavelength: float,

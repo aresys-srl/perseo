@@ -13,7 +13,7 @@ import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
-from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import Trajectory
 from perseo_core.models.types import ExtendedDatetimeType
 
 
@@ -222,7 +222,7 @@ def get_geometric_doppler_centroid(
 
 # TODO: new, add unittest
 def compute_theoretical_doppler_rate(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
     coords: np.ndarray,
     fc_hz: float,
@@ -262,7 +262,7 @@ def compute_theoretical_doppler_rate(
 
 # TODO: new, add unittest
 def compute_steering_doppler_frequency(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
     az_mid_burst_time: ExtendedDatetimeType,
     doppler_rate: float,

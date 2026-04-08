@@ -10,7 +10,7 @@ from scipy.constants import speed_of_light
 from scipy.interpolate import interp1d
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
-from perseo_core.models.trajectory import TwiceDifferentiable3DCurve
+from perseo_core.models.trajectory import Trajectory
 from perseo_core.models.types import (
     CoordinatesArrayType,
     ExtendedDatetimeArrayType,
@@ -20,7 +20,7 @@ from perseo_core.models.types import (
 
 
 def inverse_geocoding_monostatic_core(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     ground_points: CoordinatesArrayType,
     initial_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType,
     frequencies_doppler_centroid: float | FloatArrayType,
@@ -167,8 +167,8 @@ def inverse_geocoding_monostatic_core(
 
 
 def inverse_geocoding_bistatic_core(
-    trajectory_rx: TwiceDifferentiable3DCurve,
-    trajectory_tx: TwiceDifferentiable3DCurve,
+    trajectory_rx: Trajectory,
+    trajectory_tx: Trajectory,
     ground_points: CoordinatesArrayType,
     initial_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType,
     frequencies_doppler_centroid: float | FloatArrayType,
@@ -394,7 +394,7 @@ def inverse_geocoding_bistatic_core(
 
 
 def inverse_geocoding_monostatic_init_core(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     time_axis: ExtendedDatetimeArrayType,
     ground_points: CoordinatesArrayType,
     frequencies_doppler_centroid: float | FloatArrayType,
@@ -480,8 +480,8 @@ def inverse_geocoding_monostatic_init_core(
 
 
 def inverse_geocoding_bistatic_init_core(
-    trajectory_rx: TwiceDifferentiable3DCurve,
-    trajectory_tx: TwiceDifferentiable3DCurve,
+    trajectory_rx: Trajectory,
+    trajectory_tx: Trajectory,
     time_axis_rx: ExtendedDatetimeArrayType,
     time_axis_tx: ExtendedDatetimeArrayType,
     ground_points: CoordinatesArrayType,
@@ -617,8 +617,8 @@ def inverse_geocoding_bistatic_init_core(
 
 
 def inverse_geocoding_attitude_core(
-    trajectory: TwiceDifferentiable3DCurve,
-    boresight_normal: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
+    boresight_normal: Trajectory,
     ground_points: CoordinatesArrayType,
     initial_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType,
     abs_time_tolerance: float = 1e-8,
