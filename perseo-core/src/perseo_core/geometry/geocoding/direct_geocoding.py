@@ -15,12 +15,12 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_bistatic_core,
     direct_geocoding_monostatic_core,
 )
-from perseo_core.geometry.utilities import ReferenceFrameLike
 from perseo_core.geometry.utilities.ellipsoid import (
     compute_line_ellipsoid_intersections,
     create_inflated_WGS84_ellipsoid,
 )
 from perseo_core.geometry.utilities.reference_frames import (
+    ReferenceFrame,
     compute_pointing_directions,
     compute_sensor_local_axis,
 )
@@ -75,7 +75,7 @@ def direct_geocoding_with_looking_direction(
 def direct_geocoding_with_look_angles(
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
-    reference_frame: ReferenceFrameLike,
+    reference_frame: ReferenceFrame,
     look_angles: float | npt.NDArray[np.floating],
     altitude: float = 0.0,
 ) -> npt.NDArray[np.floating]:
@@ -89,7 +89,7 @@ def direct_geocoding_with_look_angles(
         sensor positions with shape (3,) or (N, 3)
     sensor_velocities : npt.NDArray[np.floating]
         sensor velocities with shape (3,) or (N, 3)
-    reference_frame : ReferenceFrameLike
+    reference_frame : ReferenceFrame
         reference frames oriented so that look angles are measured relative to the nadir direction
     look_angles : float | npt.NDArray[np.floating]
         look angles in radians, scalar or (N,)

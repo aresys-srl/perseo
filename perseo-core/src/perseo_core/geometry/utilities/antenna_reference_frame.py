@@ -9,14 +9,13 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation
 
-from perseo_core.geometry.utilities import RotationOrderLike
-from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation, rotation_to_euler_angles
+from perseo_core.geometry.utilities.rotations import RotationOrder, euler_angles_to_rotation, rotation_to_euler_angles
 
 
 # TODO: improve documentation
 def compute_antenna_reference_frame_from_euler_angles(
     euler_angles_rad: ArrayLike,
-    rotation_order: RotationOrderLike,
+    rotation_order: RotationOrder,
     initial_reference_frame_axis: Rotation,
 ) -> Rotation:
     """Computing the Antenna Reference Frame (ARF) from Euler Angles (YAW, PITCH and ROLL) giving a rotation order and
@@ -26,7 +25,7 @@ def compute_antenna_reference_frame_from_euler_angles(
     ----------
     euler_angles_rad : ArrayLike
         euler angles in radians, columns being in the same order of the ``rotation_order``, with shape (3,) or (N, 3)
-    rotation_order : RotationOrderLike
+    rotation_order : RotationOrder
         rotation order for the euler angles
     initial_reference_frame_axis : Rotation
         reference frame axis of the sensor as a scipy Rotation object
@@ -44,7 +43,7 @@ def compute_antenna_reference_frame_from_euler_angles(
 def compute_euler_angles_from_antenna_reference_frame(
     antenna_reference_frame: Rotation,
     initial_reference_frame_axis: Rotation,
-    rotation_order: RotationOrderLike,
+    rotation_order: RotationOrder,
 ) -> np.ndarray:
     """Compute euler angles (YAW, PITCH and ROLL) from Antenna Reference Frame (ARF), the initial reference frame and
     rotation order.
@@ -55,7 +54,7 @@ def compute_euler_angles_from_antenna_reference_frame(
         antenna reference frame of the sensor, as a Rotation Scipy object
     initial_reference_frame_axis : np.ndarray
         reference frame axis of the sensor as a scipy Rotation object
-    rotation_order : RotationOrderLike
+    rotation_order : RotationOrder
         rotation order for the output euler angles
 
     Returns

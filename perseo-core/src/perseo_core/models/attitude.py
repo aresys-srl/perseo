@@ -12,8 +12,11 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.geometry.utilities import RotationOrderLike
-from perseo_core.geometry.utilities.rotations import compute_slerp_derivative, euler_angles_to_rotation
+from perseo_core.geometry.utilities.rotations import (
+    RotationOrder,
+    compute_slerp_derivative,
+    euler_angles_to_rotation,
+)
 
 
 class Attitude:
@@ -163,7 +166,7 @@ class Attitude:
 
     @classmethod
     def from_euler_angles(
-        cls, euler_angles_rad: np.ndarray, rotation_order: RotationOrderLike, times: np.ndarray
+        cls, euler_angles_rad: np.ndarray, rotation_order: RotationOrder, times: np.ndarray
     ) -> Attitude:
         """Create an Attitude SLERP interpolator from euler angles. Time axis can be specified as relative or absolute
         (actual dates), while euler angles must be expressed in radians as an array with shape (N, 3), with N being the
@@ -177,7 +180,7 @@ class Attitude:
         ----------
         euler_angles_rad : np.ndarray
             euler angles in radians, with the same column order of the specified ``rotation_order``, with shape (N, 3)
-        rotation_order : RotationOrderLike
+        rotation_order : "YPR", "YRP", "PRY", "PYR", "RYP", "RPY"
             rotation order of application of Euler angles
         times : np.ndarray
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)

@@ -5,18 +5,21 @@
 
 from __future__ import annotations
 
+from typing import Literal, get_args
+
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.geometry.utilities import RotationOrder, RotationOrderLike
+RotationOrder = Literal["YPR", "YRP", "PRY", "PYR", "RYP", "RPY"]
+
 
 ROT_TRANSLATION_TABLE = str.maketrans({"Y": "Z", "P": "Y", "R": "X"})
 
 
 def euler_angles_to_rotation(
     euler_angles_rad: ArrayLike,
-    order: RotationOrderLike,
+    order: RotationOrder,
 ) -> Rotation:
     """Convert input Euler angles in radians, with their application rotation order to a SciPy Rotation object.
 
@@ -26,7 +29,7 @@ def euler_angles_to_rotation(
     ----------
     euler_angles_rad : ArrayLike
         euler angles in radians, with the same column order of the specified ``order``, with shape (3,) or (N, 3)
-    order : RotationOrderLike
+    order : "YPR", "YRP", "PRY", "PYR", "RYP", "RPY"
         rotation order
 
     Returns
@@ -39,7 +42,7 @@ def euler_angles_to_rotation(
 
     single rotation
 
-    >>> rotation = euler_angles_to_rotation(RotationOrder.ypr, euler_angles=[[0, 0, np.deg2rad(30.0)]])
+    >>> rotation = euler_angles_to_rotation("YPR", euler_angles=[[0, 0, np.deg2rad(30.0)]])
     >>> print(rotation.as_matrix())
     [[ 1.         0.         0.       ]
      [ 0.         0.8660254 -0.5      ]
@@ -49,7 +52,7 @@ def euler_angles_to_rotation(
 
     >>> roll = np.deg2rad(np.arange(10, 26, 5, dtype=float))
     >>> euler_angles = np.stack([np.zeros_like(roll), np.zeros_like(roll), roll], axis=-1)
-    >>> rotation = euler_angles_to_rotation(RotationOrder.ypr, euler_angles=euler_angles)
+    >>> rotation = euler_angles_to_rotation("YPR", euler_angles=euler_angles)
     >>> print(rotation.as_matrix().shape)
      (4, 3, 3)
 
@@ -57,19 +60,18 @@ def euler_angles_to_rotation(
 
     >>> euler_angles_to_rotation("YPR", euler_angles=[[0, 0, np.deg2rad(30.0)]])
     """
-    order = RotationOrder(order)
     # euler_angles_rad = np.atleast_2d(euler_angles_rad)
     # assert euler_angles_rad.ndim == 2 and euler_angles_rad.shape[1] == 3
     # upper case / lower case axis character matters
-    euler_sequence = order.value.translate(ROT_TRANSLATION_TABLE)
+    euler_sequence = order.translate(ROT_TRANSLATION_TABLE)
     if euler_angles_rad.ndim == 1:
-        euler_angles = euler_angles_rad[["YPR".index(a) for a in order.value]]
+        euler_angles = euler_angles_rad[["YPR".index(a) for a in order]]
     else:
-        euler_angles = euler_angles_rad[:, ["YPR".index(a) for a in order.value]]
+        euler_angles = euler_angles_rad[:, ["YPR".index(a) for a in order]]
     return Rotation.from_euler(euler_sequence, euler_angles)
 
 
-def rotation_to_euler_angles(rotation: Rotation, order: RotationOrderLike) -> np.ndarray:
+def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> np.ndarray:
     """Compute euler angles array from the Rotation object and its rotation order.
 
     This is the opposite of :py:func:`euler_angles_to_rotation`.
@@ -78,7 +80,7 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrderLike) -> np
     ----------
     rotation : Rotation
         rotation matrix from which compute the euler angles
-    order : RotationOrderLike
+    order : "YPR", "YRP", "PRY", "PYR", "RYP", "RPY"
         rotation order corresponding to the provided rotation
 
     Returns
@@ -86,9 +88,11 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrderLike) -> np
     np.ndarray
         euler angles array, (N, 3), columns being in the same rotation order provided as input
     """
-    order = RotationOrder(order)
     # upper case / lower case axis character matters
-    euler_sequence = order.value.translate(ROT_TRANSLATION_TABLE)
+    if order not in get_args(RotationOrder):
+        raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
+
+    euler_sequence = order.translate(ROT_TRANSLATION_TABLE)
     return rotation.as_euler(euler_sequence)
 
 

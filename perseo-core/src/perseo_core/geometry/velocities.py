@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_look_angles
-from perseo_core.geometry.utilities import ReferenceFrame, ReferenceFrameLike
+from perseo_core.geometry.utilities.reference_frames import ReferenceFrame
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.models.types import ExtendedDatetimeType, FloatArrayType
 
@@ -22,7 +22,7 @@ def compute_ground_velocity(
     trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
     look_angles_rad: FloatArrayType,
-    reference_frame: ReferenceFrameLike = ReferenceFrame.ZERO_DOPPLER,
+    reference_frame: ReferenceFrame = "ZERODOPPLER",
     geodetic_altitude: float = 0,
     averaging_interval_relative_origin: float = 0,
     averaging_interval_duration: float = 1,
@@ -41,8 +41,8 @@ def compute_ground_velocity(
         azimuth time at which compute the ground velocity
     look_angles : FloatArrayType
         look angles in radians, float or array with shape (N,)
-    reference_frame : ReferenceFrameLike, optional
-        the reference frames in which the look angles are intended, by default ReferenceFrame.ZERO_DOPPLER
+    reference_frame : "GEOCENTRIC", "GEODETIC", "ZERODOPPLER", optional
+        the reference frames in which the look angles are intended, by default "ZERODOPPLER"
     geodetic_altitude : float, optional
         altitude of the points over wgs84, by default 0
     averaging_interval_relative_origin : float, optional

@@ -5,14 +5,17 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 import numpy.typing as npt
 from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-from perseo_core.geometry.utilities import ReferenceFrame, ReferenceFrameLike, RotationOrder
 from perseo_core.geometry.utilities.ellipsoid import WGS84
-from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
+from perseo_core.geometry.utilities.rotations import (
+    euler_angles_to_rotation,
+)
 
 _SIDEREAL_DAY = 86164.09054
 _earth_angular_velocity = 2.0 * np.pi / _SIDEREAL_DAY
@@ -20,6 +23,9 @@ _semi_axes_ratio_min_max = WGS84.b / WGS84.a
 _semi_axis_ratio_sqr = _semi_axes_ratio_min_max**2
 _major_semi_axis_sqr = WGS84.a**2
 _minor_semi_axis_sqr = WGS84.b**2
+
+
+ReferenceFrame = Literal["GEOCENTRIC", "GEODETIC", "ZERODOPPLER"]
 
 
 # TODO: improve documentation, specify input coords must be in Global Ref??
@@ -175,7 +181,7 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
     beta = -np.arctan2(z_geocentric[..., 1], z_geocentric[..., 2])
 
     rotation = euler_angles_to_rotation(
-        order=RotationOrder.ypr,
+        order="YPR",
         euler_angles_rad=np.stack([np.zeros_like(beta), np.zeros_like(beta), beta], axis=-1),
     )
 
@@ -186,7 +192,7 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
     xsi = np.arctan2(z_rotated[..., 0], z_rotated[..., 2])
 
     second_rotation = euler_angles_to_rotation(
-        order=RotationOrder.ypr, euler_angles_rad=np.stack([np.zeros_like(xsi), xsi, np.zeros_like(xsi)], axis=-1)
+        order="YPR", euler_angles_rad=np.stack([np.zeros_like(xsi), xsi, np.zeros_like(xsi)], axis=-1)
     )
 
     return np.matmul(rotated_frame, second_rotation.as_matrix())
@@ -196,7 +202,7 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
 def compute_sensor_local_axis(
     sensor_positions: np.ndarray,
     sensor_velocities: np.ndarray,
-    reference_frame: ReferenceFrameLike,
+    reference_frame: ReferenceFrame,
 ) -> Rotation:
     """Compute the axis of the local reference frame given the sensor's positions and velocities.
 
@@ -206,7 +212,7 @@ def compute_sensor_local_axis(
         sensor positions, with shape (3,) or (N, 3)
     sensor_velocities : np.ndarray
         sensor velocities, with shape (3,) or (N, 3)
-    reference_frame : ReferenceFrameLike
+    reference_frame : "GEOCENTRIC", "GEODETIC", "ZERODOPPLER"
         reference frame
 
     Returns
@@ -221,7 +227,7 @@ def compute_sensor_local_axis(
 
     >>> print(position.shape)
     (3,)
-    >>> axis = compute_sensor_local_axis(position, velocity, ReferenceFrame.zero_doppler)
+    >>> axis = compute_sensor_local_axis(position, velocity, "ZERODOPPLER")
     >>> print(axis.as_matrix().shape)
     (3, 3)
 
@@ -229,7 +235,7 @@ def compute_sensor_local_axis(
 
     >>> print(positions.shape)
     (10, 3)
-    >>> axes = compute_sensor_local_axis(positions, velocities, ReferenceFrame.zero_doppler)
+    >>> axes = compute_sensor_local_axis(positions, velocities, "ZERODOPPLER")
     >>> print(axes.as_matrix().shape)
     (10, 3, 3)
 
@@ -237,17 +243,18 @@ def compute_sensor_local_axis(
 
     >>> compute_sensor_local_axis(position, velocity, "ZERODOPPLER")
     """
-
-    reference_frame = ReferenceFrame(reference_frame)
-
-    if reference_frame == ReferenceFrame.ZERO_DOPPLER:
-        return Rotation.from_matrix(compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities))
-
-    if reference_frame == ReferenceFrame.GEOCENTRIC:
-        return Rotation.from_matrix(compute_geocentric_reference_frame(sensor_positions, sensor_velocities))
-
-    if reference_frame == ReferenceFrame.GEODETIC:
-        return Rotation.from_matrix(compute_geodetic_reference_frame(sensor_positions, sensor_velocities))
+    match reference_frame:
+        case "GEOCENTRIC":
+            return Rotation.from_matrix(compute_geocentric_reference_frame(sensor_positions, sensor_velocities))
+        case "GEODETIC":
+            return Rotation.from_matrix(compute_geodetic_reference_frame(sensor_positions, sensor_velocities))
+        case "ZERODOPPLER":
+            return Rotation.from_matrix(compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities))
+        case _:
+            raise ValueError(
+                f"Unexpected reference_frame value: {reference_frame}. "
+                "Must be one of 'GEOCENTRIC', 'GEODETIC', or 'ZERODOPPLER'."
+            )
 
 
 def compute_pointing_directions(
@@ -478,9 +485,3 @@ def _ze_xy(x: float, y: float) -> float:
 
 def _ze_xx(x: float, y: float) -> float:
     return -_semi_axis_ratio_sqr / _ze(x, y) + (_semi_axis_ratio_sqr * x) / _ze(x, y) ** 2 * _ze_x(x, y)
-
-
-__all__ = [
-    "ReferenceFrame",
-    "compute_sensor_local_axis",
-]

@@ -10,7 +10,6 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.utilities.reference_frames import (
-    ReferenceFrame,
     compute_geocentric_reference_frame,
     compute_geodetic_point,
     compute_geodetic_reference_frame,
@@ -167,23 +166,14 @@ class SensorAxisTestCase(unittest.TestCase):
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "ZERODOPPLER")
         np.testing.assert_allclose(frame.as_matrix(), self._zerodoppler_frame_reference, rtol=0, atol=self._tolerance)
 
-        frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, ReferenceFrame.ZERO_DOPPLER)
-        np.testing.assert_allclose(frame.as_matrix(), self._zerodoppler_frame_reference, rtol=0, atol=self._tolerance)
-
     def test_compute_sensor_local_axis_geocentric(self):
         """Testing compute sensor local axis, geocentric"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "GEOCENTRIC")
         np.testing.assert_allclose(frame.as_matrix(), self._geocentric_frame_reference, rtol=0, atol=self._tolerance)
 
-        frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, ReferenceFrame.GEOCENTRIC)
-        np.testing.assert_allclose(frame.as_matrix(), self._geocentric_frame_reference, rtol=0, atol=self._tolerance)
-
     def test_compute_sensor_local_axis_geodetic(self):
         """Testing compute sensor local axis, geodetic"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "GEODETIC")
-        np.testing.assert_allclose(frame.as_matrix(), self._geodetic_frame_reference, rtol=0, atol=self._tolerance)
-
-        frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, ReferenceFrame.GEODETIC)
         np.testing.assert_allclose(frame.as_matrix(), self._geodetic_frame_reference, rtol=0, atol=self._tolerance)
 
     def test_compute_sensor_local_axis_invalid_reference_frame(self):
