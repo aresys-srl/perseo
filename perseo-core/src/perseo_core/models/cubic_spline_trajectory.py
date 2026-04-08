@@ -25,32 +25,53 @@ class CubicSplineTrajectory(Trajectory[T]):
     def __init__(
         self, times: npt.NDArray[T], positions: npt.NDArray[np.floating], velocities: npt.NDArray[np.floating]
     ) -> None:
-        """Trajectory object creation depending on positions, velocities and time axis.
-        Time axis can be specified as relative or absolute (actual dates), while positions and velocities must be
-        specified as (N, 3) arrays of floats.
+        """Create a CubicSplineTrajectory from state vectors: times, positions and velocities.
 
-        This object is based on a scipy CubicSpline interpolator.
-        **Extrapolation** outside time validity boundaries **is not allowed**.
+        Times must be of type T, either dates or floats.
+
+        Positions and velocities must be specified as (N, 3) arrays of floats.
+
+        CubicSplineTrajectory wraps scipy CubicSpline interpolator.
+
+        **Extrapolation** outside trajectory domain **is not allowed**.
 
         Parameters
         ----------
         times : npt.NDArray[T]
-            time axis as numpy array of shape (N,), it can be relative or absolute
+            time axis as numpy array of shape (N,)
         positions : npt.NDArray[np.floating]
             positions as numpy array of shape (N, 3), with coordinates being x, y, z
         velocities : npt.NDArray[np.floating]
             velocities as numpy array of shape (N, 3), with coordinates being x, y, z
         """
-        assert positions.shape[1] == 3 and positions.ndim == 2
-        assert velocities.shape[1] == 3 and velocities.ndim == 2
+        if times.ndim != 1:
+            raise ValueError("Times must be a 1D array")
+
+        if positions.ndim != 2 or positions.shape[1] != 3:
+            raise ValueError("Positions must be a 2D array with shape (N, 3)")
+
+        if velocities.ndim != 2 or velocities.shape[1] != 3:
+            raise ValueError("Velocities must be a 2D array with shape (N, 3)")
+
+        if not (len(times) == positions.shape[0] == velocities.shape[0]):
+            raise ValueError("Times, positions and velocities must have the same number of samples")
+
         self._positions = positions
         self._velocities = velocities
         self._times = times
-        self._time_origin = times[0]
-        self._last_time = times[-1]
-        self._time_relative = np.array(times - times[0], dtype=float)
-        self._domain = (self._time_origin, self._last_time)
-        self._interpolator = self._create_interpolator()
+
+        self._domain: tuple[T, T] = (times[0], times[-1])
+
+        bc_left = (1, velocities[0, :])
+        bc_right = (1, velocities[-1, :])
+        boundary_conditions = (bc_left, bc_right)
+
+        self._interpolator = CubicSpline(
+            x=np.array(times - times[0], dtype=float),
+            y=self._positions,
+            bc_type=boundary_conditions,
+            extrapolate=False,
+        )
 
     @property
     def positions(self) -> np.ndarray:
@@ -72,80 +93,56 @@ class CubicSplineTrajectory(Trajectory[T]):
         """Trajectory time domain"""
         return self._domain
 
-    def _create_interpolator(self) -> CubicSpline:
-        """Generating the Cubic Spline interpolator from given inputs.
-
-        Returns
-        -------
-        CubicSpline
-            CubicSpline scipy interpolator object
-        """
-        return CubicSpline(
-            x=self._time_relative,
-            y=self._positions,
-            bc_type=((1, self._velocities[0, :]), (1, self._velocities[-1, :])),
-            extrapolate=False,
-        )
-
-    def _relative_times(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
+    def _relative_times(self, time: T | npt.NDArray[T]) -> float | npt.NDArray[np.floating]:
         """Retrieve relative times from given absolute times."""
         if not self._is_time_valid(time):
             raise RuntimeError("One (or more) of the input times is outside of trajectory time boundaries")
-        return time - self._time_origin
+        return time - self.domain[0]
 
     def position(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
-        """Evaluate x, y, z interpolated values at given times.
-
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
+        """Evaluate x, y, z position at given time.
 
         Parameters
         ----------
         time : T | npt.NDArray[T]
-            time compatible with the time type used for building the trajectory interpolator
+            time of the same type of the initialization times axis
 
         Returns
         -------
         np.ndarray
-            interpolated values for x, y, z at given times
+            position with shape (3,) or (N, 3) with coordinates being x, y, z
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 0, extrapolate=False)
 
     def velocity(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
-        """Evaluate x, y, z first derivatives (vx, vy, vz) interpolated values at given times.
-
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
+        """Evaluate vx, vy, vz velocity at given time.
 
         Parameters
         ----------
         time : T | npt.NDArray[T]
-            time compatible with the time type used for building the trajectory interpolator
+            time of the same type of the initialization times axis
 
         Returns
         -------
         np.ndarray
-            interpolated first derivatives values for x, y, z at given times
+            velocity with shape (3,) or (N, 3) with coordinates being x, y, z
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 1, extrapolate=False)
 
     def acceleration(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
-        """Evaluate x, y, z second derivatives (ax, ay, az) interpolated values at given times.
-
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
+        """Evaluate ax, ay, az acceleration at given time.
 
         Parameters
         ----------
         time : T | npt.NDArray[T]
-            time compatible with the time type used for building the trajectory interpolator
+            time of the same type of the initialization times axis
 
         Returns
         -------
         np.ndarray
-            interpolated second derivatives values for x, y, z at given times
+            acceleration with shape (3,) or (N, 3) with coordinates being x, y, z
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 2, extrapolate=False)
