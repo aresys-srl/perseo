@@ -15,7 +15,7 @@ from perseo_core.geometry.angles import (
     compute_look_angles_core,
     get_geometric_squint_angle,
 )
-from perseo_core.models.trajectories import CubicSplineTrajectory
+from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 from tests.common import get_testing_trajectory
 

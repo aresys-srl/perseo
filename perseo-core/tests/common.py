@@ -9,7 +9,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from perseo_core.models.trajectories import CubicSplineTrajectory
+from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
