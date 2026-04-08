@@ -53,8 +53,8 @@ def _doppler_equation_residual(
         doppler equation residual
     """
 
-    sensor_position = trajectory.evaluate(az_times)
-    sensor_velocity = trajectory.evaluate_first_derivatives(az_times)
+    sensor_position = trajectory.position(az_times)
+    sensor_velocity = trajectory.velocity(az_times)
     scene_velocity = np.zeros_like(sensor_velocity)
 
     line_of_sight = ground_points - sensor_position

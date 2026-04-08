@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 """
-Models - Custom Protocols
--------------------------
+Trajectory interface
+--------------------
 """
 
 from __future__ import annotations
@@ -20,46 +20,46 @@ class Trajectory(Protocol):
 
     @property
     def domain(self) -> tuple[Any, Any]:
-        """Curve domain boundaries, min and max values"""
+        """Trajectory time domain as a tuple of [start, end]"""
 
-    def evaluate(self, coordinates: ArrayLike) -> np.ndarray:
-        """Evaluate curve value at given input coordinates.
+    def position(self, time: ArrayLike) -> np.ndarray:
+        """Retrieve position at given time.
 
         Parameters
         ----------
-        coordinates : ArrayLike
-            coordinates where to evaluate the curve, with equivalent shape (3,) or (N, 3)
+        time : ArrayLike
+            evaluation time with equivalent shape (1,) or (N, 1)
 
         Returns
         -------
         np.ndarray
-            values of the curve at given input values, with shape (3,) or (N, 3)
+            position with shape (3,) or (N, 3)
         """
 
-    def evaluate_first_derivatives(self, coordinates: ArrayLike) -> np.ndarray:
-        """Evaluate curve first derivatives values at given input coordinates.
+    def velocity(self, time: ArrayLike) -> np.ndarray:
+        """Retrieve velocity at given time.
 
         Parameters
         ----------
-        coordinates : ArrayLike
-            coordinates where to evaluate the first derivatives, with equivalent shape (3,) or (N, 3)
+        time : ArrayLike
+            evaluation time with equivalent shape (1,) or (N, 1)
 
         Returns
         -------
         np.ndarray
-            values of the curve derivatives at given input values, with shape (3,) or (N, 3)
+            velocity with shape (3,) or (N, 3)
         """
 
-    def evaluate_second_derivatives(self, coordinates: ArrayLike) -> np.ndarray:
-        """Evaluate curve second derivatives values at given input coordinates.
+    def acceleration(self, time: ArrayLike) -> np.ndarray:
+        """Retrieve acceleration at given time.
 
         Parameters
         ----------
-        coordinates : ArrayLike
-            coordinates where to evaluate the second derivatives, with equivalent shape (3,) or (N, 3)
+        time : ArrayLike
+            evaluation time with equivalent shape (1,) or (N, 1)
 
         Returns
         -------
         np.ndarray
-            values of the curve second derivatives at given input values, with shape (3,) or (N, 3)
+            velocity with shape (3,) or (N, 3)
         """

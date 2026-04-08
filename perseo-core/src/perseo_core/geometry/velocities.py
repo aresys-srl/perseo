@@ -67,8 +67,8 @@ def compute_ground_velocity(
         )
         + azimuth_time
     )
-    sensor_positions = trajectory.evaluate(averaging_time_axis)
-    sensor_velocities = trajectory.evaluate_first_derivatives(averaging_time_axis)
+    sensor_positions = trajectory.position(averaging_time_axis)
+    sensor_velocities = trajectory.velocity(averaging_time_axis)
 
     # computing ground points at each sensor position/velocity in the selected averaging time interval, for each
     # input look angle

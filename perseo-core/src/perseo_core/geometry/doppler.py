@@ -245,9 +245,9 @@ def compute_theoretical_doppler_rate(
     np.ndarray
         theoretical doppler rate
     """
-    sat_pos = trajectory.evaluate(azimuth_time)
-    sat_vel = trajectory.evaluate_first_derivatives(azimuth_time)
-    sat_acc = trajectory.evaluate_second_derivatives(azimuth_time)
+    sat_pos = trajectory.position(azimuth_time)
+    sat_vel = trajectory.velocity(azimuth_time)
+    sat_acc = trajectory.acceleration(azimuth_time)
 
     los = (sat_pos - coords).transpose()
     los_norm = np.linalg.norm(los)
@@ -291,7 +291,7 @@ def compute_steering_doppler_frequency(
     float
         steering doppler frequency
     """
-    sat_vel_norm = np.linalg.norm(trajectory.evaluate_first_derivatives(azimuth_time))
+    sat_vel_norm = np.linalg.norm(trajectory.velocity(azimuth_time))
     # azimuth steering rate conversion from rad/s to Hz/s
     az_steering_rate_hz_s = 2 * sat_vel_norm / (speed_of_light / fc_hz) * az_steering_rate_rad_s
     # antenna modulation rate

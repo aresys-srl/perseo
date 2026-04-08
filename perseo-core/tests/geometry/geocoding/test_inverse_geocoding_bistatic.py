@@ -78,10 +78,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -118,10 +118,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -165,10 +165,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -212,10 +212,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -259,10 +259,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -311,10 +311,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -363,10 +363,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -415,10 +415,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -467,10 +467,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -519,10 +519,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -571,10 +571,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -623,10 +623,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -675,10 +675,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,
@@ -727,10 +727,10 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
             wavelength=self.wavelength,
         )
         az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.evaluate(az_times)
-        velocity_rx = self.trajectory.evaluate_first_derivatives(az_times)
-        position_tx = self.trajectory.evaluate(az_times_tx)
-        velocity_tx = self.trajectory.evaluate_first_derivatives(az_times_tx)
+        position_rx = self.trajectory.position(az_times)
+        velocity_rx = self.trajectory.velocity(az_times)
+        position_tx = self.trajectory.position(az_times_tx)
+        velocity_tx = self.trajectory.velocity(az_times_tx)
         doppler_residual_new = _doppler_equation_residual(
             position_rx=position_rx,
             position_tx=position_tx,

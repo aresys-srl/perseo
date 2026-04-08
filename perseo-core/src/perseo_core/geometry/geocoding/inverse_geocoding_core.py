@@ -119,9 +119,9 @@ def inverse_geocoding_monostatic_core(
     # starting the newton method to solve the equation
     for _ in range(max_iter):
         # computing orbit position, first and second derivatives
-        sensor_position = trajectory.evaluate(azimuth_times)
-        sensor_velocity = trajectory.evaluate_first_derivatives(azimuth_times)
-        sensor_acceleration = trajectory.evaluate_second_derivatives(azimuth_times)
+        sensor_position = trajectory.position(azimuth_times)
+        sensor_velocity = trajectory.velocity(azimuth_times)
+        sensor_acceleration = trajectory.acceleration(azimuth_times)
 
         # slant range correspondent to the actual position of satellite
         line_of_sight = ground_points - sensor_position
@@ -159,7 +159,7 @@ def inverse_geocoding_monostatic_core(
         )
 
     # re-evaluating slant range
-    sensor_pos_curr = trajectory.evaluate(azimuth_times)
+    sensor_pos_curr = trajectory.position(azimuth_times)
     line_of_sight = ground_points - sensor_pos_curr
     slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 
@@ -270,8 +270,8 @@ def inverse_geocoding_bistatic_core(
         )
 
     # computing tx guess from rx by adding a delay
-    position_rx = trajectory_rx.evaluate(azimuth_times_rx)
-    position_tx = trajectory_tx.evaluate(azimuth_times_rx)
+    position_rx = trajectory_rx.position(azimuth_times_rx)
+    position_tx = trajectory_tx.position(azimuth_times_rx)
     delay_estimate = (
         np.linalg.norm(position_tx - ground_points, axis=-1, keepdims=True)
         + np.linalg.norm(position_rx - ground_points, axis=-1, keepdims=True)
@@ -281,28 +281,28 @@ def inverse_geocoding_bistatic_core(
     # Newton method to solve the equation
     for _ in range(max_iter):
         # computing orbit position, first and second derivatives for sensor rx
-        position_rx = trajectory_rx.evaluate(
+        position_rx = trajectory_rx.position(
             azimuth_times_rx,
         )
         line_of_sight_rx = ground_points - position_rx
-        velocity_rx = trajectory_rx.evaluate_first_derivatives(
+        velocity_rx = trajectory_rx.velocity(
             azimuth_times_rx,
         )
         norm_vel_rx_square = np.sum(velocity_rx * velocity_rx, axis=-1)
-        acceleration_rx = trajectory_rx.evaluate_second_derivatives(
+        acceleration_rx = trajectory_rx.acceleration(
             azimuth_times_rx,
         )
 
         # computing orbit position, first and second derivatives for sensor tx
-        position_tx = trajectory_tx.evaluate(
+        position_tx = trajectory_tx.position(
             azimuth_times_tx,
         )
         line_of_sight_tx = ground_points - position_tx
-        velocity_tx = trajectory_tx.evaluate_first_derivatives(
+        velocity_tx = trajectory_tx.velocity(
             azimuth_times_tx,
         )
         norm_vel_tx_square = np.sum(velocity_tx * velocity_tx, axis=-1)
-        acceleration_tx = trajectory_tx.evaluate_second_derivatives(
+        acceleration_tx = trajectory_tx.acceleration(
             azimuth_times_tx,
         )
 
@@ -451,8 +451,8 @@ def inverse_geocoding_monostatic_init_core(
     zero_crossing_pts_idx = []
     for id_point, point in enumerate(points):
         doppler_centroid_equation = doppler_equation_monostatic_residuals(
-            sensor_positions=trajectory.evaluate(time_axis),
-            sensor_velocities=trajectory.evaluate_first_derivatives(time_axis),
+            sensor_positions=trajectory.position(time_axis),
+            sensor_velocities=trajectory.velocity(time_axis),
             ground_point=point,
             frequency_doppler_centroid=frequencies_doppler_centroid[id_point],
             wavelength=wavelength,
@@ -566,15 +566,15 @@ def inverse_geocoding_bistatic_init_core(
     for id_point, point in enumerate(points):
         # computing doppler equations at zero doppler for both orbits
         doppler_centroid_equation_rx = doppler_equation_monostatic_residuals(
-            sensor_positions=trajectory_rx.evaluate(time_axis_rx),
-            sensor_velocities=trajectory_rx.evaluate_first_derivatives(time_axis_rx),
+            sensor_positions=trajectory_rx.position(time_axis_rx),
+            sensor_velocities=trajectory_rx.velocity(time_axis_rx),
             ground_point=point,
             frequency_doppler_centroid=0,
             wavelength=1,
         )
         doppler_centroid_equation_tx = doppler_equation_monostatic_residuals(
-            sensor_positions=trajectory_tx.evaluate(time_axis_tx),
-            sensor_velocities=trajectory_tx.evaluate_first_derivatives(time_axis_tx),
+            sensor_positions=trajectory_tx.position(time_axis_tx),
+            sensor_velocities=trajectory_tx.velocity(time_axis_tx),
             ground_point=point,
             frequency_doppler_centroid=0,
             wavelength=1,
@@ -680,11 +680,11 @@ def inverse_geocoding_attitude_core(
     # starting the newton method to solve the equation
     for _ in range(max_iter):
         # computing polynomials and polynomials derivatives
-        sensor_pos_curr = trajectory.evaluate(azimuth_times)
-        sensor_vel_curr = trajectory.evaluate_first_derivatives(azimuth_times)
+        sensor_pos_curr = trajectory.position(azimuth_times)
+        sensor_vel_curr = trajectory.velocity(azimuth_times)
 
-        arf1_curr = boresight_normal.evaluate(azimuth_times)
-        arf1_derivative_curr = boresight_normal.evaluate_first_derivatives(azimuth_times)
+        arf1_curr = boresight_normal.position(azimuth_times)
+        arf1_derivative_curr = boresight_normal.velocity(azimuth_times)
 
         # slant range correspondent to the actual position of satellite
         line_of_sight = ground_points - sensor_pos_curr
@@ -715,7 +715,7 @@ def inverse_geocoding_attitude_core(
         )
 
     # re-evaluating slant range
-    sensor_pos_curr = trajectory.evaluate(azimuth_times)
+    sensor_pos_curr = trajectory.position(azimuth_times)
     line_of_sight = ground_points - sensor_pos_curr
     slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 

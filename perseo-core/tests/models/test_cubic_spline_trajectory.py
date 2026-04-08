@@ -81,19 +81,19 @@ class TrajectoryTest(unittest.TestCase):
     def test_trajectory_methods(self) -> None:
         """Test CubicSplineTrajectory evaluate methods"""
         np.testing.assert_allclose(
-            self._trajectory.evaluate(self._times),
+            self._trajectory.position(self._times),
             self._expected_pos,
             atol=self._tolerance,
             rtol=0,
         )
         np.testing.assert_allclose(
-            self._trajectory.evaluate_first_derivatives(self._times),
+            self._trajectory.velocity(self._times),
             self._expected_vel,
             atol=self._tolerance,
             rtol=0,
         )
         np.testing.assert_allclose(
-            self._trajectory.evaluate_second_derivatives(self._times),
+            self._trajectory.acceleration(self._times),
             self._expected_acc,
             atol=self._tolerance,
             rtol=0,
@@ -102,42 +102,42 @@ class TrajectoryTest(unittest.TestCase):
     def test_trajectory_methods_extrapolation_error_1(self) -> None:
         """Test CubicSplineTrajectory evaluate methods raising extrapolation error"""
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate(self._times[0] - 2)
+            self._trajectory.position(self._times[0] - 2)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_first_derivatives(self._times[-1] + 12)
+            self._trajectory.velocity(self._times[-1] + 12)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_second_derivatives(self._times[0] - 2)
+            self._trajectory.acceleration(self._times[0] - 2)
 
     def test_trajectory_methods_extrapolation_error_2(self) -> None:
         """Test CubicSplineTrajectory evaluate methods raising extrapolation error"""
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate(self._times - 200)
+            self._trajectory.position(self._times - 200)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_first_derivatives(self._times + 200)
+            self._trajectory.velocity(self._times + 200)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_second_derivatives(self._times - 200)
+            self._trajectory.acceleration(self._times - 200)
 
     def test_trajectory_methods_extrapolation_error_3(self) -> None:
         """Test CubicSplineTrajectory evaluate methods raising extrapolation error"""
         test_times = self._times.copy()
         test_times[3] = self._times[0] + 18
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate(test_times)
+            self._trajectory.position(test_times)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_first_derivatives(test_times)
+            self._trajectory.velocity(test_times)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_second_derivatives(test_times)
+            self._trajectory.acceleration(test_times)
 
     def test_trajectory_methods_extrapolation_error_4(self) -> None:
         """Test CubicSplineTrajectory evaluate methods raising extrapolation error"""
         test_times = self._times.copy()
         test_times[2] = self._times[0] - 9
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate(test_times)
+            self._trajectory.position(test_times)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_first_derivatives(test_times)
+            self._trajectory.velocity(test_times)
         with self.assertRaises(RuntimeError):
-            self._trajectory.evaluate_second_derivatives(test_times)
+            self._trajectory.acceleration(test_times)
 
 
 if __name__ == "__main__":

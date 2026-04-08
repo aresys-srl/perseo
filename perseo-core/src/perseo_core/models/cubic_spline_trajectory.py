@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 """
-Interpolated Trajectories
--------------------------
+Cubic Spline Trajectory
+-----------------------
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeArray
 
 
 class CubicSplineTrajectory:
-    """Trajectory object based on a Cubic Spline interpolator keeping continuity up to second derivatives"""
+    """Trajectory based on a Cubic Spline interpolator"""
 
     def __init__(
         self, times: ExtendedDatetimeArrayType, positions: CoordinatesArrayType, velocities: CoordinatesArrayType
@@ -98,7 +98,7 @@ class CubicSplineTrajectory:
         if np.any(times < self._time_origin) or np.any(times > self._last_time):
             raise RuntimeError("One (or more) of the input times is outside of trajectory time boundaries")
 
-    def evaluate(self, coordinates: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
+    def position(self, time: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
         """Evaluate x, y, z interpolated values at given times.
 
         Time values must be specified with a type that is the same as the construction "times" array used to build the
@@ -106,22 +106,22 @@ class CubicSplineTrajectory:
 
         Parameters
         ----------
-        coordinates : ExtendedDatetimeType | ExtendedDatetimeArrayType
-            time coordinates compatible with the time type used for building the trajectory interpolator
+        time : ExtendedDatetimeType | ExtendedDatetimeArrayType
+            time compatible with the time type used for building the trajectory interpolator
 
         Returns
         -------
         np.ndarray
             interpolated values for x, y, z at given times
         """
-        self._check_time_validity(coordinates)
+        self._check_time_validity(time)
         # TODO: this difference here can be problematic when using datetime64 as input, creating timedelta64 instead of
         # TODO: floats but an additional check should be performed to ensure that the input is a datetime64 array and
         # TODO: not a timedelta64 array
-        relative_times = coordinates - self._time_origin
+        relative_times = time - self._time_origin
         return self._interpolator(relative_times, 0, extrapolate=False)
 
-    def evaluate_first_derivatives(self, coordinates: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
+    def velocity(self, time: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
         """Evaluate x, y, z first derivatives (vx, vy, vz) interpolated values at given times.
 
         Time values must be specified with a type that is the same as the construction "times" array used to build the
@@ -129,20 +129,20 @@ class CubicSplineTrajectory:
 
         Parameters
         ----------
-        coordinates : ExtendedDatetimeType | ExtendedDatetimeArrayType
-            time coordinates compatible with the time type used for building the trajectory interpolator
+        time : ExtendedDatetimeType | ExtendedDatetimeArrayType
+            time compatible with the time type used for building the trajectory interpolator
 
         Returns
         -------
         np.ndarray
             interpolated first derivatives values for x, y, z at given times
         """
-        self._check_time_validity(coordinates)
-        relative_times = coordinates - self._time_origin
+        self._check_time_validity(time)
+        relative_times = time - self._time_origin
         # TODO: same here
         return self._interpolator(relative_times, 1, extrapolate=False)
 
-    def evaluate_second_derivatives(self, coordinates: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
+    def acceleration(self, time: ExtendedDatetimeType | ExtendedDatetimeArrayType) -> np.ndarray:
         """Evaluate x, y, z second derivatives (ax, ay, az) interpolated values at given times.
 
         Time values must be specified with a type that is the same as the construction "times" array used to build the
@@ -150,15 +150,15 @@ class CubicSplineTrajectory:
 
         Parameters
         ----------
-        coordinates : ExtendedDatetimeType | ExtendedDatetimeArrayType
-            time coordinates compatible with the time type used for building the trajectory interpolator
+        time : ExtendedDatetimeType | ExtendedDatetimeArrayType
+            time compatible with the time type used for building the trajectory interpolator
 
         Returns
         -------
         np.ndarray
             interpolated second derivatives values for x, y, z at given times
         """
-        self._check_time_validity(coordinates)
-        relative_times = coordinates - self._time_origin
+        self._check_time_validity(time)
+        relative_times = time - self._time_origin
         # TODO: same here
         return self._interpolator(relative_times, 2, extrapolate=False)

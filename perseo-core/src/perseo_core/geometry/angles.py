@@ -88,8 +88,8 @@ def compute_incidence_angles(
     float | FloatArrayType
         incidence angles in radians/degrees corresponding to the input range times at the given azimuth time
     """
-    sensor_position = trajectory.evaluate(azimuth_time)
-    sensor_velocity = trajectory.evaluate_first_derivatives(azimuth_time)
+    sensor_position = trajectory.position(azimuth_time)
+    sensor_velocity = trajectory.velocity(azimuth_time)
     ground_points = direct_geocoding_monostatic(
         sensor_positions=sensor_position,
         sensor_velocities=sensor_velocity,
@@ -141,8 +141,8 @@ def compute_look_angles(
     float | FloatArrayType
         look angles in radians/degrees corresponding to the input range times at the given azimuth time
     """
-    sensor_position = trajectory.evaluate(azimuth_time)
-    sensor_velocity = trajectory.evaluate_first_derivatives(azimuth_time)
+    sensor_position = trajectory.position(azimuth_time)
+    sensor_velocity = trajectory.velocity(azimuth_time)
     ground_points = direct_geocoding_monostatic(
         sensor_positions=sensor_position,
         sensor_velocities=sensor_velocity,
