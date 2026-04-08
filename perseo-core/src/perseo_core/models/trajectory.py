@@ -8,7 +8,8 @@ Trajectory interface
 
 from __future__ import annotations
 
-from typing import Protocol, TypeVar, runtime_checkable
+from abc import ABC, abstractmethod
+from typing import Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -16,15 +17,21 @@ import numpy.typing as npt
 T = TypeVar("T", bound=np.generic)
 
 
-@runtime_checkable
-class Trajectory(Protocol[T]):
+class Trajectory(ABC, Generic[T]):
     """Trajectory interface"""
 
     @property
+    @abstractmethod
     def domain(self) -> tuple[T, T]:
         """Trajectory time domain as a tuple of [start, end]"""
-        ...
 
+    def _is_time_valid(self, time: T | npt.NDArray[T]) -> bool:
+        """Check if time is within the trajectory domain."""
+        start, end = self.domain
+        time_array = np.atleast_1d(time)
+        return bool(np.all((time_array >= start) & (time_array <= end)))
+
+    @abstractmethod
     def position(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Retrieve position at given time.
 
@@ -38,8 +45,8 @@ class Trajectory(Protocol[T]):
         npt.NDArray[np.floating]
             position with shape (3,) or (N, 3)
         """
-        ...
 
+    @abstractmethod
     def velocity(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Retrieve velocity at given time.
 
@@ -53,8 +60,8 @@ class Trajectory(Protocol[T]):
         npt.NDArray[np.floating]
             velocity with shape (3,) or (N, 3)
         """
-        ...
 
+    @abstractmethod
     def acceleration(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Retrieve acceleration at given time.
 
@@ -68,4 +75,20 @@ class Trajectory(Protocol[T]):
         npt.NDArray[np.floating]
             acceleration with shape (3,) or (N, 3)
         """
-        ...
+
+    def evaluate(
+        self, time: T | npt.NDArray[T]
+    ) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
+        """Evaluate position, velocity and acceleration at given time.
+
+        Parameters
+        ----------
+        time : T | npt.NDArray[T]
+            evaluation time: scalar or array with shape (N,)
+
+        Returns
+        -------
+        tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]
+            position, velocity and acceleration with shape (3,) or (N, 3)
+        """
+        return self.position(time), self.velocity(time), self.acceleration(time)

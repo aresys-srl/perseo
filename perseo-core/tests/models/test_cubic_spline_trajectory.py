@@ -12,14 +12,6 @@ from perseo_core.models.trajectory import Trajectory
 from tests.common import get_testing_state_vectors, get_testing_trajectory
 
 
-class TrajectoryProtocolComplianceTest(unittest.TestCase):
-    """Testing CubicSplineTrajectory compliance with TwiceDifferentiable3DCurve protocol"""
-
-    def test_trajectory_protocol_compliance(self) -> None:
-        """Testing CubicSplineTrajectory protocol compliance"""
-        self.assertIsInstance(CubicSplineTrajectory, Trajectory)
-
-
 class TrajectoryTest(unittest.TestCase):
     """Testing CubicSplineTrajectory generation, properties and methods"""
 
@@ -61,6 +53,10 @@ class TrajectoryTest(unittest.TestCase):
                 [2.60597199, 4.59067105, -7.62766475],
             ]
         )
+
+    def test_trajectory_subclass(self) -> None:
+        """Testing CubicSplineTrajectory protocol compliance"""
+        self.assertTrue(issubclass(CubicSplineTrajectory, Trajectory))
 
     def test_trajectory_creation(self) -> None:
         """Test CubicSplineTrajectory creation through create_trajectory() function"""

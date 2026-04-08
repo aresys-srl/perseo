@@ -8,16 +8,18 @@ Cubic Spline Trajectory
 
 from __future__ import annotations
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 import numpy as np
 import numpy.typing as npt
 from scipy.interpolate import CubicSpline
 
+from perseo_core.models.trajectory import Trajectory
+
 T = TypeVar("T", bound=np.generic)
 
 
-class CubicSplineTrajectory(Generic[T]):
+class CubicSplineTrajectory(Trajectory[T]):
     """Trajectory based on a Cubic Spline interpolator"""
 
     def __init__(
@@ -85,21 +87,11 @@ class CubicSplineTrajectory(Generic[T]):
             extrapolate=False,
         )
 
-    def _check_time_validity(self, times: T | npt.NDArray[T]) -> None:
-        """Check input times validity with respect to the time validity boundaries.
-
-        Parameters
-        ----------
-        times : T | npt.NDArray[T]
-            input times at which interpolate the trajectory
-
-        Raises
-        ------
-        RuntimeError
-            if one or more of the input times is not inside the time boundaries of trajectory definition
-        """
-        if np.any(times < self._time_origin) or np.any(times > self._last_time):
+    def _relative_times(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
+        """Retrieve relative times from given absolute times."""
+        if not self._is_time_valid(time):
             raise RuntimeError("One (or more) of the input times is outside of trajectory time boundaries")
+        return time - self._time_origin
 
     def position(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Evaluate x, y, z interpolated values at given times.
@@ -117,8 +109,7 @@ class CubicSplineTrajectory(Generic[T]):
         np.ndarray
             interpolated values for x, y, z at given times
         """
-        self._check_time_validity(time)
-        relative_times = time - self._time_origin
+        relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 0, extrapolate=False)
 
     def velocity(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
@@ -137,8 +128,7 @@ class CubicSplineTrajectory(Generic[T]):
         np.ndarray
             interpolated first derivatives values for x, y, z at given times
         """
-        self._check_time_validity(time)
-        relative_times = time - self._time_origin
+        relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 1, extrapolate=False)
 
     def acceleration(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
@@ -157,6 +147,5 @@ class CubicSplineTrajectory(Generic[T]):
         np.ndarray
             interpolated second derivatives values for x, y, z at given times
         """
-        self._check_time_validity(time)
-        relative_times = time - self._time_origin
+        relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 2, extrapolate=False)
