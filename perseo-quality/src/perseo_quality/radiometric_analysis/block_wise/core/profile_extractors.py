@@ -11,6 +11,7 @@ from functools import wraps
 
 import numpy as np
 from numba import jit, prange
+from scipy.ndimage import convolve
 from scipy.signal import convolve2d, medfilt2d
 
 from perseo_quality.core.signal_processing import convert_to_db
@@ -79,6 +80,47 @@ def _compute_histogram_peak(data: np.ndarray, num_bins: int) -> float:
     return (bin_edges[max_idx] + bin_edges[max_idx + 1]) / 2
 
 
+def _fill_nans(arr: np.ndarray, radius: int = 1) -> np.ndarray:
+    """NaN filling using convolution-based approach
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        Input array with NaN values
+    radius : int, optional
+        Neighborhood radius, by default 1
+
+    Returns
+    -------
+    np.ndarray
+        Array with NaNs filled
+    """
+
+    mask = np.isnan(arr)
+    if not np.any(mask):
+        return arr
+
+    kernel = np.ones((2 * radius + 1, 2 * radius + 1))
+
+    # Count valid neighbors for each position
+    valid_mask = ~mask
+    neighbor_count = convolve(valid_mask, kernel, mode="constant", cval=0)
+
+    # Sum of valid neighbors
+    arr_filled = np.where(mask, 0, arr)  # Replace NaN with 0 temporarily
+    neighbor_sum = convolve(arr_filled, kernel, mode="constant", cval=0)
+
+    # Calculate mean (avoid division by zero)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        smoothed = neighbor_sum / neighbor_count
+
+    # Fill NaNs with smoothed values
+    result = arr.copy()
+    result[mask] = smoothed[mask]
+
+    return result
+
+
 @register_profile_extractor("nesz")
 def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
     """Profiles extraction function for NESZ analysis.
@@ -101,6 +143,8 @@ def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameter
     # if more than half of the block is populated with zeroes, discard the whole block
     if np.count_nonzero(current_block_az_profile) / current_block_az_profile.size < 0.5:
         return np.full(data.shape[0], np.nan)
+
+    data = _fill_nans(data)
 
     kernel = np.ones((params.filtering_kernel_size[0], params.filtering_kernel_size[1])) / (
         params.filtering_kernel_size[0] * params.filtering_kernel_size[1]

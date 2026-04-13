@@ -192,7 +192,8 @@ def radiometric_profiles(
 
             if add_noise_vectors:
                 if noise_vector is not None:
-                    noise_vector = 10 * np.log10(abs(noise_vector) ** 2)
+                    with np.errstate(divide="ignore"):
+                        noise_vector = 10 * np.log10(np.abs(noise_vector) ** 2)
                 noise_vectors.append(noise_vector)
 
             # replacing all zeroes with NaNs
