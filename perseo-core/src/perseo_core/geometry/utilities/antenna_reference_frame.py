@@ -6,27 +6,25 @@
 from __future__ import annotations
 
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.utilities.rotations import RotationOrder, euler_angles_to_rotation, rotation_to_euler_angles
 
 
-# TODO: improve documentation
 def compute_antenna_reference_frame_from_euler_angles(
-    euler_angles_rad: ArrayLike,
+    ypr_rad: npt.NDArray[np.floating],
     rotation_order: RotationOrder,
     initial_reference_frame_axis: Rotation,
 ) -> Rotation:
-    """Computing the Antenna Reference Frame (ARF) from Euler Angles (YAW, PITCH and ROLL) giving a rotation order and
-    an initial reference frame axis.
+    """Compute the Antenna Reference Frame (ARF) from Euler angles (Yaw, Pitch and Roll).
 
     Parameters
     ----------
-    euler_angles_rad : ArrayLike
-        euler angles in radians, columns being in the same order of the ``rotation_order``, with shape (3,) or (N, 3)
+    ypr_rad : npt.NDArray[np.floating]
+        euler angles in radians with shape (3,) or (N, 3) with yaw, pitch, roll order.
     rotation_order : RotationOrder
-        rotation order for the euler angles
+        order of applications of the rotations
     initial_reference_frame_axis : Rotation
         reference frame axis of the sensor as a scipy Rotation object
 
@@ -35,42 +33,41 @@ def compute_antenna_reference_frame_from_euler_angles(
     Rotation
         antenna reference frame for the sensor as a Rotation object
     """
-    rotation = euler_angles_to_rotation(order=rotation_order, euler_angles_rad=euler_angles_rad)
+    rotation = euler_angles_to_rotation(order=rotation_order, ypr_rad=ypr_rad)
     return initial_reference_frame_axis * rotation
 
 
-# TODO: improve documentation
 def compute_euler_angles_from_antenna_reference_frame(
     antenna_reference_frame: Rotation,
     initial_reference_frame_axis: Rotation,
     rotation_order: RotationOrder,
 ) -> np.ndarray:
-    """Compute euler angles (YAW, PITCH and ROLL) from Antenna Reference Frame (ARF), the initial reference frame and
-    rotation order.
+    """Compute euler angles (Yaw, Pitch and Roll) from Antenna Reference Frame (ARF).
 
     Parameters
     ----------
-    antenna_reference_frame : np.ndarray
+    antenna_reference_frame : Rotation
         antenna reference frame of the sensor, as a Rotation Scipy object
-    initial_reference_frame_axis : np.ndarray
+    initial_reference_frame_axis : Rotation
         reference frame axis of the sensor as a scipy Rotation object
     rotation_order : RotationOrder
-        rotation order for the output euler angles
+        order of applications of the output euler angles
 
     Returns
     -------
     np.ndarray
-        euler angles array in radians, with shape (N, 3), columns being in the same rotation order requested as input
+        euler angles in radians with shape (3,) or (N, 3) with yaw, pitch, roll order.
     """
-    try:
-        ref_num = len(initial_reference_frame_axis)
-    except TypeError:
-        ref_num = 1
-    try:
-        arf_num = len(antenna_reference_frame)
-    except TypeError:
-        arf_num = 1
-    if ref_num != arf_num:
-        raise RuntimeError(f"input shape mismatch: init ref frame {ref_num} != arf {arf_num}")
+    num_of_reference_frames = len(initial_reference_frame_axis) if not initial_reference_frame_axis.single else 1
+    num_of_antenna_reference_frames = len(antenna_reference_frame) if not antenna_reference_frame.single else 1
+
+    if (
+        num_of_reference_frames != num_of_antenna_reference_frames
+        and num_of_reference_frames != 1
+        and num_of_antenna_reference_frames != 1
+    ):
+        raise RuntimeError(
+            f"input shape mismatch: init ref frame {num_of_reference_frames} != arf {num_of_antenna_reference_frames}"
+        )
     rotation = initial_reference_frame_axis.inv() * antenna_reference_frame
     return rotation_to_euler_angles(order=rotation_order, rotation=rotation)

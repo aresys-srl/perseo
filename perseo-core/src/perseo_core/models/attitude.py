@@ -8,8 +8,10 @@ Attitude Interpolator
 
 from __future__ import annotations
 
+from typing import Generic, TypeVar
+
 import numpy as np
-from numpy.typing import ArrayLike
+import numpy.typing as npt
 from scipy.spatial.transform import Rotation, Slerp
 
 from perseo_core.geometry.utilities.rotations import (
@@ -18,14 +20,16 @@ from perseo_core.geometry.utilities.rotations import (
     euler_angles_to_rotation,
 )
 
+T = TypeVar("T", bound=np.generic)
 
-class Attitude:
+
+class Attitude(Generic[T]):
     """Attitude Interpolator based on a Spherical Linear Interpolation of Rotations (SLERP)"""
 
     def __init__(
         self,
         rotations: Rotation,
-        times: np.ndarray,
+        times: npt.NDArray[T],
     ) -> None:
         """Create an Attitude SLERP interpolator from times and associated rotations. Time axis can be specified as
         relative or absolute (actual dates), while rotations must be expressed with a numerosity equals to the same
@@ -44,11 +48,12 @@ class Attitude:
         """
         self._rotations = rotations
         self._times = times
-        self._time_origin = times.squeeze()[0]
-        self._last_time = times.squeeze()[-1]
-        self._time_relative = np.array(times.squeeze() - self._time_origin, dtype=float)
-        self._domain = (self._time_origin, self._last_time)
-        self._slerp = self._create_slerp()
+
+        self._domain = (times[0], times[-1])
+        self._slerp = Slerp(
+            times=np.array(times - times[0], dtype=np.float64),
+            rotations=self._rotations,
+        )
 
     @property
     def rotations(self) -> Rotation:
@@ -56,93 +61,64 @@ class Attitude:
         return self._rotations
 
     @property
-    def times(self) -> np.ndarray:
+    def times(self) -> npt.NDArray[T]:
         """Accessing attitude times vector"""
         return self._times
 
     @property
-    def domain(self) -> np.ndarray:
+    def domain(self) -> tuple[T, T]:
         """Attitude time domain"""
         return self._domain
 
-    def _check_time_validity(self, times: ArrayLike) -> None:
-        """Check input times validity with respect to the construction time validity boundaries.
+    def _check_time_validity(self, time: T | npt.NDArray[T]) -> None:
+        """Check input times validity with respect to attitude time domain."""
+        if np.any(time < self.domain[0]) or np.any(time > self.domain[1]):
+            raise RuntimeError("One (or more) of the input times is outside of attitude time domain.")
+
+    def evaluate(self, time: T | npt.NDArray[T]) -> Rotation:
+        """Retrieve antenna reference frame rotations at given times.
 
         Parameters
         ----------
-        times : ArrayLike
-            input times at which interpolate the attitude
-
-        Raises
-        ------
-        RuntimeError
-            if one or more of the input times is not inside the time boundaries of attitude definition
-        """
-        if np.any(times < self._time_origin) or np.any(times > self._last_time):
-            raise RuntimeError("One (or more) of the input times is outside of attitude time boundaries")
-
-    def _create_slerp(self) -> Slerp:
-        """Generating the SLERP interpolator from given inputs.
-
-        Returns
-        -------
-        Slerp
-            Spherical Linear Interpolation of Rotations scipy interpolator object
-        """
-        return Slerp(
-            times=self._time_relative,
-            rotations=self._rotations,
-        )
-
-    def evaluate(
-        self,
-        times: ArrayLike,
-    ) -> Rotation:
-        """Evaluate interpolated rotations at given input times using SLERP interpolator.
-
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
-
-        Parameters
-        ----------
-        times : ArrayLike
-            time coordinates compatible with the time type used for building the interpolator
+        time: T | npt.NDArray[T]
+            time of the same type of the initialization times axis
 
         Returns
         -------
         Rotation
             interpolated Scipy Rotation objects at each input time
         """
-        self._check_time_validity(times)
-        relative_times = times - self._time_origin
+        self._check_time_validity(time)
+        relative_times = time - self.domain[0]
         return self._slerp(relative_times)
 
-    def evaluate_first_derivatives(self, times: ArrayLike) -> Rotation:
-        """Evaluate interpolated rotations first derivative at given times. This computes the exact derivative
-        of the SLERP at the query times with piecewise constant angular velocity and discontinuous angular acceleration.
+    def evaluate_first_derivatives(self, time: T | npt.NDArray[T]) -> Rotation:
+        """Retrieve antenna reference frame rotations derivative at given times.
 
-        Time values must be specified with a type that is the same as the construction "times" array used to build the
-        interpolator.
+        This computes the exact derivative of the SLERP at the query times with piecewise constant angular velocity
+         and discontinuous angular acceleration.
 
         Parameters
         ----------
-        times : ArrayLike
-            time coordinates compatible with the time type used for building the interpolator
+        time: T | npt.NDArray[T]
+            time of the same type of the initialization times axis
 
         Returns
         -------
         Rotation
             interpolated SLERP first derivative at each input time expressed as a Scipy Rotation object
         """
-        self._check_time_validity(times)
-        relative_times = times - self._time_origin
+        self._check_time_validity(time)
+        relative_times = time - self.domain[0]
         return compute_slerp_derivative(
-            rotations=self._rotations, times=self._time_relative, query_times=relative_times
+            rotations=self._rotations, times=self.times - self.domain[0], query_times=relative_times
         )
 
     @classmethod
-    def from_quaternions(cls, quaternions: np.ndarray, times: np.ndarray) -> Attitude:
-        """Create an Attitude SLERP interpolator from quaternions. Time axis can be specified as relative or absolute
+    def from_quaternions(cls, quaternions: npt.NDArray[np.floating], times: npt.NDArray[T]) -> Attitude:
+        """Create an Attitude SLERP interpolator from quaternions.
+
+        Time axis can be specified as relative or absolute
         (actual dates), while quaternions must be expressed as an array with shape (N, 4), with N being the same length
         as the times array.
 
@@ -152,9 +128,9 @@ class Attitude:
 
         Parameters
         ----------
-        quaternions : np.ndarray
+        quaternions : npt.NDArray[np.floating]
             quaternions in a Global Reference System (i.e. ECEF), scalar-last, with shape (N, 4)
-        times : np.ndarray
+        times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
 
         Returns
@@ -166,9 +142,11 @@ class Attitude:
 
     @classmethod
     def from_euler_angles(
-        cls, euler_angles_rad: np.ndarray, rotation_order: RotationOrder, times: np.ndarray
+        cls, euler_angles_rad: npt.NDArray[np.floating], rotation_order: RotationOrder, times: npt.NDArray[T]
     ) -> Attitude:
-        """Create an Attitude SLERP interpolator from euler angles. Time axis can be specified as relative or absolute
+        """Create an Attitude SLERP interpolator from euler angles.
+
+        Time axis can be specified as relative or absolute
         (actual dates), while euler angles must be expressed in radians as an array with shape (N, 3), with N being the
         same length as the times array and columns order matching the specified ``rotation_order``.
 
@@ -178,11 +156,11 @@ class Attitude:
 
         Parameters
         ----------
-        euler_angles_rad : np.ndarray
+        euler_angles_rad : npt.NDArray[np.floating]
             euler angles in radians, with the same column order of the specified ``rotation_order``, with shape (N, 3)
         rotation_order : "YPR", "YRP", "PRY", "PYR", "RYP", "RPY"
             rotation order of application of Euler angles
-        times : np.ndarray
+        times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
 
         Returns
@@ -190,6 +168,4 @@ class Attitude:
         Attitude
             interpolator object
         """
-        return cls(
-            rotations=euler_angles_to_rotation(order=rotation_order, euler_angles_rad=euler_angles_rad), times=times
-        )
+        return cls(rotations=euler_angles_to_rotation(order=rotation_order, ypr_rad=euler_angles_rad), times=times)

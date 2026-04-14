@@ -182,7 +182,7 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
 
     rotation = euler_angles_to_rotation(
         order="YPR",
-        euler_angles_rad=np.stack([np.zeros_like(beta), np.zeros_like(beta), beta], axis=-1),
+        ypr_rad=np.stack([np.zeros_like(beta), np.zeros_like(beta), beta], axis=-1),
     )
 
     rotated_frame = np.matmul(geocentric_frame, rotation.as_matrix())
@@ -192,7 +192,7 @@ def compute_geodetic_reference_frame(sensor_positions: npt.ArrayLike, sensor_vel
     xsi = np.arctan2(z_rotated[..., 0], z_rotated[..., 2])
 
     second_rotation = euler_angles_to_rotation(
-        order="YPR", euler_angles_rad=np.stack([np.zeros_like(xsi), xsi, np.zeros_like(xsi)], axis=-1)
+        order="YPR", ypr_rad=np.stack([np.zeros_like(xsi), xsi, np.zeros_like(xsi)], axis=-1)
     )
 
     return np.matmul(rotated_frame, second_rotation.as_matrix())

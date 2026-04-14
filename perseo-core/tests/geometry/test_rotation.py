@@ -36,7 +36,7 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
         rotation_matrix_ypr = euler_angles_to_rotation(
-            euler_angles_rad=self._euler_angles,
+            ypr_rad=self._euler_angles,
             order="YPR",
         )
         np.testing.assert_allclose(rotation_matrix_ypr.as_matrix(), reference_ypr, rtol=0, atol=self._tolerance)
@@ -52,7 +52,7 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
         rotation_matrix_yrp = euler_angles_to_rotation(
-            euler_angles_rad=self._euler_angles,
+            ypr_rad=self._euler_angles,
             order="YRP",
         )
         np.testing.assert_allclose(rotation_matrix_yrp.as_matrix(), reference_yrp, rtol=0, atol=self._tolerance)
@@ -68,7 +68,7 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
         rotation_matrix_rpy = euler_angles_to_rotation(
-            euler_angles_rad=self._euler_angles,
+            ypr_rad=self._euler_angles,
             order="RPY",
         )
         np.testing.assert_allclose(rotation_matrix_rpy.as_matrix(), reference_rpy, rtol=0, atol=self._tolerance)
@@ -84,7 +84,7 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
         rotation_matrix_ryp = euler_angles_to_rotation(
-            euler_angles_rad=self._euler_angles,
+            ypr_rad=self._euler_angles,
             order="RYP",
         )
         np.testing.assert_allclose(rotation_matrix_ryp.as_matrix(), reference_ryp, rtol=0, atol=self._tolerance)
@@ -100,7 +100,7 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
         rotation_matrix_pry = euler_angles_to_rotation(
-            euler_angles_rad=self._euler_angles,
+            ypr_rad=self._euler_angles,
             order="PRY",
         )
         np.testing.assert_allclose(rotation_matrix_pry.as_matrix(), reference_pry, rtol=0, atol=self._tolerance)
@@ -116,7 +116,7 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
         rotation_matrix_pyr = euler_angles_to_rotation(
-            euler_angles_rad=self._euler_angles,
+            ypr_rad=self._euler_angles,
             order="PYR",
         )
         np.testing.assert_allclose(rotation_matrix_pyr.as_matrix(), reference_pyr, rtol=0, atol=self._tolerance)
@@ -132,14 +132,14 @@ class RotatedFramesTestCase(unittest.TestCase):
             dtype=float,
         )
 
-        rotation_matrix_pyr = euler_angles_to_rotation(order="PYR", euler_angles_rad=self._euler_angles.reshape(1, -1))
+        rotation_matrix_pyr = euler_angles_to_rotation(order="PYR", ypr_rad=self._euler_angles.reshape(1, -1))
 
         np.testing.assert_allclose(
             rotation_matrix_pyr.as_matrix(), reference_pyr.reshape((1, 3, 3)), rtol=0, atol=self._tolerance
         )
 
         rotation_matrix_pyr = euler_angles_to_rotation(
-            euler_angles_rad=np.tile(self._euler_angles, (2, 1)),
+            ypr_rad=np.tile(self._euler_angles, (2, 1)),
             order="PYR",
         )
 
@@ -150,13 +150,13 @@ class RotatedFramesTestCase(unittest.TestCase):
     def test_euler_angles_to_rotation_invalid_orders(self):
         """Testing euler_angles_to_rotation, invalid rotation orders"""
         with self.assertRaises(ValueError):
-            euler_angles_to_rotation(order="PPP", euler_angles_rad=self._euler_angles)
+            euler_angles_to_rotation(order="PPP", ypr_rad=self._euler_angles)
 
         with self.assertRaises(AttributeError):
-            euler_angles_to_rotation(order=None, euler_angles_rad=self._euler_angles)
+            euler_angles_to_rotation(order=None, ypr_rad=self._euler_angles)
 
         with self.assertRaises(ValueError):
-            euler_angles_to_rotation(order="xyz", euler_angles_rad=self._euler_angles)
+            euler_angles_to_rotation(order="xyz", ypr_rad=self._euler_angles)
 
 
 class EulerAnglesTestCase(unittest.TestCase):
@@ -171,14 +171,14 @@ class EulerAnglesTestCase(unittest.TestCase):
 
     def test_compute_euler_angles_scalar(self):
         """Testing compute_euler_angles for single values of yaw, pitch and roll"""
-        rotation = euler_angles_to_rotation(order="YPR", euler_angles_rad=self._euler_angles[0, :])
+        rotation = euler_angles_to_rotation(order="YPR", ypr_rad=self._euler_angles[0, :])
         euler_angles = rotation_to_euler_angles(order="YPR", rotation=rotation)
 
         np.testing.assert_allclose(euler_angles, self._euler_angles[0, :], atol=self._tolerance, rtol=0)
 
     def test_compute_euler_angles_vectorized(self):
         """Testing compute_euler_angles for arrays of yaw, pitch and roll"""
-        rotation = euler_angles_to_rotation(order="YPR", euler_angles_rad=self._euler_angles)
+        rotation = euler_angles_to_rotation(order="YPR", ypr_rad=self._euler_angles)
         euler_angles = rotation_to_euler_angles(order="YPR", rotation=rotation)
 
         np.testing.assert_allclose(euler_angles, self._euler_angles, atol=self._tolerance, rtol=0)
@@ -186,7 +186,7 @@ class EulerAnglesTestCase(unittest.TestCase):
     def test_compute_euler_angles_vectorized_all_rotations(self):
         """Testing compute_euler_angles for arrays of yaw, pitch and roll, all rotation orders"""
         for order in get_args(RotationOrder):
-            rotation = euler_angles_to_rotation(order=order, euler_angles_rad=self._euler_angles)
+            rotation = euler_angles_to_rotation(order=order, ypr_rad=self._euler_angles)
             euler_angles = rotation_to_euler_angles(order=order, rotation=rotation)
             np.testing.assert_allclose(
                 self.yaw,
@@ -209,7 +209,7 @@ class EulerAnglesTestCase(unittest.TestCase):
 
     def test_compute_euler_angles_invalid_orders(self):
         """Testing compute_euler_angles with invalid rotation orders"""
-        rotation = euler_angles_to_rotation(order="YPR", euler_angles_rad=self._euler_angles)
+        rotation = euler_angles_to_rotation(order="YPR", ypr_rad=self._euler_angles)
         with self.assertRaises(ValueError):
             rotation_to_euler_angles(order="PPP", rotation=rotation)
 

@@ -108,9 +108,7 @@ def direct_geocoding_with_look_angles(
     look_angles = np.atleast_1d(look_angles)
     assert look_angles.ndim == 1
     rotation = euler_angles_to_rotation(
-        euler_angles_rad=np.stack(
-            [np.zeros_like(look_angles), np.zeros_like(look_angles), -np.asarray(look_angles)], axis=-1
-        ),
+        ypr_rad=np.stack([np.zeros_like(look_angles), np.zeros_like(look_angles), -np.asarray(look_angles)], axis=-1),
         order="YPR",
     )
 
