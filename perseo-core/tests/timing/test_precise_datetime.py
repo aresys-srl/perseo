@@ -12,15 +12,20 @@ from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 class PreciseDateTimeTestCase(unittest.TestCase):
+    """Test PreciseDateTime initialization, properties, and conversion methods."""
+
     def test_init_invalid_seconds(self):
+        """Test that PreciseDateTime raises ValueError with negative seconds."""
         with self.assertRaises(ValueError):
             PreciseDateTime(-1)
 
     def test_init_invalid_picoseconds(self):
+        """Test that PreciseDateTime raises ValueError with negative picoseconds."""
         with self.assertRaises(ValueError):
             PreciseDateTime(0, -1)
 
     def test_properties_accessor(self):
+        """Test that PreciseDateTime properties correctly return date/time components."""
         date = PreciseDateTime.from_numeric_datetime(2021, 7, 29, 14, 6, 12, 113_324)
 
         self.assertEqual(date.year, 2021)
@@ -35,10 +40,12 @@ class PreciseDateTimeTestCase(unittest.TestCase):
         self.assertAlmostEqual(date.fraction_of_day, 0.5876388889)
 
     def test_fromisoformat_isoformat(self):
+        """Test that fromisoformat and isoformat are inverse operations."""
         date = PreciseDateTime.from_numeric_datetime(1989, 11, 18, 23, 51, 20)
         self.assertEqual(date, PreciseDateTime.fromisoformat(date.isoformat()))
 
     def test_isoformat_timespec_auto(self):
+        """Test that isoformat automatically chooses appropriate precision."""
         date = PreciseDateTime.from_numeric_datetime(1989, 11, 18, 23, 51, 20)
         self.assertEqual(date.isoformat(), "1989-11-18T23:51:20Z")
         self.assertEqual(date.isoformat(timespec="picoseconds"), "1989-11-18T23:51:20.000000000000Z")
@@ -47,6 +54,7 @@ class PreciseDateTimeTestCase(unittest.TestCase):
         self.assertEqual(date.isoformat(), "1989-11-18T23:51:20.000000000012Z")
 
     def test_isoformat_timespec(self):
+        """Test that isoformat respects specified timespec precision levels."""
         date = PreciseDateTime.from_numeric_datetime(1989, 11, 18, 23, 51, 20, 123456789012)
         self.assertEqual(date.isoformat(), "1989-11-18T23:51:20.123456789012Z")
         self.assertEqual(date.isoformat(timespec="nanoseconds"), "1989-11-18T23:51:20.123456789Z")
@@ -57,15 +65,18 @@ class PreciseDateTimeTestCase(unittest.TestCase):
         self.assertEqual(date.isoformat(timespec="hours"), "1989-11-18T23Z")
 
     def test_isoformat_invalid_timespec(self):
+        """Test that isoformat raises ValueError for invalid timespec values."""
         date = PreciseDateTime.from_numeric_datetime(1989, 11, 18, 23, 51, 20, 123456789012)
         with self.assertRaises(ValueError):
             date.isoformat(timespec="days")
 
     def test_isoformat_change_separator(self):
+        """Test that isoformat respects custom date/time separator."""
         date = PreciseDateTime.from_numeric_datetime(1989, 11, 18, 23, 51, 20)
         self.assertEqual(date.isoformat(sep=" "), "1989-11-18 23:51:20Z")
 
     def test_fromisoformat(self):
+        """Test that fromisoformat correctly parses ISO format strings with varying precision."""
         self.assertEqual(
             PreciseDateTime.fromisoformat("1989"),
             PreciseDateTime.from_numeric_datetime(1989),
@@ -152,12 +163,14 @@ class PreciseDateTimeTestCase(unittest.TestCase):
         )
 
     def test_fromisoformat_change_separator(self):
+        """Test that fromisoformat respects custom date/time separator."""
         self.assertEqual(
             PreciseDateTime.fromisoformat("1989-11-18 23:51:20.123456789012Z", sep=" "),
             PreciseDateTime.from_numeric_datetime(1989, 11, 18, 23, 51, 20, 123456789012),
         )
 
     def test_fromisoformat_compact(self):
+        """Test that fromisoformat accepts compact format without separators."""
         self.assertEqual(
             PreciseDateTime.fromisoformat("19891118"),
             PreciseDateTime.fromisoformat("1989-11-18"),
@@ -179,22 +192,27 @@ class PreciseDateTimeTestCase(unittest.TestCase):
         )
 
     def test_fromisoformat_invalid_year(self):
+        """Test that fromisoformat raises ValueError for year with insufficient digits."""
         with self.assertRaises(ValueError):
             PreciseDateTime.fromisoformat("189")
 
     def test_fromisoformat_invalid_year_month_sep(self):
+        """Test that fromisoformat raises ValueError for invalid year/month separator."""
         with self.assertRaises(ValueError):
             PreciseDateTime.fromisoformat("1989/11")
 
     def test_fromisoformat_invalid_month(self):
+        """Test that fromisoformat raises ValueError for month with insufficient digits."""
         with self.assertRaises(ValueError):
             PreciseDateTime.fromisoformat("1989-1")
 
     def test_fromisoformat_invalid_year_month_date(self):
+        """Test that fromisoformat raises ValueError for compact format with missing separator."""
         with self.assertRaises(ValueError):
             PreciseDateTime.fromisoformat("198911")
 
     def test_fromisoformat_incomplete_day(self):
+        """Test that fromisoformat raises ValueError for day with insufficient digits."""
         with self.assertRaises(ValueError):
             PreciseDateTime.fromisoformat("1989-11-1")
 
