@@ -54,10 +54,10 @@ def _doppler_equation_residual(
     distance = np.sqrt(np.sum(los * los, axis=-1))
 
     doppler_residual, _ = _doppler_equation(
-        pv_scalar=los_vel_prod,
-        los=los,
+        pv_scalar=los_vel_prod.ravel(),
+        los=los.reshape(-1, 3),
         sensor_velocity=sensor_vel,
-        distance=distance,
+        distance=distance.reshape(-1),
         wavelength=wavelength,
         doppler_frequency=doppler_freq,
     )
@@ -113,7 +113,7 @@ def _ellipse_equation_residual(ground_points: np.ndarray) -> np.ndarray:
 
 
 class DirectGeocodingMonostaticTest(unittest.TestCase):
-    """Testing direct geocoding monostatic"""
+    """Test direct_geocoding_monostatic with various input dimension combinations using subtests."""
 
     def setUp(self):
         self.positions = np.array(
@@ -136,841 +136,283 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
 
         self.results = np.array([4385882.195057692, 764600.9869913795, 4551967.6143934])
 
-    def test_direct_geocoding_monostatic_case0a(self) -> None:
-        """Testing direct geocoding monostatic function, case 0a"""
-
-        # case 0a: 1 pos (3,), 1 vel (3,), 1 rng time (float), 1 initial guess (3,)
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions,
-            sensor_velocities=self.scaled_arf_velocities,
-            initial_guesses=self.initial_guesses,
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 1)
-        self.assertEqual(out.shape, (3,))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case0b(self) -> None:
-        """Testing direct geocoding monostatic function, case 0b"""
-
-        # case 0b: 1 pos (1,3), 1 vel (1,3), 1 rng time (float), 1 initial guess (1,3)
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions.reshape(1, 3),
-            sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
-            initial_guesses=self.initial_guesses.reshape(1, 3),
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (1, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case0c(self) -> None:
-        """Testing direct geocoding monostatic function, case 0c"""
-
-        # case 0c: 1 pos (3,), 1 vel (3,), 1 rng time (float), no initial guess
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions,
-            sensor_velocities=self.scaled_arf_velocities,
-            initial_guesses=None,
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 1)
-        self.assertEqual(out.shape, (3,))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case0d(self) -> None:
-        """Testing direct geocoding monostatic function, case 0d"""
-
-        # case 0d: 1 pos (1,3), 1 vel (1,3), 1 rng time (float), no initial guess
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions.reshape(1, 3),
-            sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
-            initial_guesses=None,
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (1, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case1a(self) -> None:
-        """Testing direct geocoding monostatic function, case 1a"""
-
-        # case 1a: N pos (N,3), N vel (N,3), 1 rng time (float), 1 initial guess (3,)
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=self.initial_guesses,
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case1b(self) -> None:
-        """Testing direct geocoding monostatic function, case 1b"""
-
-        # case 1b: N pos (N,3), N vel (N,3), 1 rng time (float), 1 initial guess (1,3)
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=self.initial_guesses.reshape(1, 3),
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case1c(self) -> None:
-        """Testing direct geocoding monostatic function, case 1c"""
-
-        # case 1c: N pos (N,3), N vel (N,3), 1 rng time (float), N initial guesses (N,3)
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=np.full((self.N, 3), self.initial_guesses),
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case1d(self) -> None:
-        """Testing direct geocoding monostatic function, case 1d"""
-
-        # case 1d: N pos (N,3), N vel (N,3), 1 rng time (float), no initial guess
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=None,
-            range_times=self.range_times[0],
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case2a(self) -> None:
-        """Testing direct geocoding monostatic function, case 2a"""
-
-        # case 2a: 1 pos (3,), 1 vel (3,), M rng times (M,), 1 initial guess (3,)
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions,
-            sensor_velocities=self.scaled_arf_velocities,
-            initial_guesses=self.initial_guesses,
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case2b(self) -> None:
-        """Testing direct geocoding monostatic function, case 2b"""
-
-        # case 2b: 1 pos (1,3), 1 vel (1,3), M rng times (M,), 1 initial guess (1,3)
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions.reshape(1, 3),
-            sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
-            initial_guesses=self.initial_guesses.reshape(1, 3),
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case2c(self) -> None:
-        """Testing direct geocoding monostatic function, case 2c"""
-
-        # case 2c: 1 pos (3,), 1 vel (3,), M rng times (M,), no initial guess
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions,
-            sensor_velocities=self.scaled_arf_velocities,
-            initial_guesses=None,
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case2d(self) -> None:
-        """Testing direct geocoding monostatic function, case 2d"""
-
-        # case 2d: 1 pos (3,), 1 vel (3,), M rng times (M,), 1 initial guess (3,), M doppler freqs
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions,
-            sensor_velocities=self.scaled_arf_velocities,
-            initial_guesses=self.initial_guesses,
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case2e(self) -> None:
-        """Testing direct geocoding monostatic function, case 2e"""
-
-        # case 2e: 1 pos (1,3), 1 vel (1,3), M rng times (M,), 1 initial guess (1,3), M doppler freqs
-        out = direct_geocoding_monostatic(
-            sensor_positions=self.positions.reshape(1, 3),
-            sensor_velocities=self.scaled_arf_velocities.reshape(1, 3),
-            initial_guesses=self.initial_guesses.reshape(1, 3),
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out,
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case3a(self) -> None:
-        """Testing direct geocoding monostatic function, case 3a"""
-
-        # case 3a: N pos (N,3), N vel (N,3), M rng times (M, ), 1 initial guess (3,)
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=self.initial_guesses,
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out[0, ...],
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case3b(self) -> None:
-        """Testing direct geocoding monostatic function, case 3b"""
-
-        # case 3b: N pos (N,3), N vel (N,3), M rng times (M, ), no initial guess
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=None,
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=self.doppler_freqs,
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out[0, ...],
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case3c(self) -> None:
-        """Testing direct geocoding monostatic function, case 3c"""
-
-        # case 3c: N pos (N,3), N vel (N,3), M rng times (M, ), 1 initial guess (3,), M doppler freqs
-        out = direct_geocoding_monostatic(
-            sensor_positions=np.full((self.N, 3), self.positions),
-            sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-            initial_guesses=self.initial_guesses,
-            range_times=np.repeat(self.range_times[0], self.M),
-            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-            altitude=self.geodetic_altitude,
-            look_direction=self.look_direction,
-            wavelength=self.wavelength,
-        )
-
-        doppler_residual = _doppler_equation_residual(
-            sensor_pos=self.positions,
-            sensor_vel=self.scaled_arf_velocities,
-            ground_points=out[0, ...],
-            doppler_freq=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-        range_residual = _range_equation_residual(
-            sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
-        )
-        ellipse_residual = _ellipse_equation_residual(ground_points=out)
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(
-            doppler_residual,
-            np.zeros_like(doppler_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            range_residual,
-            np.zeros_like(range_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(
-            ellipse_residual,
-            np.zeros_like(ellipse_residual),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_case4(self) -> None:
-        """Testing direct geocoding monostatic function, case 4"""
-
-        # case 4: N pos (N,3), M vel (M,3), raising error mismatch position/velocity
-        with self.assertRaises(RuntimeError):
-            direct_geocoding_monostatic(
-                sensor_positions=np.full((self.N, 3), self.positions),
-                sensor_velocities=np.full((self.M, 3), self.scaled_arf_velocities),
-                initial_guesses=np.full((self.N, 3), self.initial_guesses),
-                range_times=np.repeat(self.range_times[0], self.M),
-                doppler_frequencies=self.doppler_freqs,
-                altitude=self.geodetic_altitude,
-                look_direction=self.look_direction,
-                wavelength=self.wavelength,
-            )
-
-    def test_direct_geocoding_monostatic_case5(self) -> None:
-        """Testing direct geocoding monostatic function, case 5"""
-
-        # case 5: N pos (N,3), M init guesses (M,3), raising error mismatch position/init guesses
-        with self.assertRaises(RuntimeError):
-            direct_geocoding_monostatic(
-                sensor_positions=np.full((self.N, 3), self.positions),
-                sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-                initial_guesses=np.full((self.N // 2, 3), self.initial_guesses),
-                range_times=np.repeat(self.range_times[0], self.M),
-                doppler_frequencies=self.doppler_freqs,
-                altitude=self.geodetic_altitude,
-                look_direction=self.look_direction,
-                wavelength=self.wavelength,
-            )
-
-    def test_direct_geocoding_monostatic_case6(self) -> None:
-        """Testing direct geocoding monostatic function, case 6"""
-
-        # case 6: N range (N,), M freqs (M,), raising error mismatch frequency/ranges
-        with self.assertRaises(RuntimeError):
-            direct_geocoding_monostatic(
-                sensor_positions=np.full((self.N, 3), self.positions),
-                sensor_velocities=np.full((self.N, 3), self.scaled_arf_velocities),
-                initial_guesses=np.full((self.N, 3), self.initial_guesses),
-                range_times=np.repeat(self.range_times[0], self.N),
-                doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-                altitude=self.geodetic_altitude,
-                look_direction=self.look_direction,
-                wavelength=self.wavelength,
-            )
+    def test_direct_geocoding_monostatic_cases(self) -> None:
+        """Test direct_geocoding_monostatic with all input dimension combinations using subtests."""
+
+        test_cases = [
+            {
+                "name": "case0a: 1 pos (3,), 1 vel (3,), 1 rng time, 1 initial guess (3,)",
+                "positions": self.positions,
+                "velocities": self.scaled_arf_velocities,
+                "initial_guesses": self.initial_guesses,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 1,
+                "expected_shape": (3,),
+                "check_residuals": True,
+            },
+            {
+                "name": "case0b: 1 pos (1,3), 1 vel (1,3), 1 rng time, 1 initial guess (1,3)",
+                "positions": self.positions.reshape(1, 3),
+                "velocities": self.scaled_arf_velocities.reshape(1, 3),
+                "initial_guesses": self.initial_guesses.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case0c: 1 pos (3,), 1 vel (3,), 1 rng time, no initial guess",
+                "positions": self.positions,
+                "velocities": self.scaled_arf_velocities,
+                "initial_guesses": None,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 1,
+                "expected_shape": (3,),
+                "check_residuals": True,
+            },
+            {
+                "name": "case0d: 1 pos (1,3), 1 vel (1,3), 1 rng time, no initial guess",
+                "positions": self.positions.reshape(1, 3),
+                "velocities": self.scaled_arf_velocities.reshape(1, 3),
+                "initial_guesses": None,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case1a: N pos (N,3), N vel (N,3), 1 rng time, 1 initial guess (3,)",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": self.initial_guesses,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case1b: N pos (N,3), N vel (N,3), 1 rng time, 1 initial guess (1,3)",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": self.initial_guesses.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case1c: N pos (N,3), N vel (N,3), 1 rng time, N initial guesses (N,3)",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": np.full((self.N, 3), self.initial_guesses),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case1d: N pos (N,3), N vel (N,3), 1 rng time, no initial guess",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": None,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case2a: 1 pos (3,), 1 vel (3,), M rng times (M,), 1 initial guess (3,)",
+                "positions": self.positions,
+                "velocities": self.scaled_arf_velocities,
+                "initial_guesses": self.initial_guesses,
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case2b: 1 pos (1,3), 1 vel (1,3), M rng times (M,), 1 initial guess (1,3)",
+                "positions": self.positions.reshape(1, 3),
+                "velocities": self.scaled_arf_velocities.reshape(1, 3),
+                "initial_guesses": self.initial_guesses.reshape(1, 3),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case2c: 1 pos (3,), 1 vel (3,), M rng times (M,), no initial guess",
+                "positions": self.positions,
+                "velocities": self.scaled_arf_velocities,
+                "initial_guesses": None,
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case2d: 1 pos (3,), 1 vel (3,), M rng times (M,), 1 initial guess (3,), M doppler freqs",
+                "positions": self.positions,
+                "velocities": self.scaled_arf_velocities,
+                "initial_guesses": self.initial_guesses,
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case2e: 1 pos (1,3), 1 vel (1,3), M rng times (M,), 1 initial guess (1,3), M doppler freqs",
+                "positions": self.positions.reshape(1, 3),
+                "velocities": self.scaled_arf_velocities.reshape(1, 3),
+                "initial_guesses": self.initial_guesses.reshape(1, 3),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case3a: N pos (N,3), N vel (N,3), M rng times (M,), 1 initial guess (3,)",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": self.initial_guesses,
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 3,
+                "expected_shape": (self.N, self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case3b: N pos (N,3), N vel (N,3), M rng times (M,), no initial guess",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": None,
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "expected_ndim": 3,
+                "expected_shape": (self.N, self.M, 3),
+                "check_residuals": True,
+            },
+            {
+                "name": "case3c: N pos (N,3), N vel (N,3), M rng times (M,), 1 initial guess (3,), M doppler freqs",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": self.initial_guesses,
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+                "expected_ndim": 3,
+                "expected_shape": (self.N, self.M, 3),
+                "check_residuals": True,
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_monostatic(
+                    sensor_positions=case["positions"],
+                    sensor_velocities=case["velocities"],
+                    initial_guesses=case["initial_guesses"],
+                    range_times=case["range_times"],
+                    doppler_frequencies=case["doppler_frequencies"],
+                    altitude=self.geodetic_altitude,
+                    look_direction=self.look_direction,
+                    wavelength=self.wavelength,
+                )
+
+                self.assertEqual(out.ndim, case["expected_ndim"])
+                self.assertEqual(out.shape, case["expected_shape"])
+
+                if case["check_residuals"]:
+                    doppler_residual = _doppler_equation_residual(
+                        sensor_pos=self.positions,
+                        sensor_vel=self.scaled_arf_velocities,
+                        ground_points=out,
+                        doppler_freq=self.doppler_freqs,
+                        wavelength=self.wavelength,
+                    )
+                    range_residual = _range_equation_residual(
+                        sensor_pos=self.positions, ground_points=out, range_time=self.range_times[0]
+                    )
+                    ellipse_residual = _ellipse_equation_residual(ground_points=out)
+
+                    np.testing.assert_allclose(
+                        doppler_residual,
+                        np.zeros_like(doppler_residual),
+                        atol=self.residual_tolerance,
+                        rtol=0,
+                    )
+                    np.testing.assert_allclose(
+                        range_residual,
+                        np.zeros_like(range_residual),
+                        atol=self.residual_tolerance,
+                        rtol=0,
+                    )
+                    np.testing.assert_allclose(
+                        ellipse_residual,
+                        np.zeros_like(ellipse_residual),
+                        atol=self.residual_tolerance,
+                        rtol=0,
+                    )
+
+    def test_direct_geocoding_monostatic_error_cases(self) -> None:
+        """Test direct_geocoding_monostatic error handling for mismatched dimensions."""
+
+        error_cases = [
+            {
+                "name": "case4: N pos (N,3), M vel (M,3), mismatch position/velocity",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.M, 3), self.scaled_arf_velocities),
+                "initial_guesses": np.full((self.N, 3), self.initial_guesses),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+            },
+            {
+                "name": "case5: N pos (N,3), M init guesses (M,3), mismatch position/init guesses",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": np.full((self.N // 2, 3), self.initial_guesses),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+            },
+            {
+                "name": "case6: N range (N,), M freqs (M,), mismatch frequency/ranges",
+                "positions": np.full((self.N, 3), self.positions),
+                "velocities": np.full((self.N, 3), self.scaled_arf_velocities),
+                "initial_guesses": np.full((self.N, 3), self.initial_guesses),
+                "range_times": np.repeat(self.range_times[0], self.N),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+            },
+        ]
+
+        for case in error_cases:
+            with self.subTest(case=case["name"]):
+                with self.assertRaises(RuntimeError):
+                    direct_geocoding_monostatic(
+                        sensor_positions=case["positions"],
+                        sensor_velocities=case["velocities"],
+                        initial_guesses=case["initial_guesses"],
+                        range_times=case["range_times"],
+                        doppler_frequencies=case["doppler_frequencies"],
+                        altitude=self.geodetic_altitude,
+                        look_direction=self.look_direction,
+                        wavelength=self.wavelength,
+                    )
 
 
 class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
-    """Testing direct geocoding monostatic core"""
+    """Testing direct geocoding monostatic core with various input combinations using subtests."""
 
     def setUp(self):
         """Setting up variables for testing"""
@@ -992,173 +434,137 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
 
         self.results = np.array([4385882.195057692, 764600.9869913795, 4551967.6143934])
 
-    def test_monostatic_core_0a(self) -> None:
-        """Test _geocoding_monostatic_core function, case 0a"""
+    def test_monostatic_core_cases(self) -> None:
+        """Test direct_geocoding_monostatic_core with various input combinations using subtests."""
 
-        # case 0a: 1 pos (3,), 1 vel (3,), 1 guess (3,), 1 rng time
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=self.position,
-            sensor_velocities=self.velocity,
-            initial_guesses=self.initial_guess,
-            range_times=self.range_time[0],
-            doppler_frequencies=self.doppler_freq,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
+        test_cases = [
+            {
+                "name": "case0a: 1 pos (3,), 1 vel (3,), 1 guess (3,), 1 rng time",
+                "positions": self.position,
+                "velocities": self.velocity,
+                "initial_guesses": self.initial_guess,
+                "range_times": self.range_time[0],
+                "doppler_frequencies": self.doppler_freq,
+                "expected_ndim": 1,
+                "expected_shape": (3,),
+            },
+            {
+                "name": "case0b: 1 pos (1,3), 1 vel (1,3), 1 guess (1,3), 1 rng time",
+                "positions": self.position.reshape(1, 3),
+                "velocities": self.velocity.reshape(1, 3),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "range_times": self.range_time[0],
+                "doppler_frequencies": self.doppler_freq,
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "case0c: 1 pos (3,), 1 vel (3,), 1 guess (3,), M range times",
+                "positions": self.position,
+                "velocities": self.velocity,
+                "initial_guesses": self.initial_guess,
+                "range_times": np.repeat(self.range_time[0], self.M),
+                "doppler_frequencies": self.doppler_freq,
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case0d: 1 pos (1,3), 1 vel (1,3), 1 guess (1,3), M range times",
+                "positions": self.position.reshape(1, 3),
+                "velocities": self.velocity.reshape(1, 3),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "range_times": np.repeat(self.range_time[0], self.M),
+                "doppler_frequencies": self.doppler_freq,
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case0e: 1 pos (3,), 1 vel (3,), 1 guess (3,), M range times, M doppler freqs",
+                "positions": self.position,
+                "velocities": self.velocity,
+                "initial_guesses": self.initial_guess,
+                "range_times": np.repeat(self.range_time[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freq, self.M),
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case0f: 1 pos (1,3), 1 vel (1,3), 1 guess (1,3), M range times, M doppler freqs",
+                "positions": self.position.reshape(1, 3),
+                "velocities": self.velocity.reshape(1, 3),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "range_times": np.repeat(self.range_time[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freq, self.M),
+                "expected_ndim": 2,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case1a: N pos (N,3), N vel (N,3), N guess (N,3), 1 rng time",
+                "positions": np.full((self.N, 3), self.position),
+                "velocities": np.full((self.N, 3), self.velocity),
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "range_times": self.range_time[0],
+                "doppler_frequencies": self.doppler_freq,
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "case1b: N pos (N,3), N vel (N,3), N guess (N,3), M rng times",
+                "positions": np.full((self.N, 3), self.position),
+                "velocities": np.full((self.N, 3), self.velocity),
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "range_times": np.repeat(self.range_time[0], self.M),
+                "doppler_frequencies": self.doppler_freq,
+                "expected_ndim": 3,
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "case1c: N pos (N,3), N vel (N,3), N guess (N,3), M rng times, M doppler freqs",
+                "positions": np.full((self.N, 3), self.position),
+                "velocities": np.full((self.N, 3), self.velocity),
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "range_times": np.repeat(self.range_time[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freq, self.M),
+                "expected_ndim": 3,
+                "expected_shape": (self.N, self.M, 3),
+            },
+        ]
 
-        self.assertEqual(out.ndim, 1)
-        self.assertEqual(out.shape, (3,))
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_monostatic_core(
+                    sensor_positions=case["positions"],
+                    sensor_velocities=case["velocities"],
+                    initial_guesses=case["initial_guesses"],
+                    range_times=case["range_times"],
+                    doppler_frequencies=case["doppler_frequencies"],
+                    wavelength=self.wavelength,
+                    altitude=self.geodetic_altitude,
+                )
 
-    def test_monostatic_core_0b(self) -> None:
-        """Test _geocoding_monostatic_core function, case 0b"""
+                self.assertEqual(out.ndim, case["expected_ndim"])
+                self.assertEqual(out.shape, case["expected_shape"])
 
-        # case 0b: 1 pos (1,3), 1 vel (1,3), 1 guess (1,3), 1 rng time
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=self.velocity.reshape(1, 3),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            range_times=self.range_time[0],
-            doppler_frequencies=self.doppler_freq,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
+                # Determine expected result shape
+                if case["expected_shape"] == (3,):
+                    expected_result = self.results
+                elif case["expected_shape"] == (1, 3):
+                    expected_result = self.results.reshape(1, 3)
+                elif case["expected_shape"] == (self.M, 3):
+                    expected_result = np.full((self.M, 3), self.results)
+                elif case["expected_shape"] == (self.N, 3):
+                    expected_result = np.full((self.N, 3), self.results)
+                elif case["expected_shape"] == (self.N, self.M, 3):
+                    expected_result = np.full((self.N, self.M, 3), self.results)
+                else:
+                    expected_result = self.results
 
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (1, 3))
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
+                np.testing.assert_allclose(out, expected_result, atol=self.tolerance, rtol=0)
 
-    def test_monostatic_core_0c(self) -> None:
-        """Test _geocoding_monostatic_core function, case 0c"""
+    def test_monostatic_core_error_case(self) -> None:
+        """Test direct_geocoding_monostatic_core error handling for mismatched dimensions."""
 
-        # case 0c: 1 pos (3,), 1 vel (3,), 1 guess (3,), M range times
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=self.position,
-            sensor_velocities=self.velocity,
-            initial_guesses=self.initial_guess,
-            range_times=np.repeat(self.range_time[0], self.M),
-            doppler_frequencies=self.doppler_freq,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_0d(self) -> None:
-        """Test _geocoding_monostatic_core function, case 0d"""
-
-        # case 0d: 1 pos (1,3), 1 vel (1,3), 1 guess (1,3), M range times
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=self.velocity.reshape(1, 3),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            range_times=np.repeat(self.range_time[0], self.M),
-            doppler_frequencies=self.doppler_freq,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_0e(self) -> None:
-        """Test _geocoding_monostatic_core function, case 0e"""
-
-        # case 0e: 1 pos (3,), 1 vel (3,), 1 guess (3,), M range times, M doppler freqs
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=self.position,
-            sensor_velocities=self.velocity,
-            initial_guesses=self.initial_guess,
-            range_times=np.repeat(self.range_time[0], self.M),
-            doppler_frequencies=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_0f(self) -> None:
-        """Test _geocoding_monostatic_core function, case 0f"""
-
-        # case 0f: 1 pos (1,3), 1 vel (1,3), 1 guess (1,3), M range times, M doppler freqs
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=self.velocity.reshape(1, 3),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            range_times=np.repeat(self.range_time[0], self.M),
-            doppler_frequencies=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_1a(self) -> None:
-        """Test _geocoding_monostatic_core function, case 1a"""
-
-        # case 1a: 1 pos (N,3), 1 vel (N,3), 1 guess (N,3), 1 rng time
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=np.full((self.N, 3), self.position),
-            sensor_velocities=np.full((self.N, 3), self.velocity),
-            initial_guesses=np.full((self.N, 3), self.initial_guess),
-            range_times=self.range_time[0],
-            doppler_frequencies=self.doppler_freq,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_1b(self) -> None:
-        """Test _geocoding_monostatic_core function, case 1b"""
-
-        # case 1b: 1 pos (N,3), 1 vel (N,3), 1 guess (N,3), M rng times
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=np.full((self.N, 3), self.position),
-            sensor_velocities=np.full((self.N, 3), self.velocity),
-            initial_guesses=np.full((self.N, 3), self.initial_guess),
-            range_times=np.repeat(self.range_time[0], self.M),
-            doppler_frequencies=self.doppler_freq,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_1c(self) -> None:
-        """Test _geocoding_monostatic_core function, case 1c"""
-
-        # case 1c: N pos (N,3), N vel (N,3), N guesses (N,3), M rng times, M doppler freqs
-        out = direct_geocoding_monostatic_core(
-            sensor_positions=np.full((self.N, 3), self.position),
-            sensor_velocities=np.full((self.N, 3), self.velocity),
-            initial_guesses=np.full((self.N, 3), self.initial_guess),
-            range_times=np.repeat(self.range_time[0], self.M),
-            doppler_frequencies=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_monostatic_core_2(self) -> None:
-        """Test _geocoding_monostatic_core function, case 2"""
-
-        # case 2: N pos (N,3), N vel (N,3), N guesses (N,3), M rng times, N doppler freqs
-        # assert error raising
+        # case: N range (M,), N doppler freqs (N,), mismatched frequencies/ranges
         with self.assertRaises(RuntimeError):
             direct_geocoding_monostatic_core(
                 sensor_positions=np.full((self.N, 3), self.position),
@@ -1172,7 +578,7 @@ class DirectGeocodingMonostaticCoreTest(unittest.TestCase):
 
 
 class NewtonForDirectGeocodingMonostaticTest(unittest.TestCase):
-    """Testing Newton method for direct geocoding vectorized"""
+    """Testing Newton method for direct geocoding monostatic using subtests."""
 
     def setUp(self):
         self.position = np.array([4387348.749948771, 762123.3489877012, 4553067.931912004])
@@ -1186,57 +592,65 @@ class NewtonForDirectGeocodingMonostaticTest(unittest.TestCase):
         self.results = np.array([4385882.195057692, 764600.9869913795, 4551967.6143934])
         self.tolerance = 1e-6
 
-    def test_newton_for_geocoding_array_case0a(self) -> None:
-        """Testing Newton for geocoding for array input, case 0a"""
-        out = _direct_geocoding_monostatic_newton(
-            sensor_positions=self.position,
-            sensor_velocities=self.velocity,
-            initial_guesses=self.init_guess,
-            range_time=self.range_time,
-            altitude=self.geodetic_altitude,
-            wavelength=self.wavelength,
-            doppler_frequency=self.doppler_frequency,
-        )
+    def test_newton_for_geocoding_array_cases(self) -> None:
+        """Testing Newton for geocoding with array inputs using subtests."""
 
-        self.assertEqual(out.ndim, 1)
-        self.assertEqual(out.shape, (3,))
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
+        test_cases = [
+            {
+                "name": "case0a: 1 pos (3,), 1 vel (3,), 1 init guess (3,)",
+                "positions": self.position,
+                "velocities": self.velocity,
+                "initial_guesses": self.init_guess,
+                "expected_ndim": 1,
+                "expected_shape": (3,),
+            },
+            {
+                "name": "case0b: 1 pos (1,3), 1 vel (1,3), 1 init guess (1,3)",
+                "positions": self.position.reshape(1, 3),
+                "velocities": self.velocity.reshape(1, 3),
+                "initial_guesses": self.init_guess.reshape(1, 3),
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "case1: N pos (N,3), N vel (N,3), N init guess (N,3)",
+                "positions": np.full((4, 3), self.position),
+                "velocities": np.full((4, 3), self.velocity),
+                "initial_guesses": np.full((4, 3), self.init_guess),
+                "expected_ndim": 2,
+                "expected_shape": (4, 3),
+            },
+        ]
 
-    def test_newton_for_geocoding_array_case0b(self) -> None:
-        """Testing Newton for geocoding for array input, case 0b"""
-        out = _direct_geocoding_monostatic_newton(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=self.velocity.reshape(1, 3),
-            initial_guesses=self.init_guess.reshape(1, 3),
-            range_time=self.range_time,
-            altitude=self.geodetic_altitude,
-            wavelength=self.wavelength,
-            doppler_frequency=self.doppler_frequency,
-        )
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = _direct_geocoding_monostatic_newton(
+                    sensor_positions=case["positions"],
+                    sensor_velocities=case["velocities"],
+                    initial_guesses=case["initial_guesses"],
+                    range_time=self.range_time,
+                    altitude=self.geodetic_altitude,
+                    wavelength=self.wavelength,
+                    doppler_frequency=self.doppler_frequency,
+                )
 
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (1, 3))
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
+                self.assertEqual(out.ndim, case["expected_ndim"])
+                self.assertEqual(out.shape, case["expected_shape"])
 
-    def test_newton_for_geocoding_array_case1(self) -> None:
-        """Testing Newton for geocoding for array input, case 0b"""
-        out = _direct_geocoding_monostatic_newton(
-            sensor_positions=np.full((4, 3), self.position),
-            sensor_velocities=np.full((4, 3), self.velocity),
-            initial_guesses=np.full((4, 3), self.init_guess),
-            range_time=self.range_time,
-            altitude=self.geodetic_altitude,
-            wavelength=self.wavelength,
-            doppler_frequency=self.doppler_frequency,
-        )
+                if case["expected_shape"] == (3,):
+                    expected_result = self.results
+                elif case["expected_shape"] == (1, 3):
+                    expected_result = self.results.reshape(1, 3)
+                elif case["expected_shape"] == (4, 3):
+                    expected_result = np.full((4, 3), self.results)
+                else:
+                    expected_result = self.results
 
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (4, 3))
-        np.testing.assert_allclose(out, np.full((4, 3), self.results), atol=self.tolerance, rtol=0)
+                np.testing.assert_allclose(out, expected_result, atol=self.tolerance, rtol=0)
 
 
 class DirectGeocodingMonostaticInitTest(unittest.TestCase):
-    """Testing direct_geocoding_monostatic_init"""
+    """Testing direct_geocoding_monostatic_init with various input combinations using subtests."""
 
     def setUp(self):
         self.position = np.array([4387348.749948771, 762123.3489877012, 4553067.931912004])
@@ -1253,122 +667,95 @@ class DirectGeocodingMonostaticInitTest(unittest.TestCase):
         self.results = np.array([4385882.165361054, 764600.91441278, 4551967.49055163])
         self.tolerance = 1e-6
 
-    def test_direct_geocoding_monostatic_init_case0a(self) -> None:
-        """Testing direct geocoding monostatic init, case 0a"""
+    def test_direct_geocoding_monostatic_init_cases(self) -> None:
+        """Testing direct_geocoding_monostatic_init with various dimension combinations using subtests."""
 
-        # case0a: 1 sensor pos (3,), 1 sensor vel (3,)
-        out = direct_geocoding_init(
-            sensor_positions=self.position,
-            sensor_velocities=self.velocity,
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 1)
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
+        test_cases = [
+            {
+                "name": "case0a: 1 sensor pos (3,), 1 sensor vel (3,)",
+                "positions": self.position,
+                "velocities": self.velocity,
+                "expected_ndim": 1,
+                "expected_shape": (3,),
+                "expected_result": self.results,
+            },
+            {
+                "name": "case0b: 1 sensor pos (1,3), 1 sensor vel (3,)",
+                "positions": self.position.reshape(1, 3),
+                "velocities": self.velocity,
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+                "expected_result": self.results.reshape(1, 3),
+            },
+            {
+                "name": "case0c: 1 sensor pos (3,), 1 sensor vel (1,3)",
+                "positions": self.position,
+                "velocities": self.velocity.reshape(1, 3),
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+                "expected_result": self.results.reshape(1, 3),
+            },
+            {
+                "name": "case0d: 1 sensor pos (1,3), 1 sensor vel (1,3)",
+                "positions": self.position.reshape(1, 3),
+                "velocities": self.velocity.reshape(1, 3),
+                "expected_ndim": 2,
+                "expected_shape": (1, 3),
+                "expected_result": self.results.reshape(1, 3),
+            },
+            {
+                "name": "case1a: N sensor pos (N,3), 1 sensor vel (3,)",
+                "positions": np.full((self.N, 3), self.position),
+                "velocities": self.velocity,
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "expected_result": np.full((self.N, 3), self.results),
+            },
+            {
+                "name": "case1b: N sensor pos (N,3), 1 sensor vel (1,3)",
+                "positions": np.full((self.N, 3), self.position),
+                "velocities": self.velocity.reshape(1, 3),
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "expected_result": np.full((self.N, 3), self.results),
+            },
+            {
+                "name": "case1c: 1 sensor pos (3,), N sensor vel (N,3)",
+                "positions": self.position,
+                "velocities": np.full((self.N, 3), self.velocity),
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "expected_result": np.full((self.N, 3), self.results),
+            },
+            {
+                "name": "case1d: 1 sensor pos (1,3), N sensor vel (N,3)",
+                "positions": self.position.reshape(1, 3),
+                "velocities": np.full((self.N, 3), self.velocity),
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "expected_result": np.full((self.N, 3), self.results),
+            },
+            {
+                "name": "case1e: N sensor pos (N,3), N sensor vel (N,3)",
+                "positions": np.full((self.N, 3), self.position),
+                "velocities": np.full((self.N, 3), self.velocity),
+                "expected_ndim": 2,
+                "expected_shape": (self.N, 3),
+                "expected_result": np.full((self.N, 3), self.results),
+            },
+        ]
 
-    def test_direct_geocoding_monostatic_init_case0b(self) -> None:
-        """Testing direct geocoding monostatic init, case 0b"""
-
-        # case0b: 1 sensor pos (1, 3), 1 sensor vel (3,)
-        out = direct_geocoding_init(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=self.velocity,
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case0c(self) -> None:
-        """Testing direct geocoding monostatic init, case 0c"""
-
-        # case0c: 1 sensor pos (3,), 1 sensor vel (1, 3)
-        out = direct_geocoding_init(
-            sensor_positions=self.position,
-            sensor_velocities=self.velocity.reshape(1, 3),
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case0d(self) -> None:
-        """Testing direct geocoding monostatic init, case 0d"""
-
-        # case0d: 1 sensor pos (1, 3), 1 sensor vel (1, 3)
-        out = direct_geocoding_init(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=self.velocity.reshape(1, 3),
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case1a(self) -> None:
-        """Testing direct geocoding monostatic init, case 1a"""
-
-        # case1a: N sensor pos (N, 3), 1 sensor vel
-        out = direct_geocoding_init(
-            sensor_positions=np.full((self.N, 3), self.position),
-            sensor_velocities=self.velocity,
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case1b(self) -> None:
-        """Testing direct geocoding monostatic init, case 1b"""
-
-        # case1b: N sensor pos (N, 3), 1 sensor vel (1, 3)
-        out = direct_geocoding_init(
-            sensor_positions=np.full((self.N, 3), self.position),
-            sensor_velocities=self.velocity.reshape(1, 3),
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case1c(self) -> None:
-        """Testing direct geocoding monostatic init, case 1c"""
-
-        # case1c: 1 sensor pos (3,), N sensor vel (N, 3)
-        out = direct_geocoding_init(
-            sensor_positions=self.position,
-            sensor_velocities=np.full((self.N, 3), self.velocity),
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case1d(self) -> None:
-        """Testing direct geocoding monostatic init, case 1d"""
-
-        # case1d: 1 sensor pos (1, 3), N sensor vel (N, 3)
-        out = direct_geocoding_init(
-            sensor_positions=self.position.reshape(1, 3),
-            sensor_velocities=np.full((self.N, 3), self.velocity),
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_monostatic_init_case1e(self) -> None:
-        """Testing direct geocoding monostatic init, case 1e"""
-
-        # case1e: 1 sensor pos (1, 3), N sensor vel (N, 3)
-        out = direct_geocoding_init(
-            sensor_positions=np.full((self.N, 3), self.position),
-            sensor_velocities=np.full((self.N, 3), self.velocity),
-            range_distance=self.range_distance,
-            look_direction=self.look_direction,
-        )
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_init(
+                    sensor_positions=case["positions"],
+                    sensor_velocities=case["velocities"],
+                    range_distance=self.range_distance,
+                    look_direction=self.look_direction,
+                )
+                self.assertEqual(out.ndim, case["expected_ndim"])
+                self.assertEqual(out.shape, case["expected_shape"])
+                np.testing.assert_allclose(out, case["expected_result"], atol=self.tolerance, rtol=0)
 
 
 if __name__ == "__main__":
