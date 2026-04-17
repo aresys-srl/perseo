@@ -18,65 +18,24 @@ from perseo_core.geometry.angles import (
 from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 from tests.common import get_testing_trajectory
+from tests.fixtures.geometry_data import get_angles_test_data
 
 
 class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
-    """Testing compute_incidence_angles and compute_look_angles functions"""
+    """Test compute_incidence_angles_core and compute_look_angles_core with various input dimensions."""
 
     def setUp(self):
-        self.sensor_positions = np.array(
-            [
-                [5317606.94350283, 610603.985945038, 4577936.89859885],
-                [5313024.53547427, 608285.563877273, 4583547.15708167],
-                [5308435.7651548, 605967.120830312, 4589152.18047604],
-                [5303840.63790599, 603648.660435838, 4594751.96221552],
-                [5299239.15894225, 601330.18624638, 4600346.49592944],
-                [5294631.33350784, 599011.701824865, 4605935.7752263],
-                [5290017.16682646, 596693.210719223, 4611519.79375494],
-            ]
-        )
-
-        self.points = 1.0e6 * np.array(
-            [
-                [4.759710115562946, 0.723739860905043, 4.169511582485821],
-                [4.740767822131609, 0.785940591895703, 4.179749794811581],
-                [4.719765088454115, 0.852956178108469, 4.190295797874668],
-                [4.695901593234693, 0.926811645389169, 4.201333096521494],
-                [4.668001681937613, 1.010339507423213, 4.213072517214957],
-                [4.634228769201612, 1.107766560515324, 4.225761582103892],
-                [4.591484972384566, 1.225899798385040, 4.239684548934286],
-            ]
-        )
-
-        self.surface_normals = np.array(
-            [
-                [0.234003747210404, 0.035581544956606, 0.206369066952520],
-                [0.233072478806222, 0.038639547183139, 0.206875805039975],
-                [0.232039912061006, 0.041934264280303, 0.207397777162885],
-                [0.230866700422629, 0.045565253495203, 0.207944065853625],
-                [0.229495044663803, 0.049671770959056, 0.208525105922023],
-                [0.227834651920851, 0.054461620540163, 0.209153148422883],
-                [0.225733219610407, 0.060269457500911, 0.209842262631383],
-            ]
-        )
-
-        self.nadir_directions = np.array(
-            [
-                [-5.076811128664492, -0.582954164154652, -4.397261878693197],
-                [-5.072502925338587, -0.580748363122939, -4.402708576084343],
-                [-5.068188606556682, -0.578542492291151, -4.408150450773756],
-                [-5.063868176538823, -0.576336554975789, -4.413587496083914],
-                [-5.059541639367873, -0.574130554419002, -4.419019705524370],
-                [-5.055208999156272, -0.571924493873826, -4.424447072581663],
-                [-5.050870259998338, -0.569718376579988, -4.429869590778411],
-            ]
-        )
-
-        self.atol = 1e-8
-        self.rtol = 0
+        # Load test data from fixtures
+        data = get_angles_test_data()
+        self.sensor_positions = data["sensor_positions"]
+        self.points = data["points"]
+        self.surface_normals = data["surface_normals"]
+        self.nadir_directions = data["nadir_directions"]
+        self.atol = data["tolerance"]["atol"]
+        self.rtol = data["tolerance"]["rtol"]
 
     def test_compute_incidence_angles_core_1_pos_1_point(self):
-        """Testing compute incidence angles with scalar inputs"""
+        """Test compute_incidence_angles_core with scalar position and point (scalar and 1D array forms)."""
         reference_value = np.array([0.289504602345834])
 
         position_inputs = [
@@ -94,7 +53,10 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
     def test_compute_incidence_angles_core_1_pos_1_point_1_surface_normal(self):
-        """Testing compute incidence angles with scalar inputs"""
+        """Test compute_incidence_angles_core with scalar position, point, and surface normal.
+
+        Validate support for different surface-normal shapes and normalization options.
+        """
         reference_value = np.array([0.290207579201514])
 
         surface_normals = [
@@ -118,7 +80,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
     def test_compute_incidence_angles_core_1_pos_n_point(self):
-        """Testing compute incidence angles with mixed inputs"""
+        """Test compute_incidence_angles_core with single sensor position and multiple points."""
         reference_value = np.array(
             [
                 0.289504602345834,
@@ -141,7 +103,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
     def test_compute_incidence_angles_core_1_pos_n_point_n_surface_normal(self):
-        """Testing compute incidence angles with mixed inputs"""
+        """Test compute_incidence_angles_core with single position, multiple points and normals."""
         reference_value = np.array(
             [
                 0.290207579201514,
@@ -175,7 +137,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
     def test_compute_incidence_angles_core_n_pos_n_point(self):
-        """Testing compute incidence angles with array inputs"""
+        """Test compute_incidence_angles_core with multiple positions and points (vectorized computation)."""
         reference_value = np.array(
             [
                 0.289504602345834,
@@ -194,7 +156,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
     def test_compute_incidence_angles_core_n_pos_n_point_n_surface_normal(
         self,
     ):
-        """Testing compute incidence angles with array inputs"""
+        """Test compute_incidence_angles_core with multiple positions, points, and surface normals."""
         reference_value = np.array(
             [
                 0.290207579201514,
@@ -229,7 +191,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
     def test_compute_incidence_angles_core_invalid_inputs(self):
-        """Testing compute incidence angles with invalid inputs"""
+        """Test that compute_incidence_angles_core raises ValueError for invalid input shapes."""
         # wrong sensor positions shape
         with self.assertRaises(ValueError):
             compute_incidence_angles_core(np.arange(5), np.arange(3))
@@ -255,7 +217,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             )
 
     def test_compute_look_angles_core_1_pos_1_nadir_1_point(self):
-        """Testing compute look angles with scalar inputs"""
+        """Test compute_look_angles_core with scalar position, nadir direction, and point."""
         reference_value = np.array([0.261807718170898])
 
         position_inputs = [
@@ -283,7 +245,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
     def test_compute_look_angles_core_1_pos_1_nadir_n_point(self):
-        """Testing compute look angles with mixed inputs"""
+        """Test compute_look_angles_core with single position and nadir direction, multiple points."""
         reference_value = np.array(
             [
                 0.261807718170898,
