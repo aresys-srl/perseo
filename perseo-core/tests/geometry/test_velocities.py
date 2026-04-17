@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 from perseo_core.geometry.velocities import compute_ground_velocity
-from tests.common import get_testing_trajectory
+from tests.fixtures.models_data import get_testing_trajectory
 
 
 class GroundVelocityFromTrajectoryTest(unittest.TestCase):
