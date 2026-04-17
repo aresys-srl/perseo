@@ -13,20 +13,23 @@ from perseo_core.geometry.utilities.rotations import (
     euler_angles_to_rotation,
     rotation_to_euler_angles,
 )
+from tests.fixtures.geometry_utilities_data import get_rotation_test_data
 
 
 class RotatedFramesTestCase(unittest.TestCase):
-    """Testing euler_angles_to_rotation function"""
+    """Test euler_angles_to_rotation and rotation_to_euler_angles with various angle orders."""
 
     def setUp(self):
-        self.yaw = np.deg2rad(10)
-        self.pitch = np.deg2rad(15)
-        self.roll = np.deg2rad(20)
-        self._euler_angles = np.stack([self.yaw, self.pitch, self.roll], axis=-1)
-        self._tolerance = 1e-9
+        # Load test data from fixtures
+        data = get_rotation_test_data()
+        self.yaw = data["yaw"]
+        self.pitch = data["pitch"]
+        self.roll = data["roll"]
+        self._euler_angles = data["euler_angles"]
+        self._tolerance = data["tolerance"]
 
     def test_euler_angles_to_rotation_0(self):
-        """Testing compute rotation, scalar inputs"""
+        """Test euler_angles_to_rotation with YPR order."""
         reference_ypr = np.asarray(
             [
                 [0.951251242564198, -0.075999422127131, 0.298906609756981],
@@ -42,7 +45,7 @@ class RotatedFramesTestCase(unittest.TestCase):
         np.testing.assert_allclose(rotation_matrix_ypr.as_matrix(), reference_ypr, rtol=0, atol=self._tolerance)
 
     def test_euler_angles_to_rotation_1(self):
-        """Testing compute rotation, scalar inputs"""
+        """Test euler_angles_to_rotation with YRP order."""
         reference_yrp = np.asarray(
             [
                 [0.935879675463115, -0.163175911166535, 0.312254471657374],
@@ -58,7 +61,7 @@ class RotatedFramesTestCase(unittest.TestCase):
         np.testing.assert_allclose(rotation_matrix_yrp.as_matrix(), reference_yrp, rtol=0, atol=self._tolerance)
 
     def test_euler_angles_to_rotation_2(self):
-        """Testing compute rotation, scalar inputs"""
+        """Test euler_angles_to_rotation with RPY order."""
         reference_rpy = np.asarray(
             [
                 [0.951251242564198, -0.167731259496521, 0.258819045102521],
@@ -74,7 +77,7 @@ class RotatedFramesTestCase(unittest.TestCase):
         np.testing.assert_allclose(rotation_matrix_rpy.as_matrix(), reference_rpy, rtol=0, atol=self._tolerance)
 
     def test_euler_angles_to_rotation_3(self):
-        """Testing compute rotation, scalar inputs"""
+        """Test euler_angles_to_rotation with RYP order."""
         reference_ryp = np.asarray(
             [
                 [0.951251242564198, -0.173648177666930, 0.254887002244179],
@@ -90,7 +93,7 @@ class RotatedFramesTestCase(unittest.TestCase):
         np.testing.assert_allclose(rotation_matrix_ryp.as_matrix(), reference_ryp, rtol=0, atol=self._tolerance)
 
     def test_euler_angles_to_rotation_4(self):
-        """Testing compute rotation, scalar inputs"""
+        """Test euler_angles_to_rotation with PRY order."""
         reference_pry = np.asarray(
             [
                 [0.966622809665280, -0.080554770457117, 0.243210346801694],

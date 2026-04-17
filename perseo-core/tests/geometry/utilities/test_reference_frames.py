@@ -19,51 +19,30 @@ from perseo_core.geometry.utilities.reference_frames import (
     compute_zerodoppler_reference_frame,
 )
 from tests.common import compute_antenna_angles_a_posteriori
+from tests.fixtures.geometry_utilities_data import get_reference_frames_test_data
 
 
 class SensorAxisTestCase(unittest.TestCase):
-    """Testing compute reference frames and local axis function"""
+    """Test reference frame computation functions (zerodoppler, geocentric, geodetic, etc.)."""
 
     def setUp(self):
-        self._sensor_position = np.asarray([26512.279931507, 1064819.379506800, -7083173.555337110])
-        self._sensor_velocity = np.asarray([7529.609430015988, -342.978175622686, -23.376907795264])
-
-        self._zerodoppler_frame_reference = np.asarray(
-            [
-                [0.998959378858231, 0.045461584707689, -0.003661107352025],
-                [-0.045503192226166, 0.987972305556891, -0.147784244592682],
-                [-0.003101433282541, 0.147797049254939, 0.989012847916106],
-            ],
-            dtype=float,
-        )
-
-        self._geocentric_frame_reference = np.asarray(
-            [
-                [0.998949483740530, 0.045675252972446, -0.003701378179995],
-                [-0.045717707103110, 0.987831098247604, -0.148659384473924],
-                [-0.003133718520000, 0.148672433896922, 0.988881533454540],
-            ],
-            dtype=float,
-        )
-
-        self._geodetic_frame_reference = np.asarray(
-            [
-                [0.998949449735728, 0.045676868615385, -0.003690602413993],
-                [-0.045719074555789, 0.987896068814253, -0.148226594925155],
-                [-0.003124595085362, 0.148239606363606, 0.988946538499789],
-            ],
-            dtype=float,
-        )
-        self._geodetic_point_reference = np.asarray([23539.167841732884, 945409.529474431, -6286488.197273431])
-        self._tolerance = 1e-9
+        # Load test data from fixtures
+        data = get_reference_frames_test_data()
+        self._sensor_position = data["sensor_position"]
+        self._sensor_velocity = data["sensor_velocity"]
+        self._zerodoppler_frame_reference = data["zerodoppler_frame_reference"]
+        self._geocentric_frame_reference = data["geocentric_frame_reference"]
+        self._geodetic_frame_reference = data["geodetic_frame_reference"]
+        self._geodetic_point_reference = data["geodetic_point_reference"]
+        self._tolerance = data["tolerance"]
 
     def test_compute_zerodoppler_reference_frame(self):
-        """Testing compute zero doppler reference frame"""
+        """Test compute_zerodoppler_reference_frame with scalar inputs."""
         frame = compute_zerodoppler_reference_frame(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(frame, self._zerodoppler_frame_reference, rtol=1e-10, atol=1e-10)
 
     def test_compute_zerodoppler_reference_frame_vectorized(self):
-        """Testing compute zero doppler reference frame vectorized"""
+        """Test compute_zerodoppler_reference_frame with vectorized inputs."""
         frame = compute_zerodoppler_reference_frame(
             self._sensor_position.reshape((1, 3)),
             self._sensor_velocity.reshape((1, 3)),
@@ -86,17 +65,17 @@ class SensorAxisTestCase(unittest.TestCase):
         )
 
     def test_compute_zerodoppler_reference_frame_invalid_input(self):
-        """Testing compute zero doppler reference frame, with errors"""
+        """Test compute_zerodoppler_reference_frame raises error for invalid shape inputs."""
         with self.assertRaises(ValueError):
             compute_zerodoppler_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
     def test_compute_geocentric_reference_frame(self):
-        """Testing compute geocentric reference frame"""
+        """Test compute_geocentric_reference_frame with scalar inputs."""
         frame = compute_geocentric_reference_frame(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(frame, self._geocentric_frame_reference, rtol=1e-10, atol=1e-10)
 
     def test_compute_geocentric_reference_frame_vectorized(self):
-        """Testing compute geocentric reference frame, vectorized"""
+        """Test compute_geocentric_reference_frame with vectorized inputs."""
         frame = compute_geocentric_reference_frame(
             self._sensor_position.reshape((1, 3)),
             self._sensor_velocity.reshape((1, 3)),
@@ -119,7 +98,7 @@ class SensorAxisTestCase(unittest.TestCase):
         )
 
     def test_compute_geocentric_reference_frame_invalid_input(self):
-        """Testing compute geocentric reference frame, with errors"""
+        """Test compute_geocentric_reference_frame raises error for invalid shape combinations."""
         with self.assertRaises(ValueError):
             compute_geocentric_reference_frame(np.ones((10, 3)), np.ones((7, 3)))
 
@@ -127,12 +106,12 @@ class SensorAxisTestCase(unittest.TestCase):
             compute_geocentric_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
     def test_compute_geodetic_reference_frame(self):
-        """Testing compute geodetic reference frame"""
+        """Test compute_geodetic_reference_frame with scalar inputs."""
         frame = compute_geodetic_reference_frame(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(frame, self._geodetic_frame_reference, rtol=1e-10, atol=1e-10)
 
     def test_compute_geodetic_reference_frame_vectorized(self):
-        """Testing compute geodetic reference frame, vectorized"""
+        """Test compute_geodetic_reference_frame with vectorized inputs."""
         frame = compute_geodetic_reference_frame(
             self._sensor_position.reshape((1, 3)), self._sensor_velocity.reshape((1, 3))
         )
