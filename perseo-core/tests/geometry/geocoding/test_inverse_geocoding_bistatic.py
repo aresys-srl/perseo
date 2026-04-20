@@ -42,9 +42,9 @@ def _doppler_equation_residual(
 
 
 class InverseGeocodingBistaticTest(unittest.TestCase):
-    """Testing inverse geocoding bistatic_core"""
+    """Testing inverse geocoding bistatic functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         # creating orbit and orbit curve wrapper
         self.trajectory = get_testing_trajectory()
         self.wavelength = 1
@@ -65,1049 +65,398 @@ class InverseGeocodingBistaticTest(unittest.TestCase):
         self.azimuth_res = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.482637823016")
         self.range_res = 0.0036229998783991087
 
-    def test_inverse_geocoding_bistatic_case0a(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 0a"""
-
-        # case0a: 1 ground point (3,), 1 doppler freq, 1 init guess PDT
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=self.init_guess,
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, float))
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        self.assertTrue(np.abs(az_times - self.azimuth_res) < self.az_abs_tolerance)
-        self.assertTrue(np.abs(rng_times - self.range_res) < self.rng_abs_tolerance)
-
-    def test_inverse_geocoding_bistatic_case0b(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 0b"""
-
-        # case0b: 1 ground point (1, 3), 1 doppler freq, 1 init guess PDT
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=self.init_guess,
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == 1)
-        self.assertTrue(rng_times.size == 1)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(rng_times, np.array(self.range_res), atol=self.rng_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_case0c(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 0c"""
-
-        # case0c: 1 ground point (1, 3), 1 doppler freq, 1 init guess (array)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=np.array([self.init_guess]),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == 1)
-        self.assertTrue(rng_times.size == 1)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(rng_times, np.array(self.range_res), atol=self.rng_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_case0d(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 0d"""
-
-        # case0d: 1 ground point (3,), 1 doppler freq, 1 init guess (array)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=np.array([self.init_guess]),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == 1)
-        self.assertTrue(rng_times.size == 1)
-
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(rng_times, np.array(self.range_res), atol=self.rng_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_case1a(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 1a"""
-
-        # case1a: N ground point (N,3), 1 doppler freq, 1 init guess PDT
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=self.init_guess,
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case1b(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 1b"""
-
-        # case1b: N ground point (N,3), 1 doppler freq, 1 init guess array
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=np.array([self.init_guess]),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case1c(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 1c"""
-
-        # case1c: N ground point (N,3), 1 doppler freq, N init guesses
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=np.repeat(self.init_guess, self.N),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case2a(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 2a"""
-
-        # case2a: 1 ground point (3,), 1 doppler freq, N init guesses (N,)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=np.repeat(self.init_guess, self.N),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case2b(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 2b"""
-
-        # case2b: 1 ground point (1, 3), 1 doppler freq, N init guesses (N,)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=self.doppler_freq,
-            az_initial_time_guesses=np.repeat(self.init_guess, self.N),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case3a(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 3a"""
-
-        # case3a: 1 ground point (3,), M doppler freqs (M,), 1 init guess
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            az_initial_time_guesses=self.init_guess,
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.M)
-        self.assertTrue(rng_times.size == self.M)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.M),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case3b(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 3b"""
-
-        # case3b: N ground point (N,3), N doppler freqs (N,), 1 init guess
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.N),
-            az_initial_time_guesses=self.init_guess,
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case3c(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 3c"""
-
-        # case3c: N ground point (N,3), N doppler freqs (N,), N init guesses (N,)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.N),
-            az_initial_time_guesses=np.repeat(self.init_guess, self.N),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case3d(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 3d"""
-
-        # case3d: 1 ground point (3,), M doppler freqs (M,), M init guesses (M,)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            az_initial_time_guesses=np.repeat(self.init_guess, self.M),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.M)
-        self.assertTrue(rng_times.size == self.M)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.M),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case3e(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 3e"""
-
-        # case3e: 1 ground point (1, 3), M doppler freqs (M,), M init guesses (M,)
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            az_initial_time_guesses=np.repeat(self.init_guess, self.M),
-            wavelength=self.wavelength,
-        )
-        az_times_tx = az_times - rng_times
-        position_rx = self.trajectory.position(az_times)
-        velocity_rx = self.trajectory.velocity(az_times)
-        position_tx = self.trajectory.position(az_times_tx)
-        velocity_tx = self.trajectory.velocity(az_times_tx)
-        doppler_residual_new = _doppler_equation_residual(
-            position_rx=position_rx,
-            position_tx=position_tx,
-            velocity_rx=velocity_rx,
-            velocity_tx=velocity_tx,
-            ground_points=self.ground_point,
-            wavelength=self.wavelength,
-            freq_doppler=self.doppler_freq,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.M)
-        self.assertTrue(rng_times.size == self.M)
-
-        np.testing.assert_allclose(
-            doppler_residual_new,
-            np.zeros_like(doppler_residual_new),
-            atol=self.residual_tolerance,
-            rtol=0,
-        )
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.M),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case4a(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 4a"""
-
-        # case4a: N ground point (N,3), 1 doppler freq, M init guesses (M,)
-        with self.assertRaises(RuntimeError):
-            _, _ = inverse_geocoding_bistatic(
-                trajectory_rx=self.trajectory,
-                trajectory_tx=self.trajectory,
-                ground_points=np.full((self.N, 3), self.ground_point),
-                frequencies_doppler_centroid=self.doppler_freq,
-                az_initial_time_guesses=np.repeat(self.init_guess, self.M),
-                wavelength=self.wavelength,
-            )
-
-    def test_inverse_geocoding_bistatic_case4b(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 4b"""
-
-        # case4b: N ground point (N,3), M doppler freqs (M,), 1 init guess
-        with self.assertRaises(RuntimeError):
-            _, _ = inverse_geocoding_bistatic(
-                trajectory_rx=self.trajectory,
-                trajectory_tx=self.trajectory,
-                ground_points=np.full((self.N, 3), self.ground_point),
-                frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-                az_initial_time_guesses=self.init_guess,
-                wavelength=self.wavelength,
-            )
-
-    def test_inverse_geocoding_bistatic_case4c(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 4c"""
-
-        # case4c: N ground point (N,3), 1 doppler freq, init guess time step
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=self.doppler_freq,
-            wavelength=self.wavelength,
-            init_guess_search_time_step=1,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case4d(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 4d"""
-
-        # case4d: N ground point (N,3), N doppler freqs (N,), init guess time step
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.N),
-            wavelength=self.wavelength,
-            init_guess_search_time_step=self.trajectory.times[1] - self.trajectory.times[0],
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.N)
-        self.assertTrue(rng_times.size == self.N)
-
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.N),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case4e(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 4e"""
-
-        # case4e: 1 ground point (3,), M doppler freqs (M,), init guess time step
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-            init_guess_search_time_step=1,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.M)
-        self.assertTrue(rng_times.size == self.M)
-
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.M),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_case4f(self) -> None:
-        """Testing inverse_geocoding_bistatic, case 4f"""
-
-        # case4f: 1 ground point (1,3), M doppler freqs (M,), init guess time step
-        az_times, rng_times = inverse_geocoding_bistatic(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-            init_guess_search_time_step=self.trajectory.times[1] - self.trajectory.times[0],
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(isinstance(az_times[0], PreciseDateTime))
-        self.assertTrue(isinstance(rng_times, np.ndarray))
-        self.assertTrue(isinstance(rng_times[0], float))
-        self.assertTrue(az_times.ndim == 1)
-        self.assertTrue(rng_times.ndim == 1)
-        self.assertTrue(az_times.size == self.M)
-        self.assertTrue(rng_times.size == self.M)
-
-        delta_az = np.array(az_times - self.azimuth_res, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-        np.testing.assert_allclose(
-            rng_times,
-            np.repeat(self.range_res, self.M),
-            atol=self.rng_abs_tolerance,
-            rtol=0,
-        )
-
-    def test_inverse_geocoding_bistatic_error(self) -> None:
-        """Testing inverse_geocoding_bistatic, error for no init guess and no guess search time step"""
-
-        with self.assertRaises(RuntimeError):
-            inverse_geocoding_bistatic(
-                trajectory_rx=self.trajectory,
-                trajectory_tx=self.trajectory,
-                ground_points=self.ground_point.reshape(1, 3),
-                frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-                wavelength=self.wavelength,
-            )
+    def test_inverse_geocoding_bistatic_cases(self) -> None:
+        """Testing inverse_geocoding_bistatic success cases."""
+
+        test_cases = [
+            {
+                "name": "case0a: scalar",
+                "ground_points": self.ground_point,
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": self.init_guess,
+                "init_guess_time_step": None,
+                "expected_az_size": None,
+                "expected_rng_size": None,
+            },
+            {
+                "name": "case0b: 1x3 array",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": self.init_guess,
+                "init_guess_time_step": None,
+                "expected_az_size": 1,
+                "expected_rng_size": 1,
+            },
+            {
+                "name": "case0c: 1x3 array init array",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.array([self.init_guess]),
+                "init_guess_time_step": None,
+                "expected_az_size": 1,
+                "expected_rng_size": 1,
+            },
+            {
+                "name": "case0d: scalar init array",
+                "ground_points": self.ground_point,
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.array([self.init_guess]),
+                "init_guess_time_step": None,
+                "expected_az_size": 1,
+                "expected_rng_size": 1,
+            },
+            {
+                "name": "case1a: Nx3 array",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": self.init_guess,
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case1b: Nx3 init array",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.array([self.init_guess]),
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case1c: Nx3 N init",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.repeat(self.init_guess, self.N),
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case2a: scalar N init",
+                "ground_points": self.ground_point,
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.repeat(self.init_guess, self.N),
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case2b: 1x3 N init",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.repeat(self.init_guess, self.N),
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case3a: scalar M doppler",
+                "ground_points": self.ground_point,
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": self.init_guess,
+                "init_guess_time_step": None,
+                "expected_az_size": self.M,
+                "expected_rng_size": self.M,
+            },
+            {
+                "name": "case3b: Nx3 N doppler",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.N),
+                "init_guess": self.init_guess,
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case3c: Nx3 N doppler N init",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.N),
+                "init_guess": np.repeat(self.init_guess, self.N),
+                "init_guess_time_step": None,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case3d: scalar M doppler M init",
+                "ground_points": self.ground_point,
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": np.repeat(self.init_guess, self.M),
+                "init_guess_time_step": None,
+                "expected_az_size": self.M,
+                "expected_rng_size": self.M,
+            },
+            {
+                "name": "case3e: 1x3 M doppler M init",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": np.repeat(self.init_guess, self.M),
+                "init_guess_time_step": None,
+                "expected_az_size": self.M,
+                "expected_rng_size": self.M,
+            },
+            {
+                "name": "case4c: Nx3 time step",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": None,
+                "init_guess_time_step": 1,
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case4d: Nx3 N doppler time step",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.N),
+                "init_guess": None,
+                "init_guess_time_step": self.trajectory.times[1] - self.trajectory.times[0],
+                "expected_az_size": self.N,
+                "expected_rng_size": self.N,
+            },
+            {
+                "name": "case4e: scalar M doppler time step",
+                "ground_points": self.ground_point,
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": None,
+                "init_guess_time_step": 1,
+                "expected_az_size": self.M,
+                "expected_rng_size": self.M,
+            },
+            {
+                "name": "case4f: 1x3 M doppler time step",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": None,
+                "init_guess_time_step": self.trajectory.times[1] - self.trajectory.times[0],
+                "expected_az_size": self.M,
+                "expected_rng_size": self.M,
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                if case["init_guess"] is not None:
+                    az_times, rng_times = inverse_geocoding_bistatic(
+                        trajectory_rx=self.trajectory,
+                        trajectory_tx=self.trajectory,
+                        ground_points=case["ground_points"],
+                        frequencies_doppler_centroid=case["doppler_freqs"],
+                        az_initial_time_guesses=case["init_guess"],
+                        wavelength=self.wavelength,
+                    )
+                else:
+                    az_times, rng_times = inverse_geocoding_bistatic(
+                        trajectory_rx=self.trajectory,
+                        trajectory_tx=self.trajectory,
+                        ground_points=case["ground_points"],
+                        frequencies_doppler_centroid=case["doppler_freqs"],
+                        wavelength=self.wavelength,
+                        init_guess_search_time_step=case["init_guess_time_step"],
+                    )
+
+                az_times_tx = az_times - rng_times
+                position_rx = self.trajectory.position(az_times)
+                velocity_rx = self.trajectory.velocity(az_times)
+                position_tx = self.trajectory.position(az_times_tx)
+                velocity_tx = self.trajectory.velocity(az_times_tx)
+                doppler_residual_new = _doppler_equation_residual(
+                    position_rx=position_rx,
+                    position_tx=position_tx,
+                    velocity_rx=velocity_rx,
+                    velocity_tx=velocity_tx,
+                    ground_points=case["ground_points"],
+                    wavelength=self.wavelength,
+                    freq_doppler=self.doppler_freq,
+                )
+
+                np.testing.assert_allclose(
+                    doppler_residual_new, np.zeros_like(doppler_residual_new), atol=self.residual_tolerance, rtol=0
+                )
+
+                if case["expected_az_size"] is None:
+                    self.assertIsInstance(az_times, PreciseDateTime)
+                    self.assertIsInstance(rng_times, (float, np.floating))
+                    self.assertLess(abs(az_times - self.azimuth_res), self.az_abs_tolerance)
+                    self.assertLess(abs(float(rng_times) - self.range_res), self.rng_abs_tolerance)
+                else:
+                    self.assertIsInstance(az_times, np.ndarray)
+                    self.assertIsInstance(rng_times, np.ndarray)
+                    self.assertEqual(az_times.ndim, 1)
+                    self.assertEqual(rng_times.ndim, 1)
+                    self.assertEqual(az_times.size, case["expected_az_size"])
+                    self.assertEqual(rng_times.size, case["expected_rng_size"])
+                    self.assertTrue(all(isinstance(value, PreciseDateTime) for value in az_times))
+                    self.assertTrue(all(isinstance(value, (float, np.floating)) for value in rng_times))
+
+                    delta_az = np.array(az_times - self.azimuth_res, dtype=float)
+                    np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
+                    np.testing.assert_allclose(
+                        rng_times,
+                        np.repeat(self.range_res, case["expected_rng_size"]),
+                        atol=self.rng_abs_tolerance,
+                        rtol=0,
+                    )
+
+    def test_inverse_geocoding_bistatic_error_cases(self) -> None:
+        """Testing inverse_geocoding_bistatic error cases."""
+
+        error_cases = [
+            {
+                "name": "case4a: error Nx3 M init",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": self.doppler_freq,
+                "init_guess": np.repeat(self.init_guess, self.M),
+                "init_guess_time_step": None,
+            },
+            {
+                "name": "case4b: error Nx3 M doppler",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": self.init_guess,
+                "init_guess_time_step": None,
+            },
+            {
+                "name": "error: no init guess no time step",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "init_guess": None,
+                "init_guess_time_step": None,
+            },
+        ]
+
+        for case in error_cases:
+            with self.subTest(case=case["name"]):
+                with self.assertRaises(RuntimeError):
+                    if case["init_guess"] is not None:
+                        inverse_geocoding_bistatic(
+                            trajectory_rx=self.trajectory,
+                            trajectory_tx=self.trajectory,
+                            ground_points=case["ground_points"],
+                            frequencies_doppler_centroid=case["doppler_freqs"],
+                            az_initial_time_guesses=case["init_guess"],
+                            wavelength=self.wavelength,
+                        )
+                    else:
+                        inverse_geocoding_bistatic(
+                            trajectory_rx=self.trajectory,
+                            trajectory_tx=self.trajectory,
+                            ground_points=case["ground_points"],
+                            frequencies_doppler_centroid=case["doppler_freqs"],
+                            wavelength=self.wavelength,
+                            init_guess_search_time_step=case["init_guess_time_step"],
+                        )
 
 
 class InverseGeocodingBistaticInitTest(unittest.TestCase):
-    """Testing inverse geocoding bistatic init"""
+    """Testing inverse geocoding bistatic initialization"""
 
-    def setUp(self):
-        # creating orbit and orbit curve wrapper
+    def setUp(self) -> None:
         self.trajectory = get_testing_trajectory()
         self.wavelength = 1
         self.doppler_freq = 0
-
-        # inputs
         self.init_guess = PreciseDateTime.from_utc_string("13-FEB-2023 09:34:01.500000000000")
-        self.ground_point = np.array(
-            [-2243618.48435212, -4728341.28615007, 3633267.229522297],
-        )
+        self.ground_point = np.array([-2243618.48435212, -4728341.28615007, 3633267.229522297])
         self.az_abs_tolerance = 1e-10
         self.N = 5
         self.M = 7
-
-        # expected results
         self.result = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.500000000000")
 
-    def test_inverse_geocoding_bistatic_init_core_case0a(self) -> None:
-        """Testing inverse geocoding bistatic init, case 0a"""
+    def test_inverse_geocoding_bistatic_init_core_cases(self) -> None:
+        """Parameterized test with 8 subtests (7 valid cases + 1 error case)."""
 
-        # case 0a: 1 ground point (3,), 1 doppler freq
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=self.doppler_freq,
-            wavelength=self.wavelength,
-        )
+        test_cases = [
+            {
+                "name": "case0a: scalar",
+                "ground_points": self.ground_point,
+                "doppler_freqs": self.doppler_freq,
+                "expected_size": None,
+                "should_raise": False,
+            },
+            {
+                "name": "case0b: 1x3",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": self.doppler_freq,
+                "expected_size": 1,
+                "should_raise": False,
+            },
+            {
+                "name": "case0c: scalar doppler array",
+                "ground_points": self.ground_point,
+                "doppler_freqs": np.array([self.doppler_freq]),
+                "expected_size": 1,
+                "should_raise": False,
+            },
+            {
+                "name": "case1a: Nx3",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": self.doppler_freq,
+                "expected_size": self.N,
+                "should_raise": False,
+            },
+            {
+                "name": "case1b: Nx3 N doppler",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.N),
+                "expected_size": self.N,
+                "should_raise": False,
+            },
+            {
+                "name": "case2a: scalar M doppler",
+                "ground_points": self.ground_point,
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "expected_size": self.M,
+                "should_raise": False,
+            },
+            {
+                "name": "case2b: 1x3 M doppler",
+                "ground_points": self.ground_point.reshape(1, 3),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "expected_size": self.M,
+                "should_raise": False,
+            },
+            {
+                "name": "case3: error Nx3 M doppler",
+                "ground_points": np.full((self.N, 3), self.ground_point),
+                "doppler_freqs": np.repeat(self.doppler_freq, self.M),
+                "expected_size": None,
+                "should_raise": True,
+            },
+        ]
 
-        # checking results
-        self.assertTrue(isinstance(az_times, PreciseDateTime))
-        self.assertTrue(np.abs(az_times - self.result) < self.az_abs_tolerance)
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                if case["should_raise"]:
+                    with self.assertRaises(RuntimeError):
+                        inverse_geocoding_bistatic_init_core(
+                            trajectory_rx=self.trajectory,
+                            trajectory_tx=self.trajectory,
+                            time_axis_rx=self.trajectory.times,
+                            time_axis_tx=self.trajectory.times,
+                            ground_points=case["ground_points"],
+                            frequencies_doppler_centroid=case["doppler_freqs"],
+                            wavelength=self.wavelength,
+                        )
+                else:
+                    az_times = inverse_geocoding_bistatic_init_core(
+                        trajectory_rx=self.trajectory,
+                        trajectory_tx=self.trajectory,
+                        time_axis_rx=self.trajectory.times,
+                        time_axis_tx=self.trajectory.times,
+                        ground_points=case["ground_points"],
+                        frequencies_doppler_centroid=case["doppler_freqs"],
+                        wavelength=self.wavelength,
+                    )
 
-    def test_inverse_geocoding_bistatic_init_core_case0b(self) -> None:
-        """Testing inverse geocoding bistatic init, case 0a"""
-
-        # case 0a: 1 ground point (1, 3), 1 doppler freq
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=self.doppler_freq,
-            wavelength=self.wavelength,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(az_times.size == 1)
-        delta_az = np.array(az_times - self.result, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_init_core_case0c(self) -> None:
-        """Testing inverse geocoding bistatic init, case 0c"""
-
-        # case 0c: 1 ground point (3,), 1 doppler freq array
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=np.array([self.doppler_freq]),
-            wavelength=self.wavelength,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(az_times.size == 1)
-        delta_az = np.array(az_times - self.result, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_init_core_case1a(self) -> None:
-        """Testing inverse geocoding bistatic init, case 1a"""
-
-        # case 1a: N ground point (N, 3), 1 doppler freq
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=self.doppler_freq,
-            wavelength=self.wavelength,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(az_times.size == self.N)
-        delta_az = np.array(az_times - self.result, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_init_core_case1b(self) -> None:
-        """Testing inverse geocoding bistatic init, case 1b"""
-
-        # case 1b: N ground point (N, 3), N doppler freq
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=np.full((self.N, 3), self.ground_point),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.N),
-            wavelength=self.wavelength,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(az_times.size == self.N)
-        delta_az = np.array(az_times - self.result, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_init_core_case2a(self) -> None:
-        """Testing inverse geocoding bistatic init, case 2a"""
-
-        # case 2a: 1 ground point (3,), M doppler freq
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=self.ground_point,
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(az_times.size == self.M)
-        delta_az = np.array(az_times - self.result, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_init_core_case2b(self) -> None:
-        """Testing inverse geocoding bistatic init, case 2b"""
-
-        # case 2b: 1 ground point (1, 3), M doppler freq
-        az_times = inverse_geocoding_bistatic_init_core(
-            trajectory_rx=self.trajectory,
-            trajectory_tx=self.trajectory,
-            time_axis_rx=self.trajectory.times,
-            time_axis_tx=self.trajectory.times,
-            ground_points=self.ground_point.reshape(1, 3),
-            frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-            wavelength=self.wavelength,
-        )
-
-        # checking results
-        self.assertTrue(isinstance(az_times, np.ndarray))
-        self.assertTrue(az_times.size == self.M)
-        delta_az = np.array(az_times - self.result, dtype=float)
-        np.testing.assert_allclose(delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0)
-
-    def test_inverse_geocoding_bistatic_init_core_case3(self) -> None:
-        """Testing inverse geocoding bistatic init, case 3"""
-
-        # case 3: N ground point (N, 3), M doppler freq
-        with self.assertRaises(RuntimeError):
-            inverse_geocoding_bistatic_init_core(
-                trajectory_rx=self.trajectory,
-                trajectory_tx=self.trajectory,
-                time_axis_rx=self.trajectory.times,
-                time_axis_tx=self.trajectory.times,
-                ground_points=np.full((self.N, 3), self.ground_point),
-                frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.M),
-                wavelength=self.wavelength,
-            )
+                    if case["expected_size"] is None:
+                        self.assertTrue(isinstance(az_times, PreciseDateTime))
+                        self.assertTrue(np.abs(az_times - self.result) < self.az_abs_tolerance)
+                    else:
+                        self.assertTrue(isinstance(az_times, np.ndarray))
+                        self.assertTrue(az_times.size == case["expected_size"])
+                        delta_az = np.array(az_times - self.result, dtype=float)
+                        np.testing.assert_allclose(
+                            delta_az, np.zeros_like(delta_az), atol=self.az_abs_tolerance, rtol=0
+                        )
 
 
 if __name__ == "__main__":
