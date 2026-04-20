@@ -9,11 +9,12 @@ Geometry - Velocities Computation
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_look_angles
 from perseo_core.geometry.utilities.reference_frames import ReferenceFrame
 from perseo_core.models.trajectory import Trajectory
-from perseo_core.models.types import ExtendedDatetimeType, FloatArrayType
+from perseo_core.models.types import ExtendedDatetimeType
 
 # TODO: add effective velocity computation
 
@@ -21,13 +22,13 @@ from perseo_core.models.types import ExtendedDatetimeType, FloatArrayType
 def compute_ground_velocity(
     trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
-    look_angles_rad: FloatArrayType,
+    look_angles_rad: npt.NDArray[np.floating],
     reference_frame: ReferenceFrame = "ZERODOPPLER",
     geodetic_altitude: float = 0,
     averaging_interval_relative_origin: float = 0,
     averaging_interval_duration: float = 1,
     averaging_interval_num_points: int = 11,
-) -> FloatArrayType:
+) -> npt.NDArray[np.floating]:
     """Numerical computation of the ground velocity [m/s] at given look angles.
 
     The algorithm is based on the direct geocoding, via look angles, of points at different azimuth times in a
@@ -39,7 +40,7 @@ def compute_ground_velocity(
         sensor trajectory
     azimuth_time : ExtendedDatetimeType
         azimuth time at which compute the ground velocity
-    look_angles : FloatArrayType
+    look_angles : npt.NDArray[np.floating]
         look angles in radians, float or array with shape (N,)
     reference_frame : "GEOCENTRIC", "GEODETIC", "ZERODOPPLER", optional
         the reference frames in which the look angles are intended, by default "ZERODOPPLER"
@@ -54,7 +55,7 @@ def compute_ground_velocity(
 
     Returns
     -------
-    FloatArrayType
+    npt.NDArray[np.floating]
         ground velocity in m/s
     """
 

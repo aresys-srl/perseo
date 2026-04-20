@@ -16,4 +16,3 @@ from perseo_core.timing.precise_datetime import PreciseDateTime
 ExtendedDatetimeType = PreciseDateTime | np.datetime64
 ExtendedDatetimeArrayType = NDArray[Shape["*"], ExtendedDatetimeType]  # type: ignore
 CoordinatesArrayType = NDArray[Shape["* x, * y, * z"], float] | NDArray[Shape["3"], float]  # type: ignore
-FloatArrayType = NDArray[Shape["*"], float]  # type: ignore

@@ -9,11 +9,11 @@ Processing - Signal Features
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from numpydantic import NDArray, Shape
 from scipy import signal
 
 from perseo_core.models.enums import GetFrequencyMethod
-from perseo_core.models.types import FloatArrayType
 
 InverseROIArrayType = NDArray[Shape["* lines, * samples"], float] | NDArray[Shape["2"], float]  # type: ignore
 
@@ -22,7 +22,9 @@ InverseROIArrayType = NDArray[Shape["* lines, * samples"], float] | NDArray[Shap
 # TODO: be done
 
 
-def shift_spectrum(data: InverseROIArrayType, shift: float | FloatArrayType, axis: int = 0) -> InverseROIArrayType:
+def shift_spectrum(
+    data: InverseROIArrayType, shift: float | npt.NDArray[np.floating], axis: int = 0
+) -> InverseROIArrayType:
     """Shift the spectrum of time domain signal along the selected axis by applying a time domain modulation.
 
     The shift can be a single value or an array of values with the size of the other axis.
@@ -35,7 +37,7 @@ def shift_spectrum(data: InverseROIArrayType, shift: float | FloatArrayType, axi
     ----------
     data : InverseROIArrayType
         signal of shape (lines, samples)
-    shift : float | FloatArrayType
+    shift : float | npt.NDArray[np.floating]
         either a constant or an array of shape (lines,) or (samples,) depending on the specified axis.
     axis : int, optional
         axis along which the spectral shift is applied, by default 0
@@ -122,7 +124,7 @@ def linear_best_fit_by_fft(
     return line_trend
 
 
-def modulate_data(data: InverseROIArrayType, mod_freq: float | FloatArrayType) -> InverseROIArrayType:
+def modulate_data(data: InverseROIArrayType, mod_freq: float | npt.NDArray[np.floating]) -> InverseROIArrayType:
     """Time domain data modulation to shift a signal in the frequency domain along the selected axis.
     Signal spectrum is shifted by mod_freq value.
 
@@ -136,7 +138,7 @@ def modulate_data(data: InverseROIArrayType, mod_freq: float | FloatArrayType) -
     ----------
     data : InverseROIArrayType
         signal of shape (lines, samples)
-    mod_freq : float | FloatArrayType
+    mod_freq : float | npt.NDArray[np.floating]
         either a constant or an array of shape (lines,) or (samples,) depending on the axis.
 
     Returns

@@ -9,12 +9,13 @@ Geometry - Angles Computation
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
 from perseo_core.models.enums import SensorLookDirection
 from perseo_core.models.trajectory import Trajectory
-from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType, FloatArrayType
+from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType
 
 
 def get_geometric_squint_angle(
@@ -22,7 +23,7 @@ def get_geometric_squint_angle(
     sensor_velocities: CoordinatesArrayType,
     ground_points: CoordinatesArrayType,
     radians: bool = True,
-) -> float | FloatArrayType:
+) -> float | npt.NDArray[np.floating]:
     """Evaluating squint angle geometrically in radians/degrees.
 
     Parameters
@@ -38,7 +39,7 @@ def get_geometric_squint_angle(
 
     Returns
     -------
-    float | FloatArrayType
+    float | npt.NDArray[np.floating]
         squint angle in radians/degrees
     """
 
@@ -55,13 +56,13 @@ def get_geometric_squint_angle(
 def compute_incidence_angles(
     trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
-    range_times: float | FloatArrayType,
+    range_times: float | npt.NDArray[np.floating],
     look_direction: str | SensorLookDirection,
     geodetic_altitude: float | None = None,
-    frequencies_doppler_centroid: float | FloatArrayType | None = None,
+    frequencies_doppler_centroid: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
     radians: bool = True,
-) -> float | FloatArrayType:
+) -> float | npt.NDArray[np.floating]:
     """Compute incidence angles in radians/degrees from sensor trajectory (TwiceDifferentiable3DCurve compliant object).
 
     Parameters
@@ -70,13 +71,13 @@ def compute_incidence_angles(
         sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
     azimuth_time : ExtendedDatetimeType
         azimuth time at which compute the incidence angles corresponding to the input range times
-    range_times : float | FloatArrayType
+    range_times : float | npt.NDArray[np.floating]
         range times where to compute the incidence angles, a float or a (N,) array
     look_direction : str | SensorLookDirection
         sensor looking side where to perform geocoding, can be RIGHT or LEFT
     geodetic_altitude : float | None, optional
         the altitude over wgs84, if None is set to 0, by default None
-    frequencies_doppler_centroid : float | FloatArrayType | None, optional
+    frequencies_doppler_centroid : float | npt.NDArray[np.floating] | None, optional
         frequency_doppler_centroid value or set of values, one for each range time, if None is set to 0, by default None
     carrier_wavelength : float | None, optional
         carrier signal wavelength, if None is set to 1, by default None
@@ -85,7 +86,7 @@ def compute_incidence_angles(
 
     Returns
     -------
-    float | FloatArrayType
+    float | npt.NDArray[np.floating]
         incidence angles in radians/degrees corresponding to the input range times at the given azimuth time
     """
     sensor_position = trajectory.position(azimuth_time)
@@ -108,13 +109,13 @@ def compute_incidence_angles(
 def compute_look_angles(
     trajectory: Trajectory,
     azimuth_time: ExtendedDatetimeType,
-    range_times: float | FloatArrayType,
+    range_times: float | npt.NDArray[np.floating],
     look_direction: str | SensorLookDirection,
     geodetic_altitude: float | None = None,
-    frequencies_doppler_centroid: float | FloatArrayType | None = None,
+    frequencies_doppler_centroid: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
     radians: bool = True,
-) -> float | FloatArrayType:
+) -> float | npt.NDArray[np.floating]:
     """Compute look angles in radians/degrees from sensor trajectory (TwiceDifferentiable3DCurve compliant object).
 
     Parameters
@@ -123,13 +124,13 @@ def compute_look_angles(
         sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
     azimuth_time : ExtendedDatetimeType
         azimuth time at which compute the look a angles corresponding to the input range times
-    range_times : float | FloatArrayType
+    range_times : float | npt.NDArray[np.floating]
         range times where to compute the look angles, a float or a (N,) array
     look_direction : str | GeocodingSide
         side where to perform geocoding
     geodetic_altitude : float | None, optional
         the altitude over wgs84, if None is set to 0, by default None,
-    frequencies_doppler_centroid : float | FloatArrayType | None, optional
+    frequencies_doppler_centroid : float | npt.NDArray[np.floating] | None, optional
         frequency_doppler_centroid value, if None is set to 0, by default None
     carrier_wavelength : float | None, optional
         carrier signal wavelength, if None is set to 1, by default None
@@ -138,7 +139,7 @@ def compute_look_angles(
 
     Returns
     -------
-    float | FloatArrayType
+    float | npt.NDArray[np.floating]
         look angles in radians/degrees corresponding to the input range times at the given azimuth time
     """
     sensor_position = trajectory.position(azimuth_time)
@@ -163,7 +164,7 @@ def compute_look_angles_core(
     ground_points: CoordinatesArrayType,
     nadir_directions: CoordinatesArrayType | None = None,
     assume_nadir_directions_normalized: bool = False,
-) -> float | FloatArrayType:
+) -> float | npt.NDArray[np.floating]:
     """Compute the look angles in radians from sensor positions and ground points.
 
     Parameters
@@ -179,7 +180,7 @@ def compute_look_angles_core(
 
     Returns
     -------
-    float | FloatArrayType
+    float | npt.NDArray[np.floating]
         scalar or (N,) look angles in radians
 
     Raises
@@ -244,7 +245,7 @@ def compute_incidence_angles_core(
     ground_points: CoordinatesArrayType,
     surface_normals: CoordinatesArrayType | None = None,
     assume_surface_normals_normalized: bool = False,
-) -> float | FloatArrayType:
+) -> float | npt.NDArray[np.floating]:
     """Compute the incidence angles in radians from sensor positions and ground points.
 
     If surface normals are not specified, points are used to define the surface normals
@@ -267,7 +268,7 @@ def compute_incidence_angles_core(
 
     Returns
     -------
-    float | FloatArrayType
+    float | npt.NDArray[np.floating]
         scalar or (N,) look angles in radians
 
     Raises

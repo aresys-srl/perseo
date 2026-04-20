@@ -9,6 +9,7 @@ Processing - ROI Features
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from numpydantic import NDArray, Shape
 from scipy.constants import speed_of_light
 from scipy.fft import fft2, fftshift, ifft2, ifftshift
@@ -17,7 +18,6 @@ from scipy.signal.windows import hamming
 
 from perseo_core.models.enums import SARAcquisitionMode, SARRadiometricQuantity
 from perseo_core.models.protocols import SARCoordinatesFunction
-from perseo_core.models.types import FloatArrayType
 from perseo_core.processing.signal_features import estimate_modulation_frequency2d, locate_max_2d_interp
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
@@ -54,7 +54,7 @@ def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1
 
 def radiometric_correction(
     data: ROIArrayType,
-    incidence_angle: FloatArrayType | ROIArrayType,
+    incidence_angle: npt.NDArray[np.floating] | ROIArrayType,
     input_quantity: SARRadiometricQuantity,
     output_quantity: SARRadiometricQuantity,
     exp_power: float = 0.5,
@@ -66,7 +66,7 @@ def radiometric_correction(
     ----------
     data : ROIArrayType
         input array whose data need to be converted from a type to another, array should be in the form (samples, lines)
-    incidence_angle : FloatArrayType
+    incidence_angle : npt.NDArray[np.floating]
         incidence angle array, same size as range axis of input data or same data size: (samples,) or (samples, lines)
     input_quantity : SARRadiometricQuantity
         input radiometric quantity
