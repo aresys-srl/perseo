@@ -5,9 +5,7 @@
 
 from __future__ import annotations
 
-import itertools
 import unittest
-from dataclasses import dataclass
 
 import numpy as np
 from numpy import typing as npt
@@ -82,22 +80,8 @@ def _ellipse_equation_residual(ground_points: np.ndarray) -> np.ndarray:
     return ellipse_residual
 
 
-@dataclass
-class BistaticTestCase:
-    sensor_positions_rx: npt.NDArray
-    sensor_velocities_rx: npt.NDArray
-    sensor_positions_tx: npt.NDArray
-    sensor_velocities_tx: npt.NDArray
-    range_times: float | npt.NDArray
-    doppler_frequencies: float | npt.NDArray
-    initial_guesses: npt.NDArray
-    expected_shape: tuple[int, ...]
-
-
-class DirectGeocodingBistaticTest(unittest.TestCase):
-    """Testing all direct_geocoding_bistatic case 1* scenarios"""
-
-    def setUp(self):
+class _DirectGeocodingBistaticBase(unittest.TestCase):
+    def setUp(self) -> None:
         self.position = np.array([4387348.749948771, 762123.3489877012, 4553067.931912004])
         self.velocity = np.array([-856.1384108174528, -329.7629775067583, 398.55830806407346])
         self.initial_guess = np.array([4385932.628762595, 764443.4718341012, 4551945.624046889])
@@ -116,21 +100,36 @@ class DirectGeocodingBistaticTest(unittest.TestCase):
 
         self.results = np.array([4385882.195057692, 764600.9869913795, 4551967.6143934])
 
-    def _check_residuals(self, case: BistaticTestCase, out: npt.NDArray[np.floating]):
+    def _expected_output(self, shape: tuple[int, ...]) -> npt.NDArray[np.floating]:
+        return np.full(shape, self.results)
+
+
+class DirectGeocodingBistaticTest(_DirectGeocodingBistaticBase):
+    """Testing direct_geocoding_bistatic with consolidated subtests."""
+
+    def _check_residuals(
+        self,
+        sensor_positions_rx: npt.NDArray,
+        sensor_velocities_rx: npt.NDArray,
+        sensor_positions_tx: npt.NDArray,
+        sensor_velocities_tx: npt.NDArray,
+        range_times: float | npt.NDArray,
+        out: npt.NDArray[np.floating],
+    ) -> None:
         doppler_residual = doppler_equation_bistatic_residuals(
-            sensor_pos_rx=case.sensor_positions_rx,
-            sensor_pos_tx=case.sensor_positions_tx,
-            sensor_vel_rx=case.sensor_velocities_rx,
-            sensor_vel_tx=case.sensor_velocities_tx,
+            sensor_pos_rx=sensor_positions_rx,
+            sensor_pos_tx=sensor_positions_tx,
+            sensor_vel_rx=sensor_velocities_rx,
+            sensor_vel_tx=sensor_velocities_tx,
             ground_points=out,
             doppler_freq=self.doppler_frequency,
             wavelength=self.wavelength,
         )
         range_residual = _range_equation_residual_bistatic(
-            sensor_pos_rx=case.sensor_positions_rx,
-            sensor_pos_tx=case.sensor_positions_tx,
+            sensor_pos_rx=sensor_positions_rx,
+            sensor_pos_tx=sensor_positions_tx,
             ground_points=out,
-            range_time=case.range_times,
+            range_time=range_times,
         )
         ellipse_residual = _ellipse_equation_residual(ground_points=out)
 
@@ -138,658 +137,732 @@ class DirectGeocodingBistaticTest(unittest.TestCase):
         np.testing.assert_allclose(range_residual, 0, atol=self.residual_tolerance, rtol=0)
         np.testing.assert_allclose(ellipse_residual, 0, atol=self.residual_tolerance, rtol=0)
 
-    def _check_output(self, case: BistaticTestCase, out: npt.NDArray[np.floating]):
-        self.assertEqual(out.shape, case.expected_shape)
+    def _check_output(self, expected_shape: tuple[int, ...], out: npt.NDArray[np.floating]) -> None:
+        self.assertEqual(out.shape, expected_shape)
         np.testing.assert_allclose(
             out,
-            np.full(case.expected_shape, self.results),
+            self._expected_output(expected_shape),
             atol=self.tolerance,
             rtol=0,
         )
 
-    def _generate_cases_1_point(self):
-        """Use itertools.product to generate all valid combinations"""
-        positions = [self.position, self.position.reshape(1, 3)]
-        velocities = [self.velocity, self.velocity.reshape(1, 3)]
-        initial_guesses = [None, self.initial_guess, self.initial_guess.reshape(1, 3)]
-
-        for pos_rx, vel_rx, pos_tx, vel_tx, init_guess in itertools.product(
-            positions, velocities, positions, velocities, initial_guesses
-        ):
-            if init_guess is not None:
-                if init_guess.ndim > 1 and pos_tx.ndim == 1 and pos_rx.ndim == 1:
-                    continue
-
-            expected_shape = (1, 3) if (pos_rx.ndim > 1 or pos_tx.ndim > 1) else (3,)
-
-            yield BistaticTestCase(
-                sensor_positions_rx=pos_rx,
-                sensor_velocities_rx=vel_rx,
-                sensor_positions_tx=pos_tx,
-                sensor_velocities_tx=vel_tx,
-                range_times=self.range_times[0],
-                doppler_frequencies=self.doppler_frequency,
-                initial_guesses=init_guess,
-                expected_shape=expected_shape,
-            )
-
-    def test_direct_geocoding_bistatic_1_point(self):
-        for case in self._generate_cases_1_point():
-            out = direct_geocoding_bistatic(
-                sensor_positions_rx=case.sensor_positions_rx,
-                sensor_velocities_rx=case.sensor_velocities_rx,
-                sensor_positions_tx=case.sensor_positions_tx,
-                sensor_velocities_tx=case.sensor_velocities_tx,
-                range_times=case.range_times,
-                look_direction=self.look_direction,
-                altitude=self.altitude,
-                doppler_frequencies=case.doppler_frequencies,
-                wavelength=self.wavelength,
-                initial_guesses=case.initial_guesses,
-            )
-
-            self._check_residuals(case, out)
-            self._check_output(case, out)
-
-    def _generate_cases_N_points(self):
-        """Generate all case 1a, 1b, 1c"""
-
-        pos_rx = np.full((self.N, 3), self.position)
-        vel_rx = np.full((self.N, 3), self.velocity)
-
-        # TX variants
-        tx_variants = [
-            (self.position, self.velocity),  # (3,)
-            (self.position.reshape(1, 3), self.velocity.reshape(1, 3)),  # (1,3)
+    def test_direct_geocoding_bistatic_1_point(self) -> None:
+        """Testing direct_geocoding_bistatic with 1-point cases."""
+        test_cases = [
+            {
+                "name": "1-point rx_pos=1d rx_vel=1d tx_pos=1d tx_vel=1d init=none",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": None,
+                "expected_shape": (3,),
+            },
+            {
+                "name": "1-point rx_pos=1d rx_vel=1d tx_pos=1d tx_vel=1d init=1d",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (3,),
+            },
+            {
+                "name": "1-point rx_pos=1d rx_vel=1d tx_pos=1d tx_vel=1d init=2d",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (3,),
+            },
+            {
+                "name": "1-point rx_pos=1d rx_vel=1d tx_pos=2d tx_vel=2d init=none",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": None,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "1-point rx_pos=1d rx_vel=1d tx_pos=2d tx_vel=2d init=1d",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "1-point rx_pos=1d rx_vel=1d tx_pos=2d tx_vel=2d init=2d",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "1-point rx_pos=2d rx_vel=2d tx_pos=1d tx_vel=1d init=none",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": None,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "1-point rx_pos=2d rx_vel=2d tx_pos=1d tx_vel=1d init=1d",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "1-point rx_pos=2d rx_vel=2d tx_pos=2d tx_vel=2d init=none",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": None,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "1-point rx_pos=2d rx_vel=2d tx_pos=2d tx_vel=2d init=2d",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (1, 3),
+            },
         ]
 
-        # Initial guess variants
-        init_variants = [
-            self.initial_guess,  # (3,) -> case 1a
-            np.full((self.N, 3), self.initial_guess),  # (N,3) -> case 1b
-        ]
-
-        for (pos_tx, vel_tx), init in itertools.product(tx_variants, init_variants):
-            yield BistaticTestCase(
-                sensor_positions_rx=pos_rx,
-                sensor_velocities_rx=vel_rx,
-                sensor_positions_tx=pos_tx,
-                sensor_velocities_tx=vel_tx,
-                range_times=self.range_times,
-                doppler_frequencies=self.doppler_frequency,
-                initial_guesses=init,
-                expected_shape=(self.N, 3),
-            )
-
-    def test_direct_geocoding_bistatic_N_points(self):
-        for case in self._generate_cases_N_points():
-            out = direct_geocoding_bistatic(
-                sensor_positions_rx=case.sensor_positions_rx,
-                sensor_velocities_rx=case.sensor_velocities_rx,
-                sensor_positions_tx=case.sensor_positions_tx,
-                sensor_velocities_tx=case.sensor_velocities_tx,
-                range_times=self.range_times,
-                look_direction=self.look_direction,
-                altitude=self.altitude,
-                doppler_frequencies=case.doppler_frequencies,
-                wavelength=self.wavelength,
-                initial_guesses=case.initial_guesses,
-            )
-
-            self._check_residuals(case, out)
-            self._check_output(case, out)
-
-    def _generate_cases_M_points(self):
-        """Generate all case 2a, 2b, 2c"""
-
-        # RX variants (scalar or (1,3))
-        rx_variants = [
-            (self.position, self.velocity),  # (3,)
-            (self.position.reshape(1, 3), self.velocity.reshape(1, 3)),  # (1,3)
-        ]
-
-        # TX always (M,3)
-        pos_tx = np.full((self.M, 3), self.position)
-        vel_tx = np.full((self.M, 3), self.velocity)
-
-        # Initial guess variants
-        init_variants = [
-            self.initial_guess,  # (3,) -> case 2a / 2b
-            self.initial_guess.reshape(1, 3),  # (1,3) -> case 2c
-        ]
-
-        # Doppler variants
-        doppler_variants = [
-            self.doppler_frequency,  # scalar -> 2a / 2c
-            np.repeat(self.doppler_frequency, self.M),  # (M,) -> 2b
-        ]
-
-        for (pos_rx, vel_rx), init, doppler in itertools.product(rx_variants, init_variants, doppler_variants):
-            yield BistaticTestCase(
-                sensor_positions_rx=pos_rx,
-                sensor_velocities_rx=vel_rx,
-                sensor_positions_tx=pos_tx,
-                sensor_velocities_tx=vel_tx,
-                initial_guesses=init,
-                range_times=np.repeat(self.range_times, self.M),
-                doppler_frequencies=doppler,
-                expected_shape=(self.M, 3),
-            )
-
-    def test_direct_geocoding_bistatic_M_points(self):
-        for case in self._generate_cases_M_points():
-            out = direct_geocoding_bistatic(
-                sensor_positions_rx=case.sensor_positions_rx,
-                sensor_velocities_rx=case.sensor_velocities_rx,
-                sensor_positions_tx=case.sensor_positions_tx,
-                sensor_velocities_tx=case.sensor_velocities_tx,
-                range_times=case.range_times,
-                look_direction=self.look_direction,
-                altitude=self.altitude,
-                doppler_frequencies=case.doppler_frequencies,
-                wavelength=self.wavelength,
-                initial_guesses=case.initial_guesses,
-            )
-
-            self._check_residuals(case, out)
-            self._check_output(case, out)
-
-    def _generate_cases_3_points(self):
-        """Generate all case 3a, 3b, 3c"""
-
-        pos_rx = np.full((self.N, 3), self.position)
-        vel_rx = np.full((self.N, 3), self.velocity)
-
-        pos_tx = np.full((self.M, 3), self.position)
-        vel_tx = np.full((self.M, 3), self.velocity)
-
-        range_times = np.repeat(self.range_times[0], self.M)
-
-        # Initial guess variants (3a, 3b, 3c)
-        init_variants = [
-            self.initial_guess,  # (3,) -> 3a
-            self.initial_guess.reshape(1, 3),  # (1,3) -> 3b
-            np.full((self.N, 3), self.initial_guess),  # (N,3) -> 3c
-        ]
-
-        # Doppler variants (scalar vs array)
-        doppler_variants = [
-            self.doppler_frequency,  # scalar -> 3a, 3b
-            np.repeat(self.doppler_frequency, self.M),  # (M,) -> 3c
-        ]
-
-        for init, doppler in itertools.product(init_variants, doppler_variants):
-            # Skip invalid combos to match original cases exactly
-            if isinstance(doppler, np.ndarray) and init.ndim != 2:
-                continue  # only valid for 3c
-
-            yield BistaticTestCase(
-                sensor_positions_rx=pos_rx,
-                sensor_velocities_rx=vel_rx,
-                sensor_positions_tx=pos_tx,
-                sensor_velocities_tx=vel_tx,
-                range_times=range_times,
-                doppler_frequencies=doppler,
-                initial_guesses=init,
-                expected_shape=(self.N, self.M, 3),
-            )
-
-    def test_direct_geocoding_bistatic_3_points(self):
-        for case in self._generate_cases_3_points():
-            out = direct_geocoding_bistatic(
-                sensor_positions_rx=case.sensor_positions_rx,
-                sensor_velocities_rx=case.sensor_velocities_rx,
-                sensor_positions_tx=case.sensor_positions_tx,
-                sensor_velocities_tx=case.sensor_velocities_tx,
-                range_times=case.range_times,
-                look_direction=self.look_direction,
-                altitude=self.altitude,
-                doppler_frequencies=case.doppler_frequencies,
-                wavelength=self.wavelength,
-                initial_guesses=case.initial_guesses,
-            )
-
-            for range_index in range(self.M):
-                case_range = BistaticTestCase(
-                    sensor_positions_rx=case.sensor_positions_rx,
-                    sensor_velocities_rx=case.sensor_velocities_rx,
-                    sensor_positions_tx=case.sensor_positions_tx[range_index, :],
-                    sensor_velocities_tx=case.sensor_velocities_tx[range_index, :],
-                    range_times=case.range_times[range_index] if np.size(case.range_times) > 1 else case.range_times,
-                    doppler_frequencies=case.doppler_frequencies[range_index]
-                    if np.size(case.doppler_frequencies) > 1
-                    else case.doppler_frequencies,
-                    initial_guesses=case.initial_guesses,
-                    expected_shape=case.expected_shape,
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_bistatic(
+                    sensor_positions_rx=case["sensor_positions_rx"],
+                    sensor_velocities_rx=case["sensor_velocities_rx"],
+                    sensor_positions_tx=case["sensor_positions_tx"],
+                    sensor_velocities_tx=case["sensor_velocities_tx"],
+                    range_times=case["range_times"],
+                    look_direction=self.look_direction,
+                    altitude=self.altitude,
+                    doppler_frequencies=case["doppler_frequencies"],
+                    wavelength=self.wavelength,
+                    initial_guesses=case["initial_guesses"],
                 )
-                self._check_residuals(case_range, out[:, range_index, :])
-
-            self._check_output(case, out)
-
-
-class DirectGeocodingBistaticCoreTest(unittest.TestCase):
-    """Testing direct geocoding bistatic core"""
-
-    def setUp(self):
-        self.position = np.array(
-            [4387348.749948771, 762123.3489877012, 4553067.931912004],
-        )
-        self.velocity = np.array(
-            [-856.1384108174528, -329.7629775067583, 398.55830806407346],
-        )
-        self.initial_guess = np.array([4385932.628762595, 764443.4718341012, 4551945.624046889])
-        self.range_times = np.array([2.05624579e-05])
-        self.doppler_freqs = 0.0
-        self.geodetic_altitude = 0.0
-        self.wavelength = 1.0
-        self.N = 4
-        self.M = 5
-
-        self.tolerance = 1e-6
-
-        self.results = np.array([4385882.195057692, 764600.9869913795, 4551967.6143934])
-
-    def test_direct_geocoding_bistatic_core_case0a(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 0a"""
-
-        # case 0a: 1 pos rx (3,), 1 vel rx (3,), 1 init guess (3,), 1 pos tx (3,), 1 vel tx (3,), 1 rng time
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=self.position,
-            sensor_velocities_rx=self.velocity,
-            initial_guesses=self.initial_guess,
-            sensor_positions_tx=self.position,
-            sensor_velocities_tx=self.velocity,
-            range_times=self.range_times[0],
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 1)
-        self.assertEqual(out.shape, (3,))
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case0b(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 0b"""
-
-        # case 0b: 1 pos rx (1,3), 1 vel rx (1,3), 1 init guess (1,3), 1 pos tx (1,3), 1 vel tx (1,3), 1 rng time
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=self.position.reshape(1, 3),
-            sensor_velocities_rx=self.velocity.reshape(1, 3),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_positions_tx=self.position.reshape(1, 3),
-            sensor_velocities_tx=self.velocity.reshape(1, 3),
-            range_times=self.range_times[0],
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (1, 3))
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case0c(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 0c"""
-
-        # case 0c: 1 pos rx (3,), 1 vel rx (3,), 1 init guess (3,), 1 pos tx (1,3), 1 vel tx (1,3), 1 rng time
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=self.position,
-            sensor_velocities_rx=self.velocity,
-            initial_guesses=self.initial_guess,
-            sensor_positions_tx=self.position.reshape(1, 3),
-            sensor_velocities_tx=self.velocity.reshape(1, 3),
-            range_times=self.range_times[0],
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (1, 3))
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case1a(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 1a"""
-
-        # case 1a: N pos rx (N,3), N vel rx (N,3), 1 init guess (3,), 1 pos tx (3,), 1 vel tx (3,), 1 rng time
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess,
-            sensor_positions_tx=self.position,
-            sensor_velocities_tx=self.velocity,
-            range_times=self.range_times[0],
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case1b(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 1b"""
-
-        # case 1b: N pos rx (N,3), N vel rx (N,3), N init guess (N,3), 1 pos tx (3,), 1 vel tx (3,), 1 rng time
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=np.full((self.N, 3), self.initial_guess),
-            sensor_positions_tx=self.position,
-            sensor_velocities_tx=self.velocity,
-            range_times=self.range_times[0],
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case1c(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 1c"""
-
-        # case 1c: N pos rx (N,3), N vel rx (N,3), 1 init guess (1,3), 1 pos tx (1,3), 1 vel tx (1,3), 1 rng time
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_positions_tx=self.position.reshape(1, 3),
-            sensor_velocities_tx=self.velocity.reshape(1, 3),
-            range_times=self.range_times[0],
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.N, 3))
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case2a(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 2a"""
-
-        # case 2a: 1 pos rx (3,), 1 vel rx (3,), 1 init guess (3,), M pos tx (M,3), M vel tx (M,3), M rng times
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=self.position,
-            sensor_velocities_rx=self.velocity,
-            initial_guesses=self.initial_guess,
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case2b(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 2a"""
-
-        # case 2a: 1 pos rx (1,3), 1 vel rx (1,3), 1 init guess (1,3), M pos tx (M,3), M vel tx (M,3), M rng times
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=self.position.reshape(1, 3),
-            sensor_velocities_rx=self.velocity.reshape(1, 3),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case2c(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 2c"""
-
-        # case 2c: 1 pos rx (3,), 1 vel rx (3,), 1 init guess (3,),
-        # M pos tx (M,3), M vel tx (M,3), M rng times, M doppler freqs
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=self.position,
-            sensor_velocities_rx=self.velocity,
-            initial_guesses=self.initial_guess,
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 2)
-        self.assertEqual(out.shape, (self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case3a(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 3a"""
-
-        # case 3a: N pos rx (N,3), N vel rx (N,3), 1 init guess (3,),
-        # M pos tx (M,3), M vel tx (M,3), M rng times
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess,
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case3b(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 3b"""
-
-        # case 3b: N pos rx (N,3), N vel rx (N,3), 1 init guess (1,3),
-        # M pos tx (M,3), M vel tx (M,3), M rng times, M doppler freqs
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case3c(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 3c"""
-
-        # case 3c: N pos rx (N,3), N vel rx (N,3), N init guess (N,3),
-        # M pos tx (M,3), M vel tx (M,3), M rng times
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=np.full((self.N, 3), self.initial_guess),
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=self.doppler_freqs,
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case4(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 4"""
-
-        # case 4: N pos rx (N,3), N vel rx (N,3), N init guess (N,3),
-        # M pos tx (M,3), M vel tx (M,3), M rng times, M doppler freqs
-        out = direct_geocoding_bistatic_core(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=np.full((self.N, 3), self.initial_guess),
-            sensor_positions_tx=np.full((self.M, 3), self.position),
-            sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-            range_times=np.repeat(self.range_times[0], self.M),
-            altitude=self.geodetic_altitude,
-            doppler_frequencies=np.repeat(self.doppler_freqs, self.M),
-            wavelength=self.wavelength,
-        )
-
-        self.assertEqual(out.ndim, 3)
-        self.assertEqual(out.shape, (self.N, self.M, 3))
-        np.testing.assert_allclose(out, np.full((self.N, self.M, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_direct_geocoding_bistatic_core_case5(self) -> None:
-        """Testing direct_geocoding_bistatic_core, case 5"""
-
-        # case 5: N pos rx (N,3), N vel rx (N,3), N init guess (N,3),
-        # M pos tx (M,3), M vel tx (M,3), M rng times, N doppler freqs
-        # raising ambiguous input correlation error: mismatch range times / frequencies
-        with self.assertRaises(RuntimeError):
-            direct_geocoding_bistatic_core(
-                sensor_positions_rx=np.full((self.N, 3), self.position),
-                sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-                initial_guesses=np.full((self.N, 3), self.initial_guess),
-                sensor_positions_tx=np.full((self.M, 3), self.position),
-                sensor_velocities_tx=np.full((self.M, 3), self.velocity),
-                range_times=np.repeat(self.range_times[0], self.M),
-                altitude=self.geodetic_altitude,
-                doppler_frequencies=np.repeat(self.doppler_freqs, self.N),
-                wavelength=self.wavelength,
-            )
-
-
-class NewtonForDirectGeocodingBistaticTest(unittest.TestCase):
-    """Testing Newton for direct geocoding bistatic core"""
-
-    def setUp(self):
-        self.position = np.array(
-            [4387348.749948771, 762123.3489877012, 4553067.931912004],
-        )
-        self.velocity = np.array(
-            [-856.1384108174528, -329.7629775067583, 398.55830806407346],
-        )
-        self.initial_guess = np.array([4385932.628762595, 764443.4718341012, 4551945.624046889])
-        self.range_times = 2.05624579e-05
-        self.doppler_freqs = 0.0
-        self.geodetic_altitude = 0.0
-        self.wavelength = 1.0
-        self.N = 4
-        self.M = 5
-
-        self.tolerance = 1e-6
-
-        self.results = np.array([4385882.195057692, 764600.9869913795, 4551967.6143934])
-
-    def test_newton_for_direct_geocoding_bistatic_case0(self) -> None:
-        """Testing Newton for direct geocoding bistatic, case 0"""
-
-        # case 0: 1 pos (3,), 1 vel (3,), 1 init guess (3,), 1 rng time
-        out = _direct_geocoding_bistatic_newton(
-            sensor_positions_rx=self.position,
-            sensor_velocities_rx=self.velocity,
-            initial_guesses=self.initial_guess,
-            sensor_position_tx=self.position,
-            sensor_velocity_tx=self.velocity,
-            range_time=self.range_times,
-            doppler_frequency=self.doppler_freqs,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertTrue(out.ndim == 1)
-        np.testing.assert_allclose(out, self.results, atol=self.tolerance, rtol=0)
-
-    def test_newton_for_direct_geocoding_bistatic_case1(self) -> None:
-        """Testing Newton for direct geocoding bistatic, case 1"""
-
-        # case 1: 1 pos (1, 3), 1 vel (1, 3), 1 init guess (1, 3), 1 rng time
-        out = _direct_geocoding_bistatic_newton(
-            sensor_positions_rx=self.position.reshape(1, 3),
-            sensor_velocities_rx=self.velocity.reshape(1, 3),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_position_tx=self.position,
-            sensor_velocity_tx=self.velocity,
-            range_time=self.range_times,
-            doppler_frequency=self.doppler_freqs,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, self.results.reshape(1, 3), atol=self.tolerance, rtol=0)
-
-    def test_newton_for_direct_geocoding_bistatic_case2a(self) -> None:
-        """Testing Newton for direct geocoding bistatic, case 2a"""
-
-        # case 2a: N pos (N, 3), N vel (N, 3), 1 init guess (3,), 1 rng time
-        out = _direct_geocoding_bistatic_newton(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess,
-            sensor_position_tx=self.position,
-            sensor_velocity_tx=self.velocity,
-            range_time=self.range_times,
-            doppler_frequency=self.doppler_freqs,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_newton_for_direct_geocoding_bistatic_case2b(self) -> None:
-        """Testing Newton for direct geocoding bistatic, case 2b"""
-
-        # case 2b: N pos (N, 3), N vel (N, 3), 1 init guess (1, 3), 1 rng time
-        out = _direct_geocoding_bistatic_newton(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_position_tx=self.position,
-            sensor_velocity_tx=self.velocity,
-            range_time=self.range_times,
-            doppler_frequency=self.doppler_freqs,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
-
-    def test_newton_for_direct_geocoding_bistatic_case3(self) -> None:
-        """Testing Newton for direct geocoding bistatic, case 3"""
-
-        # case 3: N pos (N, 3), N vel (N, 3), N init guess (N, 3), 1 rng time
-        out = _direct_geocoding_bistatic_newton(
-            sensor_positions_rx=np.full((self.N, 3), self.position),
-            sensor_velocities_rx=np.full((self.N, 3), self.velocity),
-            initial_guesses=self.initial_guess.reshape(1, 3),
-            sensor_position_tx=self.position,
-            sensor_velocity_tx=self.velocity,
-            range_time=self.range_times,
-            doppler_frequency=self.doppler_freqs,
-            wavelength=self.wavelength,
-            altitude=self.geodetic_altitude,
-        )
-
-        self.assertTrue(out.ndim == 2)
-        np.testing.assert_allclose(out, np.full((self.N, 3), self.results), atol=self.tolerance, rtol=0)
+
+                self._check_residuals(
+                    case["sensor_positions_rx"],
+                    case["sensor_velocities_rx"],
+                    case["sensor_positions_tx"],
+                    case["sensor_velocities_tx"],
+                    case["range_times"],
+                    out,
+                )
+                self._check_output(case["expected_shape"], out)
+
+    def test_direct_geocoding_bistatic_N_points(self) -> None:
+        """Testing direct_geocoding_bistatic with N-point cases."""
+        test_cases = [
+            {
+                "name": "N-points tx_pos=1d tx_vel=1d init=1d",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times,
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "N-points tx_pos=1d tx_vel=1d init=2d",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times,
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "N-points tx_pos=2d tx_vel=2d init=1d",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times,
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "N-points tx_pos=2d tx_vel=2d init=2d",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times,
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, 3),
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_bistatic(
+                    sensor_positions_rx=case["sensor_positions_rx"],
+                    sensor_velocities_rx=case["sensor_velocities_rx"],
+                    sensor_positions_tx=case["sensor_positions_tx"],
+                    sensor_velocities_tx=case["sensor_velocities_tx"],
+                    range_times=case["range_times"],
+                    look_direction=self.look_direction,
+                    altitude=self.altitude,
+                    doppler_frequencies=case["doppler_frequencies"],
+                    wavelength=self.wavelength,
+                    initial_guesses=case["initial_guesses"],
+                )
+
+                self._check_residuals(
+                    case["sensor_positions_rx"],
+                    case["sensor_velocities_rx"],
+                    case["sensor_positions_tx"],
+                    case["sensor_velocities_tx"],
+                    case["range_times"],
+                    out,
+                )
+                self._check_output(case["expected_shape"], out)
+
+    def test_direct_geocoding_bistatic_M_points(self) -> None:
+        """Testing direct_geocoding_bistatic with M-point cases."""
+        test_cases = [
+            {
+                "name": "M-points rx_pos=1d rx_vel=1d init=1d doppler=scalar",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=1d rx_vel=1d init=1d doppler=array",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": np.repeat(self.doppler_frequency, self.M),
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=1d rx_vel=1d init=2d doppler=scalar",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=2d rx_vel=2d init=1d doppler=scalar",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=1d rx_vel=1d init=2d doppler=scalar",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=1d rx_vel=1d init=2d doppler=array",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": np.repeat(self.doppler_frequency, self.M),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=2d rx_vel=2d init=1d doppler=scalar",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=2d rx_vel=2d init=1d doppler=array",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": np.repeat(self.doppler_frequency, self.M),
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "M-points rx_pos=2d rx_vel=2d init=2d doppler=array",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times, self.M),
+                "doppler_frequencies": np.repeat(self.doppler_frequency, self.M),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.M, 3),
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_bistatic(
+                    sensor_positions_rx=case["sensor_positions_rx"],
+                    sensor_velocities_rx=case["sensor_velocities_rx"],
+                    sensor_positions_tx=case["sensor_positions_tx"],
+                    sensor_velocities_tx=case["sensor_velocities_tx"],
+                    range_times=case["range_times"],
+                    look_direction=self.look_direction,
+                    altitude=self.altitude,
+                    doppler_frequencies=case["doppler_frequencies"],
+                    wavelength=self.wavelength,
+                    initial_guesses=case["initial_guesses"],
+                )
+
+                if out.ndim == 2:
+                    self._check_residuals(
+                        case["sensor_positions_rx"],
+                        case["sensor_velocities_rx"],
+                        case["sensor_positions_tx"],
+                        case["sensor_velocities_tx"],
+                        case["range_times"],
+                        out,
+                    )
+                self._check_output(case["expected_shape"], out)
+
+    def test_direct_geocoding_bistatic_3_points(self) -> None:
+        """Testing direct_geocoding_bistatic with 3-point cases (N x M)."""
+        test_cases = [
+            {
+                "name": "3-points init=1d doppler=scalar",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "3-points init=2d doppler=scalar",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "3-points init=2d doppler=array",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_frequency, self.M),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "3-points init=3d doppler=scalar",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_frequency,
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "3-points init=3d doppler=array",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_frequency, self.M),
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "expected_shape": (self.N, self.M, 3),
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_bistatic(
+                    sensor_positions_rx=case["sensor_positions_rx"],
+                    sensor_velocities_rx=case["sensor_velocities_rx"],
+                    sensor_positions_tx=case["sensor_positions_tx"],
+                    sensor_velocities_tx=case["sensor_velocities_tx"],
+                    range_times=case["range_times"],
+                    look_direction=self.look_direction,
+                    altitude=self.altitude,
+                    doppler_frequencies=case["doppler_frequencies"],
+                    wavelength=self.wavelength,
+                    initial_guesses=case["initial_guesses"],
+                )
+
+                if out.ndim == 3:
+                    for range_index in range(self.M):
+                        self._check_residuals(
+                            case["sensor_positions_rx"],
+                            case["sensor_velocities_rx"],
+                            case["sensor_positions_tx"][range_index, :],
+                            case["sensor_velocities_tx"][range_index, :],
+                            case["range_times"][range_index]
+                            if np.size(case["range_times"]) > 1
+                            else case["range_times"],
+                            out[:, range_index, :],
+                        )
+                else:
+                    self._check_residuals(
+                        case["sensor_positions_rx"],
+                        case["sensor_velocities_rx"],
+                        case["sensor_positions_tx"],
+                        case["sensor_velocities_tx"],
+                        case["range_times"],
+                        out,
+                    )
+
+                self._check_output(case["expected_shape"], out)
+
+
+class DirectGeocodingBistaticCoreTest(_DirectGeocodingBistaticBase):
+    """Testing direct geocoding bistatic core with consolidated subtests."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.doppler_freqs = self.doppler_frequency
+        self.geodetic_altitude = self.altitude
+
+    def test_direct_geocoding_bistatic_core_cases(self) -> None:
+        """Testing direct_geocoding_bistatic_core success cases."""
+        test_cases = [
+            {
+                "name": "case0a: 1 pos (3,), 1 vel (3,), 1 rng time, 1 initial guess (3,)",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (3,),
+            },
+            {
+                "name": "case0b: 1 pos (1, 3), 1 vel (1, 3), 1 rng time, 1 initial guess (1, 3)",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "case0c: 1 pos (3,) + (1, 3), 1 vel (3,) + (1, 3), 1 rng time, 1 initial guess (3,)",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "case1a: N pos (N, 3), N vel (N, 3), 1 rng time, 1 initial guess (3,)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "case1b: N pos (N, 3), N vel (N, 3), 1 rng time, N initial guess (N, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position,
+                "sensor_velocities_tx": self.velocity,
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "case1c: N pos (N, 3), N vel (N, 3), 1 rng time, 1 initial guess (1, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": self.position.reshape(1, 3),
+                "sensor_velocities_tx": self.velocity.reshape(1, 3),
+                "range_times": self.range_times[0],
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "case2a: 1 pos (3,), 1 vel (3,), M rng times, 1 initial guess (3,)",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case2b: 1 pos (1, 3), 1 vel (1, 3), M rng times, 1 initial guess (1, 3)",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case2c: 1 pos (3,), 1 vel (3,), M rng times, M doppler freq",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.M, 3),
+            },
+            {
+                "name": "case3a: N pos (N, 3), N vel (N, 3), M rng times, 1 initial guess (3,)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "case3b: N pos (N, 3), N vel (N, 3), M rng times, M doppler freq, 1 init (1, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "case3c: N pos (N, 3), N vel (N, 3), M rng times, 1 doppler, N init (N, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": self.doppler_freqs,
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "expected_shape": (self.N, self.M, 3),
+            },
+            {
+                "name": "case4: N pos (N, 3), N vel (N, 3), M rng times, M doppler freq, N init (N, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.M),
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "expected_shape": (self.N, self.M, 3),
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = direct_geocoding_bistatic_core(
+                    sensor_positions_rx=case["sensor_positions_rx"],
+                    sensor_velocities_rx=case["sensor_velocities_rx"],
+                    initial_guesses=case["initial_guesses"],
+                    sensor_positions_tx=case["sensor_positions_tx"],
+                    sensor_velocities_tx=case["sensor_velocities_tx"],
+                    range_times=case["range_times"],
+                    altitude=self.geodetic_altitude,
+                    doppler_frequencies=case["doppler_frequencies"],
+                    wavelength=self.wavelength,
+                )
+
+                self.assertEqual(out.shape, case["expected_shape"])
+                np.testing.assert_allclose(
+                    out, self._expected_output(case["expected_shape"]), atol=self.tolerance, rtol=0
+                )
+
+    def test_direct_geocoding_bistatic_core_error_cases(self) -> None:
+        """Testing direct_geocoding_bistatic_core error cases."""
+        error_cases = [
+            {
+                "name": "case5: N doppler (N,) with M doppler (M,) - size mismatch",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "initial_guesses": np.full((self.N, 3), self.initial_guess),
+                "sensor_positions_tx": np.full((self.M, 3), self.position),
+                "sensor_velocities_tx": np.full((self.M, 3), self.velocity),
+                "range_times": np.repeat(self.range_times[0], self.M),
+                "doppler_frequencies": np.repeat(self.doppler_freqs, self.N),
+            },
+        ]
+
+        for case in error_cases:
+            with self.subTest(case=case["name"]):
+                with self.assertRaises(RuntimeError):
+                    direct_geocoding_bistatic_core(
+                        sensor_positions_rx=case["sensor_positions_rx"],
+                        sensor_velocities_rx=case["sensor_velocities_rx"],
+                        initial_guesses=case["initial_guesses"],
+                        sensor_positions_tx=case["sensor_positions_tx"],
+                        sensor_velocities_tx=case["sensor_velocities_tx"],
+                        range_times=case["range_times"],
+                        altitude=self.geodetic_altitude,
+                        doppler_frequencies=case["doppler_frequencies"],
+                        wavelength=self.wavelength,
+                    )
+
+
+class NewtonForDirectGeocodingBistaticTest(_DirectGeocodingBistaticBase):
+    """Testing Newton for direct geocoding bistatic core with consolidated subtests."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.range_time = self.range_times[0]
+        self.doppler_freqs = self.doppler_frequency
+        self.geodetic_altitude = self.altitude
+
+    def test_newton_for_direct_geocoding_bistatic_cases(self) -> None:
+        """Testing _direct_geocoding_bistatic_newton cases."""
+        test_cases = [
+            {
+                "name": "case0: 1 pos (3,), 1 vel (3,), 1 init guess (3,)",
+                "sensor_positions_rx": self.position,
+                "sensor_velocities_rx": self.velocity,
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (3,),
+            },
+            {
+                "name": "case1: 1 pos (1, 3), 1 vel (1, 3), 1 init guess (1, 3)",
+                "sensor_positions_rx": self.position.reshape(1, 3),
+                "sensor_velocities_rx": self.velocity.reshape(1, 3),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (1, 3),
+            },
+            {
+                "name": "case2a: N pos (N, 3), N vel (N, 3), 1 init guess (3,)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "initial_guesses": self.initial_guess,
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "case2b: N pos (N, 3), N vel (N, 3), 1 init guess (1, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, 3),
+            },
+            {
+                "name": "case3: N pos (N, 3), N vel (N, 3), 1 init guess (1, 3)",
+                "sensor_positions_rx": np.full((self.N, 3), self.position),
+                "sensor_velocities_rx": np.full((self.N, 3), self.velocity),
+                "initial_guesses": self.initial_guess.reshape(1, 3),
+                "expected_shape": (self.N, 3),
+            },
+        ]
+
+        for case in test_cases:
+            with self.subTest(case=case["name"]):
+                out = _direct_geocoding_bistatic_newton(
+                    sensor_positions_rx=case["sensor_positions_rx"],
+                    sensor_velocities_rx=case["sensor_velocities_rx"],
+                    initial_guesses=case["initial_guesses"],
+                    sensor_position_tx=self.position,
+                    sensor_velocity_tx=self.velocity,
+                    range_time=self.range_time,
+                    doppler_frequency=self.doppler_freqs,
+                    wavelength=self.wavelength,
+                    altitude=self.geodetic_altitude,
+                )
+
+                self.assertEqual(out.shape, case["expected_shape"])
+                np.testing.assert_allclose(
+                    out, self._expected_output(case["expected_shape"]), atol=self.tolerance, rtol=0
+                )
 
 
 if __name__ == "__main__":
