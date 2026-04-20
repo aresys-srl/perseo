@@ -6,9 +6,8 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from pyproj import Geod
-
-from perseo_core.models.types import CoordinatesArrayType
 
 WGS84 = Geod(ellps="WGS84")
 
@@ -30,7 +29,7 @@ def create_inflated_WGS84_ellipsoid(height: float) -> Geod:
 
 
 def compute_line_ellipsoid_intersections(
-    line_directions: CoordinatesArrayType, line_origins: CoordinatesArrayType, ellipsoid: Geod
+    line_directions: npt.NDArray[np.floating], line_origins: npt.NDArray[np.floating], ellipsoid: Geod
 ) -> tuple[tuple[np.ndarray]] | tuple[np.ndarray]:
     """Compute the intersections between lines and an ellipsoid
 
@@ -40,9 +39,9 @@ def compute_line_ellipsoid_intersections(
 
     Parameters
     ----------
-    line_directions : CoordinatesArrayType
+    line_directions : npt.NDArray[np.floating]
         (3,), (N, 3) one or more line directions, not necessarily normalized
-    line_origins : CoordinatesArrayType
+    line_origins : npt.NDArray[np.floating]
         (3,), (N, 3) one or more line origins
     ellipsoid : Geod
         ellipsoid

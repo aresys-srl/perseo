@@ -368,15 +368,15 @@ def _direct_geocoding_bistatic_newton(
 
     Parameters
     ----------
-    sensor_positions_rx : CoordinatesArrayType
+    sensor_positions_rx : npt.NDArray[np.floating]
         sensor rx position array, with shape (3,) or (N,3)
-    sensor_velocities_rx : CoordinatesArrayType
+    sensor_velocities_rx : npt.NDArray[np.floating]
         sensor rx velocities array, with shape (3,) or (N,3)
-    initial_guesses : CoordinatesArrayType
+    initial_guesses : npt.NDArray[np.floating]
         initial guesses array, with shape (3,) or (N,3)
-    sensor_position_tx : CoordinatesArrayType
+    sensor_position_tx : npt.NDArray[np.floating]
         sensor tx position, with shape (3,)
-    sensor_velocity_tx : CoordinatesArrayType
+    sensor_velocity_tx : npt.NDArray[np.floating]
         sensor tx velocity, with shape (3,)
     range_time : float
         range time

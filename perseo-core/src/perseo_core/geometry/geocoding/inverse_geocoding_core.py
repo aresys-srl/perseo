@@ -13,7 +13,6 @@ from scipy.interpolate import interp1d
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.models.types import (
-    CoordinatesArrayType,
     ExtendedDatetimeArrayType,
     ExtendedDatetimeType,
 )
@@ -21,11 +20,11 @@ from perseo_core.models.types import (
 
 def inverse_geocoding_monostatic_core(
     trajectory: Trajectory,
-    ground_points: CoordinatesArrayType,
+    ground_points: npt.NDArray[np.floating],
     initial_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType,
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
-    scene_velocity: CoordinatesArrayType | None = None,
+    scene_velocity: npt.NDArray[np.floating] | None = None,
     abs_time_tolerance: float = 1e-8,
     max_iter: int = 8,
 ) -> tuple[ExtendedDatetimeType | ExtendedDatetimeArrayType, float | npt.NDArray[np.floating]]:
@@ -50,7 +49,7 @@ def inverse_geocoding_monostatic_core(
     ----------
     trajectory : TwiceDifferentiable3DCurve
         sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : ExtendedDatetimeType | ExtendedDatetimeArrayType
         azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time
@@ -61,7 +60,7 @@ def inverse_geocoding_monostatic_core(
         each different input value
     wavelength : float
         carrier signal wavelength
-    scene_velocity : CoordinatesArrayType | None, optional
+    scene_velocity : npt.NDArray[np.floating] | None, optional
         ground scene velocity. If None, it's set to the default value of 0, by default None
     abs_time_tolerance : float, optional
         absolute time tolerance for newton convergence criteria, by default 1e-8
@@ -169,7 +168,7 @@ def inverse_geocoding_monostatic_core(
 def inverse_geocoding_bistatic_core(
     trajectory_rx: Trajectory,
     trajectory_tx: Trajectory,
-    ground_points: CoordinatesArrayType,
+    ground_points: npt.NDArray[np.floating],
     initial_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType,
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
@@ -196,7 +195,7 @@ def inverse_geocoding_bistatic_core(
         receiving sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
     trajectory_tx : TwiceDifferentiable3DCurve
         transmitting sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : ExtendedDatetimeType | ExtendedDatetimeArrayType
         azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time
@@ -396,7 +395,7 @@ def inverse_geocoding_bistatic_core(
 def inverse_geocoding_monostatic_init_core(
     trajectory: Trajectory,
     time_axis: ExtendedDatetimeArrayType,
-    ground_points: CoordinatesArrayType,
+    ground_points: npt.NDArray[np.floating],
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> list[ExtendedDatetimeArrayType]:
@@ -420,7 +419,7 @@ def inverse_geocoding_monostatic_init_core(
         sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
     time_axis : np.ndarray
         trajectory's time axis array
-    ground_points : np.ndarray
+    ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     frequencies_doppler_centroid : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
@@ -484,7 +483,7 @@ def inverse_geocoding_bistatic_init_core(
     trajectory_tx: Trajectory,
     time_axis_rx: ExtendedDatetimeArrayType,
     time_axis_tx: ExtendedDatetimeArrayType,
-    ground_points: CoordinatesArrayType,
+    ground_points: npt.NDArray[np.floating],
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> ExtendedDatetimeType | ExtendedDatetimeArrayType:
@@ -500,7 +499,7 @@ def inverse_geocoding_bistatic_init_core(
         receiving sensor's trajectory time axis array
     time_axis_tx : ExtendedDatetimeArrayType
         transmitting sensor's trajectory time axis array
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     frequencies_doppler_centroid : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
@@ -619,7 +618,7 @@ def inverse_geocoding_bistatic_init_core(
 def inverse_geocoding_attitude_core(
     trajectory: Trajectory,
     boresight_normal: Trajectory,
-    ground_points: CoordinatesArrayType,
+    ground_points: npt.NDArray[np.floating],
     initial_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType,
     abs_time_tolerance: float = 1e-8,
     max_iter: int = 8,
@@ -639,7 +638,7 @@ def inverse_geocoding_attitude_core(
         general sar orbit polynomial 3D curve wrapper
     boresight_normal : TwiceDifferentiable3DCurve
         boresight normal vector from attitude polynomial 3D curve
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         earth points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : ExtendedDatetimeType | ExtendedDatetimeArrayType
         initial guesses for newton resolution method, initial guess can be a

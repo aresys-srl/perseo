@@ -15,24 +15,24 @@ from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
 from perseo_core.models.enums import SensorLookDirection
 from perseo_core.models.trajectory import Trajectory
-from perseo_core.models.types import CoordinatesArrayType, ExtendedDatetimeType
+from perseo_core.models.types import ExtendedDatetimeType
 
 
 def get_geometric_squint_angle(
-    sensor_positions: CoordinatesArrayType,
-    sensor_velocities: CoordinatesArrayType,
-    ground_points: CoordinatesArrayType,
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
+    ground_points: npt.NDArray[np.floating],
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
     """Evaluating squint angle geometrically in radians/degrees.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         sensor positions array, with shape (3,) or (N, 3)
-    sensor_velocities : CoordinatesArrayType
+    sensor_velocities : npt.NDArray[np.floating]
         sensor velocities array, with shape (3,) or (N, 3)
-    ground_points : CoordinatesArrayType
+    ground_points : npt.NDArray[np.floating]
         ground points array, with shape (3,) or (N, 3)
     radians : bool, optional
         output angles are expressed in radians if this flag is set to True (default), if False are expressed in degrees
@@ -160,20 +160,20 @@ def compute_look_angles(
 
 
 def compute_look_angles_core(
-    sensor_positions: CoordinatesArrayType,
-    ground_points: CoordinatesArrayType,
-    nadir_directions: CoordinatesArrayType | None = None,
+    sensor_positions: npt.NDArray[np.floating],
+    ground_points: npt.NDArray[np.floating],
+    nadir_directions: npt.NDArray[np.floating] | None = None,
     assume_nadir_directions_normalized: bool = False,
 ) -> float | npt.NDArray[np.floating]:
     """Compute the look angles in radians from sensor positions and ground points.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more sensor positions
-    nadir_directions : CoordinatesArrayType
+    nadir_directions : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more nadir directions
-    points : CoordinatesArrayType
+    points : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more points
     assume_nadir_directions_normalized : bool, optional
         True to skip nadir directions normalization, by default False
@@ -241,9 +241,9 @@ def compute_look_angles_core(
 
 
 def compute_incidence_angles_core(
-    sensor_positions: CoordinatesArrayType,
-    ground_points: CoordinatesArrayType,
-    surface_normals: CoordinatesArrayType | None = None,
+    sensor_positions: npt.NDArray[np.floating],
+    ground_points: npt.NDArray[np.floating],
+    surface_normals: npt.NDArray[np.floating] | None = None,
     assume_surface_normals_normalized: bool = False,
 ) -> float | npt.NDArray[np.floating]:
     """Compute the incidence angles in radians from sensor positions and ground points.
@@ -257,11 +257,11 @@ def compute_incidence_angles_core(
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more sensor positions
-    points : CoordinatesArrayType
+    points : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more points
-    surface_normals : CoordinatesArrayType | None, optional
+    surface_normals : npt.NDArray[np.floating] | None, optional
         (3,) or (N, 3) one or more surface normal directions, by default None
     assume_surface_normals_normalized : bool, optional
         True to skip surface normals normalization, by default False
@@ -332,18 +332,18 @@ def compute_incidence_angles_core(
 
 
 def compute_nadir_from_sensor_positions(
-    sensor_positions: CoordinatesArrayType,
-) -> CoordinatesArrayType:
+    sensor_positions: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
     """Compute nadir positions from sensor positions.
 
     Parameters
     ----------
-    sensor_positions : CoordinatesArrayType
+    sensor_positions : npt.NDArray[np.floating]
         sensor positions, with shape (3,), (N, 3)
 
     Returns
     -------
-    CoordinatesArrayType
+    npt.NDArray[np.floating]
         nadir position, with shape (3,), (N, 3)
     """
     sensor_position_ground = xyz2llh(sensor_positions)
