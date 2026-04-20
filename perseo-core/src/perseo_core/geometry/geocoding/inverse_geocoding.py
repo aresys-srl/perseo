@@ -10,10 +10,7 @@ import numpy.typing as npt
 
 import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
 from perseo_core.models.trajectory import Trajectory
-from perseo_core.models.types import (
-    ExtendedDatetimeArrayType,
-    ExtendedDatetimeType,
-)
+from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 def inverse_geocoding_monostatic(
@@ -21,9 +18,9 @@ def inverse_geocoding_monostatic(
     ground_points: npt.NDArray[np.floating],
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
-    az_initial_time_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType | None = None,
+    az_initial_time_guesses: PreciseDateTime | np.datetime64 | npt.NDArray | None = None,
     init_guess_search_time_step: float | None = None,
-) -> tuple[ExtendedDatetimeType | ExtendedDatetimeArrayType, float | npt.NDArray[np.floating]]:
+) -> tuple[PreciseDateTime | np.datetime64 | npt.NDArray, float | npt.NDArray[np.floating]]:
     """Monostatic inverse geocoding computation.
 
     Parameters
@@ -39,7 +36,7 @@ def inverse_geocoding_monostatic(
         each different input value
     wavelength : float
         carrier signal wavelength
-    az_initial_time_guesses : ExtendedDatetimeType | ExtendedDatetimeArrayType | None, optional
+    az_initial_time_guesses : PreciseDateTime | np.datetime64 | npt.NDArray | None, optional
         azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time.
         If None, it is automatically computed, by default None
     init_guess_search_time_step : float | None, optional
@@ -49,7 +46,7 @@ def inverse_geocoding_monostatic(
 
     Returns
     -------
-    ExtendedDatetimeType | ExtendedDatetimeArrayType
+    PreciseDateTime | np.datetime64 | npt.NDArray
         azimuth times array
     float | npt.NDArray[np.floating]
         range times array
@@ -93,10 +90,10 @@ def inverse_geocoding_monostatic(
 def inverse_geocoding_monostatic_init(
     trajectory: Trajectory,
     ground_points: npt.NDArray[np.floating],
-    time_axis: ExtendedDatetimeArrayType,
+    time_axis: npt.NDArray,
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
-) -> ExtendedDatetimeType | ExtendedDatetimeArrayType:
+) -> PreciseDateTime | np.datetime64 | npt.NDArray:
     """Function to compute azimuth initial guess for Newton method for monostatic inverse geocoding.
 
     In principle each input ground point could be seen several times by the orbit if it contains multiple periods.
@@ -113,7 +110,7 @@ def inverse_geocoding_monostatic_init(
         sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
-    time_axis : ExtendedDatetimeArrayType
+    time_axis : npt.NDArray
         sensor's trajectory time axis array
     frequencies_doppler_centroid : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
@@ -125,7 +122,7 @@ def inverse_geocoding_monostatic_init(
 
     Returns
     -------
-    ExtendedDatetimeType | ExtendedDatetimeArrayType
+    PreciseDateTime | np.datetime64 | npt.NDArray
         azimuth times initial guesses, one for each input point
     """
 
@@ -153,9 +150,9 @@ def inverse_geocoding_bistatic(
     ground_points: npt.NDArray[np.floating],
     frequencies_doppler_centroid: float | npt.NDArray[np.floating],
     wavelength: float,
-    az_initial_time_guesses: ExtendedDatetimeType | ExtendedDatetimeArrayType | None = None,
+    az_initial_time_guesses: PreciseDateTime | np.datetime64 | npt.NDArray | None = None,
     init_guess_search_time_step: float | None = None,
-) -> tuple[ExtendedDatetimeType | ExtendedDatetimeArrayType, float | npt.NDArray[np.floating]]:
+) -> tuple[PreciseDateTime | np.datetime64 | npt.NDArray, float | npt.NDArray[np.floating]]:
     """Bistatic inverse geocoding computation.
 
     Parameters
@@ -173,7 +170,7 @@ def inverse_geocoding_bistatic(
         each different input value
     wavelength : float
         carrier signal wavelength
-    az_initial_time_guesses : ExtendedDatetimeType | ExtendedDatetimeArrayType | None, optional
+    az_initial_time_guesses : PreciseDateTime | np.datetime64 | npt.NDArray | None, optional
         azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time.
         If None, it is automatically computed, by default None
     init_guess_search_time_step : float | None, optional
@@ -183,7 +180,7 @@ def inverse_geocoding_bistatic(
 
     Returns
     -------
-    ExtendedDatetimeType | ExtendedDatetimeArrayType
+    PreciseDateTime | np.datetime64 | npt.NDArray
         azimuth times array
     float | npt.NDArray[np.floating]
         range times array

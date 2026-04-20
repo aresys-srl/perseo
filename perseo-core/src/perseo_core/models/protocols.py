@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from perseo_core.models.types import ExtendedDatetimeType
+import numpy as np
+
+from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 # TODO: check this, from quality protocols
@@ -20,12 +22,12 @@ class SARCoordinatesFunction(Protocol):
     This can be any generic f: SAR Times -> R.
     """
 
-    def evaluate(self, azimuth_time: ExtendedDatetimeType, range_time: float) -> float:
+    def evaluate(self, azimuth_time: PreciseDateTime | np.datetime64, range_time: float) -> float:
         """Evaluate the wrapped function at given azimuth and range times.
 
         Parameters
         ----------
-        azimuth_time : ExtendedDatetimeType
+        azimuth_time : PreciseDateTime | np.datetime64
             azimuth time at which evaluate the function
         range_time : float
             range time at which evaluate the function

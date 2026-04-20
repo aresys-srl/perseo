@@ -11,8 +11,3 @@ Models Implementations
 .. automodule:: perseo_core.models.orbit
 
 .. automodule:: perseo_core.models.attitude
-
-Typing
-------
-
-.. automodule:: perseo_core.models.types

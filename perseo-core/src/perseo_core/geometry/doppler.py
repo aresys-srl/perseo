@@ -14,7 +14,7 @@ from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
 from perseo_core.models.trajectory import Trajectory
-from perseo_core.models.types import ExtendedDatetimeType
+from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 # TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
@@ -223,7 +223,7 @@ def get_geometric_doppler_centroid(
 # TODO: new, add unittest
 def compute_theoretical_doppler_rate(
     trajectory: Trajectory,
-    azimuth_time: ExtendedDatetimeType,
+    azimuth_time: PreciseDateTime | np.datetime64,
     coords: np.ndarray,
     fc_hz: float,
 ) -> np.ndarray:
@@ -233,7 +233,7 @@ def compute_theoretical_doppler_rate(
     ----------
     trajectory : TwiceDifferentiable3DCurve
         sensor trajectory
-    azimuth_time : ExtendedDatetimeType
+    azimuth_time : PreciseDateTime | np.datetime64
         azimuth time when to evaluate the doppler rate
     coords : np.ndarray
         ground point coordinates
@@ -263,8 +263,8 @@ def compute_theoretical_doppler_rate(
 # TODO: new, add unittest
 def compute_steering_doppler_frequency(
     trajectory: Trajectory,
-    azimuth_time: ExtendedDatetimeType,
-    az_mid_burst_time: ExtendedDatetimeType,
+    azimuth_time: PreciseDateTime | np.datetime64,
+    az_mid_burst_time: PreciseDateTime | np.datetime64,
     doppler_rate: float,
     az_steering_rate_rad_s: float,
     fc_hz: float,
@@ -275,9 +275,9 @@ def compute_steering_doppler_frequency(
     ----------
     trajectory : TwiceDifferentiable3DCurve
         sensor trajectory
-    azimuth_time : ExtendedDatetimeType
+    azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the steering frequency
-    az_mid_burst_time : ExtendedDatetimeType
+    az_mid_burst_time : PreciseDateTime | np.datetime64
         azimuth mid burst time
     doppler_rate : float
         sensor doppler rate

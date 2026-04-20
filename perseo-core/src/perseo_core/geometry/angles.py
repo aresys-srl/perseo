@@ -15,7 +15,7 @@ from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
 from perseo_core.models.enums import SensorLookDirection
 from perseo_core.models.trajectory import Trajectory
-from perseo_core.models.types import ExtendedDatetimeType
+from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 def get_geometric_squint_angle(
@@ -55,7 +55,7 @@ def get_geometric_squint_angle(
 
 def compute_incidence_angles(
     trajectory: Trajectory,
-    azimuth_time: ExtendedDatetimeType,
+    azimuth_time: PreciseDateTime | np.datetime64,
     range_times: float | npt.NDArray[np.floating],
     look_direction: str | SensorLookDirection,
     geodetic_altitude: float | None = None,
@@ -69,7 +69,7 @@ def compute_incidence_angles(
     ----------
     trajectory : TwiceDifferentiable3DCurve
         sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
-    azimuth_time : ExtendedDatetimeType
+    azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the incidence angles corresponding to the input range times
     range_times : float | npt.NDArray[np.floating]
         range times where to compute the incidence angles, a float or a (N,) array
@@ -108,7 +108,7 @@ def compute_incidence_angles(
 
 def compute_look_angles(
     trajectory: Trajectory,
-    azimuth_time: ExtendedDatetimeType,
+    azimuth_time: PreciseDateTime | np.datetime64,
     range_times: float | npt.NDArray[np.floating],
     look_direction: str | SensorLookDirection,
     geodetic_altitude: float | None = None,
@@ -122,7 +122,7 @@ def compute_look_angles(
     ----------
     trajectory : TwiceDifferentiable3DCurve
         sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
-    azimuth_time : ExtendedDatetimeType
+    azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the look a angles corresponding to the input range times
     range_times : float | npt.NDArray[np.floating]
         range times where to compute the look angles, a float or a (N,) array
