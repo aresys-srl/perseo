@@ -12,9 +12,12 @@ import warnings
 from datetime import datetime
 
 import numpy as np
+from numpydantic import NDArray, Shape
 
-from perseo_core.models.types import NumpyDateTimeArrayType, PreciseDateTimeArrayType
 from perseo_core.timing.precise_datetime import PreciseDateTime
+
+PreciseDateTimeArrayType = NDArray[Shape["*"], PreciseDateTime]  # type: ignore
+NumpyDateTimeArrayType = NDArray[Shape["*"], np.datetime64]  # type: ignore
 
 _GPS_START_DATE = datetime(year=1980, month=1, day=6)
 

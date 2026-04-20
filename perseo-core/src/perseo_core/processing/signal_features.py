@@ -9,10 +9,13 @@ Processing - Signal Features
 from __future__ import annotations
 
 import numpy as np
+from numpydantic import NDArray, Shape
 from scipy import signal
 
 from perseo_core.models.enums import GetFrequencyMethod
-from perseo_core.models.types import FloatArrayType, InverseROIArrayType
+from perseo_core.models.types import FloatArrayType
+
+InverseROIArrayType = NDArray[Shape["* lines, * samples"], float] | NDArray[Shape["2"], float]  # type: ignore
 
 # TODO: this whole module should be typed using the Types defined in perseo-core, but to do this, it must be
 # TODO: understood the right ROI axes in 2D data processing for each function and maybe a full function refactoring must
