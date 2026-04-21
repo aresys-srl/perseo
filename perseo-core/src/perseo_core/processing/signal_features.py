@@ -8,12 +8,21 @@ Processing - Signal Features
 
 from __future__ import annotations
 
+from enum import Enum, auto
+
 import numpy as np
 import numpy.typing as npt
 from numpydantic import NDArray, Shape
 from scipy import signal
 
-from perseo_core.models.enums import GetFrequencyMethod
+
+class GetFrequencyMethod(Enum):
+    """Enum class for get local frequency settings"""
+
+    AUTOCORRELATION = auto()
+    FFT = auto()
+    POWER_BALANCE = auto()
+
 
 InverseROIArrayType = NDArray[Shape["* lines, * samples"], float] | NDArray[Shape["2"], float]  # type: ignore
 

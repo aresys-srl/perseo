@@ -8,6 +8,8 @@ Processing - ROI Features
 
 from __future__ import annotations
 
+from enum import Enum, auto
+
 import numpy as np
 import numpy.typing as npt
 from numpydantic import NDArray, Shape
@@ -16,12 +18,29 @@ from scipy.fft import fft2, fftshift, ifft2, ifftshift
 from scipy.signal import spectrogram
 from scipy.signal.windows import hamming
 
-from perseo_core.models.enums import SARAcquisitionMode, SARRadiometricQuantity
 from perseo_core.models.protocols import SARCoordinatesFunction
 from perseo_core.processing.signal_features import estimate_modulation_frequency2d, locate_max_2d_interp
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 ROIArrayType = NDArray[Shape["* samples, * lines"], float] | NDArray[Shape["2"], float]  # type: ignore
+
+
+class SARRadiometricQuantity(Enum):
+    """Enum class for radiometric analysis input/output quantity types"""
+
+    BETA_NOUGHT = auto()
+    SIGMA_NOUGHT = auto()
+    GAMMA_NOUGHT = auto()
+
+
+class SARAcquisitionMode(Enum):
+    """Acquisition mode enum class"""
+
+    SCANSAR = auto()
+    SPOTLIGHT = auto()
+    STRIPMAP = auto()
+    TOPSAR = auto()
+    WAVE = auto()
 
 
 def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1) -> np.ndarray:
