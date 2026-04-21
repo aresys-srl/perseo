@@ -19,7 +19,6 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_monostatic_core_range_vectorized,
 )
 from perseo_core.geometry.utilities.ellipsoid import WGS84
-from perseo_core.models.enums import SensorLookDirection
 
 
 def _doppler_equation_residual(
@@ -127,7 +126,7 @@ class DirectGeocodingMonostaticTest(unittest.TestCase):
         self.range_times = np.array([2.05624579e-05])
         self.doppler_freqs = 0
         self.geodetic_altitude = 0
-        self.look_direction = SensorLookDirection.RIGHT_LOOKING
+        self.look_direction = "RIGHT"
         self.wavelength = 1
         self.N = 4
         self.M = 5
@@ -990,7 +989,7 @@ class DirectGeocodingMonostaticInitTest(unittest.TestCase):
         self.wavelength = 1
         self.doppler_frequency = 0
         range_time = 2.05624579e-05
-        self.look_direction = SensorLookDirection.RIGHT_LOOKING
+        self.look_direction = "RIGHT"
         self.range_distance = np.median(range_time) * speed_of_light / 2
 
         self.N = 4

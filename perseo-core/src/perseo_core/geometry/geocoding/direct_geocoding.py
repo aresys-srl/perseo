@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import Literal, get_args
+
 import numpy as np
 from numpy import typing as npt
 from scipy.constants import speed_of_light
@@ -26,7 +28,9 @@ from perseo_core.geometry.utilities.reference_frames import (
     compute_sensor_local_axis,
 )
 from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
-from perseo_core.models.enums import SensorLookDirection
+
+SensorLookDirection = Literal["RIGHT", "LEFT"]
+_VALID_SENSOR_LOOK_DIRECTIONS = get_args(SensorLookDirection)
 
 
 def direct_geocoding_with_looking_direction(
@@ -171,7 +175,7 @@ def direct_geocoding_monostatic(
     range_times: float | npt.NDArray[np.floating],
     doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
-    look_direction: str | SensorLookDirection,
+    look_direction: SensorLookDirection,
     altitude: float,
     initial_guesses: npt.NDArray[np.floating] | None = None,
 ) -> npt.NDArray[np.floating]:
@@ -189,8 +193,8 @@ def direct_geocoding_monostatic(
         doppler frequencies scalar or array (M,)
     wavelength : float
         carrier signal wavelength
-    look_direction : str | SensorLookDirection
-        geocoding side
+    look_direction : SensorLookDirection
+        geocoding side, "RIGHT" or "LEFT"
     altitude : float
         altitude with respect to WGS84 ellipsoid
     initial_guesses : npt.NDArray[np.floating] | None, optional
@@ -201,7 +205,8 @@ def direct_geocoding_monostatic(
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
     """
-    look_direction = SensorLookDirection(look_direction)
+    if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
+        raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
 
     if initial_guesses is None:
         average_input_range: float = np.median(range_times) * speed_of_light / 2
@@ -246,7 +251,7 @@ def direct_geocoding_bistatic(
     range_times: float | npt.NDArray[np.floating],
     doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
-    look_direction: str | SensorLookDirection,
+    look_direction: SensorLookDirection,
     altitude: float,
     initial_guesses: npt.NDArray[np.floating] | None = None,
 ) -> npt.NDArray[np.floating]:
@@ -268,8 +273,8 @@ def direct_geocoding_bistatic(
         doppler frequencies scalar or shape (M,)
     wavelength : float
         carrier signal wavelength
-    look_direction : str | SensorLookDirection
-        geocoding side
+    look_direction : SensorLookDirection
+        geocoding side, "RIGHT" or "LEFT"
     altitude : float
         altitude with respect to the WGS84 ellipsoid
     initial_guesses : npt.NDArray[np.floating] | None, optional
@@ -280,7 +285,8 @@ def direct_geocoding_bistatic(
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
     """
-    look_direction = SensorLookDirection(look_direction)
+    if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
+        raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
 
     if initial_guesses is None:
         average_input_range = np.median(range_times) * speed_of_light / 2
@@ -308,7 +314,7 @@ def direct_geocoding_init(
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
     range_distance: float,
-    look_direction: str | SensorLookDirection,
+    look_direction: SensorLookDirection,
 ) -> npt.NDArray[np.floating]:
     """Computate initial guesses for direct geocoding, monostatic approximation.
 
@@ -320,8 +326,8 @@ def direct_geocoding_init(
         sensor velocities with shape (3,) or (N, 3)
     range_distance : float
         range distance
-    look_direction : str | SensorLookDirection
-        side where to perform geocoding
+    look_direction : SensorLookDirection
+        side where to perform geocoding, "RIGHT" or "LEFT"
 
     Returns
     -------
@@ -334,8 +340,9 @@ def direct_geocoding_init(
     if sensor_positions.ndim < sensor_velocities.ndim:
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
 
-    look_direction = SensorLookDirection(look_direction)
-    geocoding_side_factor = 1 if look_direction == SensorLookDirection.RIGHT_LOOKING else -1
+    if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
+        raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
+    geocoding_side_factor = 1 if look_direction == "RIGHT" else -1
 
     sensor_position_norm = np.linalg.norm(sensor_positions, axis=-1, keepdims=True)
     llh_sat = xyz2llh(sensor_positions)

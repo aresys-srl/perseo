@@ -12,8 +12,10 @@ import numpy as np
 import numpy.typing as npt
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
-from perseo_core.models.enums import SensorLookDirection
+from perseo_core.geometry.geocoding.direct_geocoding import (
+    SensorLookDirection,
+    direct_geocoding_monostatic,
+)
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
@@ -57,7 +59,7 @@ def compute_incidence_angles(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
     range_times: float | npt.NDArray[np.floating],
-    look_direction: str | SensorLookDirection,
+    look_direction: SensorLookDirection,
     geodetic_altitude: float | None = None,
     frequencies_doppler_centroid: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
@@ -73,8 +75,8 @@ def compute_incidence_angles(
         azimuth time at which compute the incidence angles corresponding to the input range times
     range_times : float | npt.NDArray[np.floating]
         range times where to compute the incidence angles, a float or a (N,) array
-    look_direction : str | SensorLookDirection
-        sensor looking side where to perform geocoding, can be RIGHT or LEFT
+    look_direction : SensorLookDirection
+        sensor looking side where to perform geocoding, "RIGHT" or "LEFT"
     geodetic_altitude : float | None, optional
         the altitude over wgs84, if None is set to 0, by default None
     frequencies_doppler_centroid : float | npt.NDArray[np.floating] | None, optional
@@ -97,7 +99,7 @@ def compute_incidence_angles(
         range_times=range_times,
         doppler_frequencies=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
         wavelength=carrier_wavelength if carrier_wavelength is not None else 1,
-        look_direction=SensorLookDirection(look_direction),
+        look_direction=look_direction,
         altitude=geodetic_altitude if geodetic_altitude is not None else 0,
     )
     angles = compute_incidence_angles_core(sensor_positions=sensor_position, ground_points=ground_points)
@@ -110,7 +112,7 @@ def compute_look_angles(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
     range_times: float | npt.NDArray[np.floating],
-    look_direction: str | SensorLookDirection,
+    look_direction: SensorLookDirection,
     geodetic_altitude: float | None = None,
     frequencies_doppler_centroid: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
@@ -126,8 +128,8 @@ def compute_look_angles(
         azimuth time at which compute the look a angles corresponding to the input range times
     range_times : float | npt.NDArray[np.floating]
         range times where to compute the look angles, a float or a (N,) array
-    look_direction : str | GeocodingSide
-        side where to perform geocoding
+    look_direction : SensorLookDirection
+        sensor looking side where to perform geocoding, "RIGHT" or "LEFT"
     geodetic_altitude : float | None, optional
         the altitude over wgs84, if None is set to 0, by default None,
     frequencies_doppler_centroid : float | npt.NDArray[np.floating] | None, optional
@@ -150,7 +152,7 @@ def compute_look_angles(
         range_times=range_times,
         doppler_frequencies=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
         wavelength=carrier_wavelength if carrier_wavelength is not None else 1,
-        look_direction=SensorLookDirection(look_direction),
+        look_direction=look_direction,
         altitude=geodetic_altitude if geodetic_altitude is not None else 0,
     )
     angles = compute_look_angles_core(sensor_positions=sensor_position, ground_points=ground_points)

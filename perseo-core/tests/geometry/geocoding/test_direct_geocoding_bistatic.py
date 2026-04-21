@@ -19,7 +19,6 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_bistatic_core,
 )
 from perseo_core.geometry.utilities.ellipsoid import WGS84
-from perseo_core.models.enums import SensorLookDirection
 
 
 def _range_equation_residual_bistatic(
@@ -89,7 +88,7 @@ class _DirectGeocodingBistaticBase(unittest.TestCase):
         self.range_times = np.array([2.05624579e-05])
         self.doppler_frequency = 0.0
         self.altitude = 0.0
-        self.look_direction = SensorLookDirection.RIGHT_LOOKING
+        self.look_direction = "RIGHT"
         self.wavelength = 1.0
 
         self.N = 4
