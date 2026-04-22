@@ -8,6 +8,12 @@ tags:
 
 # Changelog
 
+## v1.0.13
+
+**Other Changes**
+
+- Adding NaN masking to NESZ Radiometric Analysis
+
 ## v1.0.12
 
 **Bug Fixes**
