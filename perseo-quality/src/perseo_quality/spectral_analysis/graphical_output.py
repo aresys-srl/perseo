@@ -70,8 +70,8 @@ def spectral_graph_core(
     items = data.targets_info if is_pt_graph else data.blocks_info
 
     for item in items:
-        if item.spectrum_db is None:
-            msg = f"Cannot create graph for swath {data.swath}, pol {data.polarization.name} "
+        if item.spectrum_db is None or np.isnan(item.target_phase_value_deg):
+            msg = f"Cannot create graph for swath {data.general_info.swath}, pol {data.general_info.polarization} "
             if is_pt_graph:
                 msg += f"target {item.target_name}, burst {item.burst}"
             else:

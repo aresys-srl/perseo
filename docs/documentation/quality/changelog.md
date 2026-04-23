@@ -8,6 +8,12 @@ tags:
 
 # Changelog
 
+## v1.0.14
+
+**Bug Fixes**
+
+- Fixing bug in spectral analysis graphs generation
+
 ## v1.0.13
 
 **Other Changes**
