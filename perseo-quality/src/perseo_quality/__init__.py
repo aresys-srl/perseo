@@ -6,4 +6,4 @@ Python Ecosystem for Remote Sensing & Earth Observation - PERSEO: SAR Quality An
 --------------------------------------------------------------------------------------
 """
 
-__version__ = "1.0.13"
+__version__ = "1.0.14"
