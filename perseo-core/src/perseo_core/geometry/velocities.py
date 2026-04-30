@@ -28,7 +28,7 @@ def compute_ground_velocity(
     averaging_interval_relative_origin: float = 0,
     averaging_interval_duration: float = 1,
     averaging_interval_num_points: int = 11,
-) -> npt.NDArray[np.floating]:
+) -> npt.NDArray[np.floating] | float:
     """Numerical computation of the ground velocity [m/s] at given look angles.
 
     The algorithm is based on the direct geocoding, via look angles, of points at different azimuth times in a
@@ -55,7 +55,7 @@ def compute_ground_velocity(
 
     Returns
     -------
-    npt.NDArray[np.floating]
+    npt.NDArray[np.floating] | float
         ground velocity in m/s
     """
 
