@@ -13,6 +13,7 @@ tags:
 **Bug Fixes**
 
 - Fixing bug in spectral analysis graphs generation
+- Fixing bug in spectral analysis output profiles saving to netCDF
 
 ## v1.0.13
 

@@ -704,8 +704,8 @@ def spectral_analysis_profiles_to_netcdf(
                 rng_abs_profiles.unit = "dB"
                 rng_abs_profiles[:] = np.stack(block.range_profiles_db)
 
-        root.close()
-        return output_file
+    root.close()
+    return output_file
 
 
 def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1) -> np.ndarray:
