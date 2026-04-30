@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -434,15 +435,19 @@ def extract_abs_profiles(
         3 azimuth absolute profiles in dB
     """
     rng_profiles_starts, rng_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[1])
-    range_profiles_db = [
-        convert_to_db(np.nanmean(np.abs(data_fft[:, start:stop]) ** 2, axis=1))
-        for start, stop in zip(rng_profiles_starts, rng_profiles_stops, strict=True)
-    ]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        range_profiles_db = [
+            convert_to_db(np.nanmean(np.abs(data_fft[:, start:stop]) ** 2, axis=1))
+            for start, stop in zip(rng_profiles_starts, rng_profiles_stops, strict=True)
+        ]
     az_profiles_starts, az_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[0])
-    azimuth_profiles_db = [
-        convert_to_db(np.nanmean(np.abs(data_fft[start:stop, :]) ** 2, axis=0))
-        for start, stop in zip(az_profiles_starts, az_profiles_stops, strict=True)
-    ]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        azimuth_profiles_db = [
+            convert_to_db(np.nanmean(np.abs(data_fft[start:stop, :]) ** 2, axis=0))
+            for start, stop in zip(az_profiles_starts, az_profiles_stops, strict=True)
+        ]
     return range_profiles_db, azimuth_profiles_db
 
 
@@ -464,15 +469,19 @@ def extract_phase_profiles(
         3 azimuth phase profiles in deg
     """
     rng_profiles_starts, rng_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[1])
-    range_profiles_deg = [
-        np.angle(np.nanmean(data_fft[:, start:stop], axis=1), deg=True)
-        for start, stop in zip(rng_profiles_starts, rng_profiles_stops, strict=True)
-    ]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        range_profiles_deg = [
+            np.angle(np.nanmean(data_fft[:, start:stop], axis=1), deg=True)
+            for start, stop in zip(rng_profiles_starts, rng_profiles_stops, strict=True)
+        ]
     az_profiles_starts, az_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[0])
-    azimuth_profiles_deg = [
-        np.angle(np.nanmean(data_fft[start:stop, :], axis=0), deg=True)
-        for start, stop in zip(az_profiles_starts, az_profiles_stops, strict=True)
-    ]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        azimuth_profiles_deg = [
+            np.angle(np.nanmean(data_fft[start:stop, :], axis=0), deg=True)
+            for start, stop in zip(az_profiles_starts, az_profiles_stops, strict=True)
+        ]
     return range_profiles_deg, azimuth_profiles_deg
 
 

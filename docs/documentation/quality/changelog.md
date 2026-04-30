@@ -15,6 +15,10 @@ tags:
 - Fixing bug in spectral analysis graphs generation
 - Fixing bug in spectral analysis output profiles saving to netCDF
 
+**Other Changes**
+
+- Silencing "mean of empty slice" warning in spectral analysis
+
 ## v1.0.13
 
 **Other Changes**
