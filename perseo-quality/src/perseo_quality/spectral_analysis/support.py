@@ -593,87 +593,88 @@ def spectral_analysis_profiles_to_netcdf(
         pol_grp.polarization = item.general_info.polarization
         pol_grp.acquisition_start_time = str(item.general_info.acquisition_start_time)
 
+        targets_info = [t for t in item.targets_info if t is not None]
         # creating common dimensions
         if is_pt_analysis:
-            pol_grp.createDimension("targets", len(item.targets_info))
-            pol_grp.createDimension("azimuth", item.targets_info[0].azimuth_frequency_axis.size)
-            pol_grp.createDimension("range", item.targets_info[0].range_frequency_axis.size)
+            pol_grp.createDimension("targets", len(targets_info))
+            pol_grp.createDimension("azimuth", targets_info[0].azimuth_frequency_axis.size)
+            pol_grp.createDimension("range", targets_info[0].range_frequency_axis.size)
             pol_grp.createDimension("slices", 3)
             pol_grp.createDimension("coeffs", 3)
 
             # name of analyzed targets
-            pol_grp.bursts = [n.burst for n in item.targets_info]
-            pol_grp.targets = [n.target_name for n in item.targets_info]
+            pol_grp.bursts = [n.burst for n in targets_info]
+            pol_grp.targets = [n.target_name for n in targets_info]
 
             # doppler centroid and phase value at target position
             dc_target = pol_grp.createVariable(
-                "doppler_centroid", item.targets_info[0].target_doppler_centroid_Hz.dtype, ("targets",)
+                "doppler_centroid", targets_info[0].target_doppler_centroid_Hz.dtype, ("targets",)
             )
             dc_target.unit = "Hz"
             dc_target.description = "Doppler centroid at the target position"
-            dc_target[:] = np.array([p.target_doppler_centroid_Hz for p in item.targets_info])
+            dc_target[:] = np.array([p.target_doppler_centroid_Hz for p in targets_info])
             phase_target = pol_grp.createVariable(
-                "phase_value", item.targets_info[0].target_phase_value_deg.dtype, ("targets",)
+                "phase_value", targets_info[0].target_phase_value_deg.dtype, ("targets",)
             )
             phase_target.unit = "deg"
             phase_target.description = "Phase value at the target position"
-            phase_target[:] = np.array([p.target_phase_value_deg for p in item.targets_info])
+            phase_target[:] = np.array([p.target_phase_value_deg for p in targets_info])
 
             # frequency axes
             az_freq_axis = pol_grp.createVariable(
-                "azimuth_frequency_axis", item.targets_info[0].azimuth_frequency_axis.dtype, ("azimuth",)
+                "azimuth_frequency_axis", targets_info[0].azimuth_frequency_axis.dtype, ("azimuth",)
             )
             az_freq_axis.unit = "Hz"
-            az_freq_axis[:] = item.targets_info[0].azimuth_frequency_axis
+            az_freq_axis[:] = targets_info[0].azimuth_frequency_axis
             rng_freq_axis = pol_grp.createVariable(
-                "range_frequency_axis", item.targets_info[0].range_frequency_axis.dtype, ("range",)
+                "range_frequency_axis", targets_info[0].range_frequency_axis.dtype, ("range",)
             )
             rng_freq_axis.unit = "Hz"
-            rng_freq_axis[:] = item.targets_info[0].range_frequency_axis
+            rng_freq_axis[:] = targets_info[0].range_frequency_axis
 
             # absolute profiles
             az_abs_profiles = pol_grp.createVariable(
                 "azimuth_profiles_abs",
-                item.targets_info[0].azimuth_profiles_db[0].dtype,
+                targets_info[0].azimuth_profiles_db[0].dtype,
                 ("targets", "slices", "azimuth"),
             )
             az_abs_profiles.unit = "dB"
-            az_abs_profiles[:] = np.stack([p.azimuth_profiles_db for p in item.targets_info])
+            az_abs_profiles[:] = np.stack([p.azimuth_profiles_db for p in targets_info])
             rng_abs_profiles = pol_grp.createVariable(
-                "range_profiles_abs", item.targets_info[0].range_profiles_db[0].dtype, ("targets", "slices", "range")
+                "range_profiles_abs", targets_info[0].range_profiles_db[0].dtype, ("targets", "slices", "range")
             )
             rng_abs_profiles.unit = "dB"
-            rng_abs_profiles[:] = np.stack([p.range_profiles_db for p in item.targets_info])
+            rng_abs_profiles[:] = np.stack([p.range_profiles_db for p in targets_info])
 
             # phase profiles
             az_phase_profiles = pol_grp.createVariable(
                 "azimuth_profiles_phase",
-                item.targets_info[0].azimuth_profiles_deg[0].dtype,
+                targets_info[0].azimuth_profiles_deg[0].dtype,
                 ("targets", "slices", "azimuth"),
             )
             az_phase_profiles.unit = "deg"
-            az_phase_profiles[:] = np.stack([p.azimuth_profiles_deg for p in item.targets_info])
+            az_phase_profiles[:] = np.stack([p.azimuth_profiles_deg for p in targets_info])
             rng_phase_profiles = pol_grp.createVariable(
                 "range_profiles_phase",
-                item.targets_info[0].range_profiles_deg[0].dtype,
+                targets_info[0].range_profiles_deg[0].dtype,
                 ("targets", "slices", "range"),
             )
             rng_phase_profiles.unit = "deg"
-            rng_phase_profiles[:] = np.stack([p.range_profiles_deg for p in item.targets_info])
+            rng_phase_profiles[:] = np.stack([p.range_profiles_deg for p in targets_info])
 
             # polynomials
             az_poly_coeffs = pol_grp.createVariable(
                 "az_phase_polynomial_coefficients",
-                item.targets_info[0].azimuth_polynomial_fit.convert().coef.dtype,
+                targets_info[0].azimuth_polynomial_fit.convert().coef.dtype,
                 ("targets", "coeffs"),
             )
-            az_poly_coeffs[:] = np.stack([p.azimuth_polynomial_fit.convert().coef for p in item.targets_info])
+            az_poly_coeffs[:] = np.stack([p.azimuth_polynomial_fit.convert().coef for p in targets_info])
             rng_poly_coeffs = pol_grp.createVariable(
                 "rng_phase_polynomial_coefficients",
-                item.targets_info[0].range_polynomial_fit.convert().coef.dtype,
+                targets_info[0].range_polynomial_fit.convert().coef.dtype,
                 ("targets", "coeffs"),
             )
-            rng_poly_coeffs[:] = np.stack([p.range_polynomial_fit.convert().coef for p in item.targets_info])
+            rng_poly_coeffs[:] = np.stack([p.range_polynomial_fit.convert().coef for p in targets_info])
 
         else:
             for block in item.blocks_info:

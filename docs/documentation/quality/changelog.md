@@ -12,6 +12,7 @@ tags:
 
 **Bug Fixes**
 
+- Fixing bug in spectral analysis (and graphs) when errors occur during target processing
 - Fixing bug in spectral analysis graphs generation
 - Fixing bug in spectral analysis output profiles saving to netCDF
 

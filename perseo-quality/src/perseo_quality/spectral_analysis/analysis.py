@@ -145,7 +145,7 @@ def point_target_spectral_analysis(
                     az_rng_coords.azimuth_index_subpx,
                     az_rng_coords.range_index_subpx,
                 ):
-                    res.append(output_results)
+                    targets_info.append(None)
                     continue
 
                 point_target_location_px = (
@@ -162,7 +162,7 @@ def point_target_spectral_analysis(
                     )
                 except (RangeExceedsBoundariesError, AzimuthExceedsBoundariesError):
                     log.warning("Target ROI exceeds burst or swath boundaries")
-                    res.append(output_results)
+                    targets_info.append(None)
                     continue
 
                 if channel_data.acquisition_mode in (SARAcquisitionMode.TOPSAR, SARAcquisitionMode.SCANSAR):

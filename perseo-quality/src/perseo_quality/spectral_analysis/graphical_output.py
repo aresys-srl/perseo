@@ -68,6 +68,7 @@ def spectral_graph_core(
 
     is_pt_graph = isinstance(data, PointTargetSpectraDataOutput)
     items = data.targets_info if is_pt_graph else data.blocks_info
+    items = [t for t in items if t is not None]
 
     for item in items:
         if item.spectrum_db is None or np.isnan(item.target_phase_value_deg):
