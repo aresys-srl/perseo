@@ -14,6 +14,7 @@ from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_bistatic_core,
     direct_geocoding_monostatic_core,
+    direct_geocoding_monostatic_core_range_vectorized,
 )
 from perseo_core.geometry.utilities.ellipsoid import (
     compute_line_ellipsoid_intersections,
@@ -209,6 +210,21 @@ def direct_geocoding_monostatic(
             sensor_velocities=sensor_velocities,
             range_distance=average_input_range,
             look_direction=look_direction,
+        )
+
+    if 10 * (sensor_positions.size // 3) < np.size(range_times):
+        if not isinstance(range_times, float):
+            initial_guesses = np.repeat(
+                np.atleast_2d(initial_guesses).mean(axis=0, keepdims=True), np.size(range_times), axis=0
+            )
+        return direct_geocoding_monostatic_core_range_vectorized(
+            initial_guesses=initial_guesses,
+            sensor_positions=sensor_positions,
+            sensor_velocities=sensor_velocities,
+            range_times=range_times,
+            doppler_frequencies=doppler_frequencies,
+            wavelength=wavelength,
+            altitude=altitude,
         )
 
     return direct_geocoding_monostatic_core(

@@ -82,13 +82,100 @@ def direct_geocoding_monostatic_core(
             sensor_positions=sensor_positions,
             sensor_velocities=sensor_velocities,
             initial_guesses=initial_guesses,
-            range_time=range_time,
-            doppler_frequency=doppler_frequency,
+            range_times=range_time,
+            doppler_frequencies=doppler_frequency,
             altitude=altitude,
             wavelength=wavelength,
         )
 
     one_size_array_flag = sensor_positions.ndim == 2 and sensor_positions.size / 3 == 1
+    return ground_points.squeeze() if not one_size_array_flag else ground_points.squeeze(axis=0)
+
+
+def direct_geocoding_monostatic_core_range_vectorized(
+    sensor_positions: npt.NDArray[np.floating],
+    sensor_velocities: npt.NDArray[np.floating],
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
+    wavelength: float,
+    altitude: float,
+    initial_guesses: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
+    """Computation of direct geocoding for monostatic systems, vectorized computation along range times.
+
+    Parameters
+    ----------
+    sensor_positions : npt.NDArray[np.floating]
+        sensor positions with shape (3,) or (N, 3)
+    sensor_velocities : npt.NDArray[np.floating]
+        sensor velocities with shape (3,) or (N, 3)
+    range_times : float | npt.NDArray[np.floating]
+        range times with shape float or (M,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        frequency_doppler_centroid value, single value or array (M,)
+    wavelength : float
+        carrier signal wavelength
+    altitude : float
+        altitude with respect to WGS84 ellipsoid
+    initial_guesses : npt.NDArray[np.floating]
+        initial guess for the Newton method, with shape (3,) or (N, 3) or (M, 3)
+
+    Returns
+    -------
+    npt.NDArray[np.floating]
+        ground points with shape (N, M, 3)
+    """
+
+    range_times = np.atleast_1d(range_times)
+
+    one_size_array_flag = sensor_positions.ndim == 2 and sensor_positions.size / 3 == 1
+
+    try:
+        doppler_frequencies = np.broadcast_to(doppler_frequencies, range_times.shape)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"doppler frequencies {np.shape(doppler_frequencies)} != range times {range_times.shape}"
+        ) from exc
+
+    sensor_positions = np.atleast_2d(sensor_positions)
+    sensor_velocities = np.atleast_2d(sensor_velocities)
+    initial_guesses = np.atleast_2d(initial_guesses)
+
+    S, D = sensor_positions.shape
+    T = range_times.size
+
+    n = initial_guesses.shape[0]
+
+    if n == S:
+        initial_guesses = initial_guesses[:, None, :]  # (S, 1, D)
+    elif n == T:
+        initial_guesses = initial_guesses[None, :, :]  # (1, T, D)
+    elif n == 1:
+        initial_guesses = initial_guesses[None, :, :]  # (1, 1, D)
+    else:
+        raise RuntimeError(f"initial guesses ({n}) must match sensors ({S}), times ({T}), or be 1")
+
+    initial_guesses = np.broadcast_to(initial_guesses, (S, T, D))
+
+    try:
+        sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"sensor positions {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
+        ) from exc
+
+    ground_points = np.zeros((sensor_positions.size // 3, range_times.size, 3))
+    for id_az, sensor_params in enumerate(zip(sensor_positions, sensor_velocities, strict=True)):
+        ground_points[id_az, ...] = _direct_geocoding_monostatic_newton(
+            sensor_positions=sensor_params[0],
+            sensor_velocities=sensor_params[1],
+            initial_guesses=initial_guesses[id_az, ...],
+            range_times=range_times,
+            doppler_frequencies=doppler_frequencies,
+            altitude=altitude,
+            wavelength=wavelength,
+        )
+
     return ground_points.squeeze() if not one_size_array_flag else ground_points.squeeze(axis=0)
 
 
@@ -114,7 +201,7 @@ def direct_geocoding_bistatic_core(
     sensor_positions_tx : npt.NDArray[np.floating]
         position of the transmitter, with shape (3,) or (M, 3), where M is the number of range times
     sensor_velocities_tx : npt.NDArray[np.floating]
-        velocities of the stransmitter, with shape (3,) or (M, 3), where M is the number of range times
+        velocities of the transmitter, with shape (3,) or (M, 3), where M is the number of range times
     range_times : float | npt.NDArray[np.floating]
         range times with shape float or (M,)
     doppler_frequencies : float | npt.NDArray[np.floating]
@@ -170,8 +257,8 @@ def _direct_geocoding_monostatic_newton(
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
     initial_guesses: npt.NDArray[np.floating],
-    range_time: float,
-    doppler_frequency: float,
+    range_times: float,
+    doppler_frequencies: float,
     wavelength: float,
     altitude: float,
     max_iterations: int = 8,
@@ -208,7 +295,7 @@ def _direct_geocoding_monostatic_newton(
 
     tolerance_squared = increment_tolerance * increment_tolerance
 
-    range_distance_square = (speed_of_light * range_time / 2.0) ** 2
+    range_distance_square = (speed_of_light * range_times / 2.0) ** 2
     geoid_r_min = WGS84.b + altitude
     geoid_r_max = WGS84.a + altitude
     r_ep2 = geoid_r_min**2
@@ -231,7 +318,7 @@ def _direct_geocoding_monostatic_newton(
             sensor_velocity=sensor_velocities,
             distance=distance,
             wavelength=wavelength,
-            doppler_frequency=doppler_frequency,
+            doppler_frequency=doppler_frequencies,
         )
 
         residuals = [
