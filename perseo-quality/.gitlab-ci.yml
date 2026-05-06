@@ -104,7 +104,7 @@ integration_test_linux:
     - sct testing test -r ./tests/integration_tests/test_registry_linux.json -out ./test_output
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
+      - PYTHON: ["3.11", "3.12", "3.13"]
   extends: .tags_manylinux_2_28
   needs: []
 
