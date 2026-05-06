@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import asdict
 from pathlib import Path
 
@@ -20,7 +21,7 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import RadiometricPr
 
 
 def radiometric_profiles_to_netcdf(
-    data: list[RadiometricProfilesOutput], out_path: str | Path, tag: str | None = None
+    data: list[RadiometricProfilesOutput], out_path: str | Path, tag: str | None = None, mode: str = "mean"
 ) -> Path:
     """Saving Radiometric Profiles output data to NetCDF4 file.
 
@@ -44,6 +45,8 @@ def radiometric_profiles_to_netcdf(
         path where to save the NetCDF file
     tag : str | None, optional
         tag string to be added to the output filename, by default None
+    mode : str, optional
+        mode string to save the summary profile for each channel, it can be "min" or "mean", by default "mean
 
     Returns
     -------
@@ -55,37 +58,35 @@ def radiometric_profiles_to_netcdf(
     out_path = Path(out_path)
     output_file = out_path.joinpath(out_name).with_suffix(".nc")
 
-    root = Dataset(output_file, "w", format="NETCDF4")
-    root.product = data[0].general_info.product
-    root.sensor = data[0].general_info.sensor
-    root.product_type = data[0].general_info.product_type
-    root.acquisition_mode = data[0].general_info.acquisition_mode
-    root.orbit_direction = data[0].general_info.orbit_direction
-    root.acquisition_start_time = str(data[0].general_info.acquisition_start_time)
-    root.direction = data[0].direction.name.lower()
-    root.output_radiometric_quantity = data[0].general_info.radiometric_quantity
+    with Dataset(output_file, "w") as root:
+        root.product = data[0].general_info.product
+        root.sensor = data[0].general_info.sensor
+        root.product_type = data[0].general_info.product_type
+        root.acquisition_mode = data[0].general_info.acquisition_mode
+        root.orbit_direction = data[0].general_info.orbit_direction
+        root.acquisition_start_time = str(data[0].general_info.acquisition_start_time)
+        root.direction = data[0].direction.name.lower()
+        root.output_radiometric_quantity = data[0].general_info.radiometric_quantity
 
-    for item in data:
-        if item.general_info.swath not in root.groups:
-            swath_grp = root.createGroup(item.general_info.swath)
-        else:
-            swath_grp = root.groups[item.general_info.swath]
-        if item.general_info.polarization not in swath_grp.groups:
-            pol_grp = swath_grp.createGroup(item.general_info.polarization)
-        else:
-            pol_grp = swath_grp.groups[item.general_info.polarization]
-        if SARAcquisitionMode[item.general_info.acquisition_mode] == SARAcquisitionMode.WAVE:
-            channel_grp = pol_grp.createGroup(item.general_info.channel)
-            _fill_group(group=channel_grp, item=item)
-        else:
-            _fill_group(group=pol_grp, item=item)
-
-    root.close()
+        for item in data:
+            if item.general_info.swath not in root.groups:
+                swath_grp = root.createGroup(item.general_info.swath)
+            else:
+                swath_grp = root.groups[item.general_info.swath]
+            if item.general_info.polarization not in swath_grp.groups:
+                pol_grp = swath_grp.createGroup(item.general_info.polarization)
+            else:
+                pol_grp = swath_grp.groups[item.general_info.polarization]
+            if SARAcquisitionMode[item.general_info.acquisition_mode] == SARAcquisitionMode.WAVE:
+                channel_grp = pol_grp.createGroup(item.general_info.channel)
+                _fill_group(group=channel_grp, item=item, mode=mode)
+            else:
+                _fill_group(group=pol_grp, item=item, mode=mode)
 
     return output_file
 
 
-def _fill_group(group: Group, item: RadiometricProfilesOutput) -> None:
+def _fill_group(group: Group, item: RadiometricProfilesOutput, mode: str) -> None:
     """Filling the input group with profiles info for the current channel"""
     group.swath = item.general_info.swath
     group.channel = item.general_info.channel
@@ -120,10 +121,27 @@ def _fill_group(group: Group, item: RadiometricProfilesOutput) -> None:
         noise.unit = "dB"
         noise[:] = item.noise_vectors
 
-    # creating nesz profile variable
+    # creating profile variable
     profs = group.createVariable("radiometric_profiles", item.profiles.dtype, ("azimuth_blocks", "samples"))
     profs.unit = "dB"
     profs[:] = item.profiles
+
+    # average/mean profile for the current channel
+    common_axis = np.linspace(item.incidence_angles.min(), item.incidence_angles.max(), item.profiles.shape[1])
+    interp_profiles = _interp_profiles(item.profiles, item.incidence_angles, common_axis)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        common_profile = np.nanmean(interp_profiles, axis=0) if mode == "mean" else np.nanmin(interp_profiles, axis=0)
+
+    # creating interp common profile variable
+    axis = group.createVariable(f"{mode}_incidence_angles", common_axis.dtype, ("samples",))
+    axis.unit = "deg"
+    axis[:] = common_axis
+
+    # creating interp common profile variable
+    prof = group.createVariable(f"{mode}_profile", common_profile.dtype, ("samples",))
+    prof.unit = "dB"
+    prof[:] = common_profile
 
 
 def compute_2d_histogram(
@@ -259,3 +277,29 @@ def radiometric_statistical_analysis_to_df(data: list[RadiometricProfilesOutput]
         general_info = [asdict(item.general_info)] * len(kpi_info)
         item_df.append(pd.concat([pd.DataFrame(general_info), pd.DataFrame(kpi_info)], axis=1))
     return pd.concat(item_df).reset_index(drop=True)
+
+
+def _interp_profiles(profiles: np.ndarray, axes: np.ndarray, common_axis: np.ndarray) -> np.ndarray:
+    """Interpolating profiles along the common axis.
+
+    Parameters
+    ----------
+    profiles : np.ndarray
+        profiles to be interpolated
+    axes : np.ndarray
+        axes along which profiles are interpolated
+    common_axis : np.ndarray
+        common axis along which profiles are interpolated
+
+    Returns
+    -------
+    np.ndarray
+        interpolated profiles
+    """
+    interp_profiles = []
+    for ax, prof in zip(axes, profiles, strict=True):
+        mask = ~np.isnan(prof) & ~np.isnan(ax)
+        interp = np.interp(common_axis, ax[mask], prof[mask], left=np.nan, right=np.nan)
+        interp_profiles.append(interp)
+
+    return np.vstack(interp_profiles)

@@ -19,6 +19,7 @@ tags:
 **Other Changes**
 
 - Silencing "mean of empty slice" warning in spectral analysis
+- Adding average/mean radiometric profile for each channel to NetCDF output
 
 ## v1.0.13
 

@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # setup custom logger
     quality_logger.addHandler(logging.StreamHandler(sys.stdout))
 
-    out_fldr = Path(r"C:\Users\giorgio.parma\Desktop\temporary_outputs\output_ref")
+    out_fldr = Path(r"C:\Users\giorgio.parma\Desktop\temporary_outputs\out")
 
     prod = r"C:\Users\giorgio.parma\Aresys_DATA\sct_data\sentinel1\GRD_24_RF.SAFE"
     prod = Sentinel1ProductManager(prod)
