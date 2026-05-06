@@ -72,7 +72,7 @@ python_package_linux:
     - python${PYTHON} -m nox -s build_python_package -p ${PYTHON}
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   extends: .tags_manylinux_2_28
   needs: []
   artifacts:
@@ -89,7 +89,7 @@ python_package_win:
     - python -m nox -s build_python_package -p ${PYTHON}
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   extends: .tags_win10
   needs: []
   artifacts:
@@ -110,7 +110,7 @@ test_wheel_linux:
     - python -m unittest perseo_perturbations.tests
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   extends: .tags_manylinux_2_28
   needs:
     - job: python_package_linux
@@ -126,7 +126,7 @@ test_wheel_win10:
     - python -m unittest perseo_perturbations.tests
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   extends: .tags_win10
   needs:
     - job: python_package_win
