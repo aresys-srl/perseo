@@ -10,7 +10,6 @@ from typing import Literal, get_args
 import numpy as np
 from numpy import typing as npt
 from scipy.constants import speed_of_light
-from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
@@ -126,7 +125,7 @@ def direct_geocoding_with_look_angles(
 
 def direct_geocoding_with_pointing(
     sensor_positions: npt.NDArray[np.floating],
-    antenna_reference_frames: Rotation,
+    antenna_reference_frames: npt.NDArray[np.floating],
     azimuth_antenna_angles: float | npt.NDArray[np.floating],
     elevation_antenna_angles: float | npt.NDArray[np.floating],
     altitude: float = 0.0,
@@ -137,8 +136,8 @@ def direct_geocoding_with_pointing(
     ----------
     sensor_positions : npt.NDArray[np.floating]
         sensor positions, with shape (3,) or (N, 3)
-    antenna_reference_frames : Rotation
-        antenna reference frames as a Rotation object, with 1 or N rotations
+    antenna_reference_frames : npt.NDArray[np.floating]
+        antenna reference frames as a numpy array, with shape (3, 3) or (N, 3, 3)
     azimuth_antenna_angles : float | npt.NDArray[np.floating]
         scalar or (N,), in radians
     elevation_antenna_angles : float | npt.NDArray[np.floating]
@@ -152,7 +151,7 @@ def direct_geocoding_with_pointing(
         ground points (3,) or (N, 3) numpy array
     """
 
-    arf_num = len(antenna_reference_frames) if len(antenna_reference_frames.shape) == 1 else 1
+    arf_num = antenna_reference_frames.size // 9
     if arf_num != np.size(sensor_positions) // 3:
         raise ValueError(
             f"input shape mismatch: antenna reference frames {arf_num} != sensor positions {sensor_positions.shape}"
@@ -161,7 +160,7 @@ def direct_geocoding_with_pointing(
     return direct_geocoding_with_looking_direction(
         sensor_positions=sensor_positions,
         looking_directions=compute_pointing_directions(
-            antenna_reference_frame=antenna_reference_frames.as_matrix(),
+            antenna_reference_frame=antenna_reference_frames,
             azimuth_antenna_angles=azimuth_antenna_angles,
             elevation_antenna_angles=elevation_antenna_angles,
         ),
