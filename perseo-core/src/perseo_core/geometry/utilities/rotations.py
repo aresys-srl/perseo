@@ -87,7 +87,10 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> npt.ND
         raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
 
     euler_sequence = order.translate(_ROT_TRANSLATION_TABLE)
-    return rotation.as_euler(euler_sequence)
+    euler_angles = rotation.as_euler(euler_sequence)
+
+    indices = [order.index(axis) for axis in "YPR"]
+    return euler_angles[..., indices]
 
 
 def compute_slerp_derivative(
