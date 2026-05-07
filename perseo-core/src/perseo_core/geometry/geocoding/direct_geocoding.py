@@ -18,6 +18,7 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_monostatic_core,
     direct_geocoding_monostatic_core_range_vectorized,
 )
+from perseo_core.geometry.utilities.antenna_reference_frame import compute_antenna_reference_frame_from_euler_angles
 from perseo_core.geometry.utilities.ellipsoid import (
     compute_line_ellipsoid_intersections,
     create_inflated_WGS84_ellipsoid,
@@ -27,7 +28,6 @@ from perseo_core.geometry.utilities.reference_frames import (
     compute_pointing_directions,
     compute_sensor_local_axis,
 )
-from perseo_core.geometry.utilities.rotations import euler_angles_to_rotation
 
 SensorLookDirection = Literal["RIGHT", "LEFT"]
 _VALID_SENSOR_LOOK_DIRECTIONS = get_args(SensorLookDirection)
@@ -112,12 +112,12 @@ def direct_geocoding_with_look_angles(
 
     look_angles = np.atleast_1d(look_angles)
     assert look_angles.ndim == 1
-    rotation = euler_angles_to_rotation(
-        ypr_rad=np.stack([np.zeros_like(look_angles), np.zeros_like(look_angles), -np.asarray(look_angles)], axis=-1),
-        order="YPR",
-    )
+    ypr_rad = np.stack([np.zeros_like(look_angles), np.zeros_like(look_angles), -np.asarray(look_angles)], axis=-1)
 
-    pointing = (local_axis * rotation).as_matrix().squeeze()[..., 2]
+    arf = compute_antenna_reference_frame_from_euler_angles(
+        rotation_order="YPR", ypr_rad=ypr_rad, initial_reference_frame_axis=local_axis
+    )
+    pointing = arf.as_matrix().squeeze()[..., 2]
 
     return direct_geocoding_with_looking_direction(
         sensor_positions=sensor_positions, looking_directions=pointing, altitude=altitude
