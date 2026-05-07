@@ -115,7 +115,7 @@ def direct_geocoding_with_look_angles(
     ypr_rad = np.stack([np.zeros_like(look_angles), np.zeros_like(look_angles), -np.asarray(look_angles)], axis=-1)
 
     arf = compute_antenna_reference_frame_from_euler_angles(
-        rotation_order="YPR", ypr_rad=ypr_rad, initial_reference_frame_axis=local_axis
+        rotation_order="YPR", ypr_rad=ypr_rad, initial_reference_frame_axis=Rotation.from_matrix(local_axis)
     )
     pointing = arf.as_matrix().squeeze()[..., 2]
 
@@ -161,7 +161,7 @@ def direct_geocoding_with_pointing(
     return direct_geocoding_with_looking_direction(
         sensor_positions=sensor_positions,
         looking_directions=compute_pointing_directions(
-            antenna_reference_frame=antenna_reference_frames,
+            antenna_reference_frame=antenna_reference_frames.as_matrix(),
             azimuth_antenna_angles=azimuth_antenna_angles,
             elevation_antenna_angles=elevation_antenna_angles,
         ),

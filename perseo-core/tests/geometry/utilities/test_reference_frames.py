@@ -7,7 +7,6 @@ import itertools
 import unittest
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.utilities.reference_frames import (
     compute_geocentric_reference_frame,
@@ -143,17 +142,17 @@ class SensorAxisTestCase(unittest.TestCase):
     def test_compute_sensor_local_axis_zero_doppler(self):
         """Testing compute sensor local axis, zero doppler"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "ZERODOPPLER")
-        np.testing.assert_allclose(frame.as_matrix(), self._zerodoppler_frame_reference, rtol=0, atol=self._tolerance)
+        np.testing.assert_allclose(frame, self._zerodoppler_frame_reference, rtol=0, atol=self._tolerance)
 
     def test_compute_sensor_local_axis_geocentric(self):
         """Testing compute sensor local axis, geocentric"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "GEOCENTRIC")
-        np.testing.assert_allclose(frame.as_matrix(), self._geocentric_frame_reference, rtol=0, atol=self._tolerance)
+        np.testing.assert_allclose(frame, self._geocentric_frame_reference, rtol=0, atol=self._tolerance)
 
     def test_compute_sensor_local_axis_geodetic(self):
         """Testing compute sensor local axis, geodetic"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "GEODETIC")
-        np.testing.assert_allclose(frame.as_matrix(), self._geodetic_frame_reference, rtol=0, atol=self._tolerance)
+        np.testing.assert_allclose(frame, self._geodetic_frame_reference, rtol=0, atol=self._tolerance)
 
     def test_compute_sensor_local_axis_invalid_reference_frame(self):
         """Testing compute sensor local axis, with errors"""
@@ -240,7 +239,7 @@ class PointingDirectionsComputationTestCase(unittest.TestCase):
     def test_compute_pointing_directions(self):
 
         boresight_dir = compute_pointing_directions(
-            antenna_reference_frame=Rotation.from_matrix(self._arf_in),
+            antenna_reference_frame=self._arf_in,
             azimuth_antenna_angles=0,
             elevation_antenna_angles=0,
         )
@@ -261,7 +260,7 @@ class PointingDirectionsComputationTestCase(unittest.TestCase):
         for arf, azimuth_angles, elevation_angles in itertools.product(
             arf_inputs, azimuth_angles_inputs, elevation_angles_inputs
         ):
-            directions = compute_pointing_directions(Rotation.from_matrix(arf), azimuth_angles, elevation_angles)
+            directions = compute_pointing_directions(arf, azimuth_angles, elevation_angles)
 
             expected_shape = (3,)
             if arf.ndim == 3 or np.size(azimuth_angles) > 1 or np.size(elevation_angles) > 1:
@@ -316,7 +315,7 @@ class PointingDirectionsComputationTestCase(unittest.TestCase):
             strict=False,
         ):
             with self.assertRaises(ValueError):
-                compute_pointing_directions(Rotation.from_matrix(arf), azimuth_angles, elevation_angles)
+                compute_pointing_directions(arf, azimuth_angles, elevation_angles)
 
 
 if __name__ == "__main__":

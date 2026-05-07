@@ -20,7 +20,6 @@ from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
-from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.utilities.ellipsoid import WGS84
@@ -214,7 +213,7 @@ def compute_sensor_local_axis(
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
     reference_frame: ReferenceFrame,
-) -> Rotation:
+) -> npt.NDArray[np.floating]:
     """Compute the axis of the local reference frame given the sensor's positions and velocities.
 
     Parameters
@@ -228,8 +227,8 @@ def compute_sensor_local_axis(
 
     Returns
     -------
-    Rotation
-        sensor's local axis as a Rotation object
+    npt.NDArray[np.floating]
+        sensor's local axis as a numpy array with shape (3, 3) or (N, 3, 3)
 
     Examples
     --------
@@ -239,7 +238,7 @@ def compute_sensor_local_axis(
     >>> print(position.shape)
     (3,)
     >>> axis = compute_sensor_local_axis(position, velocity, "ZERODOPPLER")
-    >>> print(axis.as_matrix().shape)
+    >>> print(axis.shape)
     (3, 3)
 
     multiple position and velocity
@@ -247,17 +246,17 @@ def compute_sensor_local_axis(
     >>> print(positions.shape)
     (10, 3)
     >>> axes = compute_sensor_local_axis(positions, velocities, "ZERODOPPLER")
-    >>> print(axes.as_matrix().shape)
+    >>> print(axes.shape)
     (10, 3, 3)
 
     """
     match reference_frame:
         case "GEOCENTRIC":
-            return Rotation.from_matrix(compute_geocentric_reference_frame(sensor_positions, sensor_velocities))
+            return compute_geocentric_reference_frame(sensor_positions, sensor_velocities)
         case "GEODETIC":
-            return Rotation.from_matrix(compute_geodetic_reference_frame(sensor_positions, sensor_velocities))
+            return compute_geodetic_reference_frame(sensor_positions, sensor_velocities)
         case "ZERODOPPLER":
-            return Rotation.from_matrix(compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities))
+            return compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities)
         case _:
             raise ValueError(
                 f"Unexpected reference_frame value: {reference_frame}. "
@@ -266,7 +265,7 @@ def compute_sensor_local_axis(
 
 
 def compute_pointing_directions(
-    antenna_reference_frame: Rotation,
+    antenna_reference_frame: npt.NDArray[np.floating],
     azimuth_antenna_angles: float | npt.NDArray[np.floating],
     elevation_antenna_angles: float | npt.NDArray[np.floating],
 ) -> npt.NDArray[np.floating]:
@@ -274,8 +273,8 @@ def compute_pointing_directions(
 
     Parameters
     ----------
-    antenna_reference_frame : Rotation
-        antenna reference frame for the sensor as a Rotation object, with 1 or N rotations
+    antenna_reference_frame : npt.NDArray[np.floating]
+        antenna reference frame for the sensor as a numpy array with shape (3, 3) or (N, 3, 3)
     azimuth_antenna_angles : float | npt.NDArray[np.floating]
         scalar or (N,) array like, in radians
     elevation_antenna_angles : float | npt.NDArray[np.floating]
@@ -291,7 +290,7 @@ def compute_pointing_directions(
     ValueError
         in case of mismatching input dimensions
     """
-    num_of_arf = len(antenna_reference_frame) if not antenna_reference_frame.single else 1
+    num_of_arf = antenna_reference_frame.size // 9
 
     if num_of_arf != 1 and np.size(azimuth_antenna_angles) != 1 and num_of_arf != np.size(azimuth_antenna_angles):
         raise ValueError(
@@ -326,7 +325,7 @@ def compute_pointing_directions(
     local_directions = np.stack([ux, uy, uz], axis=-1)
     local_directions = local_directions / np.linalg.norm(local_directions, axis=-1, keepdims=True)
 
-    return antenna_reference_frame.apply(local_directions)
+    return np.einsum("...ij,...j->...i", antenna_reference_frame, local_directions)
 
 
 def compute_inertial_velocity(
