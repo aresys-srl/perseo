@@ -58,11 +58,20 @@ def get_rotation_test_data():
     pitch = np.deg2rad(15)
     roll = np.deg2rad(20)
 
+    arf_from_eye = np.array(
+        [
+            [0.95125124, -0.07599942, 0.29890661],
+            [0.16773126, 0.94078815, -0.29459106],
+            [-0.25881905, 0.33036609, 0.90767337],
+        ]
+    )
+
     return {
         "yaw": yaw,
         "pitch": pitch,
         "roll": roll,
         "euler_angles": np.stack([yaw, pitch, roll], axis=-1),
+        "arf_from_eye": arf_from_eye,
         "tolerance": 1e-9,
     }
 
