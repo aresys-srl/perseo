@@ -28,25 +28,22 @@ class Attitude(Generic[T]):
 
     def __init__(
         self,
-        rotations: Rotation,
+        antenna_reference_frames: npt.NDArray[np.floating],
         times: npt.NDArray[T],
     ) -> None:
         """Create an Attitude SLERP interpolator from times and associated rotations. Time axis can be specified as
-        relative or absolute (actual dates), while rotations must be expressed with a numerosity equals to the same
-        length as the times array.
-
-        .. note::
-            The provided rotations are expressed in a reference system chosen by the user, and the interpolator will
-            keep the same reference system for the interpolated rotations.
+        relative or absolute (actual dates).
+        Antenna reference frames must be expressed as an array with shape (N, 3, 3),
+        with N being the same length as the times array.
 
         Parameters
         ----------
-        rotations : Rotation
-            Scipy Rotation object
-        times : np.ndarray
+        antenna_reference_frames : npt.NDArray[np.floating]
+            array of rotations in a Global Reference System (i.e. ECEF), with shape (N, 3, 3)
+        times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
         """
-        self._rotations = rotations
+        self._rotations = Rotation.from_matrix(antenna_reference_frames)
         self._times = times
 
         self._domain = (times[0], times[-1])
@@ -56,9 +53,9 @@ class Attitude(Generic[T]):
         )
 
     @property
-    def rotations(self) -> Rotation:
-        """Accessing attitude rotations used for interpolation"""
-        return self._rotations
+    def antenna_reference_frames(self) -> npt.NDArray[np.floating]:
+        """Accessing antenna reference frames used for interpolation"""
+        return self._rotations.as_matrix()
 
     @property
     def times(self) -> npt.NDArray[T]:
@@ -75,7 +72,7 @@ class Attitude(Generic[T]):
         if np.any(time < self.domain[0]) or np.any(time > self.domain[1]):
             raise RuntimeError("One (or more) of the input times is outside of attitude time domain.")
 
-    def evaluate(self, time: T | npt.NDArray[T]) -> Rotation:
+    def evaluate(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Retrieve antenna reference frame rotations at given times.
 
         Parameters
@@ -85,14 +82,15 @@ class Attitude(Generic[T]):
 
         Returns
         -------
-        Rotation
-            interpolated Scipy Rotation objects at each input time
+        npt.NDArray[np.floating]
+            interpolated antenna reference frame at each input time as a numpy array with shape (3, 3) or (N, 3, 3)
+         depending on the input time shape
         """
         self._check_time_validity(time)
         relative_times = time - self.domain[0]
-        return self._slerp(relative_times)
+        return self._slerp(relative_times).as_matrix()
 
-    def evaluate_first_derivatives(self, time: T | npt.NDArray[T]) -> Rotation:
+    def evaluate_first_derivatives(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Retrieve antenna reference frame rotations derivative at given times.
 
         This computes the exact derivative of the SLERP at the query times with piecewise constant angular velocity
@@ -105,14 +103,16 @@ class Attitude(Generic[T]):
 
         Returns
         -------
-        Rotation
-            interpolated SLERP first derivative at each input time expressed as a Scipy Rotation object
+        npt.NDArray[np.floating]
+            interpolated SLERP first derivative at each input time expressed as a
+            numpy array with shape (3, 3) or (N, 3, 3)
+         depending on the input time shape
         """
         self._check_time_validity(time)
         relative_times = time - self.domain[0]
         return compute_slerp_derivative(
             rotations=self._rotations, times=self.times - self.domain[0], query_times=relative_times
-        )
+        ).as_matrix()
 
     @classmethod
     def from_quaternions(cls, quaternions: npt.NDArray[np.floating], times: npt.NDArray[T]) -> Attitude:
@@ -138,7 +138,7 @@ class Attitude(Generic[T]):
         Attitude
             interpolator object
         """
-        return cls(rotations=Rotation.from_quat(quaternions), times=times)
+        return cls(antenna_reference_frames=Rotation.from_quat(quaternions).as_matrix(), times=times)
 
     @classmethod
     def from_euler_angles(
@@ -168,4 +168,9 @@ class Attitude(Generic[T]):
         Attitude
             interpolator object
         """
-        return cls(rotations=euler_angles_to_rotation(order=rotation_order, ypr_rad=euler_angles_rad), times=times)
+        return cls(
+            antenna_reference_frames=euler_angles_to_rotation(
+                order=rotation_order, ypr_rad=euler_angles_rad
+            ).as_matrix(),
+            times=times,
+        )

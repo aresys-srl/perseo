@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Complex Rotation transformations utilities"""
+"""Antenna Reference Frame (ARF) computation utilities."""
 
 from __future__ import annotations
 

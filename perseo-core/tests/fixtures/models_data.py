@@ -34,12 +34,12 @@ def get_attitude_test_data():
     """
     times = np.array([0.0, 4.0, 8.0])
     euler_angles = np.deg2rad(np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 45.0], [0.0, 45.0, 90.0]]))
-    rotations = Rotation.from_euler(seq="ZYX", angles=euler_angles, degrees=False)
+    antenna_reference_frames = Rotation.from_euler(seq="ZYX", angles=euler_angles, degrees=False).as_matrix()
 
     return {
         "times": times,
         "euler_angles": euler_angles,
-        "rotations": rotations,
+        "antenna_reference_frames": antenna_reference_frames,
     }
 
 

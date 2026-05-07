@@ -21,36 +21,36 @@ class TestAttitude(unittest.TestCase):
         data = get_attitude_test_data()
         self.times = data["times"]
         self._euler_angles = data["euler_angles"]
-        self.rotations = data["rotations"]
-        self.attitude = Attitude(rotations=self.rotations, times=self.times)
+        self.antenna_reference_frames = data["antenna_reference_frames"]
+        self.attitude = Attitude(antenna_reference_frames=self.antenna_reference_frames, times=self.times)
 
     def test_properties(self):
         """Test that Attitude properties correctly return times, domain, and rotations."""
         self.assertTrue(np.array_equal(self.attitude.times, self.times))
         self.assertEqual(self.attitude.domain, (0.0, 8.0))
-        self.assertIsInstance(self.attitude.rotations, Rotation)
+        self.assertIsInstance(self.attitude.antenna_reference_frames, np.ndarray)
 
     def test_evaluate_at_knots(self):
         """Test that Attitude.evaluate returns exact values at knot points."""
         result = self.attitude.evaluate(self.times)
-        assert_allclose(result.as_quat(), self.rotations.as_quat(), atol=1e-12)
+        assert_allclose(result, self.antenna_reference_frames, atol=1e-12)
 
     def test_evaluate_midpoints(self):
         """Test that Attitude.evaluate interpolates correctly between knot points using SLERP."""
         query = np.array([2.0, 6.0])
 
-        ref_slerp = Slerp(self.times, self.rotations)
+        ref_slerp = Slerp(self.times, Rotation.from_matrix(self.antenna_reference_frames))
         expected = ref_slerp(query)
 
         result = self.attitude.evaluate(query)
 
-        assert_allclose(result.as_quat(), expected.as_quat(), atol=1e-10)
+        assert_allclose(result, expected.as_matrix(), atol=1e-10)
 
     def test_evaluate_output_shape(self):
         """Test that Attitude.evaluate returns output with correct shape for multiple query points."""
-        query = np.array([1.0, 2.0, 3.0])
+        query = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
         result = self.attitude.evaluate(query)
-        self.assertEqual(result.as_quat().shape[0], 3)
+        self.assertEqual(result.shape, (7, 3, 3))
 
     def test_extrapolation_below_domain(self):
         """Test that Attitude.evaluate raises RuntimeError for times below domain."""
@@ -66,21 +66,21 @@ class TestAttitude(unittest.TestCase):
         """Test that Attitude.evaluate_first_derivatives returns correct shape."""
         query = np.array([2.0, 4.0])
         derivative = self.attitude.evaluate_first_derivatives(query)
-        self.assertIsInstance(derivative, Rotation)
-        self.assertEqual(derivative.as_quat().shape[0], 2)
+        self.assertIsInstance(derivative, np.ndarray)
+        self.assertEqual(derivative.shape, (2, 3, 3))
 
     def test_from_quaternions(self):
         """Test that Attitude.from_quaternions creates object that evaluates correctly."""
-        quats = self.rotations.as_quat()
+        quats = Rotation.from_matrix(self.antenna_reference_frames).as_quat()
         attitude = Attitude.from_quaternions(quats, self.times)
 
         query = np.array([2.0])
         result = attitude.evaluate(query)
 
-        ref_slerp = Slerp(self.times, self.rotations)
+        ref_slerp = Slerp(self.times, Rotation.from_matrix(self.antenna_reference_frames))
         expected = ref_slerp(query)
 
-        assert_allclose(result.as_quat(), expected.as_quat(), atol=1e-10)
+        assert_allclose(result, expected.as_matrix(), atol=1e-10)
 
     def test_from_euler_angles(self):
         """Test that Attitude.from_euler_angles creates object that evaluates correctly."""
@@ -93,10 +93,10 @@ class TestAttitude(unittest.TestCase):
         query = np.array([6.0])
         result = attitude.evaluate(query)
 
-        ref_slerp = Slerp(self.times, self.rotations)
+        ref_slerp = Slerp(self.times, Rotation.from_matrix(self.antenna_reference_frames))
         expected = ref_slerp(query)
 
-        assert_allclose(result.as_quat(), expected.as_quat(), atol=1e-10)
+        assert_allclose(result, expected.as_matrix(), atol=1e-10)
 
 
 if __name__ == "__main__":
