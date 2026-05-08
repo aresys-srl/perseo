@@ -8,7 +8,7 @@ from typing import get_args
 
 import numpy as np
 
-from perseo_core.geometry.utilities.rotations import (
+from perseo_core.geometry.pointing.rotations import (
     RotationOrder,
     euler_angles_to_rotation,
     rotation_to_euler_angles,

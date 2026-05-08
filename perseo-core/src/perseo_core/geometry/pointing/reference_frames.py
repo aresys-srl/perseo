@@ -22,10 +22,10 @@ import numpy as np
 import numpy.typing as npt
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-from perseo_core.geometry.utilities.ellipsoid import WGS84
-from perseo_core.geometry.utilities.rotations import (
+from perseo_core.geometry.pointing.rotations import (
     euler_angles_to_rotation,
 )
+from perseo_core.geometry.utilities.ellipsoid import WGS84
 
 _SIDEREAL_DAY = 86164.09054
 _earth_angular_velocity = 2.0 * np.pi / _SIDEREAL_DAY
@@ -41,7 +41,9 @@ ReferenceFrame = Literal["GEOCENTRIC", "GEODETIC", "ZERODOPPLER"]
 def compute_zerodoppler_reference_frame(
     sensor_positions: npt.NDArray[np.floating], sensor_velocities: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
-    """Compute the ZeroDoppler reference frame at given sensor positions and velocities.
+    """Compute the axes of the ZeroDoppler reference frame.
+
+    Sensor positions and velocities are assumed to be expressed in ECEF coordinates.
 
     Reference frame
 
@@ -49,7 +51,8 @@ def compute_zerodoppler_reference_frame(
     - y-unit vector: given by the cross product between x and sensor position corrected with Earth eccentricity
     - z-unit vector: completing the reference frame
 
-    - output frame has x as first column, y as second one and z as the last one.
+    Output frame has x as first column, y as second one and z as the last one.
+    e.g. ux = zero_doppler_frame[..., 0], uy = zero_doppler_frame[..., 1], uz = zero_doppler_frame[..., 2]
 
     Parameters
     ----------
@@ -61,7 +64,8 @@ def compute_zerodoppler_reference_frame(
     Returns
     -------
     npt.NDArray[np.floating]
-        zero doppler reference frame at each sensor position, with shape (3, 3) or (N, 3, 3)
+        zero doppler axes for each sensor position, with shape (3, 3) or (N, 3, 3)
+        stored as columns of the output array.
 
     Raises
     ------
@@ -98,13 +102,18 @@ def compute_zerodoppler_reference_frame(
 def compute_geocentric_reference_frame(
     sensor_positions: npt.NDArray[np.floating], sensor_velocities: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
-    """Computed the geocentric reference frame at given sensor positions and velocities.
+    """Compute the axes of the geocentric reference frame.
+
+    Sensor positions and velocities are assumed to be expressed in ECEF coordinates.
 
     Reference frame
 
     - x-unit vector: completing the reference frame
     - y-unit vector: given by the cross product between z and sensor inertial velocity
     - z-unit vector: oriented as -sat_pos
+
+    Output frame has x as first column, y as second one and z as the last one.
+    e.g. ux = geocentric_frame[..., 0], uy = geocentric_frame[..., 1], uz = geocentric_frame[..., 2]
 
     Parameters
     ----------
@@ -117,11 +126,8 @@ def compute_geocentric_reference_frame(
     -------
     npt.NDArray[np.floating]
         geocentric reference frame for each sensor position, with shape (3, 3) or (N, 3, 3)
+        stored as columns of the output array.
 
-    Raises
-    ------
-    ValueError
-        in case of invalid input
     """
     if sensor_positions.shape != sensor_velocities.shape:
         raise ValueError(
@@ -148,7 +154,12 @@ def compute_geocentric_reference_frame(
 def compute_geodetic_reference_frame(
     sensor_positions: npt.NDArray[np.floating], sensor_velocities: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
-    """Compute the geodetic reference frame at given sensor positions and velocities.
+    """Compute the axes of the geodetic reference frame.
+
+    Sensor positions and velocities are assumed to be expressed in ECEF coordinates.
+
+    Output frame has x as first column, y as second one and z as the last one.
+    e.g. ux = geodetic_frame[..., 0], uy = geodetic_frame[..., 1], uz = geodetic_frame[..., 2]
 
     Parameters
     ----------
@@ -161,11 +172,7 @@ def compute_geodetic_reference_frame(
     -------
     npt.NDArray[np.floating]
         geodetic reference frame for each sensor position, with shape (3, 3) or (N, 3, 3)
-
-    Raises
-    ------
-    ValueError
-        in case of invalid input
+        stored as columns of the output array.
     """
 
     if sensor_positions.shape != sensor_velocities.shape:
@@ -214,7 +221,14 @@ def compute_sensor_local_axis(
     sensor_velocities: npt.NDArray[np.floating],
     reference_frame: ReferenceFrame,
 ) -> npt.NDArray[np.floating]:
-    """Compute the axis of the local reference frame given the sensor's positions and velocities.
+    """Compute the axes of the sensor reference frame
+
+    Sensor positions and velocities are assumed to be expressed in ECEF coordinates.
+        Reference frame is one of "GEOCENTRIC", "GEODETIC", or "ZERODOPPLER".
+
+    Output frame has x as first column, y as second one and z as the last one.
+    e.g. for "ZERODOPPLER"
+    reference frame: ux = zero_doppler_frame[..., 0], uy = zero_doppler_frame[..., 1], uz = zero_doppler_frame[..., 2]
 
     Parameters
     ----------
@@ -262,70 +276,6 @@ def compute_sensor_local_axis(
                 f"Unexpected reference_frame value: {reference_frame}. "
                 "Must be one of 'GEOCENTRIC', 'GEODETIC', or 'ZERODOPPLER'."
             )
-
-
-def compute_pointing_directions(
-    antenna_reference_frame: npt.NDArray[np.floating],
-    azimuth_antenna_angles: float | npt.NDArray[np.floating],
-    elevation_antenna_angles: float | npt.NDArray[np.floating],
-) -> npt.NDArray[np.floating]:
-    """Compute the pointing directions corresponding to the given antenna angles.
-
-    Parameters
-    ----------
-    antenna_reference_frame : npt.NDArray[np.floating]
-        antenna reference frame for the sensor as a numpy array with shape (3, 3) or (N, 3, 3)
-    azimuth_antenna_angles : float | npt.NDArray[np.floating]
-        scalar or (N,) array like, in radians
-    elevation_antenna_angles : float | npt.NDArray[np.floating]
-        scalar or (N,) array like, in radians
-
-    Returns
-    -------
-    npt.NDArray[np.floating]
-        pointing directions, with shape (3,) or (N, 3)
-
-    Raises
-    ------
-    ValueError
-        in case of mismatching input dimensions
-    """
-    num_of_arf = antenna_reference_frame.size // 9
-
-    if num_of_arf != 1 and np.size(azimuth_antenna_angles) != 1 and num_of_arf != np.size(azimuth_antenna_angles):
-        raise ValueError(
-            f"input shape mismatch: antenna reference frame {num_of_arf} != azimuth antenna angles "
-            + f"{np.size(azimuth_antenna_angles)}"
-        )
-
-    if num_of_arf != 1 and np.size(elevation_antenna_angles) != 1 and num_of_arf != np.size(elevation_antenna_angles):
-        raise ValueError(
-            f"input shape mismatch: antenna reference frame {num_of_arf} != elevation antenna angles "
-            + f"{np.size(elevation_antenna_angles)}"
-        )
-
-    if (
-        np.size(elevation_antenna_angles) != 1
-        and np.size(azimuth_antenna_angles) != 1
-        and np.size(elevation_antenna_angles) != np.size(azimuth_antenna_angles)
-    ):
-        raise ValueError(
-            "Incompatible azimuth and elevation antenna angles numerosity: "
-            + f"{np.size(azimuth_antenna_angles)}, {np.size(elevation_antenna_angles)}"
-        )
-
-    if np.shape(azimuth_antenna_angles) != np.shape(elevation_antenna_angles):
-        broadcast_shape = np.broadcast_shapes(np.shape(azimuth_antenna_angles), np.shape(elevation_antenna_angles))
-        azimuth_antenna_angles = np.broadcast_to(azimuth_antenna_angles, broadcast_shape)
-        elevation_antenna_angles = np.broadcast_to(elevation_antenna_angles, broadcast_shape)
-
-    ux = np.tan(azimuth_antenna_angles)
-    uy = np.tan(elevation_antenna_angles)
-    uz = np.ones_like(ux)
-    local_directions = np.stack([ux, uy, uz], axis=-1)
-    local_directions = local_directions / np.linalg.norm(local_directions, axis=-1, keepdims=True)
-
-    return np.einsum("...ij,...j->...i", antenna_reference_frame, local_directions)
 
 
 def compute_inertial_velocity(

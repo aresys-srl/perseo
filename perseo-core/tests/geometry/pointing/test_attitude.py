@@ -9,7 +9,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.models.attitude import Attitude
+from perseo_core.geometry.pointing.attitude import Attitude
 from tests.fixtures.models_data import get_attitude_test_data
 
 

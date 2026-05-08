@@ -12,7 +12,7 @@ import numpy as np
 import numpy.typing as npt
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_look_angles
-from perseo_core.geometry.utilities.reference_frames import ReferenceFrame
+from perseo_core.geometry.pointing.reference_frames import ReferenceFrame
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 

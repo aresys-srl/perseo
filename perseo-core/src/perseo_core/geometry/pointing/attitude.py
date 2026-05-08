@@ -14,7 +14,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.geometry.utilities.rotations import (
+from perseo_core.geometry.pointing.rotations import (
     RotationOrder,
     compute_slerp_derivative,
     euler_angles_to_rotation,
