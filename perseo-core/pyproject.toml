@@ -10,7 +10,7 @@ dependencies = [
     "scipy>1.15",
     "numpydantic >= 1.6",
     "pyproj>=3.5",
-    "python-dateutil"
+    "python-dateutil",
 ]
 dynamic = ["version"]
 classifiers = [
@@ -36,7 +36,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["ruff", "pylint", "nox"]
-test = ["unittest-xml-reporting", "coverage"]
+test = ["pytest>8.0.0", "pytest-cov>7.0.0"]
 docs = [
     "ipython",
     "nbsphinx",
@@ -55,6 +55,32 @@ path = "src/perseo_core/__init__.py"
 
 [tool.hatch.build.targets.sdist]
 only-include = ["src", "tests", "docs"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+    "--cov=perseo_core",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--no-cov-on-fail",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+fail_under = 70
 
 [tool.ruff]
 line-length = 120
@@ -89,7 +115,7 @@ format = "ruff format"
 sort = "ruff check --select I --fix-only"
 lint_check = "ruff check"
 lint_fix = "ruff check --show-fixes --fix-only"
-test = "python -m unittest discover -s ./tests -p test_*.py"
+test = "python -m pytest ./tests/ -v --cov=perseo_core --cov-report=html --cov-report=term"
 clean_doc = "python -m sphinx -M clean docs/source {args}"
 build_doc = "python -m sphinx -b html docs/source {args}"
 check_code = { composite = ["format_check", "lint_check"] }

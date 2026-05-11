@@ -3,103 +3,101 @@
 
 """Testing geometry/coords_conversions.py functionalities"""
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-from tests.fixtures.geometry_data import get_coords_conversions_test_data
 
 
-class CoordsConversionsTest(unittest.TestCase):
+class TestCoordsConversions:
     """Test coordinate conversion functions xyz2llh and llh2xyz with various input types and options."""
 
-    def setUp(self) -> None:
-        # Load test data from fixtures
-        data = get_coords_conversions_test_data()
-        self.xyz = data["xyz"]
-        self.llh = data["llh"]
-        self.llh_deg = data["llh_deg"]
-        self.xyz_vec = data["xyz_vec"]
-        self.llh_vec = data["llh_vec"]
-        self.llh_vec_deg = data["llh_vec_deg"]
-        self.atol = data["tolerance"]["atol"]
-        self.rtol = data["tolerance"]["rtol"]
+    @pytest.fixture(autouse=True)
+    def setup_coords_conversions_data(self, coords_conversions_test_data):
+        """Load test data from fixtures."""
+        self.xyz = coords_conversions_test_data["xyz"]
+        self.llh = coords_conversions_test_data["llh"]
+        self.llh_deg = coords_conversions_test_data["llh_deg"]
+        self.xyz_vec = coords_conversions_test_data["xyz_vec"]
+        self.llh_vec = coords_conversions_test_data["llh_vec"]
+        self.llh_vec_deg = coords_conversions_test_data["llh_vec_deg"]
+        self.atol = coords_conversions_test_data["tolerance"]["atol"]
+        self.rtol = coords_conversions_test_data["tolerance"]["rtol"]
 
     def test_xyz2llh_from_list(self) -> None:
         """Test xyz2llh with list input in radians mode."""
         llh = xyz2llh(self.xyz)
-        self.assertEqual(llh.shape, (3,))
+        assert llh.shape == (3,)
         np.testing.assert_allclose(llh, np.array(self.llh), atol=self.atol, rtol=self.rtol)
 
     def test_xyz2llh_from_list_deg(self) -> None:
         """Test xyz2llh with list input in degrees mode."""
         llh = xyz2llh(self.xyz, radians=False)
         llh[:2] = np.deg2rad(llh[:2])
-        self.assertEqual(llh.shape, (3,))
+        assert llh.shape == (3,)
         np.testing.assert_allclose(llh, np.array(self.llh), atol=self.atol, rtol=self.rtol)
 
     def test_xyz2llh_from_array(self) -> None:
         """Test xyz2llh with numpy array (1D) input in radians mode."""
         llh = xyz2llh(np.array(self.xyz))
-        self.assertEqual(llh.shape, (3,))
+        assert llh.shape == (3,)
         np.testing.assert_allclose(llh, np.array(self.llh), atol=self.atol, rtol=self.rtol)
 
     def test_xyz2llh_from_array_deg(self) -> None:
         """Test xyz2llh with numpy array (1D) input in degrees mode."""
         llh = xyz2llh(np.array(self.xyz), radians=False)
         llh[:2] = np.deg2rad(llh[:2])
-        self.assertEqual(llh.shape, (3,))
+        assert llh.shape == (3,)
         np.testing.assert_allclose(llh, np.array(self.llh), atol=self.atol, rtol=self.rtol)
 
     def test_llh2xyz_from_list(self) -> None:
         """Test llh2xyz with list input in radians mode."""
         xyz = llh2xyz(self.llh)
-        self.assertEqual(xyz.shape, (3,))
+        assert xyz.shape == (3,)
         np.testing.assert_allclose(xyz, np.array(self.xyz), atol=self.atol, rtol=self.rtol)
 
     def test_llh2xyz_from_list_deg(self) -> None:
         """Test llh2xyz with list input in degrees mode."""
         xyz = llh2xyz(self.llh_deg, radians=False)
-        self.assertEqual(xyz.shape, (3,))
+        assert xyz.shape == (3,)
         np.testing.assert_allclose(xyz, np.array(self.xyz), atol=self.atol, rtol=self.rtol)
 
     def test_llh2xyz_from_array(self) -> None:
         """Test llh2xyz with numpy array (1D) input in radians mode."""
         xyz = llh2xyz(np.array(self.llh))
-        self.assertEqual(xyz.shape, (3,))
+        assert xyz.shape == (3,)
         np.testing.assert_allclose(xyz, np.array(self.xyz), atol=self.atol, rtol=self.rtol)
 
     def test_llh2xyz_from_array_deg(self) -> None:
         """Test llh2xyz with numpy array (1D) input in degrees mode."""
         xyz = llh2xyz(np.array(self.llh_deg), radians=False)
-        self.assertEqual(xyz.shape, (3,))
+        assert xyz.shape == (3,)
         np.testing.assert_allclose(xyz, np.array(self.xyz), atol=self.atol, rtol=self.rtol)
 
     def test_xyz2llh_from_array_2d(self) -> None:
         """Test xyz2llh with numpy array (2D/vectorized) input in radians mode."""
         llh = xyz2llh(self.xyz_vec)
-        self.assertEqual(llh.shape, self.xyz_vec.shape)
+        assert llh.shape == self.xyz_vec.shape
         np.testing.assert_allclose(llh, self.llh_vec, atol=self.atol, rtol=self.rtol)
 
     def test_xyz2llh_from_array_2d_deg(self) -> None:
         """Test xyz2llh with numpy array (2D/vectorized) input in degrees mode."""
         llh = xyz2llh(self.xyz_vec, radians=False)
         llh[:, :2] = np.deg2rad(llh[:, :2])
-        self.assertEqual(llh.shape, self.xyz_vec.shape)
+        assert llh.shape == self.xyz_vec.shape
         np.testing.assert_allclose(llh, self.llh_vec, atol=self.atol, rtol=self.rtol)
 
     def test_llh2xyz_from_array_2d(self) -> None:
         """Test llh2xyz with numpy array (2D/vectorized) input in radians mode."""
         xyz = llh2xyz(self.llh_vec)
-        self.assertEqual(xyz.shape, self.llh_vec.shape)
+        assert xyz.shape == self.llh_vec.shape
         np.testing.assert_allclose(xyz, self.xyz_vec, atol=self.atol, rtol=self.rtol)
 
     def test_llh2xyz_from_array_2d_deg(self) -> None:
         """Test llh2xyz with numpy array (2D/vectorized) input in degrees mode."""
 
         xyz = llh2xyz(self.llh_vec_deg, radians=False)
-        self.assertEqual(xyz.shape, self.llh_vec.shape)
+        assert xyz.shape == self.llh_vec.shape
         np.testing.assert_allclose(xyz, self.xyz_vec, atol=self.atol, rtol=self.rtol)
 
     def test_multiple_application_1(self) -> None:
@@ -125,7 +123,3 @@ class CoordsConversionsTest(unittest.TestCase):
         xyz = llh2xyz(self.llh_vec_deg, radians=False)
         llh = xyz2llh(xyz)
         np.testing.assert_allclose(llh, self.llh_vec, atol=self.atol, rtol=self.rtol)
-
-
-if __name__ == "__main__":
-    unittest.main()

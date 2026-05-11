@@ -43,7 +43,7 @@ def get_attitude_test_data():
     }
 
 
-def get_testing_state_vectors() -> TestingStateVectors:
+def _get_testing_state_vectors() -> TestingStateVectors:
     """Getting testing state vectors"""
     positions = np.array(
         [
@@ -108,7 +108,7 @@ def get_testing_state_vectors() -> TestingStateVectors:
 
 def get_testing_trajectory() -> CubicSplineTrajectory:
     """Getting a testing trajectory object"""
-    state_vectors = get_testing_state_vectors()
+    state_vectors = _get_testing_state_vectors()
     return CubicSplineTrajectory(
         times=state_vectors.time_axis,
         positions=state_vectors.sensor_positions,
@@ -124,7 +124,7 @@ def get_trajectory_test_data():
     dict[str, object]
         State vectors, trajectory object, expected samples, and tolerance.
     """
-    state_vectors = get_testing_state_vectors()
+    state_vectors = _get_testing_state_vectors()
     trajectory = get_testing_trajectory()
 
     tolerance = 1e-6

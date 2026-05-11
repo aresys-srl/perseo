@@ -4,9 +4,9 @@
 """Testing geometry/angles.py functionalities"""
 
 import itertools
-import unittest
 
 import numpy as np
+import pytest
 
 from perseo_core.geometry.angles import (
     compute_incidence_angles,
@@ -15,23 +15,20 @@ from perseo_core.geometry.angles import (
     compute_look_angles_core,
     get_geometric_squint_angle,
 )
-from tests.fixtures.geometry_data import get_angles_test_data
-from tests.fixtures.models_data import get_testing_trajectory
-from tests.fixtures.trajectory_angles_data import get_angles_from_trajectory_test_data
 
 
-class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
+class TestComputeLookAndIncidenceAngles:
     """Test compute_incidence_angles_core and compute_look_angles_core with various input dimensions."""
 
-    def setUp(self):
-        # Load test data from fixtures
-        data = get_angles_test_data()
-        self.sensor_positions = data["sensor_positions"]
-        self.points = data["points"]
-        self.surface_normals = data["surface_normals"]
-        self.nadir_directions = data["nadir_directions"]
-        self.atol = data["tolerance"]["atol"]
-        self.rtol = data["tolerance"]["rtol"]
+    @pytest.fixture(autouse=True)
+    def setup_angles_data(self, angles_test_data):
+        """Load test data from fixtures."""
+        self.sensor_positions = angles_test_data["sensor_positions"]
+        self.points = angles_test_data["points"]
+        self.surface_normals = angles_test_data["surface_normals"]
+        self.nadir_directions = angles_test_data["nadir_directions"]
+        self.atol = angles_test_data["tolerance"]["atol"]
+        self.rtol = angles_test_data["tolerance"]["rtol"]
 
     def test_compute_incidence_angles_core_1_pos_1_point(self):
         """Test compute_incidence_angles_core with scalar position and point (scalar and 1D array forms)."""
@@ -192,23 +189,23 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
     def test_compute_incidence_angles_core_invalid_inputs(self):
         """Test that compute_incidence_angles_core raises ValueError for invalid input shapes."""
         # wrong sensor positions shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_incidence_angles_core(np.arange(5), np.arange(3))
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_incidence_angles_core(np.arange(6).reshape(3, 2), np.arange(3))
 
         # wrong points shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_incidence_angles_core(np.arange(3), np.arange(5))
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_incidence_angles_core(np.arange(3), np.arange(6).reshape(3, 2))
 
         # incompatible points sensor positions shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_incidence_angles_core(np.arange(12).reshape(4, 3), np.arange(6).reshape(2, 3))
 
         # incompatible points surface normals shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_incidence_angles_core(
                 np.arange(3),
                 np.arange(12).reshape(4, 3),
@@ -411,7 +408,7 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
     def test_compute_look_angles_core_invalid_inputs(self):
         """Testing compute look angles with invalid inputs"""
         # wrong point shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(
                 np.arange(12).reshape(4, 3),
                 np.arange(12).reshape(4, 3),
@@ -419,27 +416,27 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             )
 
         # wrong position shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(np.arange(5), np.arange(3), np.arange(3))
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(np.arange(6).reshape(3, 2), np.arange(3), np.arange(3))
 
         # wrong nadir direction shape
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(np.arange(3), np.arange(5), np.arange(3))
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(np.arange(3), np.arange(6).reshape(3, 2), np.arange(3))
 
         # incompatible shapes
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(
                 np.arange(12).reshape(4, 3),
                 np.arange(12).reshape(4, 3),
                 np.arange(6).reshape(2, 3),
             )
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(np.arange(12).reshape(4, 3), np.arange(6), np.arange(12).reshape(4, 3))
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_look_angles_core(
                 np.arange(1, 4),
                 np.arange(15).reshape((5, 3)),
@@ -447,19 +444,19 @@ class ComputeLookAndIncidenceAnglesTest(unittest.TestCase):
             )
 
 
-class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
+class TestComputeLookIncidenceAnglesFromTrajectory:
     """Testing compute_incidence_angles_from_trajectory and compute_look_angles functions"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_trajectory_angles_data(self, angles_from_trajectory_test_data):
         """Load trajectory angle test fixture data."""
-        data = get_angles_from_trajectory_test_data()
-        self.trajectory = data["trajectory"]
-        self.range_times = data["range_times"]
-        self.az_time = data["az_time"]
-        self.look_dir = data["look_dir"]
-        self.tolerance = data["tolerance"]
-        self.look_angles_expected = data["look_angles_expected"]
-        self.incidence_angles_expected = data["incidence_angles_expected"]
+        self.trajectory = angles_from_trajectory_test_data["trajectory"]
+        self.range_times = angles_from_trajectory_test_data["range_times"]
+        self.az_time = angles_from_trajectory_test_data["az_time"]
+        self.look_dir = angles_from_trajectory_test_data["look_dir"]
+        self.tolerance = angles_from_trajectory_test_data["tolerance"]
+        self.look_angles_expected = angles_from_trajectory_test_data["look_angles_expected"]
+        self.incidence_angles_expected = angles_from_trajectory_test_data["incidence_angles_expected"]
 
     def test_compute_look_angles_from_trajectory_case0(self) -> None:
         """Testing compute_look_angles function, case 0"""
@@ -473,7 +470,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, float)
+        assert isinstance(angles, float)
         np.testing.assert_allclose(angles, self.look_angles_expected[0], atol=self.tolerance, rtol=0)
 
     def test_compute_look_angles_from_trajectory_case0_deg(self) -> None:
@@ -489,7 +486,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, float)
+        assert isinstance(angles, float)
         np.testing.assert_allclose(np.deg2rad(angles), self.look_angles_expected[0], atol=self.tolerance, rtol=0)
 
     def test_compute_look_angles_from_trajectory_case1(self) -> None:
@@ -504,9 +501,9 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, np.ndarray)
-        self.assertEqual(angles.ndim, 1)
-        self.assertEqual(angles.size, self.look_angles_expected.size)
+        assert isinstance(angles, np.ndarray)
+        assert angles.ndim == 1
+        assert angles.size == self.look_angles_expected.size
         np.testing.assert_allclose(angles, self.look_angles_expected, atol=self.tolerance, rtol=0)
 
     def test_compute_look_angles_from_trajectory_case1_deg(self) -> None:
@@ -522,9 +519,9 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, np.ndarray)
-        self.assertEqual(angles.ndim, 1)
-        self.assertEqual(angles.size, self.look_angles_expected.size)
+        assert isinstance(angles, np.ndarray)
+        assert angles.ndim == 1
+        assert angles.size == self.look_angles_expected.size
         np.testing.assert_allclose(np.deg2rad(angles), self.look_angles_expected, atol=self.tolerance, rtol=0)
 
     def test_compute_incidence_angles_from_trajectory_case0(self) -> None:
@@ -539,7 +536,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, float)
+        assert isinstance(angles, float)
         np.testing.assert_allclose(angles, self.incidence_angles_expected[0], atol=self.tolerance, rtol=0)
 
     def test_compute_incidence_angles_from_trajectory_case0_deg(self) -> None:
@@ -555,7 +552,7 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, float)
+        assert isinstance(angles, float)
         np.testing.assert_allclose(np.deg2rad(angles), self.incidence_angles_expected[0], atol=self.tolerance, rtol=0)
 
     def test_compute_incidence_angles_from_trajectory_case1(self) -> None:
@@ -570,9 +567,9 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, np.ndarray)
-        self.assertEqual(angles.ndim, 1)
-        self.assertEqual(angles.size, self.incidence_angles_expected.size)
+        assert isinstance(angles, np.ndarray)
+        assert angles.ndim == 1
+        assert angles.size == self.incidence_angles_expected.size
         np.testing.assert_allclose(angles, self.incidence_angles_expected, atol=self.tolerance, rtol=0)
 
     def test_compute_incidence_angles_from_trajectory_case1_deg(self) -> None:
@@ -588,16 +585,18 @@ class ComputeLookIncidenceAnglesFromTrajectoryTest(unittest.TestCase):
         )
 
         # checking results
-        self.assertIsInstance(angles, np.ndarray)
-        self.assertEqual(angles.ndim, 1)
-        self.assertEqual(angles.size, self.incidence_angles_expected.size)
+        assert isinstance(angles, np.ndarray)
+        assert angles.ndim == 1
+        assert angles.size == self.incidence_angles_expected.size
         np.testing.assert_allclose(np.deg2rad(angles), self.incidence_angles_expected, atol=self.tolerance, rtol=0)
 
 
-class GeometricSquintTest(unittest.TestCase):
+class TestGeometricSquint:
     """Testing get_geometric_squint function"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_squint_data(self):
+        """Setup squint test data."""
         self.pos_0 = np.array([-2449675.14554249, -5216814.136353868, 3907089.2898868835])
         self.pos_20 = np.array([4397940.093636902, 763963.1640477455, 4542599.8509511445])
         self.vel_0 = np.array([-3283.937062880771, -3101.7802725409233, -6163.652047976267])
@@ -617,7 +616,7 @@ class GeometricSquintTest(unittest.TestCase):
             sensor_velocities=self.vel_0,
             ground_points=self.point_0,
         )
-        self.assertIsInstance(squint, float)
+        assert isinstance(squint, float)
         np.testing.assert_allclose(squint, self.squint_ref_0, atol=self.tolerance, rtol=0)
 
     def test_get_geometric_squint_zero_deg(self) -> None:
@@ -625,7 +624,7 @@ class GeometricSquintTest(unittest.TestCase):
         squint = get_geometric_squint_angle(
             sensor_positions=self.pos_0, sensor_velocities=self.vel_0, ground_points=self.point_0, radians=False
         )
-        self.assertIsInstance(squint, float)
+        assert isinstance(squint, float)
         np.testing.assert_allclose(np.deg2rad(squint), self.squint_ref_0, atol=self.tolerance, rtol=0)
 
     def test_get_geometric_squint_non_zero(self) -> None:
@@ -635,7 +634,7 @@ class GeometricSquintTest(unittest.TestCase):
             sensor_velocities=self.vel_20,
             ground_points=self.point_20,
         )
-        self.assertIsInstance(squint, float)
+        assert isinstance(squint, float)
         np.testing.assert_allclose(squint, self.squint_ref_20, atol=self.tolerance, rtol=0)
 
     def test_get_geometric_squint_non_zero_deg(self) -> None:
@@ -643,7 +642,7 @@ class GeometricSquintTest(unittest.TestCase):
         squint = get_geometric_squint_angle(
             sensor_positions=self.pos_20, sensor_velocities=self.vel_20, ground_points=self.point_20, radians=False
         )
-        self.assertIsInstance(squint, float)
+        assert isinstance(squint, float)
         np.testing.assert_allclose(np.deg2rad(squint), self.squint_ref_20, atol=self.tolerance, rtol=0)
 
     def test_get_multiple_squint(self) -> None:
@@ -653,9 +652,9 @@ class GeometricSquintTest(unittest.TestCase):
             sensor_velocities=np.vstack([self.vel_0, self.vel_20]),
             ground_points=np.vstack([self.point_0, self.point_20]),
         )
-        self.assertIsInstance(squints, np.ndarray)
-        self.assertTrue(squints.ndim == 1)
-        self.assertTrue(squints.size == 2)
+        assert isinstance(squints, np.ndarray)
+        assert squints.ndim == 1
+        assert squints.size == 2
         np.testing.assert_allclose(
             squints,
             np.array([self.squint_ref_0, self.squint_ref_20]),
@@ -671,9 +670,9 @@ class GeometricSquintTest(unittest.TestCase):
             ground_points=np.vstack([self.point_0, self.point_20]),
             radians=False,
         )
-        self.assertIsInstance(squints, np.ndarray)
-        self.assertTrue(squints.ndim == 1)
-        self.assertTrue(squints.size == 2)
+        assert isinstance(squints, np.ndarray)
+        assert squints.ndim == 1
+        assert squints.size == 2
         np.testing.assert_allclose(
             np.deg2rad(squints),
             np.array([self.squint_ref_0, self.squint_ref_20]),
@@ -682,11 +681,13 @@ class GeometricSquintTest(unittest.TestCase):
         )
 
 
-class AnglesComputationFromTrajectoryTest(unittest.TestCase):
+class TestAnglesComputationFromTrajectory:
     """Testing angles computation from CubicSplineTrajectory object"""
 
-    def setUp(self) -> None:
-        self._trajectory = get_testing_trajectory()
+    @pytest.fixture(autouse=True)
+    def setup_trajectory_angles_data(self, testing_trajectory):
+        """Load test data from fixtures."""
+        self._trajectory = testing_trajectory
         self._range_times = np.array([0.00362255, 0.003623, 0.0036239, 0.003635, 0.003639, 0.003642, 0.003645])
         self._azimuth_time = self._trajectory.domain[0] + 2
         self._geocoding_side = "RIGHT"
@@ -764,7 +765,3 @@ class AnglesComputationFromTrajectoryTest(unittest.TestCase):
             atol=self._tolerance,
             rtol=0,
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -3,9 +3,8 @@
 
 """Unittest for models/attitude.py Attitude object"""
 
-import unittest
-
 import numpy as np
+import pytest
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation, Slerp
 
@@ -14,26 +13,25 @@ from perseo_core.geometry.pointing.attitude import (
     compute_antenna_attitude_from_euler_angles,
     compute_sensor_attitude_from_state_vectors,
 )
-from tests.fixtures.geometry_utilities_data import get_reference_frames_test_data
-from tests.fixtures.models_data import get_attitude_test_data
 
 
-class TestAttitude(unittest.TestCase):
+class TestAttitude:
     """Test Attitude object creation, properties, evaluation, and interpolation methods."""
 
-    def setUp(self):
-        # Load test data from fixtures
-        data = get_attitude_test_data()
+    @pytest.fixture(autouse=True)
+    def setup_attitude_data(self, attitude_test_data, reference_frames_test_data):
+        data = attitude_test_data
         self.times = data["times"]
         self._euler_angles = data["euler_angles"]
         self.antenna_reference_frames = data["antenna_reference_frames"]
         self.attitude = Attitude(reference_frames=self.antenna_reference_frames, times=self.times)
+        self._ref_data = reference_frames_test_data
 
     def test_properties(self):
         """Test that Attitude properties correctly return times, domain, and rotations."""
-        self.assertTrue(np.array_equal(self.attitude.times, self.times))
-        self.assertEqual(self.attitude.domain, (0.0, 8.0))
-        self.assertIsInstance(self.attitude.reference_frames, np.ndarray)
+        assert np.array_equal(self.attitude.times, self.times)
+        assert self.attitude.domain == (0.0, 8.0)
+        assert isinstance(self.attitude.reference_frames, np.ndarray)
 
     def test_evaluate_at_knots(self):
         """Test that Attitude.evaluate returns exact values at knot points."""
@@ -55,16 +53,16 @@ class TestAttitude(unittest.TestCase):
         """Test that Attitude.evaluate returns output with correct shape for multiple query points."""
         query = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
         result = self.attitude.evaluate(query)
-        self.assertEqual(result.shape, (7, 3, 3))
+        assert result.shape == (7, 3, 3)
 
     def test_extrapolation_below_domain(self):
         """Test that Attitude.evaluate raises RuntimeError for times below domain."""
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             self.attitude.evaluate(np.array([-1.0]))
 
     def test_extrapolation_above_domain(self):
         """Test that Attitude.evaluate raises RuntimeError for times above domain."""
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             self.attitude.evaluate(np.array([9.0]))
 
     def test_from_quaternions(self):
@@ -105,12 +103,12 @@ class TestAttitude(unittest.TestCase):
             sensor_local_axis=np.eye(3),
         )
 
-        self.assertIsInstance(attitude, Attitude)
+        assert isinstance(attitude, Attitude)
 
-        self.assertTrue(np.array_equal(attitude.times, self.times))
+        assert np.array_equal(attitude.times, self.times)
 
         result = attitude.evaluate(self.times)
-        self.assertEqual(result.shape, (3, 3, 3))
+        assert result.shape == (3, 3, 3)
 
         # Verify reference frames are orthgonal matrices (R^T * R = I)
         for i in range(result.shape[0]):
@@ -119,10 +117,8 @@ class TestAttitude(unittest.TestCase):
 
     def test_compute_sensor_attitude_from_state_vectors(self):
         """Test compute_sensor_attitude_from_state_vectors with ZERODOPPLER reference frame."""
-        ref_data = get_reference_frames_test_data()
-
-        position = ref_data["sensor_position"]
-        velocity = ref_data["sensor_velocity"]
+        position = self._ref_data["sensor_position"]
+        velocity = self._ref_data["sensor_velocity"]
         times = np.array([0.0, 1.0])
         position_2 = position + float(np.diff(times).squeeze()) * velocity
 
@@ -136,17 +132,13 @@ class TestAttitude(unittest.TestCase):
             reference_frame="ZERODOPPLER",
         )
 
-        self.assertIsInstance(attitude, Attitude)
-        self.assertTrue(np.array_equal(attitude.times, times))
+        assert isinstance(attitude, Attitude)
+        assert np.array_equal(attitude.times, times)
 
         result = attitude.evaluate(times)
-        self.assertEqual(result.shape, (2, 3, 3))
+        assert result.shape == (2, 3, 3)
 
         # Verify reference frames are orthgonal matrices (R^T * R = I)
         for i in range(result.shape[0]):
             product = result[i].T @ result[i]
             assert_allclose(product, np.eye(3), atol=1e-10)
-
-
-if __name__ == "__main__":
-    unittest.main()

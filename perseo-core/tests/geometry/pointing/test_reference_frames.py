@@ -3,9 +3,8 @@
 
 """Testing geometry/utilities/reference_frames.py functionalities"""
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_core.geometry.pointing.reference_frames import (
     compute_geocentric_reference_frame,
@@ -15,15 +14,14 @@ from perseo_core.geometry.pointing.reference_frames import (
     compute_sensor_local_axis,
     compute_zerodoppler_reference_frame,
 )
-from tests.fixtures.geometry_utilities_data import get_reference_frames_test_data
 
 
-class SensorAxisTestCase(unittest.TestCase):
+class TestSensorAxis:
     """Test reference frame computation functions (zerodoppler, geocentric, geodetic, etc.)."""
 
-    def setUp(self):
-        # Load test data from fixtures
-        data = get_reference_frames_test_data()
+    @pytest.fixture(autouse=True)
+    def setup_sensor_axis_data(self, reference_frames_test_data):
+        data = reference_frames_test_data
         self._sensor_position = data["sensor_position"]
         self._sensor_velocity = data["sensor_velocity"]
         self._zerodoppler_frame_reference = data["zerodoppler_frame_reference"]
@@ -62,7 +60,7 @@ class SensorAxisTestCase(unittest.TestCase):
 
     def test_compute_zerodoppler_reference_frame_invalid_input(self):
         """Test compute_zerodoppler_reference_frame raises error for invalid shape inputs."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_zerodoppler_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
     def test_compute_geocentric_reference_frame(self):
@@ -95,10 +93,10 @@ class SensorAxisTestCase(unittest.TestCase):
 
     def test_compute_geocentric_reference_frame_invalid_input(self):
         """Test compute_geocentric_reference_frame raises error for invalid shape combinations."""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_geocentric_reference_frame(np.ones((10, 3)), np.ones((7, 3)))
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_geocentric_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
     def test_compute_geodetic_reference_frame(self):
@@ -130,10 +128,10 @@ class SensorAxisTestCase(unittest.TestCase):
 
     def test_compute_geodetic_reference_frame_invalid_input(self):
         """Testing compute geodetic reference frame, with errors"""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_geodetic_reference_frame(np.ones((10, 3)), np.ones((7, 3)))
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_geodetic_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
     def test_compute_sensor_local_axis_zero_doppler(self):
@@ -153,19 +151,19 @@ class SensorAxisTestCase(unittest.TestCase):
 
     def test_compute_sensor_local_axis_invalid_reference_frame(self):
         """Testing compute sensor local axis, with errors"""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_sensor_local_axis(
                 sensor_positions=self._sensor_position, sensor_velocities=self._sensor_velocity, reference_frame=None
             )
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_sensor_local_axis(
                 sensor_positions=self._sensor_position,
                 sensor_velocities=self._sensor_velocity,
                 reference_frame="unknown name",
             )
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             compute_sensor_local_axis(
                 sensor_positions=self._sensor_position,
                 sensor_velocities=self._sensor_velocity,
@@ -178,10 +176,11 @@ class SensorAxisTestCase(unittest.TestCase):
         np.testing.assert_allclose(geodetic_point, self._geodetic_point_reference, rtol=0, atol=self._tolerance)
 
 
-class InertialFramesTestCase(unittest.TestCase):
+class TestInertialFrames:
     """Testing compute inertial velocity function"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup_inertial_frames_data(self):
         self._sensor_position = np.asarray([26512.279931507, 1064819.379506800, 7083173.555337110])
         self._sensor_velocity = np.asarray([7529.609430015988, -342.978175622686, -23.376907795264])
         self._inertial_velocity_reference = np.asarray(
@@ -218,7 +217,3 @@ class InertialFramesTestCase(unittest.TestCase):
             rtol=10,
             atol=self._tolerance,
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

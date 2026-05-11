@@ -49,38 +49,38 @@ unittest_linux:
   extends: .tags_manylinux_2_28
   script:
     - python3.12 -m pip install nox
-    - python3.12 -m nox -s unittest -p ${PYTHON}
+    - python3.12 -m nox -s pytest -p ${PYTHON}
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   needs: []
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
       junit:
-        - ${SUBPROJECT}/_build/unittest-report-*.xml
+        - ${SUBPROJECT}/_build/pytest-report-*.xml
       coverage_report:
         coverage_format: cobertura
-        path: ${SUBPROJECT}/_build/unittest-coverage-*.xml
+        path: ${SUBPROJECT}/_build/pytest-coverage-*.xml
 
 unittest_win:
   stage: test
   extends: .tags_win10
   script:
     - python -m pip install nox
-    - python -m nox -s unittest -p ${PYTHON}
+    - python -m nox -s pytest -p ${PYTHON}
   parallel:
     matrix:
-      - PYTHON: ["3.11", "3.12", "3.13"]
+      - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   needs: []
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
       junit:
-        - ${SUBPROJECT}/_build/unittest-report-*.xml
+        - ${SUBPROJECT}/_build/pytest-report-*.xml
       coverage_report:
         coverage_format: cobertura
-        path: ${SUBPROJECT}/_build/unittest-coverage-*.xml
+        path: ${SUBPROJECT}/_build/pytest-coverage-*.xml
 
 # === build ==================================================================
 # ============================================================================
