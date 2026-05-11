@@ -62,13 +62,6 @@ class TestAttitude(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.attitude.evaluate(np.array([9.0]))
 
-    def test_first_derivative_shape(self):
-        """Test that Attitude.evaluate_first_derivatives returns correct shape."""
-        query = np.array([2.0, 4.0])
-        derivative = self.attitude.evaluate_first_derivatives(query)
-        self.assertIsInstance(derivative, np.ndarray)
-        self.assertEqual(derivative.shape, (2, 3, 3))
-
     def test_from_quaternions(self):
         """Test that Attitude.from_quaternions creates object that evaluates correctly."""
         quats = Rotation.from_matrix(self.antenna_reference_frames).as_quat()

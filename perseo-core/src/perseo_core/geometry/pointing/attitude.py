@@ -16,7 +16,6 @@ from scipy.spatial.transform import Rotation, Slerp
 
 from perseo_core.geometry.pointing.rotations import (
     RotationOrder,
-    compute_slerp_derivative,
     euler_angles_to_rotation,
 )
 
@@ -89,30 +88,6 @@ class Attitude(Generic[T]):
         self._check_time_validity(time)
         relative_times = time - self.domain[0]
         return self._slerp(relative_times).as_matrix()
-
-    def evaluate_first_derivatives(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
-        """Retrieve antenna reference frame rotations derivative at given times.
-
-        This computes the exact derivative of the SLERP at the query times with piecewise constant angular velocity
-         and discontinuous angular acceleration.
-
-        Parameters
-        ----------
-        time: T | npt.NDArray[T]
-            time of the same type of the initialization times axis
-
-        Returns
-        -------
-        npt.NDArray[np.floating]
-            interpolated SLERP first derivative at each input time expressed as a
-            numpy array with shape (3, 3) or (N, 3, 3)
-         depending on the input time shape
-        """
-        self._check_time_validity(time)
-        relative_times = time - self.domain[0]
-        return compute_slerp_derivative(
-            rotations=self._rotations, times=self.times - self.domain[0], query_times=relative_times
-        ).as_matrix()
 
     @classmethod
     def from_quaternions(cls, quaternions: npt.NDArray[np.floating], times: npt.NDArray[T]) -> Attitude:
