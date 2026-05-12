@@ -12,6 +12,12 @@ tags:
 
 **Bug Fixes**
 
+- Fixing bug in Radiometric Analysis output graphs generation: axis name is now "look angles" not "elevation angles"
+
+## v1.0.14
+
+**Bug Fixes**
+
 - Fixing bug in spectral analysis (and graphs) when errors occur during target processing
 - Fixing bug in spectral analysis graphs generation
 - Fixing bug in spectral analysis output profiles saving to netCDF

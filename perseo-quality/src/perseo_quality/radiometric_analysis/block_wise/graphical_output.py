@@ -124,7 +124,7 @@ def radiometric_2D_hist_plot(
     plt.xticks(fontsize=8)
     plt.yticks(fontsize=8)
     if data.look_angles is not None:
-        plt.xlabel("Elevation Angle [deg]", fontdict={"size": 12})
+        plt.xlabel("Look Angles [deg]", fontdict={"size": 12})
     else:
         plt.xlabel("Azimuth Block Times [s]", fontdict={"size": 12})
     plt.ylabel("Power [dB]", fontdict={"size": 12})
