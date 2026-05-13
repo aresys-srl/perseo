@@ -9,7 +9,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.geometry.pointing.attitude import Attitude
+from perseo_core.geometry.pointing.attitude import (
+    Attitude,
+    compute_antenna_attitude_from_euler_angles,
+    compute_sensor_attitude_from_state_vectors,
+)
+from tests.fixtures.geometry_utilities_data import get_reference_frames_test_data
 from tests.fixtures.models_data import get_attitude_test_data
 
 
@@ -22,13 +27,13 @@ class TestAttitude(unittest.TestCase):
         self.times = data["times"]
         self._euler_angles = data["euler_angles"]
         self.antenna_reference_frames = data["antenna_reference_frames"]
-        self.attitude = Attitude(antenna_reference_frames=self.antenna_reference_frames, times=self.times)
+        self.attitude = Attitude(reference_frames=self.antenna_reference_frames, times=self.times)
 
     def test_properties(self):
         """Test that Attitude properties correctly return times, domain, and rotations."""
         self.assertTrue(np.array_equal(self.attitude.times, self.times))
         self.assertEqual(self.attitude.domain, (0.0, 8.0))
-        self.assertIsInstance(self.attitude.antenna_reference_frames, np.ndarray)
+        self.assertIsInstance(self.attitude.reference_frames, np.ndarray)
 
     def test_evaluate_at_knots(self):
         """Test that Attitude.evaluate returns exact values at knot points."""
@@ -90,6 +95,57 @@ class TestAttitude(unittest.TestCase):
         expected = ref_slerp(query)
 
         assert_allclose(result, expected.as_matrix(), atol=1e-10)
+
+    def test_compute_antenna_attitude_from_euler_angles(self):
+        """Test compute_antenna_attitude_from_euler_angles creates correct attitude."""
+        attitude = compute_antenna_attitude_from_euler_angles(
+            ypr_rad=self._euler_angles,
+            rotation_order="YPR",
+            times=self.times,
+            sensor_local_axis=np.eye(3),
+        )
+
+        self.assertIsInstance(attitude, Attitude)
+
+        self.assertTrue(np.array_equal(attitude.times, self.times))
+
+        result = attitude.evaluate(self.times)
+        self.assertEqual(result.shape, (3, 3, 3))
+
+        # Verify reference frames are orthgonal matrices (R^T * R = I)
+        for i in range(result.shape[0]):
+            product = result[i].T @ result[i]
+            assert_allclose(product, np.eye(3), atol=1e-10)
+
+    def test_compute_sensor_attitude_from_state_vectors(self):
+        """Test compute_sensor_attitude_from_state_vectors with ZERODOPPLER reference frame."""
+        ref_data = get_reference_frames_test_data()
+
+        position = ref_data["sensor_position"]
+        velocity = ref_data["sensor_velocity"]
+        times = np.array([0.0, 1.0])
+        position_2 = position + float(np.diff(times).squeeze()) * velocity
+
+        positions = np.array([position, position_2])
+        velocities = np.array([velocity, velocity])
+
+        attitude = compute_sensor_attitude_from_state_vectors(
+            position=positions,
+            velocity=velocities,
+            times=times,
+            reference_frame="ZERODOPPLER",
+        )
+
+        self.assertIsInstance(attitude, Attitude)
+        self.assertTrue(np.array_equal(attitude.times, times))
+
+        result = attitude.evaluate(times)
+        self.assertEqual(result.shape, (2, 3, 3))
+
+        # Verify reference frames are orthgonal matrices (R^T * R = I)
+        for i in range(result.shape[0]):
+            product = result[i].T @ result[i]
+            assert_allclose(product, np.eye(3), atol=1e-10)
 
 
 if __name__ == "__main__":

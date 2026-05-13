@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 """
-Attitude Interpolator
----------------------
+Attitude
+--------
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ import numpy as np
 import numpy.typing as npt
 from scipy.spatial.transform import Rotation, Slerp
 
+from perseo_core.geometry.pointing.antenna_reference_frame import compute_antenna_reference_frame_from_euler_angles
+from perseo_core.geometry.pointing.reference_frames import ReferenceFrame, compute_sensor_local_axis
 from perseo_core.geometry.pointing.rotations import (
     RotationOrder,
     euler_angles_to_rotation,
@@ -23,26 +25,38 @@ T = TypeVar("T", bound=np.generic)
 
 
 class Attitude(Generic[T]):
-    """Attitude Interpolator based on a Spherical Linear Interpolation of Rotations (SLERP)"""
+    """Attitude based on a Spherical Linear Interpolation of Rotations (SLERP)"""
 
     def __init__(
         self,
-        antenna_reference_frames: npt.NDArray[np.floating],
+        reference_frames: npt.NDArray[np.floating],
         times: npt.NDArray[T],
     ) -> None:
-        """Create an Attitude SLERP interpolator from times and associated rotations. Time axis can be specified as
-        relative or absolute (actual dates).
-        Antenna reference frames must be expressed as an array with shape (N, 3, 3),
+        """Create an Attitude SLERP interpolator from times and attitude reference frames.
+
+        Time axis can be specified as relative or absolute (actual dates).
+
+        Attitude reference frames must be expressed as an array with shape (N, 3, 3),
         with N being the same length as the times array.
 
         Parameters
         ----------
-        antenna_reference_frames : npt.NDArray[np.floating]
-            array of rotations in a Global Reference System (i.e. ECEF), with shape (N, 3, 3)
+        reference_frames : npt.NDArray[np.floating]
+            array of attitude reference frames expressed in a reference System (i.e. ECEF), with shape (N, 3, 3)
+            the interpolated reference frames will be in the same reference system of the input reference frames.
         times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
+            interpolation times must be of the same type as the initialization times axis
         """
-        self._rotations = Rotation.from_matrix(antenna_reference_frames)
+        if reference_frames.ndim not in (2, 3) or reference_frames.shape[-2:] != (3, 3):
+            raise ValueError("reference_frames must have shape (3, 3) or (N, 3, 3)")
+
+        n_frames = 1 if reference_frames.ndim == 2 else reference_frames.shape[0]
+        if n_frames != len(times):
+            raise ValueError("reference_frames and times must contain the same number of samples")
+
+        self._rotations = Rotation.from_matrix(reference_frames)
+
         self._times = times
 
         self._domain = (times[0], times[-1])
@@ -52,13 +66,13 @@ class Attitude(Generic[T]):
         )
 
     @property
-    def antenna_reference_frames(self) -> npt.NDArray[np.floating]:
-        """Accessing antenna reference frames used for interpolation"""
+    def reference_frames(self) -> npt.NDArray[np.floating]:
+        """Attitude reference frames used for interpolation"""
         return self._rotations.as_matrix()
 
     @property
     def times(self) -> npt.NDArray[T]:
-        """Accessing attitude times vector"""
+        """Attitude times vector"""
         return self._times
 
     @property
@@ -72,18 +86,19 @@ class Attitude(Generic[T]):
             raise RuntimeError("One (or more) of the input times is outside of attitude time domain.")
 
     def evaluate(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
-        """Retrieve antenna reference frame rotations at given times.
+        """Retrieve attitude reference frame at given times.
 
         Parameters
         ----------
         time: T | npt.NDArray[T]
-            time of the same type of the initialization times axis
+            time of the same type of the initialization times axis. Can be a scalar or an array of shape (M,)
 
         Returns
         -------
         npt.NDArray[np.floating]
-            interpolated antenna reference frame at each input time as a numpy array with shape (3, 3) or (N, 3, 3)
-         depending on the input time shape
+            interpolated attitude reference frame at each input time as a numpy array with shape (3, 3) or (M, 3, 3)
+            depending on the input time shape. The interpolated reference frames are expressed in the same
+            reference system of the input reference frames
         """
         self._check_time_validity(time)
         relative_times = time - self.domain[0]
@@ -91,20 +106,23 @@ class Attitude(Generic[T]):
 
     @classmethod
     def from_quaternions(cls, quaternions: npt.NDArray[np.floating], times: npt.NDArray[T]) -> Attitude:
-        """Create an Attitude SLERP interpolator from quaternions.
+        """Create an Attitude from quaternions.
 
         Time axis can be specified as relative or absolute
         (actual dates), while quaternions must be expressed as an array with shape (N, 4), with N being the same length
         as the times array.
 
         .. note::
-            The provided quaternions are expressed in a reference system chosen by the user, and the interpolator will
-            keep the same reference system for the interpolated rotations.
+            The reference frame in which quaternions are provided is kept as the reference frame of the interpolator,
+            so the interpolated reference frames will be in the same reference system of the input quaternions.
+
+            For example, if the quaternions are defined as rotations from ECEF to the antenna reference frame,
+            the interpolated reference frames will be in ECEF as well.
 
         Parameters
         ----------
         quaternions : npt.NDArray[np.floating]
-            quaternions in a Global Reference System (i.e. ECEF), scalar-last, with shape (N, 4)
+            quaternions, scalar-last, with shape (N, 4)
         times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
 
@@ -113,28 +131,46 @@ class Attitude(Generic[T]):
         Attitude
             interpolator object
         """
-        return cls(antenna_reference_frames=Rotation.from_quat(quaternions).as_matrix(), times=times)
+        return cls(reference_frames=Rotation.from_quat(quaternions).as_matrix(), times=times)
 
     @classmethod
     def from_euler_angles(
         cls, euler_angles_rad: npt.NDArray[np.floating], rotation_order: RotationOrder, times: npt.NDArray[T]
     ) -> Attitude:
-        """Create an Attitude SLERP interpolator from euler angles.
+        """Create an Attitude from euler angles.
 
-        Time axis can be specified as relative or absolute
-        (actual dates), while euler angles must be expressed in radians as an array with shape (N, 3), with N being the
-        same length as the times array and columns order matching the specified ``rotation_order``.
+        Time axis can be specified as relative or absolute (actual dates).
+
+        Euler angles must be expressed in radians as an array with shape (N, 3), with N being the
+        same length as the times array. The first column of the euler angles is the yaw, the second is
+        the pitch and the third is the roll, but the order of application of the rotations is defined
+        by the ``rotation_order`` parameter.
 
         .. note::
-            The provided euler angles are expressed in a reference system chosen by the user, and the interpolator
-            will keep the same reference system for the interpolated rotations.
+            The reference frame in which euler angles are provided is kept as the reference frame of the interpolator,
+            so the interpolated reference frames will be in the same reference system of the input euler angles.
+
+            For example, if the euler angles are defined as rotations from sensor local axis to the
+            antenna reference frame, the interpolated reference frames will be defined in the sensor local frame.
+
+            In such a case, if you need the antenna reference frames in a global reference system (i.e. ECEF),
+            an additional change of coordinates from the sensor local frame to a global reference system (i.e. ECEF)
+            will be needed to get the attitude reference frames in the global reference system. In this case,
+            you can use the :func:`compute_antenna_attitude_from_euler_angles
+            <perseo_core.geometry.pointing.attitude.compute_antenna_attitude_from_euler_angles>`
+            function to directly compute the overall attitude of the system in the same reference system
+            of the sensor local axis.
 
         Parameters
         ----------
         euler_angles_rad : npt.NDArray[np.floating]
-            euler angles in radians, with the same column order of the specified ``rotation_order``, with shape (N, 3)
-        rotation_order : "YPR", "YRP", "PRY", "PYR", "RYP", "RPY"
-            rotation order of application of Euler angles
+            euler angles in radians, with shape (N, 3). The first column of the euler angles is the yaw, the second is
+            the pitch and the third is the roll, but the order of application of the rotations is defined by the
+            ``rotation_order`` parameter. The interpolated reference frames will be in the same reference system of the
+            input euler angles.
+        rotation_order : RotationOrder
+            order of application of the rotations defined by the euler angles.
+            values are: "YPR", "YRP", "PYR", "PRY", "RYP", "RPY"
         times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
 
@@ -144,8 +180,99 @@ class Attitude(Generic[T]):
             interpolator object
         """
         return cls(
-            antenna_reference_frames=euler_angles_to_rotation(
-                order=rotation_order, ypr_rad=euler_angles_rad
-            ).as_matrix(),
+            reference_frames=euler_angles_to_rotation(order=rotation_order, ypr_rad=euler_angles_rad).as_matrix(),
             times=times,
         )
+
+
+def compute_antenna_attitude_from_euler_angles(
+    ypr_rad: npt.NDArray[np.floating],
+    rotation_order: RotationOrder,
+    times: npt.NDArray[T],
+    sensor_local_axis: npt.NDArray[np.floating],
+) -> Attitude:
+    """Compute the attitude of an antenna from euler angles and sensor local axis.
+
+    Euler angles must be expressed in radians as an array with shape (N, 3), with N being the
+    same length as the times array. The first column of the euler angles is the yaw, the second is
+    the pitch and the third is the roll, but the order of application of the rotations is defined
+    by the ``rotation_order`` parameter.
+
+    The sensor local axis must be expressed as an array with shape (3, 3) or (N, 3, 3) representing
+    the reference frame of the sensor.
+
+    .. note::
+        The reference frame in which the sensor local axis is provided is kept as the reference frame
+        of the interpolator, so the interpolated reference frames will be in the same reference system
+        of the input sensor local axis.
+
+        The euler angles are assumed to be defined as rotations from the sensor local axis to the
+        antenna reference frame.
+
+        For example, if the sensor local axis is defined in ECEF, the antenna attitude will be in ECEF as well.
+
+    Parameters
+    ----------
+    ypr_rad : npt.NDArray[np.floating]
+        euler angles in radians, with shape (N, 3). The first column of the euler angles is the yaw, the second is
+        the pitch and the third is the roll, but the order of application of the rotations is defined by the
+        ``rotation_order`` parameter.
+    rotation_order : RotationOrder
+        order of application of the rotations defined by the euler angles.
+        values are: "YPR", "YRP", "PYR", "PRY", "RYP", "RPY"
+    times : npt.NDArray[T]
+        relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
+    sensor_local_axis : npt.NDArray[np.floating]
+        reference frame of the sensor, with shape (3, 3) or (N, 3, 3).
+        The Attitude reference frames will be defined in the same reference system as the input sensor local axis.
+
+    Returns
+    -------
+    Attitude
+        interpolator object
+
+    """
+    antenna_reference_frame = compute_antenna_reference_frame_from_euler_angles(
+        ypr_rad=ypr_rad, rotation_order=rotation_order, initial_reference_frame=sensor_local_axis
+    )
+    return Attitude(reference_frames=antenna_reference_frame, times=times)
+
+
+def compute_sensor_attitude_from_state_vectors(
+    position: npt.NDArray[np.floating],
+    velocity: npt.NDArray[np.floating],
+    times: npt.NDArray[T],
+    reference_frame: ReferenceFrame,
+) -> Attitude:
+    """Compute the attitude of a sensor from its state vectors.
+
+    The sensor local axis is computed from the state vectors and the specified reference frame, and then the attitude
+    is created with the sensor local axis as reference frame.
+
+        .. note::
+            The reference frame in which the position and the velocities are provided is kept as the reference frame
+            of the attitude, so the interpolated reference frames will be in the same reference system
+            as the input state vectors.
+
+            For example, if the state vectors are defined in ECEF, the sensor attitude will be in ECEF as well.
+
+    Parameters
+    ----------
+    position : npt.NDArray[np.floating]
+        position state vectors of the sensor, with shape (N, 3)
+    velocity : npt.NDArray[np.floating]
+        velocity state vectors of the sensor, with shape (N, 3)
+    times : npt.NDArray[T]
+        relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
+    reference_frame : ReferenceFrame
+        kind of reference frame to compute. The options are: "GEOCENTRIC", "GEODETIC" and "ZERODOPPLER".
+
+    Returns
+    -------
+    Attitude
+        interpolator object
+    """
+    sensor_local_axis = compute_sensor_local_axis(
+        sensor_positions=position, sensor_velocities=velocity, reference_frame=reference_frame
+    )
+    return Attitude(reference_frames=sensor_local_axis, times=times)
