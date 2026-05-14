@@ -152,8 +152,12 @@ def direct_geocoding_with_pointing(
     npt.NDArray[np.floating]
         ground points (3,) or (N, 3) numpy array
     """
+    if antenna_reference_frames.ndim not in (2, 3) or antenna_reference_frames.shape[-2:] != (3, 3):
+        raise ValueError(
+            f"antenna_reference_frames must have shape (3, 3) or (N, 3, 3), got {antenna_reference_frames.shape}"
+        )
 
-    arf_num = antenna_reference_frames.size // 9
+    arf_num = 1 if antenna_reference_frames.ndim == 2 else antenna_reference_frames.shape[0]
     if arf_num != np.size(sensor_positions) // 3:
         raise ValueError(
             f"input shape mismatch: antenna reference frames {arf_num} != sensor positions {sensor_positions.shape}"
