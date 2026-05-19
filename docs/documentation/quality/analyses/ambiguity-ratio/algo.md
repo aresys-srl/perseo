@@ -35,7 +35,7 @@ Graphs can be generated from the analysis output using implemented features to o
 and TAR value as show in the PTAR example below.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/ptar.png){ width="900" }
+    ![PTAR](../../../../assets/images/q/ptar.png){ width="900" }
     <figcaption>Point Target Ambiguities and analysis results.</figcaption>
 </figure>
 

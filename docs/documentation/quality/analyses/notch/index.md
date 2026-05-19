@@ -15,7 +15,7 @@ which is critical for accurate SAR data calibration. An incorrect pointing leads
 **Elevation Antenna Pattern (EAP)**, causing radiometric artifacts such as gain trends in the SAR imagery.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/elevation_notch_schema.png){ width="900" }
+    ![Elevation Notch Schema](../../../../assets/images/q/elevation_notch_schema.png){ width="900" }
     <figcaption>Satellite pointing schematics.</figcaption>
 </figure>
 
@@ -27,6 +27,6 @@ To improve robustness, dedicated Elevation Notch (EN) patterns, characterized by
 as shown below by an EN acquisition over rainforest areas.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/elevation_notch_s1.png){ width="900" }
+    ![Notch Sentinel-1](../../../../assets/images/q/elevation_notch_s1.png){ width="900" }
     <figcaption>Sentinel-1 C Elevation Notch Acquisition.</figcaption>
 </figure>

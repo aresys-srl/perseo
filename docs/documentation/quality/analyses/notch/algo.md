@@ -78,7 +78,7 @@ Graphical output can also be generated using the ``graphical_output.plot_elevati
 the plots.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/elevation_notch_estimate.png){ width="900" }
+    ![Elevation Notch](../../../../assets/images/q/elevation_notch_estimate.png){ width="900" }
     <figcaption>Elevation Notch graphical output.</figcaption>
 </figure>
 

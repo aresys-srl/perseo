@@ -81,14 +81,14 @@ The side lobe levels control is a fundamental step of SAR processing: it's imple
 to the range and azimuth spectra.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/quality_intro.png){ width="850" }
+    ![Quality](../../../../assets/images/q/quality_intro.png){ width="850" }
     <figcaption>IRF output obtained from Point Target Analysis.</figcaption>
 </figure>
 
 The side lobe levels are evaluated from specific portions of the SAR image, as shown in the picture below.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/masking.png){ width="850" }
+    ![Masking](../../../../assets/images/q/masking.png){ width="850" }
     <figcaption>Masking of the ROI around the peak.</figcaption>
 </figure>
 

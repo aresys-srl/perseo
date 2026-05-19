@@ -11,7 +11,7 @@ tags:
 for analyzing SAR data and quantitatively and qualitatively assess their quality and calibration features.
 
 <figure markdown="span">
-    ![Supporting Projects](../../assets/images/q/quality_intro.png){ width="850" }
+    ![Quality](../../assets/images/q/quality_intro.png){ width="850" }
     <figcaption>Example of quality graphical output obtained from Point Target Analysis.</figcaption>
 </figure>
 

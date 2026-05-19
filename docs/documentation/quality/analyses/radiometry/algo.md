@@ -44,7 +44,7 @@ block data (not null values) before selecting the center of the highest-count bi
 along azimuth direction for each range value.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/nesz.png){ width="900" }
+    ![Nesz](../../../../assets/images/q/nesz.png){ width="900" }
     <figcaption>NESZ smoothed profile (the solid line) and 2D noise histogram.</figcaption>
 </figure>
 
@@ -65,7 +65,7 @@ The filter and the outlier removal functionalities can be enabled/disabled and t
 file.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/rain_forest.png){ width="900" }
+    ![Rain Forest](../../../../assets/images/q/rain_forest.png){ width="900" }
     <figcaption>Rain Forest average profile (the solid line) and 2D histogram.</figcaption>
 </figure>
 
@@ -83,12 +83,12 @@ contaminants prior to processing, the method prevents bias in profile estimation
 structured artifacts, leading to cleaner and more reliable downstream analysis.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/river_masking.png){ width="900" }
+    ![River Masking](../../../../assets/images/q/river_masking.png){ width="900" }
     <figcaption>River masking on an amazonian rain forest scene, masking a river.</figcaption>
 </figure>
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/river_masking_1.png){ width="900" }
+    ![River Masking 1](../../../../assets/images/q/river_masking_1.png){ width="900" }
     <figcaption>The masking algorithm works also on rain pools.</figcaption>
 </figure>
 

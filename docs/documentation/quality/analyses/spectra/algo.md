@@ -18,7 +18,7 @@ the extent of the data portion to be read. This results in **Absolute Spectral A
 chart displaying the fft of the ROI, the range and azimuth profiles and a spectrogram.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/distributed_spectral.png){ width="900" }
+    ![Distributed Spectra](../../../../assets/images/q/distributed_spectral.png){ width="900" }
     <figcaption>Absolute spectral analysis profiles and frequency content.</figcaption>
 </figure>
 
@@ -29,12 +29,12 @@ performed to display also the phase information and profiles related to this qua
 providing the point target coordinates in the scene like any other analysis supporting Point Targets.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/point_target_spectral_abs.png){ width="900" }
+    ![PT Spectra Abs](../../../../assets/images/q/point_target_spectral_abs.png){ width="900" }
     <figcaption>Absolute spectral analysis profiles and frequency content.</figcaption>
 </figure>
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/point_target_spectral_phase.png){ width="900" }
+    ![PT Spectra Phase](../../../../assets/images/q/point_target_spectral_phase.png){ width="900" }
     <figcaption>Phase spectral analysis profiles.</figcaption>
 </figure>
 

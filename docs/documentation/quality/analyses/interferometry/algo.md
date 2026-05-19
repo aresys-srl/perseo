@@ -37,12 +37,12 @@ directions. Also, graphical plots can be obtained as output using the ``graphica
 functionality showing the coherence map (amplitude and phase available) and the two histograms along the corresponding axes.
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/coherence_magnitude.png){ width="900" }
+    ![Coherence Magnitude](../../../../assets/images/q/coherence_magnitude.png){ width="900" }
     <figcaption>Interferometric coherence magnitude and 2D coherence histograms.</figcaption>
 </figure>
 
 <figure markdown="span">
-    ![Supporting Projects](../../../../assets/images/q/coherence_phase.png){ width="900" }
+    ![Coherence Phase](../../../../assets/images/q/coherence_phase.png){ width="900" }
     <figcaption>Interferometric coherence phase and 2D coherence histograms.</figcaption>
 </figure>
 

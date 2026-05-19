@@ -8,6 +8,16 @@ tags:
 
 # Changelog
 
+## v1.0.2
+
+**New Features**
+
+- Added IGRF 14, geomagnetic field computation model
+
+**Other Changes**
+
+- Switched testing framework from `unittest` to `pytest`
+
 ## v1.0.1
 
 **Other Changes**
