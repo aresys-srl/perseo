@@ -13,14 +13,14 @@ sys.path.append("..")
 import nox_common  # type: ignore # noqa: F401
 
 
-def unittest_executor(session: nox.Session, project: str) -> None:
-    """Executor of unittest from nox session.
+def pytest_executor(session: nox.Session, project: str) -> None:
+    """Executor of pytest from nox session.
 
     Parameters
     ----------
     session : nox.Session
         nox session
-    project_source : str
+    project : str
         project name, with "-" as separator for namespace sub-packages
     """
     Path("_build").mkdir(exist_ok=True)
@@ -32,31 +32,23 @@ def unittest_executor(session: nox.Session, project: str) -> None:
     session.run(
         "python",
         "-m",
-        "coverage",
-        "run",
-        f"--source={project}",
-        "-m",
-        "xmlrunner",
-        "--output-file",
-        f"_build/unittest-report-{nox_common.PLATFORM}-py{session.python}.xml",
-        "discover",
-    )
-    session.run("python", "-m", "coverage", "report", "-m")
-    session.run(
-        "python",
-        "-m",
-        "coverage",
-        "xml",
-        "-o",
-        f"_build/unittest-coverage-{nox_common.PLATFORM}-py{session.python}.xml",
+        "pytest",
+        "--cov",
+        project,
+        "--cov-report",
+        "term-missing",
+        "--cov-report",
+        f"xml:_build/pytest-coverage-{nox_common.PLATFORM}-py{session.python}.xml",
+        "--junitxml",
+        f"_build/pytest-report-{nox_common.PLATFORM}-py{session.python}.xml",
     )
 
 
 @nox.session(python=nox_common.PY_VERSIONS)
 def unittest(session: nox.Session):
-    """Module testing with unittest"""
+    """Module testing with pytest"""
     cwd = Path.cwd()
-    unittest_executor(session, project=cwd.name)
+    pytest_executor(session, project=cwd.name)
 
 
 @nox.session()

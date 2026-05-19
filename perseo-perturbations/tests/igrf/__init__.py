@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 """
-IGRF unittest
--------------
+IGRF tests
+-----------
 """
 
 from .test_conversions import TestConversions

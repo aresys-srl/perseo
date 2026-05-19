@@ -107,13 +107,24 @@ test_wheel_linux:
     - source ./ci_test/bin/activate
     - python -m pip install --find-links= dist/*$match*.whl
     - cd ..
-    - python -m unittest perseo_perturbations.tests
+    - python -m pip install pytest pytest-cov
+    - >
+      python -m pytest ${SUBPROJECT}/tests/
+      --junitxml=_build/pytest-report-linux-py${PYTHON}.xml
+      --cov-report=xml:_build/pytest-coverage-linux-py${PYTHON}.xml
   parallel:
     matrix:
       - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   extends: .tags_manylinux_2_28
   needs:
     - job: python_package_linux
+  artifacts:
+    reports:
+      junit:
+        - ./_build/pytest-report-*.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: ./_build/pytest-coverage-*.xml
 
 test_wheel_win10:
   stage: test-build
@@ -123,13 +134,25 @@ test_wheel_win10:
     - cd ..
     - pyenv local ${PYTHON}
     - python -m pip install $wheel_py
-    - python -m unittest perseo_perturbations.tests
+    - python -m pip install pytest pytest-cov
+    - >
+      python -m pytest ${SUBPROJECT}/tests/
+      --junitxml=_build/pytest-report-win-py${PYTHON}.xml
+      --cov-report=xml:_build/pytest-coverage-win-py${PYTHON}.xml
   parallel:
     matrix:
       - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
   extends: .tags_win10
   needs:
     - job: python_package_win
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      junit:
+        - ./_build/pytest-report-*.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: ./_build/pytest-coverage-*.xml
 
 # === deploy =================================================================
 # ============================================================================

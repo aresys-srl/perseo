@@ -3,14 +3,12 @@
 
 """Tests for utility functions (Legendre polynomials, inclination/declination)."""
 
-import unittest
-
 import numpy as np
 
 from perseo_perturbations.geomagnetic.core.utils import get_legendre, get_magnetic_declination, get_magnetic_inclination
 
 
-class TestGetLegendre(unittest.TestCase):
+class TestGetLegendre:
     """Tests for the get_legendre function."""
 
     def test_shape(self):
@@ -18,8 +16,8 @@ class TestGetLegendre(unittest.TestCase):
         theta = np.array([45.0, 90.0])
         keys = [(1, 0), (1, 1)]
         P, dP = get_legendre(theta, keys)
-        self.assertEqual(P.shape, (2, 2))
-        self.assertEqual(dP.shape, (2, 2))
+        assert P.shape == (2, 2)
+        assert dP.shape == (2, 2)
 
     def test_first_degree(self):
         """P(1,0)=0, P(1,1)=1 at the equator (theta=90°)."""
@@ -34,7 +32,7 @@ class TestGetLegendre(unittest.TestCase):
         theta = np.array([45.0])
         keys = [(2, 0), (2, 1), (2, 2)]
         P, dP = get_legendre(theta, keys)
-        self.assertEqual(P.shape, (1, 3))
+        assert P.shape == (1, 3)
 
     def test_equator(self):
         """P(1,0)=0 at the equator for a single key."""
@@ -48,13 +46,13 @@ class TestGetLegendre(unittest.TestCase):
         theta = np.array([0.0, 45.0, 90.0, 135.0, 180.0])
         keys = [(1, 1)]
         P, dP = get_legendre(theta, keys)
-        self.assertEqual(P.shape, (5, 1))
+        assert P.shape == (5, 1)
         np.testing.assert_allclose(P[0, 0], 0.0, atol=1e-12)
         np.testing.assert_allclose(P[2, 0], 1.0, atol=1e-12)
         np.testing.assert_allclose(P[4, 0], 0.0, atol=1e-12)
 
 
-class TestGetInclinationDeclination(unittest.TestCase):
+class TestGetInclinationDeclination:
     """Tests for the get_inclination_declination function."""
 
     def test_horizontal(self):
@@ -98,7 +96,3 @@ class TestGetInclinationDeclination(unittest.TestCase):
         dec = get_magnetic_declination(geodetic_magnetic_field=field, degrees=False)
         assert inc.shape == (2,)
         assert dec.shape == (2,)
-
-
-if __name__ == "__main__":
-    unittest.main()

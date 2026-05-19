@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: MIT
 
 """
-PERSEO: Perturbations package, Testing module
----------------------------------------------
+PERSEO: Perturbations package, Tests
+-------------------------------------
 """
 
 from .igrf import *  # noqa: F403

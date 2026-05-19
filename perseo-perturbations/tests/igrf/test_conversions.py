@@ -3,8 +3,6 @@
 
 """Tests for coordinate and field vector conversion functions."""
 
-import unittest
-
 import numpy as np
 
 from perseo_perturbations.geomagnetic.core.conversions import (
@@ -15,7 +13,7 @@ from perseo_perturbations.geomagnetic.core.conversions import (
 )
 
 
-class TestConversions(unittest.TestCase):
+class TestConversions:
     """Tests for the coordinate conversion functions."""
 
     def test_geodetic_to_geocentric_equator(self):
@@ -33,7 +31,7 @@ class TestConversions(unittest.TestCase):
     def test_geodetic_to_geocentric_at_altitude(self):
         """Radius at 400 km altitude exceeds equatorial radius."""
         theta, r = geodetic_to_geocentric(np.array([45.0]), np.array([400.0]))
-        self.assertGreater(r, 6378.137)
+        assert r > 6378.137
 
     def test_geocentric_to_geodetic_roundtrip(self):
         """Geodetic-to-geocentric round-trip preserves lat and height."""
@@ -81,7 +79,3 @@ class TestConversions(unittest.TestCase):
         Bn_out, Bu_out = rotate_field_to_geodetic(B_th, B_r, lat, theta)
         np.testing.assert_allclose(Bn, Bn_out, atol=1e-10)
         np.testing.assert_allclose(Bu, Bu_out, atol=1e-10)
-
-
-if __name__ == "__main__":
-    unittest.main()
