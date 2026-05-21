@@ -32,4 +32,7 @@ for key in tropospheric_legendre_coeff:
 grid_stations_fine = res.files(resources).joinpath("troposphere_support", "gridpoint_coord_1x1.txt")
 grid_stations_coarse = res.files(resources).joinpath("troposphere_support", "gridpoint_coord_5x5.txt")
 
+# International Geomagnetic Reference Field (IGRF) Model 14
+igrf_14_coeff_path = res.files(resources).joinpath("igrf", "IGRF14.shc")
+
 __version__ = "1.0.2"

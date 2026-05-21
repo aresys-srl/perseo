@@ -12,6 +12,8 @@ dependencies = [
     "more-itertools",
     "netCDF4",
     "arepytools >= 1.7.6",
+    "pymap3d>=3.2",
+    "xarray>=2026.4.0",
 ]
 dynamic = ["version"]
 classifiers = [

@@ -47,12 +47,9 @@ py3.install_sources(
 )
 py3.install_sources(
     [
-      './tests/test_solid_earth_tides.py',
-      './tests/test_plate_tectonics.py',
-      './tests/test_atmospheric_map_names_generation.py',
-      './tests/__init__.py'
+      './src/perseo_perturbations/resources/igrf/IGRF14.shc',
     ],
-    subdir: 'perseo_perturbations/tests'
+    subdir: 'perseo_perturbations/resources/igrf'
 )
 py3.install_sources(
     [
@@ -61,6 +58,41 @@ py3.install_sources(
       './src/perseo_perturbations/atmospheric/troposphere.py'
     ],
     subdir: 'perseo_perturbations/atmospheric'
+)
+py3.install_sources(
+    [
+      './src/perseo_perturbations/geomagnetic/__init__.py',
+      './src/perseo_perturbations/geomagnetic/igrf.py',
+    ],
+    subdir: 'perseo_perturbations/geomagnetic'
+)
+py3.install_sources(
+    [
+      './src/perseo_perturbations/geomagnetic/core/__init__.py',
+      './src/perseo_perturbations/geomagnetic/core/conversions.py',
+      './src/perseo_perturbations/geomagnetic/core/shc_reader.py',
+      './src/perseo_perturbations/geomagnetic/core/utils.py',
+    ],
+    subdir: 'perseo_perturbations/geomagnetic/core'
+)
+py3.install_sources(
+    [
+      './tests/test_solid_earth_tides.py',
+      './tests/test_plate_tectonics.py',
+      './tests/test_atmospheric_map_names_generation.py',
+      './tests/__init__.py',
+    ],
+    subdir: 'perseo_perturbations/tests'
+)
+py3.install_sources(
+    [
+      './tests/igrf/test_conversions.py',
+      './tests/igrf/test_igrf.py',
+      './tests/igrf/test_shc_reader.py',
+      './tests/igrf/test_utils.py',
+      './tests/igrf/__init__.py',
+    ],
+    subdir: 'perseo_perturbations/tests/igrf'
 )
 
 add_languages('fortran', native: false)
