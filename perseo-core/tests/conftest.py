@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.fixtures.geometry_data import get_angles_test_data, get_coords_conversions_test_data
+from tests.fixtures.geometry_data import get_angles_test_data, get_coords_conversions_test_data, get_doppler_test_data
 from tests.fixtures.geometry_geocoding_data import (
     get_direct_geocoding_test_data,
     get_direct_geocoding_with_looks_test_data,
@@ -103,3 +103,9 @@ def direct_geocoding_test_data():
 def inverse_geocoding_test_data():
     """Return fixture data for ``inverse_geocoding_monostatic`` and ``inverse_geocoding_bistatic`` tests."""
     return get_inverse_geocoding_test_data()
+
+
+@pytest.fixture
+def doppler_test_data():
+    """Return fixture data for doppler functions tests."""
+    return get_doppler_test_data()

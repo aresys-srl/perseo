@@ -6,6 +6,7 @@
 import numpy as np
 
 from perseo_core.geometry.utilities.ellipsoid import WGS84
+from tests.fixtures.models_data import get_testing_trajectory
 
 
 def get_angles_test_data() -> dict[str, object]:
@@ -105,4 +106,33 @@ def get_coords_conversions_test_data():
         "llh_vec": llh_vec,
         "llh_vec_deg": llh_vec_deg,
         "tolerance": {"atol": 1e-8, "rtol": 1e-8},
+    }
+
+
+def get_doppler_test_data() -> dict[str, object]:
+    """Return fixture data for doppler functions tests."""
+    trajectory = get_testing_trajectory()
+    return {
+        "N": 5,
+        "trajectory": trajectory,
+        "azimuth_time": trajectory.domain[0] + 2.0,
+        "ground_point": np.array(
+            [-2243618.48435212, -4728341.28615007, 3633267.229522297],
+        ),
+        "frequency_doppler_centroid": 0.0,
+        "wavelength": 1.0,
+        "carrier_frequency": 5405000454.33435,
+        "az_steering_rate_rad_s": 0.027757171601738514,
+        "doppler_rate": -2202.4494321715547,
+        "pv_scalar": 3.954046405851841e-07,
+        "distance": 2940.7387133883235,
+        "sensor_velocity": np.array([-856.1384108174528, -329.7629775067583, 398.55830806407346]),
+        "los": np.array([1416.1211861753836, -2320.122846400016, 1122.3078651148826]),
+        "doppler_result": 2.6891518024707355e-10,
+        "gradient_result": np.array([0.5822607815646932, 0.22427220480713764, -0.2710599933611937]),
+        "doppler_rate_result": -3607.893770499216,
+        "steering_doppler_frequency_result": [-1711.8272616173901, 1711.8262922977972],
+        "doppler_centroid_result": 96.22056463133517,
+        "residual_monostatic_result": 96.22056463133458,
+        "tolerance": {"atol": 1e-8, "rtol": 0},
     }
