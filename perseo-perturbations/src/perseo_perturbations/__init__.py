@@ -10,6 +10,11 @@ from importlib import resources as res
 
 from perseo_perturbations import resources
 
+# constants
+DEFAULT_EARTH_RADIUS_M = 6371000.0  # [m]
+IGRF_EARTH_RADIUS_KM = 6371.2  # [km]
+DEFAULT_IONOSPHERE_HEIGHT_M = 450000.0  # [m]
+
 # tropospheric legendre coefficients
 # these data has been taken from the data management script hosted by VMF Data Server (vmf3.m) that can be found here:
 # https://vmf.geo.tuwien.ac.at/codes/vmf3.m

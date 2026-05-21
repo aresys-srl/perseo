@@ -28,11 +28,8 @@ from arepytools.timing.conversions import date_to_gps_week
 from more_itertools import pairwise
 from scipy.interpolate import RegularGridInterpolator
 
+from perseo_perturbations import DEFAULT_EARTH_RADIUS_M, DEFAULT_IONOSPHERE_HEIGHT_M
 from perseo_perturbations.atmospheric import GPS_WEEK_REFERENCE
-
-# constants
-DEFAULT_EARTH_RADIUS = 6371000.0  # [m]
-DEFAULT_IONOSPHERE_HEIGHT = 450000.0  # [m]
 
 
 class IonosphericAnalysisCenters(Enum):
@@ -278,8 +275,8 @@ class IonosphericDelayEstimator:
         self.solution_type = tec_solution_type
         self.time_resolution = tec_time_resolution
         # updated by the one read directly from the map file, if the operation is successful
-        self._ionosphere_height = DEFAULT_IONOSPHERE_HEIGHT
-        self._earth_radius = DEFAULT_EARTH_RADIUS
+        self._ionosphere_height = DEFAULT_IONOSPHERE_HEIGHT_M
+        self._earth_radius = DEFAULT_EARTH_RADIUS_M
 
         # analysis center
         if isinstance(analysis_center, IonosphericAnalysisCenters):
@@ -362,8 +359,8 @@ class IonosphericDelayEstimator:
     def _detect_pierce_point(
         sat_coords: np.ndarray,
         pt_coords: np.ndarray,
-        earth_radius: float = DEFAULT_EARTH_RADIUS,
-        ionosphere_height: float = DEFAULT_IONOSPHERE_HEIGHT,
+        earth_radius: float = DEFAULT_EARTH_RADIUS_M,
+        ionosphere_height: float = DEFAULT_IONOSPHERE_HEIGHT_M,
     ) -> tuple[np.ndarray, np.ndarray, list[np.ndarray]]:
         """Detecting ionospheric pierce points (IPP) for each line of sight sensor/point-target.
 
@@ -417,7 +414,7 @@ class IonosphericDelayEstimator:
     def _generate_mapping_function(
         sat_coords: np.ndarray,
         method: TECIncidenceAngleMethod,
-        ionosphere_height: float = DEFAULT_IONOSPHERE_HEIGHT,
+        ionosphere_height: float = DEFAULT_IONOSPHERE_HEIGHT_M,
         ipp_coords: np.ndarray = None,
         pt_coords: np.ndarray = None,
     ) -> np.ndarray:
@@ -460,7 +457,8 @@ class IonosphericDelayEstimator:
         elif method == TECIncidenceAngleMethod.GROUND_CONVERTED:
             incidence_angle = compute_incidence_angles(sat_coords, pt_coords)
             mapping_function = 1 / np.sqrt(
-                1 - (DEFAULT_EARTH_RADIUS / (DEFAULT_EARTH_RADIUS + ionosphere_height) * np.sin(incidence_angle)) ** 2
+                1
+                - (DEFAULT_EARTH_RADIUS_M / (DEFAULT_EARTH_RADIUS_M + ionosphere_height) * np.sin(incidence_angle)) ** 2
             )
 
         return mapping_function
@@ -503,7 +501,7 @@ class IonosphericDelayEstimator:
         except Exception:
             warnings.warn(
                 "Error while trying to extract Ionospheric Height from map data, "
-                + f"using default value {DEFAULT_IONOSPHERE_HEIGHT} [m]",
+                + f"using default value {DEFAULT_IONOSPHERE_HEIGHT_M} [m]",
                 stacklevel=2,
             )
 
@@ -514,7 +512,7 @@ class IonosphericDelayEstimator:
         except Exception:
             warnings.warn(
                 "Error while trying to extract Earth Radius from map data, "
-                + f"using default value {DEFAULT_EARTH_RADIUS} [m]",
+                + f"using default value {DEFAULT_EARTH_RADIUS_M} [m]",
                 stacklevel=2,
             )
 
