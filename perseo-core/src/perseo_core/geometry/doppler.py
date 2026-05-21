@@ -220,7 +220,7 @@ def get_geometric_doppler_centroid(
     return 2 * sensor_velocity_norm * np.sin(squint_angles) / wavelength
 
 
-# TODO: new, add unittest
+# TODO: new, add tests
 def compute_theoretical_doppler_rate(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
@@ -260,7 +260,7 @@ def compute_theoretical_doppler_rate(
     )
 
 
-# TODO: new, add unittest
+# TODO: new, add tests
 def compute_steering_doppler_frequency(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,

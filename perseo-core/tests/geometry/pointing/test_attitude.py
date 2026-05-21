@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for models/attitude.py Attitude object"""
+"""Testing for models/attitude.py Attitude object"""
 
 import numpy as np
 import pytest

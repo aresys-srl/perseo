@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 """
-PERSEO - CORE: Unittest
+PERSEO - CORE: Testing
 -----------------------
 """

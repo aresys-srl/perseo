@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for geometry/geocoding/direct_geocoding.py geocoding with looks functionalities"""
+"""Testing for geometry/geocoding/direct_geocoding.py geocoding with looks functionalities"""
 
 from __future__ import annotations
 
