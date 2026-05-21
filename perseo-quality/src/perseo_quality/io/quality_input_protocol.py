@@ -359,18 +359,18 @@ class ExtendedChannelData(ChannelData, Protocol):
             altitude over WGS84 ellipsoid in meters
         """
 
-    def get_noise_vector(self, azimuth_index: int) -> np.ndarray | None:
-        """Compute noise vector at a given azimuth index.
+    def get_noise_vector(self, azimuth_indexes: int | tuple[int, int]) -> np.ndarray | None:
+        """Get noise vector(s) at a given azimuth index(es).
 
         Parameters
         ----------
-        azimuth_index : int
-            azimuth index
+        azimuth_index : int | tuple[int, int]
+            azimuth index or tuple of azimuth indexes (start, stop)
 
         Returns
         -------
         np.ndarray | None
-            noise vector
+            noise vector(s) corresponding to the input azimuth index(es), if any else None
         """
 
     def times_to_burst_association(self, azimuth_times: ArrayLike) -> list[int]:

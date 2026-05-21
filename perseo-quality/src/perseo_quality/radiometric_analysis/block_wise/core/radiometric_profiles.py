@@ -117,7 +117,7 @@ def radiometric_profiles(
         look_angles_array = []
         incidence_angles_array = []
         az_rel_times = []
-        noise_vectors = []
+        noise_vectors_array = []
         for bc_num, center in enumerate(blocks_centers_px):
             log.info(f"Processing block {bc_num + 1} of {blocks_num}")
 
@@ -156,11 +156,18 @@ def radiometric_profiles(
 
             noise_vector = None
             if add_noise_vectors:
+                az_block_start = center[0] - np.floor(cropping_size[1] / 2).astype(int)
+                az_block_stop = az_block_start + cropping_size[1]
                 # getting noise vectors
                 if hasattr(channel_data, "get_noise_vector"):
-                    noise_vector = channel_data.get_noise_vector(azimuth_index=center[0])
-                    if noise_vector is not None:
-                        noise_vector = noise_vector[config.range_pixel_margin : -config.range_pixel_margin]
+                    log.info("Computing average noise vector for the current block...")
+                    noise_vectors = channel_data.get_noise_vector(
+                        azimuth_indexes=(az_block_start, az_block_stop),
+                    )
+                    if noise_vectors is not None:
+                        noise_vector = np.nanmean(noise_vectors, axis=0)[
+                            config.range_pixel_margin : -config.range_pixel_margin
+                        ]
             else:
                 log.debug("'get_noise_vector' method not defined for the current plugin")
 
@@ -194,7 +201,7 @@ def radiometric_profiles(
                 if noise_vector is not None:
                     with np.errstate(divide="ignore"):
                         noise_vector = 10 * np.log10(np.abs(noise_vector) ** 2)
-                noise_vectors.append(noise_vector)
+                noise_vectors_array.append(noise_vector)
 
             # replacing all zeroes with NaNs
             log.debug("Replacing all zeroes with NaNs.")
@@ -230,10 +237,10 @@ def radiometric_profiles(
             x_axis=hist_axis,
             config=config.histogram_parameters,
         )
-        if not all(n is None for n in noise_vectors):
-            noise_vectors = np.ma.stack(noise_vectors)
+        if not all(n is None for n in noise_vectors_array):
+            noise_vectors_array = np.ma.stack(noise_vectors_array)
         else:
-            noise_vectors = None
+            noise_vectors_array = None
 
         # storing results
         output_results.append(
@@ -264,7 +271,7 @@ def radiometric_profiles(
                 range_block_centers=channel_data.slant_range_axis[[t[1] for t in blocks_centers_px]],
                 blocks_num=blocks_num,
                 profiles=profiles,
-                noise_vectors=noise_vectors,
+                noise_vectors=noise_vectors_array,
                 block_azimuth_times=az_rel_times,
                 look_angles=look_angles_array,
                 incidence_angles=incidence_angles_array,

@@ -8,11 +8,15 @@ tags:
 
 # Changelog
 
-## v1.0.14
+## v1.0.15
 
 **Bug Fixes**
 
 - Fixing bug in Radiometric Analysis output graphs generation: axis name is now "look angles" not "elevation angles"
+
+**Other Changes**
+
+- ``get_noise_vector`` method now returns a 2D array of noise vectors corresponding to the input azimuth indexes range requested that is then averaged along azimuth to provide the output noise vector in NESZ Radiometric Analysis
 
 ## v1.0.14
 
