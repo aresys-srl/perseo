@@ -7,223 +7,206 @@ import io
 import logging
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
+from rich.console import Console
+from rich.logging import RichHandler
 
-from perseo_core.perseo_logger import (
+from perseo_core.logger import (
     FAIL,
     SUCCESS,
-    ColorfulFormatter,
+    TRACE,
     CustomFileHandler,
-    PlainFormatter,
-    StdErrConsoleHandler,
-    StdOutConsoleHandler,
-    critical,
-    debug,
-    error,
-    fail,
-    get_logger_object,
-    info,
+    PlainFileFormatter,
+    StdErrRichHandler,
+    StdOutRichHandler,
+    get_logger,
     initialize_logger,
-    success,
-    warning,
+    set_log_level,
 )
 
 
-def _setup_logger():
-    """Clear handlers and return logger instance."""
-    logger = get_logger_object()
-    for handler in logger.handlers[:]:
+@pytest.fixture(autouse=True)
+def _logger_cleanup():
+    logger_obj = get_logger()
+    for handler in logger_obj.handlers[:]:
         if not isinstance(handler, logging.NullHandler):
-            logger.removeHandler(handler)
-    logger.setLevel(logging.DEBUG)
-    return logger
-
-
-class LoggerTestCase:
-    """Base test case with common logger setup and teardown."""
-
-    @pytest.fixture(autouse=True)
-    def setup_logger(self):
-        self.logger = _setup_logger()
-        yield
-        for handler in self.logger.handlers[:]:
-            if not isinstance(handler, logging.NullHandler):
-                self.logger.removeHandler(handler)
+            logger_obj.removeHandler(handler)
+    logger_obj.setLevel(logging.DEBUG)
+    yield
+    for handler in logger_obj.handlers[:]:
+        if not isinstance(handler, logging.NullHandler):
+            logger_obj.removeHandler(handler)
 
 
 class TestCustomLogLevels:
-    """Test custom log levels FAIL and SUCCESS."""
+    """Test custom log levels TRACE, FAIL and SUCCESS."""
+
+    def test_trace_level_value(self):
+        assert TRACE == 5
 
     def test_fail_level_value(self):
-        """Test that FAIL level is set to 21."""
         assert FAIL == 21
 
     def test_success_level_value(self):
-        """Test that SUCCESS level is set to 22."""
         assert SUCCESS == 22
 
+    def test_trace_level_name(self):
+        assert logging.getLevelName(TRACE) == "TRACE"
+
     def test_fail_level_name(self):
-        """Test that FAIL level name is registered."""
         assert logging.getLevelName(FAIL) == "FAIL"
 
     def test_success_level_name(self):
-        """Test that SUCCESS level name is registered."""
         assert logging.getLevelName(SUCCESS) == "SUCCESS"
 
 
-class TestModuleLevelFunctions(LoggerTestCase):
-    """Test module-level logging functions."""
+class TestLoggerObjectMethods:
+    """Test logging via the logger object."""
 
     @pytest.fixture(autouse=True)
-    def setup_stream(self, setup_logger):
+    def _setup_stream(self):
         self.stream = io.StringIO()
-        self.handler = logging.StreamHandler(self.stream)
-        self.logger.addHandler(self.handler)
+        handler = logging.StreamHandler(self.stream)
+        get_logger().addHandler(handler)
 
-    def test_debug_function(self):
-        """Test debug module-level function."""
-        debug("Debug test message")
+    def test_trace(self):
+        logger = get_logger()
+        logger.setLevel(TRACE)
+        logger.trace("Trace test message")
+        assert "Trace test message" in self.stream.getvalue()
+
+    def test_debug(self):
+        get_logger().debug("Debug test message")
         assert "Debug test message" in self.stream.getvalue()
 
-    def test_info_function(self):
-        """Test info module-level function."""
-        info("Info test message")
+    def test_info(self):
+        get_logger().info("Info test message")
         assert "Info test message" in self.stream.getvalue()
 
-    def test_warning_function(self):
-        """Test warning module-level function."""
-        warning("Warning test message")
+    def test_warning(self):
+        get_logger().warning("Warning test message")
         assert "Warning test message" in self.stream.getvalue()
 
-    def test_error_function(self):
-        """Test error module-level function."""
-        error("Error test message")
+    def test_error(self):
+        get_logger().error("Error test message")
         assert "Error test message" in self.stream.getvalue()
 
-    def test_critical_function(self):
-        """Test critical module-level function."""
-        critical("Critical test message")
+    def test_critical(self):
+        get_logger().critical("Critical test message")
         assert "Critical test message" in self.stream.getvalue()
 
-    def test_fail_function(self):
-        """Test fail module-level function."""
-        fail("Fail test message")
+    def test_fail(self):
+        get_logger().fail("Fail test message")
         assert "Fail test message" in self.stream.getvalue()
 
-    def test_success_function(self):
-        """Test success module-level function."""
-        success("Success test message")
+    def test_success(self):
+        get_logger().success("Success test message")
         assert "Success test message" in self.stream.getvalue()
 
 
-class TestStreamSeparation(LoggerTestCase):
+class TestStreamSeparation:
     """Test that log messages go to correct streams."""
 
     @pytest.fixture(autouse=True)
-    def setup_stream_separation(self, setup_logger):
+    def _setup_streams(self):
         self.stdout_stream = io.StringIO()
         self.stderr_stream = io.StringIO()
 
-        self.stdout_handler = StdOutConsoleHandler()
-        self.stderr_handler = StdErrConsoleHandler()
+        stdout_handler = StdOutRichHandler()
+        stdout_handler.console = Console(file=self.stdout_stream)
 
-        self.stdout_handler.stream = self.stdout_stream
-        self.stderr_handler.stream = self.stderr_stream
+        stderr_handler = StdErrRichHandler()
+        stderr_handler.console = Console(file=self.stderr_stream)
 
-        self.logger.addHandler(self.stdout_handler)
-        self.logger.addHandler(self.stderr_handler)
+        logger = get_logger()
+        logger.addHandler(stdout_handler)
+        logger.addHandler(stderr_handler)
+
+    def test_trace_goes_to_stdout(self):
+        logger = get_logger()
+        logger.setLevel(TRACE)
+        logger.trace("Trace message")
+        assert "Trace message" in self.stdout_stream.getvalue()
+        assert self.stderr_stream.getvalue() == ""
 
     def test_debug_goes_to_stdout(self):
-        """Test that DEBUG messages go to stdout."""
-        self.logger.debug("Debug message")
+        get_logger().debug("Debug message")
         assert "Debug message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_info_goes_to_stdout(self):
-        """Test that INFO messages go to stdout."""
-        self.logger.info("Info message")
+        get_logger().info("Info message")
         assert "Info message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_warning_goes_to_stdout(self):
-        """Test that WARNING messages go to stdout."""
-        self.logger.warning("Warning message")
+        get_logger().warning("Warning message")
         assert "Warning message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_error_goes_to_stderr(self):
-        """Test that ERROR messages go to stderr."""
-        self.logger.error("Error message")
+        get_logger().error("Error message")
         assert "Error message" in self.stderr_stream.getvalue()
         assert self.stdout_stream.getvalue() == ""
 
     def test_critical_goes_to_stderr(self):
-        """Test that CRITICAL messages go to stderr."""
-        self.logger.critical("Critical message")
+        get_logger().critical("Critical message")
         assert "Critical message" in self.stderr_stream.getvalue()
         assert self.stdout_stream.getvalue() == ""
 
     def test_fail_goes_to_stdout(self):
-        """Test that FAIL messages go to stdout."""
-        self.logger.log(FAIL, "Fail message")
+        get_logger().fail("Fail message")
         assert "Fail message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_success_goes_to_stdout(self):
-        """Test that SUCCESS messages go to stdout."""
-        self.logger.log(SUCCESS, "Success message")
+        get_logger().success("Success message")
         assert "Success message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
 
-class TestGetLoggerObject:
-    """Test get_logger_object function."""
+class TestGetLogger:
+    """Test get_logger function."""
 
     def test_returns_logger(self):
-        """Test that get_logger_object returns a Logger instance."""
-        logger = get_logger_object()
+        logger = get_logger()
         assert isinstance(logger, logging.Logger)
 
     def test_returns_perseo_logger(self):
-        """Test that get_logger_object returns the perseo logger."""
-        logger = get_logger_object()
+        logger = get_logger()
         assert logger.name == "perseo"
 
     def test_returns_same_instance(self):
-        """Test that get_logger_object returns the same instance."""
-        logger1 = get_logger_object()
-        logger2 = get_logger_object()
+        logger1 = get_logger()
+        logger2 = get_logger()
         assert logger1 is logger2
 
 
-class TestInitializeLogger(LoggerTestCase):
+class TestInitializeLogger:
     """Test initialize_logger function."""
 
     def test_initialize_without_file(self):
-        """Test initialize_logger without file handler."""
         initialize_logger(log_file=None, log_level=logging.INFO)
 
-        handlers = [h for h in self.logger.handlers if not isinstance(h, logging.NullHandler)]
+        handlers = [h for h in get_logger().handlers if not isinstance(h, logging.NullHandler)]
         handler_types = [type(h).__name__ for h in handlers]
 
-        assert "StdOutConsoleHandler" in handler_types
-        assert "StdErrConsoleHandler" in handler_types
+        assert "StdOutRichHandler" in handler_types
+        assert "StdErrRichHandler" in handler_types
 
     def test_initialize_with_file(self):
-        """Test initialize_logger with file handler."""
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             temp_file = f.name
 
         try:
             initialize_logger(log_file=temp_file, log_level=logging.DEBUG)
 
-            handlers = [h for h in self.logger.handlers if not isinstance(h, logging.NullHandler)]
+            handlers = [h for h in get_logger().handlers if not isinstance(h, logging.NullHandler)]
             handler_types = [type(h).__name__ for h in handlers]
 
-            assert "StdOutConsoleHandler" in handler_types
-            assert "StdErrConsoleHandler" in handler_types
+            assert "StdOutRichHandler" in handler_types
+            assert "StdErrRichHandler" in handler_types
             assert "CustomFileHandler" in handler_types
 
             for handler in handlers:
@@ -233,19 +216,29 @@ class TestInitializeLogger(LoggerTestCase):
             Path(temp_file).unlink(missing_ok=True)
 
     def test_initialize_sets_log_level(self):
-        """Test that initialize_logger sets the correct log level."""
         initialize_logger(log_level=logging.WARNING)
-        assert self.logger.level == logging.WARNING
+        assert get_logger().level == logging.WARNING
 
 
-class TestStdOutConsoleHandler:
-    """Test StdOutConsoleHandler."""
+class TestSetLogLevel:
+    """Test set_log_level function."""
+
+    def test_set_log_level(self):
+        set_log_level(logging.ERROR)
+        assert get_logger().level == logging.ERROR
+
+
+class TestStdOutRichHandler:
+    """Test StdOutRichHandler."""
+
+    def test_is_rich_handler(self):
+        handler = StdOutRichHandler()
+        assert isinstance(handler, RichHandler)
 
     def test_filters_error_and_above(self):
-        """Test that StdOutConsoleHandler filters ERROR and CRITICAL."""
         stream = io.StringIO()
-        handler = StdOutConsoleHandler()
-        handler.stream = stream
+        handler = StdOutRichHandler()
+        handler.console = Console(file=stream)
 
         logger = logging.getLogger("test_stdout")
         logger.addHandler(handler)
@@ -261,27 +254,18 @@ class TestStdOutConsoleHandler:
 
         logger.removeHandler(handler)
 
-    @patch("sys.stdout.isatty", return_value=True)
-    def test_uses_colorful_formatter(self, mock_isatty):
-        """Test that handler uses ColorfulFormatter when isatty returns True."""
-        handler = StdOutConsoleHandler()
-        assert isinstance(handler.formatter, ColorfulFormatter)
 
-    @patch("sys.stdout.isatty", return_value=False)
-    def test_uses_plain_formatter(self, mock_isatty):
-        """Test that handler uses PlainFormatter when isatty returns False."""
-        handler = StdOutConsoleHandler()
-        assert isinstance(handler.formatter, PlainFormatter)
+class TestStdErrRichHandler:
+    """Test StdErrRichHandler."""
 
-
-class TestStdErrConsoleHandler:
-    """Test StdErrConsoleHandler."""
+    def test_is_rich_handler(self):
+        handler = StdErrRichHandler()
+        assert isinstance(handler, RichHandler)
 
     def test_filters_below_error(self):
-        """Test that StdErrConsoleHandler only logs ERROR and above."""
         stream = io.StringIO()
-        handler = StdErrConsoleHandler()
-        handler.stream = stream
+        handler = StdErrRichHandler()
+        handler.console = Console(file=stream)
 
         logger = logging.getLogger("test_stderr")
         logger.addHandler(handler)
@@ -300,7 +284,6 @@ class TestCustomFileHandler:
     """Test CustomFileHandler."""
 
     def test_creates_file(self):
-        """Test that CustomFileHandler creates a log file."""
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             temp_file = f.name
 
@@ -322,36 +305,22 @@ class TestCustomFileHandler:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_uses_plain_formatter(self):
-        """Test that handler uses PlainFormatter."""
         with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
             temp_file = f.name
 
         try:
             handler = CustomFileHandler(temp_file)
-            assert isinstance(handler.formatter, PlainFormatter)
+            assert isinstance(handler.formatter, PlainFileFormatter)
             handler.close()
         finally:
             Path(temp_file).unlink(missing_ok=True)
 
 
-class TestFormatters:
-    """Test formatter classes."""
+class TestPlainFileFormatter:
+    """Test PlainFileFormatter."""
 
-    def test_colorful_formatter_caches_formatters(self):
-        """Test that ColorfulFormatter caches formatters."""
-        formatter = ColorfulFormatter()
-        assert isinstance(formatter._formatters, dict)
-        assert len(formatter._formatters) == 7
-
-    def test_plain_formatter_caches_formatters(self):
-        """Test that PlainFormatter caches formatters."""
-        formatter = PlainFormatter()
-        assert isinstance(formatter._formatters, dict)
-        assert len(formatter._formatters) == 7
-
-    def test_colorful_formatter_output(self):
-        """Test ColorfulFormatter produces colored output."""
-        formatter = ColorfulFormatter()
+    def test_output_includes_message(self):
+        formatter = PlainFileFormatter()
         record = logging.LogRecord(
             name="test",
             level=logging.INFO,
@@ -364,24 +333,8 @@ class TestFormatters:
         output = formatter.format(record)
         assert "Test message" in output
 
-    def test_colorful_formatter_includes_ansi_codes(self):
-        """Test that ColorfulFormatter includes ANSI escape codes."""
-        formatter = ColorfulFormatter()
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        output = formatter.format(record)
-        assert "\x1b[" in output or "\033[" in output, "ANSI codes should be present in colored output"
-
-    def test_plain_formatter_excludes_ansi_codes(self):
-        """Test that PlainFormatter does NOT include ANSI escape codes."""
-        formatter = PlainFormatter()
+    def test_excludes_ansi_codes(self):
+        formatter = PlainFileFormatter()
         record = logging.LogRecord(
             name="test",
             level=logging.INFO,
@@ -394,18 +347,3 @@ class TestFormatters:
         output = formatter.format(record)
         assert "\x1b[" not in output, "ANSI escape codes should NOT be in plain output"
         assert "\033[" not in output, "ANSI escape codes should NOT be in plain output"
-
-    def test_plain_formatter_output(self):
-        """Test PlainFormatter produces plain output."""
-        formatter = PlainFormatter()
-        record = logging.LogRecord(
-            name="test",
-            level=logging.INFO,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-        output = formatter.format(record)
-        assert "Test message" in output

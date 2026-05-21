@@ -6,3 +6,4 @@ User Manual
 
    attitude
    reference_systems
+   logging
