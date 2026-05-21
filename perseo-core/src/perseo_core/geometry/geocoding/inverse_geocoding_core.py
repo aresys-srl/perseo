@@ -450,7 +450,7 @@ def inverse_geocoding_monostatic_init_core(
             sensor_positions=trajectory.position(time_axis),
             sensor_velocities=trajectory.velocity(time_axis),
             ground_point=point,
-            frequency_doppler_centroid=frequencies_doppler_centroid[id_point],
+            doppler_frequency=frequencies_doppler_centroid[id_point],
             wavelength=wavelength,
         )
 
@@ -565,14 +565,14 @@ def inverse_geocoding_bistatic_init_core(
             sensor_positions=trajectory_rx.position(time_axis_rx),
             sensor_velocities=trajectory_rx.velocity(time_axis_rx),
             ground_point=point,
-            frequency_doppler_centroid=0,
+            doppler_frequency=0,
             wavelength=1,
         )
         doppler_centroid_equation_tx = doppler_equation_monostatic_residuals(
             sensor_positions=trajectory_tx.position(time_axis_tx),
             sensor_velocities=trajectory_tx.velocity(time_axis_tx),
             ground_point=point,
-            frequency_doppler_centroid=0,
+            doppler_frequency=0,
             wavelength=1,
         )
 

@@ -20,39 +20,39 @@ from perseo_core.timing.precise_datetime import PreciseDateTime
 # TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
 def doppler_equation(
     wavelength: float,
-    pv_scalar: float,
-    distance: float,
-    frequency_doppler_centroid: float,
+    pv_scalar: float | npt.NDArray[np.floating],
+    distance: float | npt.NDArray[np.floating],
+    doppler_frequency: float | npt.NDArray[np.floating],
     sensor_velocity: npt.NDArray[np.floating],
-    los: np.ndarray,
-) -> tuple[float, npt.NDArray[np.floating]]:
+    los: npt.NDArray[np.floating],
+) -> tuple[float | npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Doppler equation solver.
 
     Parameters
     ----------
     wavelength : float
         carrier signal wavelength
-    pv_scalar : float
-        scalar product between sensor velocity and line of sight
+    pv_scalar : float | npt.NDArray[np.floating],
+        scalar product between sensor velocity and line of sight scalar or shape (N,)
     distance : float
-        ground point - sensor distance
-    frequency_doppler_centroid : float
-        frequency doppler centroid
+        ground point - sensor position distance scalar or shape (N,)
+    doppler_frequency : float
+        doppler frequency scalar or shape (N,)
     sensor_velocity : npt.NDArray[np.floating]
-        sensor velocity
-    los : np.ndarray
-        line of sight
+        sensor velocity (3,) or shape (N, 3)
+    los : npt.NDArray[np.floating]
+        ground point - sensor position (3,) or shape (N, 3)
 
     Returns
     -------
-    float
-        doppler equation solution
+    float | npt.NDArray[np.floating]
+        doppler equation solution scalar or shape (N,)
     npt.NDArray[np.floating]
-        doppler equation gradient
+        doppler equation gradient (3,) or shape (N, 3)
     """
 
     c_factor = 2.0 / wavelength / distance
-    doppler_equation = c_factor * pv_scalar + frequency_doppler_centroid
+    doppler_equation = c_factor * pv_scalar + doppler_frequency
     norm_pv = pv_scalar / distance**2
     grad_doppler_equation = (c_factor * (-sensor_velocity + (norm_pv * los.T).T).T).T
     return doppler_equation, grad_doppler_equation
@@ -62,9 +62,9 @@ def doppler_equation_monostatic_residuals(
     ground_point: npt.NDArray[np.floating],
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
-    frequency_doppler_centroid: float,
+    doppler_frequency: float,
     wavelength: float,
-) -> npt.NDArray[np.floating]:
+) -> float | npt.NDArray[np.floating]:
     """Evaluate SAR doppler equation residual, assuming monostatic approximation.
 
     *Doppler Equation*
@@ -87,18 +87,18 @@ def doppler_equation_monostatic_residuals(
     ground_point : npt.NDArray[np.floating]
         ground point in ECEF coordinates, with shape (3,)
     sensor_positions : npt.NDArray[np.floating]
-        sensor positions, with shape (N, 3)
+        sensor positions, with shape (3,) or (N, 3)
     sensor_velocities : npt.NDArray[np.floating]
-        sensor velocities, with shape (N, 3)
-    frequency_doppler_centroid : float
-        frequency doppler centroid
+        sensor velocities, with shape (3,) or (N, 3)
+    doppler_frequency : float
+        frequency doppler centroid in Hz
     wavelength : float
-        signal carrier wavelength
+        signal carrier wavelength in meters
 
     Returns
     -------
-    npt.NDArray[np.floating]
-        doppler equation residual (Hz) for each input sensor position, (N,)
+    float | npt.NDArray[np.floating]
+        doppler equation residual (Hz) for each input sensor position, scalar or (N,)
     """
 
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
@@ -107,19 +107,29 @@ def doppler_equation_monostatic_residuals(
     if sensor_velocities.ndim > 2 or sensor_velocities.shape[-1] != 3:
         raise ValueError(f"sensor_velocities has invalid shape: {sensor_velocities.shape}, it should be (3,) or (N, 3)")
 
+    is_scalar = ground_point.ndim == 1 and sensor_positions.ndim == 1 and sensor_velocities.ndim == 1
+
+    ground_point = np.atleast_1d(ground_point)
+    sensor_positions = np.atleast_2d(sensor_positions)
+    sensor_velocities = np.atleast_2d(sensor_velocities)
+
     line_of_sight = ground_point - sensor_positions
     line_of_sight_norm = np.linalg.norm(line_of_sight, axis=1)
 
     def col_wise_scalar_product(matrix_a, matrix_b):
         return np.einsum("ij,ij->i", matrix_a, matrix_b)  # Einstein notation -- col wise dot product.
 
-    return (
+    result = (
         np.divide(
             2 / wavelength * col_wise_scalar_product(line_of_sight, sensor_velocities),
             line_of_sight_norm,
         )
-        - frequency_doppler_centroid
+        - doppler_frequency
     )
+
+    if is_scalar:
+        return float(result[0])
+    return result
 
 
 def doppler_equation_bistatic_residuals(
@@ -129,8 +139,8 @@ def doppler_equation_bistatic_residuals(
     sensor_vel_tx: npt.NDArray[np.floating],
     ground_points: npt.NDArray[np.floating],
     wavelength: float,
-    doppler_freq: float,
-) -> npt.NDArray[np.floating]:
+    doppler_frequency: float,
+) -> float | npt.NDArray[np.floating]:
     """Evaluating doppler equation residual for bistatic sensors.
 
     Parameters
@@ -146,14 +156,14 @@ def doppler_equation_bistatic_residuals(
     ground_points : npt.NDArray[np.floating]
         ground points from direct geocoding solution, (3,) or (N, 3)
     wavelength : float
-        carrier signal wavelength
-    doppler_freq : float
-        doppler frequency
+        carrier signal wavelength in meters
+    doppler_frequency : float
+        doppler frequency in Hz
 
     Returns
     -------
-    npt.NDArray[np.floating]
-        doppler equation residual
+    float | npt.NDArray[np.floating]
+        doppler equation residual, scalar or (N,)
     """
 
     los_rx = sensor_pos_rx - ground_points
@@ -169,7 +179,7 @@ def doppler_equation_bistatic_residuals(
         sensor_velocity=sensor_vel_rx,
         distance=distance_rx,
         wavelength=wavelength,
-        frequency_doppler_centroid=doppler_freq,
+        doppler_frequency=doppler_frequency,
     )
 
     doppler_residual_tx, _ = doppler_equation(
@@ -178,10 +188,22 @@ def doppler_equation_bistatic_residuals(
         sensor_velocity=sensor_vel_tx,
         distance=distance_tx,
         wavelength=wavelength,
-        frequency_doppler_centroid=doppler_freq,
+        doppler_frequency=doppler_frequency,
     )
 
-    return np.array(doppler_residual_rx + doppler_residual_tx)
+    is_scalar = (
+        sensor_pos_rx.ndim == 1
+        and sensor_pos_tx.ndim == 1
+        and sensor_vel_rx.ndim == 1
+        and sensor_vel_tx.ndim == 1
+        and ground_points.ndim == 1
+    )
+
+    result = doppler_residual_rx + doppler_residual_tx
+
+    if is_scalar:
+        return float(result)
+    return result
 
 
 def get_geometric_doppler_centroid(
@@ -205,8 +227,8 @@ def get_geometric_doppler_centroid(
 
     Returns
     -------
-    float
-        doppler centroid in Hz
+    float | npt.NDArray[np.floating]
+        doppler centroid in Hz, scalar or with shape (N,)
     """
 
     # evaluating squint
@@ -217,16 +239,20 @@ def get_geometric_doppler_centroid(
     )
     sensor_velocity_norm = np.linalg.norm(sensor_velocities, axis=-1)
 
-    return 2 * sensor_velocity_norm * np.sin(squint_angles) / wavelength
+    doppler_centroid = 2 * sensor_velocity_norm * np.sin(squint_angles) / wavelength
+
+    if np.ndim(doppler_centroid) == 0:
+        return float(doppler_centroid)
+
+    return doppler_centroid
 
 
-# TODO: new, add tests
 def compute_theoretical_doppler_rate(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
-    coords: np.ndarray,
-    fc_hz: float,
-) -> np.ndarray:
+    ground_points: npt.NDArray[np.floating],
+    carrier_frequency: float,
+) -> float | npt.NDArray[np.floating]:
     """Compute theoretical doppler rate.
 
     Parameters
@@ -235,39 +261,43 @@ def compute_theoretical_doppler_rate(
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time when to evaluate the doppler rate
-    coords : np.ndarray
-        ground point coordinates
-    fc_hz : float
-        signal carrier frequency
+    ground_points : npt.NDArray[np.floating]
+        ground point coordinates, with shape (3,) or (N, 3)
+    carrier_frequency : float
+        signal carrier frequency in Hz
 
     Returns
     -------
-    np.ndarray
-        theoretical doppler rate
+    float | npt.NDArray[np.floating]
+        theoretical doppler rate in Hz/s, scalar or with shape (N,) if multiple ground points are provided
     """
-    sat_pos = trajectory.position(azimuth_time)
-    sat_vel = trajectory.velocity(azimuth_time)
-    sat_acc = trajectory.acceleration(azimuth_time)
+    sensor_position = trajectory.position(azimuth_time)
+    sensor_velocity = trajectory.velocity(azimuth_time)
+    sensor_acceleration = trajectory.acceleration(azimuth_time)
 
-    los = (sat_pos - coords).transpose()
-    los_norm = np.linalg.norm(los)
+    los = sensor_position - ground_points
+    los_norm = np.linalg.norm(los, axis=-1)
 
-    return (
-        -2
-        / (speed_of_light / fc_hz)
-        / los_norm
-        * (np.linalg.norm(sat_vel) ** 2 + float(np.dot(los, sat_acc)) - (float(np.dot(los, sat_vel)) / los_norm) ** 2)
-    )
+    wavelength = speed_of_light / carrier_frequency
+    v_norm_sq = np.linalg.norm(sensor_velocity) ** 2
+
+    los_dot_acc = np.sum(los * sensor_acceleration, axis=-1)
+    los_dot_vel = np.sum(los * sensor_velocity, axis=-1)
+
+    result = -2.0 / wavelength / los_norm * (v_norm_sq + los_dot_acc - (los_dot_vel / los_norm) ** 2)
+
+    if np.ndim(result) == 0:
+        return float(result)
+    return result
 
 
-# TODO: new, add tests
 def compute_steering_doppler_frequency(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
     az_mid_burst_time: PreciseDateTime | np.datetime64,
     doppler_rate: float,
-    az_steering_rate_rad_s: float,
-    fc_hz: float,
+    az_steering_rate: float,
+    carrier_frequency: float,
 ) -> float:
     """Compute doppler frequency related to the antenna electrical steering.
 
@@ -280,20 +310,20 @@ def compute_steering_doppler_frequency(
     az_mid_burst_time : PreciseDateTime | np.datetime64
         azimuth mid burst time
     doppler_rate : float
-        sensor doppler rate
+        sensor doppler rate in Hz/s
     az_steering_rate_rad_s : float
         azimuth steering rate in rad/s
-    fc_hz : float
+    carrier_frequency : float
         signal carrier frequency
 
     Returns
     -------
     float
-        steering doppler frequency
+        steering doppler frequency in Hz
     """
     sat_vel_norm = np.linalg.norm(trajectory.velocity(azimuth_time))
     # azimuth steering rate conversion from rad/s to Hz/s
-    az_steering_rate_hz_s = 2 * sat_vel_norm / (speed_of_light / fc_hz) * az_steering_rate_rad_s
+    az_steering_rate_hz_s = 2 * sat_vel_norm / (speed_of_light / carrier_frequency) * az_steering_rate
     # antenna modulation rate
     antenna_modulation_rate = -doppler_rate * az_steering_rate_hz_s / (az_steering_rate_hz_s - doppler_rate)
 

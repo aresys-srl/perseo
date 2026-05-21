@@ -116,7 +116,7 @@ class TestDirectGeocodingBistatic:
             sensor_vel_rx=sensor_velocities_rx,
             sensor_vel_tx=sensor_velocities_tx,
             ground_points=out,
-            doppler_freq=self.doppler_frequency,
+            doppler_frequency=self.doppler_frequency,
             wavelength=self.wavelength,
         )
         range_residual = _range_equation_residual_bistatic(
