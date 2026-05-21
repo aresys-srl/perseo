@@ -5,7 +5,12 @@
 
 import pytest
 
-from tests.fixtures.geometry_data import get_angles_test_data, get_coords_conversions_test_data, get_doppler_test_data
+from tests.fixtures.geometry_data import (
+    get_angles_test_data,
+    get_doppler_test_data,
+    get_ecef_eci_coords_conversions_test_data,
+    get_xyz2llh_coords_conversions_test_data,
+)
 from tests.fixtures.geometry_geocoding_data import (
     get_direct_geocoding_test_data,
     get_direct_geocoding_with_looks_test_data,
@@ -46,9 +51,9 @@ def angles_test_data():
 
 
 @pytest.fixture
-def coords_conversions_test_data():
+def xyz2llh_coords_conversions_test_data():
     """Return fixture data for ``xyz2llh`` and ``llh2xyz`` tests."""
-    return get_coords_conversions_test_data()
+    return get_xyz2llh_coords_conversions_test_data()
 
 
 @pytest.fixture
@@ -109,3 +114,9 @@ def inverse_geocoding_test_data():
 def doppler_test_data():
     """Return fixture data for doppler functions tests."""
     return get_doppler_test_data()
+
+
+@pytest.fixture
+def ecef_eci_coords_conversions_test_data():
+    """Return fixture data for ``ecef2eci`` and ``eci2ecef`` tests."""
+    return get_ecef_eci_coords_conversions_test_data()
