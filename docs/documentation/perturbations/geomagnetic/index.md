@@ -6,7 +6,7 @@ tags:
     - magnetic field
 ---
 
-# Geomagnetic Reference Field { #mag data-toc-label="Geomagnetic Reference Field" }
+# Geomagnetic Reference Field { #mag data-toc-label="Geomagnetic Field" }
 
 The **International Geomagnetic Reference Field (IGRF)** is a standard mathematical description of the Earth's main magnetic
 field, produced and endorsed by the [International Association of Geomagnetism and Aeronomy (IAGA)](https://iugg.org/associations-commissions/associations/iaga/).
@@ -14,8 +14,7 @@ It is widely used in studies of the Earth's deep interior, crust, ionosphere, an
 
 !!! tip "Magnetic field in SAR context"
 
-    While the geomagnetic field does not directly affect SAR signal propagation, an accurate magnetic field model is essential
-    for example for **space weather** corrections in ionospheric modelling.
+    An accurate magnetic field model is essential for example for **space weather** corrections in ionospheric modelling.
 
 <figure markdown="span">
   <video width="900" controls autoplay loop muted>
