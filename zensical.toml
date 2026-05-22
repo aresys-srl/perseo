@@ -30,12 +30,15 @@ Copyright &copy; 2026-present Aresys s.r.l.
 # ]
 
 # Read more: https://zensical.org/docs/customization/#additional-css
-extra_css = ["stylesheets/extra.css", "https://unpkg.com/katex@0/dist/katex.min.css"]
+extra_css = [
+    "stylesheets/extra.css",
+    "https://unpkg.com/katex@0/dist/katex.min.css",
+]
 # Read more: https://zensical.org/docs/customization/#additional-javascript
 extra_javascript = [
     "javascripts/katex.js",
     "https://unpkg.com/katex@0/dist/katex.min.js",
-    "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js"
+    "https://unpkg.com/katex@0/dist/contrib/auto-render.min.js",
 ]
 
 # ----------------------------------------------------------------------------
@@ -179,7 +182,7 @@ line_spans = "__span"
 [project.markdown_extensions.pymdownx.snippets]
 [project.markdown_extensions.pymdownx.superfences]
 custom_fences = [
-  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
+    { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
 ]
 [project.markdown_extensions.attr_list]
 [project.markdown_extensions.md_in_html]
@@ -216,12 +219,11 @@ toggle.name = "Switch to light mode"
 favicon = "assets/favicon.png"
 
 [project.plugins.mkdocstrings.handlers.python]
-inventories = ["https://docs.python.org/3/objects.inv"]
-paths = [
-    "perseo-core/src",
-    "perseo-quality/src",
-    "perseo-perturbations/src",
+inventories = [
+    "https://docs.python.org/3/objects.inv",
+    "https://numpy.org/doc/stable/objects.inv",
 ]
+paths = ["perseo-core/src", "perseo-quality/src", "perseo-perturbations/src"]
 
 # ----------------------------------------------------------------------------
 # PLUGINS
