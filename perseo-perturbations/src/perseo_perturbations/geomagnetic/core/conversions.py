@@ -63,10 +63,10 @@ def rotate_field_to_geocentric(
     geodetic_lat_rad = np.radians(geodetic_lat)
     theta_rad = np.radians(theta)
 
-    psi = np.sin(geodetic_lat_rad) * np.sin(theta_rad) - np.cos(geodetic_lat_rad) * np.cos(theta_rad)
+    delta = geodetic_lat_rad + theta_rad - np.pi / 2
 
-    B_r = -np.sin(psi) * b_north + np.cos(psi) * b_up
-    B_th = -np.cos(psi) * b_north - np.sin(psi) * b_up
+    B_th = -np.cos(delta) * b_north + np.sin(delta) * b_up
+    B_r = np.sin(delta) * b_north + np.cos(delta) * b_up
 
     return B_th, B_r
 
@@ -124,8 +124,8 @@ def rotate_field_to_geodetic(
     geodetic_lat_rad = np.radians(geodetic_lat)
     theta_rad = np.radians(theta)
 
-    psi = np.sin(geodetic_lat_rad) * np.sin(theta_rad) - np.cos(geodetic_lat_rad) * np.cos(theta_rad)
-    b_north = -np.cos(psi) * b_theta - np.sin(psi) * b_r
-    b_up = -np.sin(psi) * b_theta + np.cos(psi) * b_r
+    delta = geodetic_lat_rad + theta_rad - np.pi / 2
+    b_north = -np.cos(delta) * b_theta + np.sin(delta) * b_r
+    b_up = np.sin(delta) * b_theta + np.cos(delta) * b_r
 
     return b_north, b_up
