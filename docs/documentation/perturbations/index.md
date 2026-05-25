@@ -1,6 +1,6 @@
 ---
 icon: lucide/cloud-sun-rain
-title: "Core"
+title: "Perturbations"
 tags:
     - perturbations
     - atmosphere
