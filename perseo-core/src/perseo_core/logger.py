@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Centralized logging framework for Perseo with custom levels and Rich output.
-
+"""
 This module provides a pre-configured logger for the Perseo framework with support for
 custom log levels (TRACE, FAIL, SUCCESS), Rich-formatted console output, and plain file logging.
 
 The logger separates output streams:
+
    - TRACE, DEBUG, INFO, WARNING, FAIL, SUCCESS -> stdout
    - ERROR, CRITICAL -> stderr
 
@@ -15,40 +15,41 @@ Custom log levels can be enabled programmatically, and handlers can be customize
 
 The logger has a null handler by default so that by default the perseo framework is silent.
 
-Custom Log Levels
------------------
-TRACE : 5
-    Hyper-detailed debugging, below DEBUG.
-FAIL : 21
-    Indicates a failed validation or test.
-SUCCESS : 22
-    Indicates a successful validation or test.
+### Custom Log Levels
 
-Examples
---------
-Basic usage::
+- TRACE (5): hyper-detailed debugging, below DEBUG.
+- FAIL (21): indicates a failed validation or test.
+- SUCCESS (22): indicates a successful validation or test.
 
-    from perseo_core import logger
-    from perseo_core.logger import initialize_logger
+### Examples
 
-    initialize_logger(log_file="perseo.log", log_level=20)  # INFO
+Basic usage:
 
-    logger.info("Processing started")
-    logger.error("An error occurred")
-    logger.fail("Operation failed")
-    logger.success("Operation completed")
+```python
+from perseo_core import logger
+from perseo_core.logger import initialize_logger
 
-Bypass initialization and add a different file handler::
+initialize_logger(log_file="perseo.log", log_level=20)  # INFO
 
-    from perseo_core import get_logger
+logger.info("Processing started")
+logger.error("An error occurred")
+logger.fail("Operation failed")
+logger.success("Operation completed")
+```
 
-    get_logger().addHandler(handler)
+Bypass initialization and add a different file handler:
 
-Notes
------
-The logger is initialized with both stdout and stderr Rich handlers by default.
-To customize handlers or log levels, access the underlying logger via
-``get_logger()`` or the ``logger`` alias.
+```python
+from perseo_core import get_logger
+
+get_logger().addHandler(handler)
+```
+
+!!! note
+    The logger is initialized with both stdout and stderr Rich handlers by default.
+    To customize handlers or log levels, access the underlying logger via
+    ``get_logger()`` or the ``logger`` alias.
+
 """
 
 from __future__ import annotations

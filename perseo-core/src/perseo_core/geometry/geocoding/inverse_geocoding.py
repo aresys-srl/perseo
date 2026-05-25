@@ -1,7 +1,18 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Inverse geocoding main functionalities"""
+"""
+This module provides high-level inverse geocoding functions for computing sensor times (azimuth time, range time)
+from known ground point coordinates. Inverse geocoding is the reverse operation of direct geocoding, solving for the
+acquisition geometry that observes a specific Earth surface location.
+
+The module supports both monostatic (single sensor) and bistatic (separate transmitter/receiver)
+configurations, using Newton iterations to solve the system of equations.
+
+All functions support vectorized operations on (N, 3) ground point arrays and handle both scalar
+and array inputs for Doppler frequencies. The Trajectory interface allows flexible sensor
+path representations while PreciseDateTime ensures precise time handling.
+"""
 
 from __future__ import annotations
 
@@ -22,6 +33,10 @@ def inverse_geocoding_monostatic(
     init_guess_search_time_step: float | None = None,
 ) -> tuple[PreciseDateTime | np.datetime64 | npt.NDArray, float | npt.NDArray[np.floating]]:
     """Monostatic inverse geocoding computation.
+
+    !!! note "Initial guesses"
+
+        One between `az_initial_time_guesses` and `init_guess_search_time_step` inputs must be provided.
 
     Parameters
     ----------
@@ -154,6 +169,10 @@ def inverse_geocoding_bistatic(
     init_guess_search_time_step: float | None = None,
 ) -> tuple[PreciseDateTime | np.datetime64 | npt.NDArray, float | npt.NDArray[np.floating]]:
     """Bistatic inverse geocoding computation.
+
+    !!! note "Initial guesses"
+
+        One between `az_initial_time_guesses` and `init_guess_search_time_step` inputs must be provided.
 
     Parameters
     ----------

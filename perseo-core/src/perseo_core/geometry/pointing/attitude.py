@@ -2,8 +2,30 @@
 # SPDX-License-Identifier: MIT
 
 """
-Attitude
---------
+This module provides the `Attitude` class, a wrapper around scipy's Spherical Linear
+Interpolation (SLERP) for smooth attitude interpolation. The attitude can be initialized from reference frames,
+quaternions, or Euler angles, and supports interpolation at arbitrary times within the defined domain.
+
+### Key Components
+
+- `Attitude`: Main class for attitude interpolation using SLERP.
+
+    - Initialized with reference frames (N, 3, 3) and corresponding times
+    - Supports interpolation via `evaluate(time)` method
+    - Properties: `reference_frames`, `times`, `domain`
+
+- Factory methods for creating Attitude from different representations:
+
+    - `from_quaternions`: Create from scalar-last quaternions (N, 4)
+    - `from_euler_angles`: Create from yaw-pitch-roll angles (N, 3) with specified rotation order
+
+- Utility functions for computing attitude from sensor data:
+
+    - `compute_antenna_attitude_from_euler_angles`: antenna attitude from Euler angles relative to sensor local axis
+    - `compute_sensor_attitude_from_state_vectors`: sensor attitude directly from position/velocity vectors
+
+All attitude reference frames are expressed as (N, 3, 3) matrices. The reference frame system is preserved through
+interpolation (e.g., ECEF input yields ECEF output).
 """
 
 from __future__ import annotations

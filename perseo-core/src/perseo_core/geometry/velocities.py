@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Geometry - Velocities Computation
----------------------------------
-"""
+"""Computation of different sensor velocities"""
 
 from __future__ import annotations
 
@@ -40,7 +37,7 @@ def compute_ground_velocity(
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the ground velocity
-    look_angles : npt.NDArray[np.floating]
+    look_angles_rad : npt.NDArray[np.floating]
         look angles in radians, float or array with shape (N,)
     reference_frame : "GEOCENTRIC", "GEODETIC", "ZERODOPPLER", optional
         the reference frames in which the look angles are intended, by default "ZERODOPPLER"

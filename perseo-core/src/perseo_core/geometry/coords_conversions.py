@@ -2,8 +2,19 @@
 # SPDX-License-Identifier: MIT
 
 """
-Geometry - Coordinates Conversions
-----------------------------------
+This module provides vectorized coordinate transformations for terrestrial and celestial
+reference frames commonly used in SAR and orbital geometry computations. It leverages `pyproj`
+for geodetic conversions and `Astropy` for precise celestial frame transformations.
+
+### Coordinate Systems Supported
+
+- **ECEF (EPSG:4978)**: Earth-Centered Earth-Fixed cartesian coordinates (X, Y, Z) in meters
+- **LLH (EPSG:4326)**: Geodetic coordinates - Latitude, Longitude in radians/degrees, Height in meters
+- **ECI (GCRS)**: Earth-Centered Inertial (Geocentric Celestial Reference System)
+
+All functions support both single point (shape (3,)) and batch operations on arrays
+of coordinates (shape (N, 3)). The ECEF<->ECI transformations properly account for
+Earth rotation requiring a precise UTC timestamp via `PreciseDateTime` and velocities.
 """
 
 from __future__ import annotations

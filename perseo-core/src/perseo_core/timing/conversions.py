@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Timing - Conversions Utilities
-------------------------------
+Timing conversions utilities
 """
 
 from __future__ import annotations
@@ -71,7 +70,7 @@ def precise_datetime_to_numpy(
 
     Parameters
     ----------
-    date : PreciseDateTime | PreciseDateTimeArrayType
+    times : PreciseDateTime | PreciseDateTimeArrayType
         times to be converted from PreciseDateTime format to numpy.datetime64[ns]
 
     Returns

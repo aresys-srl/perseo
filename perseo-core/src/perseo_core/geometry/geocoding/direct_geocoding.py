@@ -1,7 +1,21 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Direct geocoding main functionalities"""
+"""
+This module provides high-level direct geocoding functions for computing ground point coordinates from sensor
+state vectors at given sensor times. It supports both monostatic (single sensor) and bistatic
+(separate transmitter/receiver) configurations.
+
+Direct geocoding solves the intersection of the range-Doppler-ellipsoid system to find the Earth surface point
+corresponding to given sensor times. The equations are solved via Newton iterations.
+
+All functions support vectorized operations on (N, 3) coordinate arrays and handle both scalar
+and array inputs for range times and Doppler frequencies. The WGS84 ellipsoid is used as the
+Earth model with configurable altitude offsets.
+
+Look direction is specified as `RIGHT` or `LEFT` to determine the geocoding side relative
+to the sensor velocity vector.
+"""
 
 from __future__ import annotations
 
@@ -321,7 +335,7 @@ def direct_geocoding_init(
     range_distance: float,
     look_direction: SensorLookDirection,
 ) -> npt.NDArray[np.floating]:
-    """Computate initial guesses for direct geocoding, monostatic approximation.
+    """Compute initial guesses for direct geocoding, monostatic approximation.
 
     Parameters
     ----------

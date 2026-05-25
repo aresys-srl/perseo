@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Geometry - Angles Computation
------------------------------
-"""
+"""Computation of incidence, look, squint and other angles"""
 
 from __future__ import annotations
 
@@ -173,10 +170,10 @@ def compute_look_angles_core(
     ----------
     sensor_positions : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more sensor positions
+    ground_points : npt.NDArray[np.floating]
+        (3,) or (N, 3) one or more points
     nadir_directions : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more nadir directions
-    points : npt.NDArray[np.floating]
-        (3,) or (N, 3) one or more points
     assume_nadir_directions_normalized : bool, optional
         True to skip nadir directions normalization, by default False
 
@@ -261,7 +258,7 @@ def compute_incidence_angles_core(
     ----------
     sensor_positions : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more sensor positions
-    points : npt.NDArray[np.floating]
+    ground_points : npt.NDArray[np.floating]
         (3,) or (N, 3) one or more points
     surface_normals : npt.NDArray[np.floating] | None, optional
         (3,) or (N, 3) one or more surface normal directions, by default None

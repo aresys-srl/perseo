@@ -2,8 +2,28 @@
 # SPDX-License-Identifier: MIT
 
 """
-Trajectory interface
---------------------
+This module defines the `Trajectory` abstract base class, which establishes the interface
+for all trajectory implementations in the PERSEO framework. A trajectory represents the
+path of a sensor through space over time, providing position, velocity, and
+acceleration vectors at arbitrary time points within its defined domain.
+
+The Trajectory ABC specifies three core evaluation methods that all concrete implementations
+must provide:
+
+- `position(time)`: Returns sensor position as (x, y, z) coordinates
+- `velocity(time)`: Returns sensor velocity as (vx, vy, vz) components
+- `acceleration(time)`: Returns sensor acceleration as (ax, ay, az) components
+
+The abstract interface enables polymorphic use throughout PERSEO geometry computations,
+allowing different trajectory representations (e.g., cubic splines, Keplerian orbits,
+polynomial fits) to be used interchangeably in geocoding, pointing, and SAR processing.
+
+### Implementation tips
+
+The concrete implementation of this class and its methods must support vectorized evaluation, with scalar times
+returning (3,) arrays and array times (N,) returning (N, 3) arrays. The `domain` property defines the valid time
+range [start, end]. Input query times *can be checked* to ensure they are within the domain bounds
+(using _is_time_valid) to avoid extrapolation outside the time domain.
 """
 
 from __future__ import annotations

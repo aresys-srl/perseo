@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Reference frames definitions and computing utilities
-
+"""
 This module provides utilities for computing various reference frames used in the Perseo framework, including:
+
 - Geocentric Reference Frame
 - Geodetic Reference Frame
 - ZeroDoppler Reference Frame

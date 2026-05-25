@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Timing - Precise Date-Time Object
----------------------------------
+Definition of Precise Date-Time Object for picoseconds timing accuracy
 """
 
 from __future__ import annotations
@@ -184,43 +183,19 @@ def _isoformat_time(hour, minute, second, picosecond, timespec="auto"):
 class PreciseDateTime:
     """Precise Date Time format specification.
 
-    .. list-table::
-       :widths: 25 35 40
-       :header-rows: 1
-
-       * - Field
-         - Value / Format
-         - Description
-       * - Precision
-         - 1e-12 s
-         - Picosecond precision
-       * - Standard format
-         - ``"DD-MMM-YYYY hh:mm:ss.pppppppppppp"``
-         - Default string representation
-       * - Standard reference date
-         - PRECISEDATETIME_REFERENCE_TIME
-         - Reference epoch
-       * - DD
-         - —
-         - Day
-       * - MMM
-         - ``JAN``, ``FEB``, ``MAR``, ``APR``, ``MAY``, ``JUN``, ``JUL``, ``AUG``, ``SEP``, ``OCT``, ``NOV``, ``DEC``
-         - Month (three-letter uppercase abbreviation)
-       * - YYYY
-         - —
-         - Year (4 digits)
-       * - hh
-         - 00-23
-         - Hours (24-hour format)
-       * - mm
-         - 00-59
-         - Minutes
-       * - ss
-         - 00-59
-         - Seconds
-       * - pppppppppppp
-         - 12 digits
-         - Picoseconds
+    | Field | Value / Format | Description |
+    | --- | --- | --- |
+    | Precision | 1e-12 s | Picosecond precision |
+    | Standard format | `"DD-MMM-YYYY hh:mm:ss.pppppppppppp"` | Default string representation |
+    | Standard reference date | `PRECISEDATETIME_REFERENCE_TIME` | Reference epoch |
+    | DD | — | Day |
+    | MMM | `JAN`, `FEB`, `MAR`, `APR`, `MAY`, `JUN`, `JUL`, `AUG`, `SEP`, `OCT`, `NOV`, `DEC` |\
+    Month (three-letter uppercase abbreviation) |
+    | YYYY | — | Year (4 digits) |
+    | hh | 00-23 | Hours (24-hour format) |
+    | mm | 00-59 | Minutes |
+    | ss | 00-59 | Seconds |
+    | pppppppppppp | 12 digits | Picoseconds |
     """
 
     _MONTH_ABBREVIATED_NAME_DIRECTIVE = "%b"

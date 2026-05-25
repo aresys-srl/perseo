@@ -1,99 +1,107 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Antenna Reference Frame (ARF) computation and management.
-
+r"""
 This module provides functions to compute the Antenna Reference Frame (ARF) from rotations
 and Euler angles, and to extract Euler angles from a given ARF.
 
-Notes
------
-The Antenna Reference Frame (ARF) is a 3x3 matrix that represents the orientation
-of the antenna coordinate system.
+!!! note
 
-ARF Matrix Structure
---------------------
+    The Antenna Reference Frame (ARF) is a 3x3 matrix that represents the orientation
+    of the antenna reference frame.
+
+### ARF Matrix Structure
+
 Each column of the ARF matrix represents one axis of the antenna frame expressed in the
 local frame's coordinates:
 
-    ARF = [X_antenna | Y_antenna | Z_antenna]
+$$
+ARF = [X_{antenna} | Y_{antenna} | Z_{antenna}]
+$$
 
 Where:
-    - X_antenna: X-axis of the antenna frame (usually along-track direction)
-    - Y_antenna: Y-axis of the antenna frame (cross-track direction)
-    - Z_antenna: Z-axis of the antenna frame (boresight direction)
 
-Accessing Antenna Reference Frame Versors
------------------------------------------
+- X_antenna: X-axis of the antenna frame (usually along-track direction)
+- Y_antenna: Y-axis of the antenna frame (cross-track direction)
+- Z_antenna: Z-axis of the antenna frame (boresight direction)
+
+### Accessing Antenna Reference Frame unit vectors
+
 Individual axes (columns) can be accessed with:
 
-    X_antenna = arf[..., 0]    # First column (X-axis)
-    Y_antenna = arf[..., 1]    # Second column (Y-axis)
-    Z_antenna = arf[..., 2]    # Third column (Z-axis)
+```python
+X_antenna = arf[..., 0]  # First column (X-axis)
+Y_antenna = arf[..., 1]  # Second column (Y-axis)
+Z_antenna = arf[..., 2]  # Third column (Z-axis)
+```
 
-Construction via Euler Angles
------------------------------
+### Construction via Euler Angles
+
 The ARF is typically constructed from three sequential rotations (Euler angles):
 
-    1. Yaw (Z-axis rotation): Rotation around the local Z-axis
-    2. Pitch (Y-axis rotation): Rotation around the local Y-axis
-    3. Roll (X-axis rotation): Rotation around the local X-axis
+1. Yaw (Z-axis rotation): Rotation around the local Z-axis
+2. Pitch (Y-axis rotation): Rotation around the local Y-axis
+3. Roll (X-axis rotation): Rotation around the local X-axis
 
 These rotations are applied in certain order (usually YPR order (Yaw-Pitch-Roll)) to progressively
 rotate the initial reference frame into the antenna reference frame.
 
-Vector Transformation
----------------------
+### Vector Transformation
+
 To rotate a vector v from the local frame to the antenna frame:
 
-    v_antenna = ARF @ v_local
+$$
+v_{antenna} = ARF \, @ \, v_{local}
+$$
 
 To rotate back from the antenna frame to the local frame (using transpose/inverse):
 
-    v_local = ARF.T @ v_antenna
+$$
+v_{local} = ARF.T \, @ \, v_{antenna}
+$$
 
 This is crucial for SAR processing where understanding antenna orientation relative to
 satellite motion and Earth's surface is essential.
 
-Examples
---------
+### Examples
+
 Basic usage:
 
->>> import numpy as np
->>> from perseo_core.geometry.pointing.antenna_reference_frame import (
-...     compute_antenna_reference_frame_from_euler_angles,
-...     compute_sensor_local_axis,
-... )
+```python
+import numpy as np
+from perseo_core.geometry.pointing.antenna_reference_frame import (
+    compute_antenna_reference_frame_from_euler_angles,
+    compute_sensor_local_axis,
+)
 
->>> # Define rotation angles
->>> ypr_deg = np.array([5, 1, 30])  # yaw, pitch, roll in degrees
->>> ypr_rad = np.deg2rad(ypr_deg)
+# Define rotation angles
+ypr_deg = np.array([5, 1, 30])  # yaw, pitch, roll in degrees
+ypr_rad = np.deg2rad(ypr_deg)
 
->>> # Sensor parameters in ECEF
->>> sensor_positions = np.array([26512.279931507, 1064819.379506800, -7083173.555337110])
->>> sensor_velocities = np.array([7529.609430015988, -342.978175622686, -23.376907795264])
+# Sensor parameters in ECEF
+sensor_positions = np.array([26512.279931507, 1064819.379506800, -7083173.555337110])
+sensor_velocities = np.array([7529.609430015988, -342.978175622686, -23.376907795264])
 
->>> # Compute local axis (ZERODOPPLER reference frame in ECEF)
->>> local_axis = compute_sensor_local_axis(
-...     sensor_positions=sensor_positions,
-...     sensor_velocities=sensor_velocities,
-...     reference_frame="ZERODOPPLER",
-... )
+# Compute local axis (ZERODOPPLER reference frame in ECEF)
+local_axis = compute_sensor_local_axis(
+    sensor_positions=sensor_positions,
+    sensor_velocities=sensor_velocities,
+    reference_frame="ZERODOPPLER",
+)
 
->>> # Compute antenna reference frame (ARF) from Euler angles
->>> arf = compute_antenna_reference_frame_from_euler_angles(
-...     rotation_order="YPR",
-...     ypr_rad=ypr_rad,
-...     initial_reference_frame=local_axis,
-... )
+# Compute antenna reference frame (ARF) from Euler angles
+arf = compute_antenna_reference_frame_from_euler_angles(
+    rotation_order="YPR",
+    ypr_rad=ypr_rad,
+    initial_reference_frame=local_axis,
+)
 
->>> # Access individual axes
->>> print("Antenna Reference Frame:")
->>> print("  X-axis:", arf[..., 0])
->>> print("  Y-axis:", arf[..., 1])
->>> print("  Z-axis (boresight):", arf[..., 2])
-
+# Access individual axes
+print("Antenna Reference Frame:")
+print("  X-axis:", arf[..., 0])
+print("  Y-axis:", arf[..., 1])
+print("  Z-axis (boresight):", arf[..., 2])
+```
 """
 
 from __future__ import annotations

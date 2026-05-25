@@ -2,8 +2,18 @@
 # SPDX-License-Identifier: MIT
 
 """
-Cubic Spline Trajectory
------------------------
+This module provides the `CubicSplineTrajectory` class, a concrete implementation of the
+`Trajectory` abstract base class that uses scipy's CubicSpline interpolator for continuous trajectory representation.
+
+The CubicSplineTrajectory creates a twice-differentiable cubic spline that interpolates
+between recorded position and velocity state vectors. Extrapolation outside the time domain
+is not allowed.
+
+The trajectory is initialized from three arrays of equal length:
+
+- `times`: Time axis (N,), either floats (relative times) or PreciseDateTime objects (absolute times)
+- `positions`: Position state vectors (N, 3) as [x, y, z] coordinates
+- `velocities`: Velocity state vectors (N, 3) as [vx, vy, vz] components
 """
 
 from __future__ import annotations

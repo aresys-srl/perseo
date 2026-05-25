@@ -23,7 +23,8 @@ def euler_angles_to_rotation(
 ) -> Rotation:
     """Convert input Euler angles in radians to a SciPy Rotation object.
 
-    This is the opposite of [`rotation_to_euler_angles`][].
+    This is the reverse operation of
+    [`rotation_to_euler_angles`][perseo_core.geometry.pointing.rotations.rotation_to_euler_angles].
 
     Parameters
     ----------
@@ -68,7 +69,8 @@ def euler_angles_to_rotation(
 def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> npt.NDArray[np.floating]:
     """Compute euler angles array from the Rotation object and its rotation order.
 
-    This is the opposite of [`euler_angles_to_rotation`][].
+    This is the reverse operation of
+    [`euler_angles_to_rotation`][perseo_core.geometry.pointing.rotations.euler_angles_to_rotation].
 
     Parameters
     ----------

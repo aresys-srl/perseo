@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Geometry - Doppler-related Utilities
-------------------------------------
-"""
+"""Computation of Doppler-related quantities"""
 
 from __future__ import annotations
 
@@ -311,7 +308,7 @@ def compute_steering_doppler_frequency(
         azimuth mid burst time
     doppler_rate : float
         sensor doppler rate in Hz/s
-    az_steering_rate_rad_s : float
+    az_steering_rate : float
         azimuth steering rate in rad/s
     carrier_frequency : float
         signal carrier frequency
