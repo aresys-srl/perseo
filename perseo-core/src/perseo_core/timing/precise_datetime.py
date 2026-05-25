@@ -13,7 +13,6 @@ import functools
 import math
 import numbers
 import re
-import warnings
 from typing import overload
 
 from dateutil import parser, tz
@@ -533,27 +532,6 @@ class PreciseDateTime:
         seconds = time_diff_from_reference_date.total_seconds()
         return cls(seconds, 0)
 
-    def set_now(self) -> PreciseDateTime:
-        """Set the object to the current time (local timezone)
-
-        .. deprecated:: v1.2.0
-            use :func:`PreciseDateTime.now` instead
-
-        Returns
-        -------
-        PreciseDateTime
-            self
-        """
-        warnings.warn(
-            "self.set_now() is deprecated: use PreciseDateTime.now()",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        tmp = PreciseDateTime.now()
-        self._set_state(tmp._seconds, tmp._picoseconds)
-        return self
-
     @classmethod
     def from_sec85(cls, seconds: float) -> PreciseDateTime:
         """Create an object with the time point defined by adding the specified input seconds to PRECISEDATETIME_1985
@@ -569,32 +547,6 @@ class PreciseDateTime:
             the time point
         """
         return cls(seconds - cls._TIME_DIFF_REFERENCE_FROM_1985.total_seconds(), 0)
-
-    def set_from_sec85(self, seconds: float) -> PreciseDateTime:
-        """Set the object to the time point defined by adding the specified input seconds to PRECISEDATETIME_1985
-
-        .. deprecated:: v1.2.0
-            use :func:`PreciseDateTime.from_sec85` instead.
-
-        Parameters
-        ----------
-        seconds : float
-            number of seconds from PRECISEDATETIME_1985
-
-        Returns
-        -------
-        PreciseDateTime
-            self
-        """
-        warnings.warn(
-            "self.set_from_sec85(seconds) is deprecated: use PreciseDateTime.from_sec85(seconds)",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        tmp = PreciseDateTime.from_sec85(seconds)
-        self._set_state(tmp._seconds, tmp._picoseconds)
-        return self
 
     @classmethod
     def from_utc_string(cls, utc_str: str) -> PreciseDateTime:
@@ -622,32 +574,6 @@ class PreciseDateTime:
         picoseconds = seconds_fraction / cls._PRECISION
 
         return cls(seconds, picoseconds)
-
-    def set_from_utc_string(self, utc_str: str) -> PreciseDateTime:
-        """Set the object to the time point specified by the input UTC string.
-
-        .. deprecated:: v1.2.0
-            use :func:`PreciseDateTime.from_utc_string` instead.
-
-        Parameters
-        ----------
-        utc_str : str
-            UTC string
-
-        Returns
-        -------
-        PreciseDateTime
-            self
-        """
-        warnings.warn(
-            "self.set_from_utc_string(utc_str) is deprecated: use PreciseDateTime.from_utc_string(utc_str)",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        tmp = PreciseDateTime.from_utc_string(utc_str)
-        self._set_state(tmp._seconds, tmp._picoseconds)
-        return self
 
     @classmethod
     def from_numeric_datetime(
@@ -698,53 +624,6 @@ class PreciseDateTime:
 
         return cls(total_seconds, picoseconds)
 
-    def set_from_numeric_datetime(
-        self,
-        year: int,
-        month: int = 1,
-        day: int = 1,
-        hours: int = 0,
-        minutes: int = 0,
-        seconds: int = 0,
-        picoseconds: float = 0.0,
-    ) -> PreciseDateTime:
-        """Set the object to the time point specified by the input date and time parameters
-
-        .. deprecated:: v1.2.0
-            use :func:`PreciseDateTime.from_numeric_datetime` instead.
-
-        Parameters
-        ----------
-        year : int
-            year
-        month : int, optional
-            from 1 to 12, by default 1
-        day : int, optional
-            from 1 to 28-31 (depending on month), by default 1
-        hours : int, optional
-            from 0 to 23, by default 0
-        minutes : int, optional
-            from 0 to 59, by default 0
-        seconds : int, optional
-            from 0 to 59, by default 0
-        picoseconds : float, optional
-            non-negative and less than 1e12, by default 0.0
-
-        Returns
-        -------
-        PreciseDateTime
-            self
-        """
-        warnings.warn(
-            "self.set_from_numeric_datetime(...) is deprecated: use PreciseDateTime.from_numeric_datetime(...)",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        tmp = PreciseDateTime.from_numeric_datetime(year, month, day, hours, minutes, seconds, picoseconds)
-        self._set_state(tmp._seconds, tmp._picoseconds)
-        return self
-
     @classmethod
     def fromisoformat(cls, datetime_string: str, sep: str = "T") -> PreciseDateTime:
         """Create an object with the time specified by the input ISO string
@@ -794,34 +673,6 @@ class PreciseDateTime:
                 raise ValueError(f"Invalid isoformat string: {datetime_string}")
 
         return cls.from_numeric_datetime(*(date + time))
-
-    def set_from_isoformat(self, datetime_string: str, sep: str = "T") -> PreciseDateTime:
-        """Set the object to the time specified by the input ISO string
-
-        .. deprecated:: v1.2.0
-            use :func:`PreciseDateTime.fromisoformat` instead.
-
-        Parameters
-        ----------
-        datetime_string : str
-            time specified as ISO string
-        sep : str, optional
-            separator between date and time, by default "T"
-
-        Returns
-        -------
-        PreciseDateTime
-            self
-        """
-        warnings.warn(
-            "self.set_from_isoformat(...) is deprecated: use PreciseDateTime.fromisoformat(...)",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        tmp = PreciseDateTime.fromisoformat(datetime_string, sep)
-        self._set_state(tmp._seconds, tmp._picoseconds)
-        return self
 
     def isoformat(self, sep: str = "T", timespec: str = "auto") -> str:
         """ISO formatting of the time point
