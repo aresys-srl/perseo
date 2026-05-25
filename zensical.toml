@@ -222,6 +222,9 @@ favicon = "assets/favicon.png"
 inventories = [
     "https://docs.python.org/3/objects.inv",
     "https://numpy.org/doc/stable/objects.inv",
+    "https://docs.scipy.org/doc/scipy/objects.inv",
+    "https://docs.astropy.org/en/stable/objects.inv",
+    "https://pyproj4.github.io/pyproj/stable/objects.inv"
 ]
 paths = ["perseo-core/src", "perseo-quality/src", "perseo-perturbations/src"]
 
