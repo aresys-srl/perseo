@@ -451,7 +451,7 @@ def antenna_pattern_pointing_mismatch(
     """Computing the pointing mismatch between a given data set and the pattern obtained from the
     antenna model. Optimizing the discrepancy between the data and the model to determine the best fit parameters.
 
-    Function to be optimized using Least Squares method it the :func:`residuals` function.
+    Function to be optimized using Least Squares method in the [`residuals`][] function.
 
     Parameters
     ----------
