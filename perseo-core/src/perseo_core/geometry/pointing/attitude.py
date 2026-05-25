@@ -112,7 +112,8 @@ class Attitude(Generic[T]):
         (actual dates), while quaternions must be expressed as an array with shape (N, 4), with N being the same length
         as the times array.
 
-        .. note::
+        !!! warning "Reference frame consistency"
+
             The reference frame in which quaternions are provided is kept as the reference frame of the interpolator,
             so the interpolated reference frames will be in the same reference system of the input quaternions.
 
@@ -146,7 +147,8 @@ class Attitude(Generic[T]):
         the pitch and the third is the roll, but the order of application of the rotations is defined
         by the ``rotation_order`` parameter.
 
-        .. note::
+        !!! warning "Reference frame consistency"
+
             The reference frame in which euler angles are provided is kept as the reference frame of the interpolator,
             so the interpolated reference frames will be in the same reference system of the input euler angles.
 
@@ -156,8 +158,8 @@ class Attitude(Generic[T]):
             In such a case, if you need the antenna reference frames in a global reference system (i.e. ECEF),
             an additional change of coordinates from the sensor local frame to a global reference system (i.e. ECEF)
             will be needed to get the attitude reference frames in the global reference system. In this case,
-            you can use the :func:`compute_antenna_attitude_from_euler_angles
-            <perseo_core.geometry.pointing.attitude.compute_antenna_attitude_from_euler_angles>`
+            you can use the [`compute_antenna_attitude_from_euler_angles`]
+            [perseo_core.geometry.pointing.attitude.compute_antenna_attitude_from_euler_angles]
             function to directly compute the overall attitude of the system in the same reference system
             of the sensor local axis.
 
@@ -201,7 +203,8 @@ def compute_antenna_attitude_from_euler_angles(
     The sensor local axis must be expressed as an array with shape (3, 3) or (N, 3, 3) representing
     the reference frame of the sensor.
 
-    .. note::
+    !!! warning "Reference frame consistency"
+
         The reference frame in which the sensor local axis is provided is kept as the reference frame
         of the interpolator, so the interpolated reference frames will be in the same reference system
         of the input sensor local axis.
@@ -249,12 +252,13 @@ def compute_sensor_attitude_from_state_vectors(
     The sensor local axis is computed from the state vectors and the specified reference frame, and then the attitude
     is created with the sensor local axis as reference frame.
 
-        .. note::
-            The reference frame in which the position and the velocities are provided is kept as the reference frame
-            of the attitude, so the interpolated reference frames will be in the same reference system
-            as the input state vectors.
+    !!! warning "Reference frame consistency"
 
-            For example, if the state vectors are defined in ECEF, the sensor attitude will be in ECEF as well.
+        The reference frame in which the position and the velocities are provided is kept as the reference frame
+        of the attitude, so the interpolated reference frames will be in the same reference system
+        as the input state vectors.
+
+        For example, if the state vectors are defined in ECEF, the sensor attitude will be in ECEF as well.
 
     Parameters
     ----------

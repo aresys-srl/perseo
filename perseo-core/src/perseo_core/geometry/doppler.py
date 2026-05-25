@@ -69,15 +69,15 @@ def doppler_equation_monostatic_residuals(
 
     *Doppler Equation*
 
-    .. math::
-
-        f_{doppler} = \\frac{2}{\\lambda}  \\frac{v_{sensor} \\cdot LOS}{\\|LOS\\|}
+    $$
+    f_{doppler} = \\frac{2}{\\lambda}  \\frac{v_{sensor} \\cdot LOS}{\\|LOS\\|}
+    $$
 
     *Doppler Equation Residual*
 
-    .. math::
-
-        Residual = \\frac{2}{\\lambda}  \\frac{v_{sensor} \\cdot LOS}{\\|LOS\\|} - f_{doppler}
+    $$
+    residual = \\frac{2}{\\lambda}  \\frac{v_{sensor} \\cdot LOS}{\\|LOS\\|} - f_{doppler}
+    $$
 
     where LOS is defined as the line of sight, a.k.a. the position difference between the ground point and the sensor
     positions.
