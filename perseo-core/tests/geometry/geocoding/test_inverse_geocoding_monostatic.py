@@ -87,14 +87,14 @@ def _assert_range_output(
     tolerance: float,
 ) -> None:
     if expected_size is None:
-        assert isinstance(rng_times, (float, np.floating))
+        assert isinstance(rng_times, float)
         assert abs(float(rng_times) - expected_value) < tolerance
         return
 
     assert isinstance(rng_times, np.ndarray)
     assert rng_times.ndim == 1
     assert rng_times.size == expected_size
-    assert all(isinstance(value, (float, np.floating)) for value in rng_times)
+    assert all(isinstance(value, float) for value in rng_times)
     np.testing.assert_allclose(rng_times, np.repeat(expected_value, expected_size), atol=tolerance, rtol=0)
 
 

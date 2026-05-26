@@ -153,6 +153,9 @@ def inverse_geocoding_monostatic_core(
     line_of_sight = ground_points - sensor_pos_curr
     slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 
+    if np.ndim(slant_range) == 0:
+        slant_range = float(slant_range)
+
     return azimuth_times, slant_range
 
 
@@ -377,6 +380,9 @@ def inverse_geocoding_bistatic_core(
 
     if isinstance(slant_range, np.ndarray):
         slant_range = slant_range.astype(float)
+
+    if np.ndim(slant_range) == 0:
+        slant_range = float(slant_range)
 
     return azimuth_times_rx, slant_range
 

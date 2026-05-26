@@ -354,7 +354,7 @@ class TestInverseGeocodingBistatic:
 
         if expected_az_size is None:
             assert isinstance(az_times, PreciseDateTime)
-            assert isinstance(rng_times, (float, np.floating))
+            assert isinstance(rng_times, float)
             assert abs(az_times - self.azimuth_res) < self.tolerance["atol"]
             assert abs(float(rng_times) - self.range_res) < self.tolerance["atol"]
         else:
@@ -365,7 +365,7 @@ class TestInverseGeocodingBistatic:
             assert az_times.size == expected_az_size
             assert rng_times.size == expected_rng_size
             assert all(isinstance(value, PreciseDateTime) for value in az_times)
-            assert all(isinstance(value, (float, np.floating)) for value in rng_times)
+            assert all(isinstance(value, float) for value in rng_times)
 
             delta_az = np.array(az_times - self.azimuth_res, dtype=float)
             np.testing.assert_allclose(
