@@ -125,7 +125,7 @@ ground_point = np.array(
 azimuth_times, range_times = inverse_geocoding_monostatic(
     trajectory=trajectory,
     ground_points=ground_point,
-    frequencies_doppler_centroid=0.0,
+    doppler_frequencies=0.0,
     wavelength=1.0,
     az_initial_time_guesses=trajectory.domain[0],
 )
@@ -150,7 +150,7 @@ azimuth_times, range_times = inverse_geocoding_bistatic(
     trajectory_rx=trajectory_rx,
     trajectory_tx=trajectory_tx,
     ground_points=ground_point,
-    frequencies_doppler_centroid=0.0,
+    doppler_frequencies=0.0,
     wavelength=1.0,
     az_initial_time_guesses=trajectory.domain[0] + 0.5,
 )

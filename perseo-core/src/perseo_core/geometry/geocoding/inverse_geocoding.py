@@ -27,7 +27,7 @@ from perseo_core.timing.precise_datetime import PreciseDateTime
 def inverse_geocoding_monostatic(
     trajectory: Trajectory,
     ground_points: npt.NDArray[np.floating],
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     az_initial_time_guesses: PreciseDateTime | np.datetime64 | npt.NDArray | None = None,
     init_guess_search_time_step: float | None = None,
@@ -44,7 +44,7 @@ def inverse_geocoding_monostatic(
         sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -86,7 +86,7 @@ def inverse_geocoding_monostatic(
             trajectory=trajectory,
             ground_points=ground_points,
             time_axis=time_axis,
-            frequencies_doppler_centroid=frequencies_doppler_centroid,
+            doppler_frequencies=doppler_frequencies,
             wavelength=wavelength,
         )
 
@@ -94,7 +94,7 @@ def inverse_geocoding_monostatic(
     azimuth_times, range_times = inverse_core.inverse_geocoding_monostatic_core(
         trajectory=trajectory,
         ground_points=ground_points,
-        frequencies_doppler_centroid=frequencies_doppler_centroid,
+        doppler_frequencies=doppler_frequencies,
         wavelength=wavelength,
         initial_guesses=az_initial_time_guesses,
     )
@@ -106,7 +106,7 @@ def inverse_geocoding_monostatic_init(
     trajectory: Trajectory,
     ground_points: npt.NDArray[np.floating],
     time_axis: npt.NDArray,
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> PreciseDateTime | np.datetime64 | npt.NDArray:
     """Function to compute azimuth initial guess for Newton method for monostatic inverse geocoding.
@@ -127,7 +127,7 @@ def inverse_geocoding_monostatic_init(
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     time_axis : npt.NDArray
         sensor's trajectory time axis array
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -146,7 +146,7 @@ def inverse_geocoding_monostatic_init(
         trajectory=trajectory,
         time_axis=time_axis,
         ground_points=ground_points,
-        frequencies_doppler_centroid=frequencies_doppler_centroid,
+        doppler_frequencies=doppler_frequencies,
         wavelength=wavelength,
     )
 
@@ -163,7 +163,7 @@ def inverse_geocoding_bistatic(
     trajectory_rx: Trajectory,
     trajectory_tx: Trajectory,
     ground_points: npt.NDArray[np.floating],
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     az_initial_time_guesses: PreciseDateTime | np.datetime64 | npt.NDArray | None = None,
     init_guess_search_time_step: float | None = None,
@@ -182,7 +182,7 @@ def inverse_geocoding_bistatic(
         transmitting sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -210,10 +210,8 @@ def inverse_geocoding_bistatic(
         if the input sensors' trajectories are overlapping
     """
 
-    frequencies_doppler_centroid = (
-        np.asarray(frequencies_doppler_centroid)
-        if not np.isscalar(frequencies_doppler_centroid)
-        else frequencies_doppler_centroid
+    doppler_frequencies = (
+        np.asarray(doppler_frequencies) if not np.isscalar(doppler_frequencies) else doppler_frequencies
     )
 
     if az_initial_time_guesses is not None:
@@ -238,7 +236,7 @@ def inverse_geocoding_bistatic(
             time_axis_rx=time_axis_rx,
             time_axis_tx=time_axis_tx,
             ground_points=ground_points,
-            frequencies_doppler_centroid=frequencies_doppler_centroid,
+            doppler_frequencies=doppler_frequencies,
             wavelength=wavelength,
         )
 
@@ -255,7 +253,7 @@ def inverse_geocoding_bistatic(
         trajectory_rx=trajectory_rx,
         trajectory_tx=trajectory_tx,
         ground_points=ground_points,
-        frequencies_doppler_centroid=frequencies_doppler_centroid,
+        doppler_frequencies=doppler_frequencies,
         initial_guesses=az_initial_time_guesses,
         wavelength=wavelength,
     )

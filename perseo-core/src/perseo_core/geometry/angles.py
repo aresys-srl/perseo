@@ -58,7 +58,7 @@ def compute_incidence_angles(
     range_times: float | npt.NDArray[np.floating],
     look_direction: SensorLookDirection,
     geodetic_altitude: float | None = None,
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating] | None = None,
+    doppler_frequencies: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
@@ -76,7 +76,7 @@ def compute_incidence_angles(
         sensor looking side where to perform geocoding, "RIGHT" or "LEFT"
     geodetic_altitude : float | None, optional
         the altitude over wgs84, if None is set to 0, by default None
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating] | None, optional
+    doppler_frequencies : float | npt.NDArray[np.floating] | None, optional
         frequency_doppler_centroid value or set of values, one for each range time, if None is set to 0, by default None
     carrier_wavelength : float | None, optional
         carrier signal wavelength, if None is set to 1, by default None
@@ -94,7 +94,7 @@ def compute_incidence_angles(
         sensor_positions=sensor_position,
         sensor_velocities=sensor_velocity,
         range_times=range_times,
-        doppler_frequencies=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
+        doppler_frequencies=(doppler_frequencies if doppler_frequencies is not None else 0),
         wavelength=carrier_wavelength if carrier_wavelength is not None else 1,
         look_direction=look_direction,
         altitude=geodetic_altitude if geodetic_altitude is not None else 0,
@@ -111,7 +111,7 @@ def compute_look_angles(
     range_times: float | npt.NDArray[np.floating],
     look_direction: SensorLookDirection,
     geodetic_altitude: float | None = None,
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating] | None = None,
+    doppler_frequencies: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
@@ -129,8 +129,8 @@ def compute_look_angles(
         sensor looking side where to perform geocoding, "RIGHT" or "LEFT"
     geodetic_altitude : float | None, optional
         the altitude over wgs84, if None is set to 0, by default None,
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating] | None, optional
-        frequency_doppler_centroid value, if None is set to 0, by default None
+    doppler_frequencies : float | npt.NDArray[np.floating] | None, optional
+        doppler frequencies values, if None is set to 0, by default None
     carrier_wavelength : float | None, optional
         carrier signal wavelength, if None is set to 1, by default None
     radians : bool, optional
@@ -147,7 +147,7 @@ def compute_look_angles(
         sensor_positions=sensor_position,
         sensor_velocities=sensor_velocity,
         range_times=range_times,
-        doppler_frequencies=(frequencies_doppler_centroid if frequencies_doppler_centroid is not None else 0),
+        doppler_frequencies=(doppler_frequencies if doppler_frequencies is not None else 0),
         wavelength=carrier_wavelength if carrier_wavelength is not None else 1,
         look_direction=look_direction,
         altitude=geodetic_altitude if geodetic_altitude is not None else 0,

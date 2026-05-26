@@ -267,7 +267,7 @@ class TestInverseGeocodingMonostaticCore:
         az_times, rng_times = inverse_geocoding_monostatic_core(
             trajectory=self.trajectory,
             ground_points=ground_points,
-            frequencies_doppler_centroid=frequencies,
+            doppler_frequencies=frequencies,
             initial_guesses=initial_guesses,
             wavelength=self.wavelength,
         )
@@ -337,7 +337,7 @@ class TestInverseGeocodingMonostaticCore:
             inverse_geocoding_monostatic_core(
                 trajectory=self.trajectory,
                 ground_points=ground_points,
-                frequencies_doppler_centroid=frequencies,
+                doppler_frequencies=frequencies,
                 initial_guesses=initial_guesses,
                 wavelength=self.wavelength,
             )
@@ -537,7 +537,7 @@ class TestInverseGeocodingMonostatic:
         kwargs = {
             "trajectory": self.trajectory,
             "ground_points": ground_points,
-            "frequencies_doppler_centroid": frequencies,
+            "doppler_frequencies": frequencies,
             "wavelength": self.wavelength,
         }
         if search_time_step is not None:
@@ -562,7 +562,7 @@ class TestInverseGeocodingMonostatic:
             inverse_geocoding_monostatic(
                 trajectory=self.trajectory,
                 ground_points=_reshape_ground_points(self.ground_point, self.N),
-                frequencies_doppler_centroid=np.repeat(self.doppler_freq, self.N),
+                doppler_frequencies=np.repeat(self.doppler_freq, self.N),
                 wavelength=self.wavelength,
             )
 
@@ -676,7 +676,7 @@ class TestInverseGeocodingMonostaticInit:
             trajectory=self.trajectory,
             ground_points=ground_points,
             time_axis=self.trajectory.times,
-            frequencies_doppler_centroid=frequencies,
+            doppler_frequencies=frequencies,
             wavelength=self.wavelength,
         )
         _assert_init_output(

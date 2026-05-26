@@ -19,7 +19,7 @@ def inverse_geocoding_monostatic_core(
     trajectory: Trajectory,
     ground_points: npt.NDArray[np.floating],
     initial_guesses: PreciseDateTime | np.datetime64 | npt.NDArray,
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     scene_velocity: npt.NDArray[np.floating] | None = None,
     abs_time_tolerance: float = 1e-8,
@@ -50,7 +50,7 @@ def inverse_geocoding_monostatic_core(
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : PreciseDateTime | np.datetime64 | npt.NDArray
         azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -84,10 +84,8 @@ def inverse_geocoding_monostatic_core(
     # input conversion and management
     ground_points = np.asarray(ground_points)
     azimuth_times = np.asarray(initial_guesses).copy()
-    frequencies_doppler_centroid = (
-        np.asarray(frequencies_doppler_centroid)
-        if not np.isscalar(frequencies_doppler_centroid)
-        else frequencies_doppler_centroid
+    doppler_frequencies = (
+        np.asarray(doppler_frequencies) if not np.isscalar(doppler_frequencies) else doppler_frequencies
     )
     if scene_velocity is None:
         scene_velocity = np.zeros(3)
@@ -103,12 +101,12 @@ def inverse_geocoding_monostatic_core(
             + f"ground points {ground_points.shape}"
         )
 
-    if np.size(frequencies_doppler_centroid) != ground_points.size // 3 and not (
-        ground_points.size // 3 == 1 or np.size(frequencies_doppler_centroid) == 1
+    if np.size(doppler_frequencies) != ground_points.size // 3 and not (
+        ground_points.size // 3 == 1 or np.size(doppler_frequencies) == 1
     ):
         raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
-            + f"{frequencies_doppler_centroid.shape} and "
+            + f"{doppler_frequencies.shape} and "
             + f"ground points {ground_points.shape}"
         )
 
@@ -126,7 +124,7 @@ def inverse_geocoding_monostatic_core(
         # function to be computed and solved with Newton method
         # equation:
         # f = [(earth_point - sensor_position) * (scene_velocity - sat_velocity)] + doppler_term
-        doppler_term = wavelength * frequencies_doppler_centroid / 2.0 * slant_range
+        doppler_term = wavelength * doppler_frequencies / 2.0 * slant_range
         func = np.sum((line_of_sight * (scene_velocity - sensor_velocity)), axis=-1) + doppler_term
 
         # derivative equation:
@@ -135,11 +133,7 @@ def inverse_geocoding_monostatic_core(
         func_der = (
             -np.sum(sensor_velocity * (scene_velocity - sensor_velocity), axis=-1)
             - np.sum(sensor_acceleration * line_of_sight, axis=-1)
-            - np.sum(sensor_velocity * line_of_sight, axis=-1)
-            * wavelength
-            * frequencies_doppler_centroid
-            / 2
-            / slant_range
+            - np.sum(sensor_velocity * line_of_sight, axis=-1) * wavelength * doppler_frequencies / 2 / slant_range
         )
 
         # updating the current value
@@ -167,7 +161,7 @@ def inverse_geocoding_bistatic_core(
     trajectory_tx: Trajectory,
     ground_points: npt.NDArray[np.floating],
     initial_guesses: PreciseDateTime | np.datetime64 | npt.NDArray,
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     abs_time_tolerance: float = 1e-8,
     max_iter: int = 8,
@@ -196,7 +190,7 @@ def inverse_geocoding_bistatic_core(
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : PreciseDateTime | np.datetime64 | npt.NDArray
         azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -233,18 +227,16 @@ def inverse_geocoding_bistatic_core(
         one_size_array = 1
     azimuth_times_rx = np.asarray(initial_guesses).copy()
     azimuth_times_tx = azimuth_times_rx.copy()
-    frequencies_doppler_centroid = (
-        np.asarray(frequencies_doppler_centroid)
-        if not np.isscalar(frequencies_doppler_centroid)
-        else frequencies_doppler_centroid
+    doppler_frequencies = (
+        np.asarray(doppler_frequencies) if not np.isscalar(doppler_frequencies) else doppler_frequencies
     )
 
     if azimuth_times_rx.size > ground_points.size // 3 == 1:
         ground_points = np.full((azimuth_times_rx.size, 3), ground_points)
         num_points = ground_points.size // 3
 
-    if np.size(frequencies_doppler_centroid) > ground_points.size // 3 == 1:
-        ground_points = np.full((np.size(frequencies_doppler_centroid), 3), ground_points)
+    if np.size(doppler_frequencies) > ground_points.size // 3 == 1:
+        ground_points = np.full((np.size(doppler_frequencies), 3), ground_points)
         num_points = ground_points.size // 3
 
     if np.size(initial_guesses) != ground_points.size // 3 and not (
@@ -256,12 +248,12 @@ def inverse_geocoding_bistatic_core(
             + f"ground points {ground_points.shape}"
         )
 
-    if np.size(frequencies_doppler_centroid) != ground_points.size // 3 and not (
-        ground_points.size // 3 == 1 or np.size(frequencies_doppler_centroid) == 1
+    if np.size(doppler_frequencies) != ground_points.size // 3 and not (
+        ground_points.size // 3 == 1 or np.size(doppler_frequencies) == 1
     ):
         raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
-            + f"{frequencies_doppler_centroid.shape} and "
+            + f"{doppler_frequencies.shape} and "
             + f"ground points {ground_points.shape}"
         )
 
@@ -312,7 +304,7 @@ def inverse_geocoding_bistatic_core(
 
         # equation residuals
         distance_equation_residual = slant_range_rx + slant_range_tx - slant_range
-        doppler_equation_freq_term = wavelength * frequencies_doppler_centroid * slant_range_rx * slant_range_tx
+        doppler_equation_freq_term = wavelength * doppler_frequencies * slant_range_rx * slant_range_tx
         doppler_equation_residual = (
             -rng_vel_product_tx * slant_range_rx - rng_vel_product_rx * slant_range_tx
         ) + doppler_equation_freq_term
@@ -329,7 +321,7 @@ def inverse_geocoding_bistatic_core(
         df2_dt_rx_doppler_freq_term = (
             rng_vel_product_rx
             / slant_range_rx
-            * (rng_vel_product_tx + wavelength * frequencies_doppler_centroid * slant_range_tx)
+            * (rng_vel_product_tx + wavelength * doppler_frequencies * slant_range_tx)
         )
         df2_dt_rx = (
             slant_range_tx * (norm_vel_rx_square - np.sum(line_of_sight_rx * acceleration_rx, axis=-1))
@@ -340,7 +332,7 @@ def inverse_geocoding_bistatic_core(
         df2_dt_tx_doppler_freq_term = (
             rng_vel_product_tx
             / slant_range_tx
-            * (rng_vel_product_rx + wavelength * frequencies_doppler_centroid * slant_range_rx)
+            * (rng_vel_product_rx + wavelength * doppler_frequencies * slant_range_rx)
         )
         df2_dt_tx = (
             slant_range_rx * (norm_vel_tx_square - np.sum(line_of_sight_tx * acceleration_tx, axis=-1))
@@ -393,7 +385,7 @@ def inverse_geocoding_monostatic_init_core(
     trajectory: Trajectory,
     time_axis: npt.NDArray,
     ground_points: npt.NDArray[np.floating],
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> list[npt.NDArray]:
     """Function to compute initialization of inverse geocoding.
@@ -418,7 +410,7 @@ def inverse_geocoding_monostatic_init_core(
         trajectory's time axis array
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -432,17 +424,17 @@ def inverse_geocoding_monostatic_init_core(
         list of azimuth times initial guesses arrays, one for each input ground point
     """
 
-    frequencies_doppler_centroid = np.atleast_1d(frequencies_doppler_centroid)
+    doppler_frequencies = np.atleast_1d(doppler_frequencies)
     points = ground_points.copy()
     if ground_points.size // 3 == 1 and ground_points.ndim == 1:
         points = points.reshape(1, points.size)
 
     # if there are more frequencies than points, broadcast points up to frequencies
-    if points.size // 3 == 1 and frequencies_doppler_centroid.size > 1:
-        points = np.full((frequencies_doppler_centroid.size, 3), points)
+    if points.size // 3 == 1 and doppler_frequencies.size > 1:
+        points = np.full((doppler_frequencies.size, 3), points)
     # otherwise do the opposite
-    if frequencies_doppler_centroid.size == 1 and points.size // 3 > 1:
-        frequencies_doppler_centroid = np.repeat(frequencies_doppler_centroid, points.size // 3)
+    if doppler_frequencies.size == 1 and points.size // 3 > 1:
+        doppler_frequencies = np.repeat(doppler_frequencies, points.size // 3)
 
     zero_crossing_pts_idx = []
     for id_point, point in enumerate(points):
@@ -450,7 +442,7 @@ def inverse_geocoding_monostatic_init_core(
             sensor_positions=trajectory.position(time_axis),
             sensor_velocities=trajectory.velocity(time_axis),
             ground_point=point,
-            doppler_frequency=frequencies_doppler_centroid[id_point],
+            doppler_frequency=doppler_frequencies[id_point],
             wavelength=wavelength,
         )
 
@@ -481,7 +473,7 @@ def inverse_geocoding_bistatic_init_core(
     time_axis_rx: npt.NDArray,
     time_axis_tx: npt.NDArray,
     ground_points: npt.NDArray[np.floating],
-    frequencies_doppler_centroid: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> PreciseDateTime | np.datetime64 | npt.NDArray:
     """Function to compute azimuth initial guess for Newton method for bistatic inverse geocoding.
@@ -498,7 +490,7 @@ def inverse_geocoding_bistatic_init_core(
         transmitting sensor's trajectory time axis array
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
-    frequencies_doppler_centroid : float | npt.NDArray[np.floating]
+    doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
         If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
@@ -524,26 +516,26 @@ def inverse_geocoding_bistatic_init_core(
         points = points.reshape(1, points.size)
 
     array_one_dim = 0
-    frequencies_doppler_centroid = np.asarray(frequencies_doppler_centroid)
-    if frequencies_doppler_centroid.ndim == 1:
+    doppler_frequencies = np.asarray(doppler_frequencies)
+    if doppler_frequencies.ndim == 1:
         array_one_dim = 1
-    frequencies_doppler_centroid = np.atleast_1d(frequencies_doppler_centroid)
+    doppler_frequencies = np.atleast_1d(doppler_frequencies)
 
-    if points.size // 3 > np.size(frequencies_doppler_centroid) == 1:
-        frequencies_doppler_centroid = np.repeat(frequencies_doppler_centroid[0], points.size // 3)
+    if points.size // 3 > np.size(doppler_frequencies) == 1:
+        doppler_frequencies = np.repeat(doppler_frequencies[0], points.size // 3)
 
-    if np.size(frequencies_doppler_centroid) != points.size // 3 and not (
-        points.size // 3 == 1 or np.size(frequencies_doppler_centroid) == 1
+    if np.size(doppler_frequencies) != points.size // 3 and not (
+        points.size // 3 == 1 or np.size(doppler_frequencies) == 1
     ):
         raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
-            + f"{frequencies_doppler_centroid.shape} and "
+            + f"{doppler_frequencies.shape} and "
             + f"ground points {points.shape}"
         )
 
     # if there are more frequencies than points, broadcast points up to frequencies
-    if points.size // 3 == 1 and frequencies_doppler_centroid.size > 1:
-        points = np.full((frequencies_doppler_centroid.size, 3), points)
+    if points.size // 3 == 1 and doppler_frequencies.size > 1:
+        points = np.full((doppler_frequencies.size, 3), points)
 
     # creating a common time axis valid for both orbits
     d_t = min(np.mean(np.diff(time_axis_rx)), np.mean(np.diff(time_axis_tx)))
@@ -589,9 +581,7 @@ def inverse_geocoding_bistatic_init_core(
         )
 
         residual = (
-            doppler_centroid_equation_tx
-            + doppler_centroid_equation_rx
-            - frequencies_doppler_centroid[id_point] * wavelength
+            doppler_centroid_equation_tx + doppler_centroid_equation_rx - doppler_frequencies[id_point] * wavelength
         )
 
         zero_crossing_indexes = _compute_zero_downcrossings(residual)

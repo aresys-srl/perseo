@@ -316,7 +316,7 @@ class TestInverseGeocodingBistatic:
                 trajectory_rx=self.trajectory,
                 trajectory_tx=self.trajectory,
                 ground_points=ground_points,
-                frequencies_doppler_centroid=doppler_freqs,
+                doppler_frequencies=doppler_freqs,
                 az_initial_time_guesses=init_guess,
                 wavelength=self.wavelength,
             )
@@ -325,7 +325,7 @@ class TestInverseGeocodingBistatic:
                 trajectory_rx=self.trajectory,
                 trajectory_tx=self.trajectory,
                 ground_points=ground_points,
-                frequencies_doppler_centroid=doppler_freqs,
+                doppler_frequencies=doppler_freqs,
                 wavelength=self.wavelength,
                 init_guess_search_time_step=init_guess_time_step,
             )
@@ -436,7 +436,7 @@ class TestInverseGeocodingBistatic:
                     trajectory_rx=self.trajectory,
                     trajectory_tx=self.trajectory,
                     ground_points=ground_points,
-                    frequencies_doppler_centroid=doppler_freqs,
+                    doppler_frequencies=doppler_freqs,
                     az_initial_time_guesses=init_guess,
                     wavelength=self.wavelength,
                 )
@@ -445,7 +445,7 @@ class TestInverseGeocodingBistatic:
                     trajectory_rx=self.trajectory,
                     trajectory_tx=self.trajectory,
                     ground_points=ground_points,
-                    frequencies_doppler_centroid=doppler_freqs,
+                    doppler_frequencies=doppler_freqs,
                     wavelength=self.wavelength,
                     init_guess_search_time_step=init_guess_time_step,
                 )
@@ -578,7 +578,7 @@ class TestInverseGeocodingBistaticInit:
                     time_axis_rx=self.trajectory.times,
                     time_axis_tx=self.trajectory.times,
                     ground_points=ground_points,
-                    frequencies_doppler_centroid=doppler_freqs,
+                    doppler_frequencies=doppler_freqs,
                     wavelength=self.wavelength,
                 )
         else:
@@ -588,7 +588,7 @@ class TestInverseGeocodingBistaticInit:
                 time_axis_rx=self.trajectory.times,
                 time_axis_tx=self.trajectory.times,
                 ground_points=ground_points,
-                frequencies_doppler_centroid=doppler_freqs,
+                doppler_frequencies=doppler_freqs,
                 wavelength=self.wavelength,
             )
 
