@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for spectra_analysis core functionalities"""
+"""Tests for spectra_analysis core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_quality.spectral_analysis import support as sup
 
@@ -16,10 +15,11 @@ raster = random_rng1.random((10, 10)) + random_rng1.random((10, 10)) * 1j
 raster_1 = random_rng1.random((80, 80)) + random_rng1.random((80, 80)) * 1j
 
 
-class TestSpectralAnalysisFunctions(unittest.TestCase):
+class TestSpectralAnalysisFunctions:
     """Testing Spectral Analysis support functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         """Testing setup"""
         self.tolerance = 1e-6
         self._profile = np.array(
@@ -1332,7 +1332,3 @@ class TestSpectralAnalysisFunctions(unittest.TestCase):
             np.testing.assert_allclose(
                 profs[1], self._expected_azimuth_profiles_phase[prof_id], atol=self.tolerance, rtol=0
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

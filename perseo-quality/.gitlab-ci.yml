@@ -55,7 +55,7 @@ unittest_linux:
   extends: .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
-    - python3.12 -m nox -s unittest -p ${PYTHON}
+    - python3.12 -m nox -s pytest -p ${PYTHON}
   parallel:
     matrix:
       - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
@@ -64,20 +64,17 @@ unittest_linux:
   artifacts:
     reports:
       junit:
-        - ${SUBPROJECT}/_build/unittest-report-*.xml
+        - ${SUBPROJECT}/_build/pytest-report-*.xml
       coverage_report:
         coverage_format: cobertura
-        path: ${SUBPROJECT}/_build/unittest-coverage-*.xml
+        path: ${SUBPROJECT}/_build/pytest-coverage-*.xml
 
 unittest_win:
   stage: test
-  extends: .tags_win10_new
+  extends: .tags_win10
   script:
-    - . "C:\Users\ContainerAdministrator\Documents\WindowsPowerShell\profile.ps1"
-    - conda create -y -n test python=${PYTHON}
-    - conda activate test
-    - pip install nox
-    - python -m nox -s unittest -p ${PYTHON}
+    - python -m pip install nox
+    - python -m nox -s pytest -p ${PYTHON}
   parallel:
     matrix:
       - PYTHON: ["3.11", "3.12", "3.13", "3.14"]
@@ -86,10 +83,10 @@ unittest_win:
   artifacts:
     reports:
       junit:
-        - ${SUBPROJECT}/_build/unittest-report-*.xml
+        - ${SUBPROJECT}/_build/pytest-report-*.xml
       coverage_report:
         coverage_format: cobertura
-        path: ${SUBPROJECT}/_build/unittest-coverage-*.xml
+        path: ${SUBPROJECT}/_build/pytest-coverage-*.xml
 
 # === test - integration =====================================================
 # ============================================================================

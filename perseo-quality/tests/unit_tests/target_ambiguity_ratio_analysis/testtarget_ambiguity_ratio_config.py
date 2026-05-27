@@ -1,18 +1,20 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for tar_analysis/config.py core functionalities"""
+"""Tests for tar_analysis/config.py core functionalities"""
 
-import unittest
 from dataclasses import fields
+
+import pytest
 
 from perseo_quality.tar_analysis.config import AmbiguityRatioConfig
 
 
-class AmbiguityRatioConfigConfigTest(unittest.TestCase):
+class TestAmbiguityRatioConfig:
     """Testing ambiguity ratio config dataclasses core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
 
         self.params = {
@@ -28,10 +30,6 @@ class AmbiguityRatioConfigConfigTest(unittest.TestCase):
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
             if isinstance(value, tuple):
-                self.assertEqual(item, list(value))
+                assert item == list(value)
             else:
-                self.assertEqual(item, value)
-
-
-if __name__ == "__main__":
-    unittest.main()
+                assert item == value

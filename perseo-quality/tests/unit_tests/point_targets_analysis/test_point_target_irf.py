@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for point_target_analysis/core/irf.py core functionalities"""
+"""Tests for point_target_analysis/core/irf.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_quality.point_targets_analysis.core.irf import (
     compute_islr_2d,
@@ -17,10 +16,11 @@ from perseo_quality.point_targets_analysis.core.irf import (
 from tests.unit_tests import test_utils
 
 
-class PointTargetIRFTest(unittest.TestCase):
+class TestPointTargetIRF:
     """Testing point_target_analysis/core/irf.py core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.data, self.peak_pos, self.target_pos = test_utils.generate_data_for_test(
             lines=test_utils.default_input_data_generation["lines"],
@@ -58,7 +58,3 @@ class PointTargetIRFTest(unittest.TestCase):
             side_lobes_directions=(np.inf, 0.0),
         )
         np.testing.assert_allclose(sslr, self.sslr_ref, atol=1e-6, rtol=0)
-
-
-if __name__ == "__main__":
-    unittest.main()

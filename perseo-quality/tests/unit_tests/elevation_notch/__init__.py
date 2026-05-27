@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Elevation Notch Analysis Module Unittest
-----------------------------------------
+Unit tests for perseo-quality elevation_notch
 """

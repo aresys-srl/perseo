@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for radiometric_analysis/block_wise/graphical_output.py core functionalities"""
+"""Tests for radiometric_analysis/block_wise/graphical_output.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -23,7 +22,7 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import (
 )
 
 
-class Radiometric2DHistPlotTest(unittest.TestCase):
+class TestRadiometric2DHistPlot:
     """Testing Radiometric Analysis graphical output functionalities"""
 
     def test_radiometric_2D_hist_plot(self) -> None:
@@ -70,9 +69,5 @@ class Radiometric2DHistPlotTest(unittest.TestCase):
                 .joinpath("graphs", f"radiometric_hist_{str(data.general_info.channel)}")
                 .with_suffix(".png")
             )
-            self.assertTrue(out_file.exists())
-            self.assertTrue(out_file.is_file())
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert out_file.exists()
+            assert out_file.is_file()

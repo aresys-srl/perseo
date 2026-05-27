@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for radiometric_analysis/point_wise/analysis.py core functionalities"""
+"""Tests for radiometric_analysis/point_wise/analysis.py core functionalities"""
 
-import unittest
 from dataclasses import fields
 
 import numpy as np
 import numpy.typing as npt
+import pytest
 
 from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
@@ -24,10 +24,11 @@ from perseo_quality.radiometric_analysis.point_wise.config import (
 )
 
 
-class RadiometricAnalysisConfigTest(unittest.TestCase):
+class TestRadiometricAnalysisConfig:
     """Testing radiometric analysis config dataclasses core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
 
         self.ra_flags = {
@@ -59,9 +60,9 @@ class RadiometricAnalysisConfigTest(unittest.TestCase):
                 dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
                 value = getattr(dtc, dataclass_key)
                 if key in ["output_quantity", "value", "direction", "axis"]:
-                    self.assertEqual(item, value.name.lower())
+                    assert item == value.name.lower()
                 else:
-                    self.assertEqual(item, value)
+                    assert item == value
             else:
                 for key, item in self.ra_params_flags.items():
                     dataclass_key = [
@@ -69,9 +70,9 @@ class RadiometricAnalysisConfigTest(unittest.TestCase):
                     ][0]
                     value = getattr(dtc.parameters, dataclass_key)
                     if isinstance(value, tuple):
-                        self.assertEqual(tuple(item), value)
+                        assert tuple(item) == value
                     else:
-                        self.assertEqual(item, value)
+                        assert item == value
 
     def test_radiometric_analysis_parameters_from_dict(self):
         """Testing RadiometricAnalysisParameters dataclass generation from dictionary"""
@@ -82,15 +83,16 @@ class RadiometricAnalysisConfigTest(unittest.TestCase):
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
             if "outlier" in key:
-                self.assertEqual(tuple(item), value)
+                assert tuple(item) == value
             else:
-                self.assertEqual(item, value)
+                assert item == value
 
 
-class RadiometricAnalysis(unittest.TestCase):
+class TestRadiometricAnalysis:
     """Testing radiometric_analysis.py core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         self.size = 128
         self.data = self._generate_gaussian_kernel(size_x=self.size, sigma_x=10)
 
@@ -148,11 +150,7 @@ class RadiometricAnalysis(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(smth[0], smth[1], decimal=15)
         np.testing.assert_array_almost_equal(orig[0], orig[1], decimal=15)
-        self.assertEqual(smth[0].size, self.size)
-        self.assertEqual(orig[0].size, self.size)
-        self.assertEqual(smth[0].size, smth[1].size)
-        self.assertEqual(orig[0].size, orig[1].size)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert smth[0].size == self.size
+        assert orig[0].size == self.size
+        assert smth[0].size == smth[1].size
+        assert orig[0].size == orig[1].size

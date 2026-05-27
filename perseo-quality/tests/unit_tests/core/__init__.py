@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Core Module Unittest
---------------------
+Unit tests for perseo-quality/core
 """

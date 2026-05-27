@@ -1,17 +1,17 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for radiometric_analysis/block_wise/support.py core functionalities"""
+"""Tests for radiometric_analysis/block_wise/support.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
 import numpy.typing as npt
+import pytest
 from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 
@@ -38,10 +38,11 @@ class MockTrajectory:
         return [-797.011102366091, -1383.8309567802658, -7427.764230040876]
 
 
-class Compute2DHistogramTest(unittest.TestCase):
+class TestCompute2DHistogram:
     """Testing radiometric_analysis/support.py compute_2d_histogram function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # reference results
         self.tolerance = 1e-9
         self._ref_hist = np.stack(
@@ -68,10 +69,11 @@ class Compute2DHistogramTest(unittest.TestCase):
         np.testing.assert_allclose(y_bins, self._ref_y_bins, atol=self.tolerance, rtol=0)
 
 
-class MaskingOutliersByPercentileTest(unittest.TestCase):
+class TestMaskingOutliersByPercentile:
     """Testing radiometric_analysis/support.py masking_outliers_by_percentiles function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # reference results
         self._ref_masked_num = 17
 
@@ -80,10 +82,10 @@ class MaskingOutliersByPercentileTest(unittest.TestCase):
         random_rng1 = np.random.default_rng(123)
         raster = random_rng1.random((15, 15))
         masked = support.masking_outliers_by_percentiles(data=raster, kernel=(5, 5), percentile_boundaries=[20, 80])
-        self.assertEqual(np.sum(np.isnan(masked)), self._ref_masked_num)
+        assert np.sum(np.isnan(masked)) == self._ref_masked_num
 
 
-class RadiometricProfilesToNetCDF(unittest.TestCase):
+class TestRadiometricProfilesToNetCDF:
     """Testing radiometric_analysis/support.py radiometric_profiles_to_netcdf function"""
 
     def test_radiometric_profiles_to_netcdf(self):
@@ -128,32 +130,28 @@ class RadiometricProfilesToNetCDF(unittest.TestCase):
             support.radiometric_profiles_to_netcdf(data=[data], out_path=out_fldr, tag=tag)
 
             # checking results
-            self.assertTrue(out_file.exists())
-            self.assertTrue(out_file.is_file())
+            assert out_file.exists()
+            assert out_file.is_file()
             root = Dataset(out_file, "r", format="NETCDF4")
-            self.assertEqual(root.product, data.general_info.product)
-            self.assertEqual(root.sensor, data.general_info.sensor)
-            self.assertEqual(root.product_type, data.general_info.product_type)
-            self.assertEqual(root.acquisition_mode, data.general_info.acquisition_mode)
-            self.assertEqual(root.orbit_direction, data.general_info.orbit_direction)
-            self.assertEqual(root.acquisition_start_time, str(data.general_info.acquisition_start_time))
-            self.assertEqual(root.direction, data.direction.name.lower())
-            self.assertEqual(root.output_radiometric_quantity, data.general_info.radiometric_quantity)
-            self.assertIn(data.general_info.swath, root.groups)
-            self.assertIn(data.general_info.polarization, root[data.general_info.swath].groups)
+            assert root.product == data.general_info.product
+            assert root.sensor == data.general_info.sensor
+            assert root.product_type == data.general_info.product_type
+            assert root.acquisition_mode == data.general_info.acquisition_mode
+            assert root.orbit_direction == data.general_info.orbit_direction
+            assert root.acquisition_start_time == str(data.general_info.acquisition_start_time)
+            assert root.direction == data.direction.name.lower()
+            assert root.output_radiometric_quantity == data.general_info.radiometric_quantity
+            assert data.general_info.swath in root.groups
+            assert data.general_info.polarization in root[data.general_info.swath].groups
             pol_grp = root[data.general_info.swath][data.general_info.polarization]
-            self.assertEqual(pol_grp.swath, data.general_info.swath)
-            self.assertEqual(pol_grp.channel, data.general_info.channel)
-            self.assertEqual(pol_grp.polarization, data.general_info.polarization)
-            self.assertEqual(pol_grp.azimuth_blocks_num, data.blocks_num)
-            self.assertListEqual(pol_grp.azimuth_block_centers, [str(d) for d in data.azimuth_block_centers])
+            assert pol_grp.swath == data.general_info.swath
+            assert pol_grp.channel == data.general_info.channel
+            assert pol_grp.polarization == data.general_info.polarization
+            assert pol_grp.azimuth_blocks_num == data.blocks_num
+            assert pol_grp.azimuth_block_centers == [str(d) for d in data.azimuth_block_centers]
             np.testing.assert_array_equal(pol_grp.range_block_centers, data.range_block_centers)
             np.testing.assert_array_equal(pol_grp.variables["look_angles"][:].data, data.look_angles)
             np.testing.assert_array_equal(pol_grp.variables["incidence_angles"][:].data, data.incidence_angles)
             np.testing.assert_array_equal(pol_grp.variables["radiometric_profiles"][:].data, data.profiles)
             np.testing.assert_array_equal(pol_grp.variables["azimuth_times"][:].data, data.block_azimuth_times)
             root.close()
-
-
-if __name__ == "__main__":
-    unittest.main()

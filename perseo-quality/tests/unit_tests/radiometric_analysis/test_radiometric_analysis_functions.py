@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for block-wise radiometric_analysis core functionalities"""
+"""Tests for block-wise radiometric_analysis core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 import perseo_quality.radiometric_analysis.block_wise.support as support
 from perseo_quality.core.common import blocks_partitioning
@@ -16,10 +15,11 @@ from perseo_quality.radiometric_analysis.block_wise.config import (
 )
 
 
-class TestRadiometricAnalysisFunctions(unittest.TestCase):
+class TestRadiometricAnalysisFunctions:
     """Testing Radiometric Analysis support functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         """Testing setup"""
         self._test_array = np.array(
             [
@@ -393,7 +393,7 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
         masked = support.masking_outliers_by_percentiles(
             data=self._test_array, kernel=kernel, percentile_boundaries=[15, 75]
         )
-        self.assertEqual(np.sum(np.isnan(masked)), self._masking_results)
+        assert np.sum(np.isnan(masked)) == self._masking_results
 
     def test_histogram_2d(self) -> None:
         """Testing histogram 2D generation"""
@@ -422,10 +422,8 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
             azimuth_axis=az_axis, range_axis=rng_axis, default_block_size=block_size, lines_per_burst=lines_per_burst
         )
         np.testing.assert_array_equal([block_size] * blk_num, blk_sz)
-        self.assertEqual(blk_num, az_axis.size // block_size)
-        self.assertListEqual(
-            blk_centers, [(block_size // 2 + block_size * n, rng_axis.size // 2) for n in range(blk_num)]
-        )
+        assert blk_num == az_axis.size // block_size
+        assert blk_centers == [(block_size // 2 + block_size * n, rng_axis.size // 2) for n in range(blk_num)]
 
     def test_block_definition_1(self) -> None:
         """Testing block definition, case 1"""
@@ -436,11 +434,7 @@ class TestRadiometricAnalysisFunctions(unittest.TestCase):
         blk_sz, blk_num, blk_centers = blocks_partitioning(
             azimuth_axis=az_axis, range_axis=rng_axis, default_block_size=block_size, lines_per_burst=lines_per_burst
         )
-        self.assertFalse(block_size == blk_sz[0])
-        self.assertEqual(blk_sz[0], lines_per_burst[0])
-        self.assertEqual(blk_num, lines_per_burst.size)
-        self.assertListEqual(blk_centers, [(b * n + b // 2, rng_axis.size // 2) for n, b in enumerate(lines_per_burst)])
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert not (block_size == blk_sz[0])
+        assert blk_sz[0] == lines_per_burst[0]
+        assert blk_num == lines_per_burst.size
+        assert blk_centers == [(b * n + b // 2, rng_axis.size // 2) for n, b in enumerate(lines_per_burst)]

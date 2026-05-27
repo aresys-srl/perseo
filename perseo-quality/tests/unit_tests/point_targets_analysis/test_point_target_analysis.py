@@ -1,15 +1,14 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for point_target_analysis/analysis.py core functionalities"""
+"""Tests for point_target_analysis/analysis.py core functionalities"""
 
 from __future__ import annotations
-
-import unittest
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import pytest
 
 from perseo_quality.core.generic_dataclasses import (
     SARCoordinates,
@@ -62,10 +61,11 @@ class MockChannelData:
         )
 
 
-class ExtractTargetAreaTest(unittest.TestCase):
+class TestExtractTargetArea:
     """Testing point_target_analysis/analysis.py core _extract_target_area"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.channel_data = MockChannelData()
         self.sar_coordinates = SARCoordinates(azimuth=1, azimuth_index_subpx=53.22, range=1, range_index_subpx=262.17)
@@ -546,14 +546,14 @@ class ExtractTargetAreaTest(unittest.TestCase):
             initial_crop=(10, 10),
             final_crop=self.target_area_shape,
         )
-        self.assertIsInstance(target_area, np.ndarray)
-        self.assertIsInstance(peak_coords, np.ndarray)
-        self.assertIsInstance(nominal_coords, np.ndarray)
-        self.assertIsInstance(peak_coords_swath, np.ndarray)
-        self.assertEqual(target_area.shape, self.target_area_shape)
-        self.assertEqual(peak_coords.shape, (2,))
-        self.assertEqual(nominal_coords.shape, (2,))
-        self.assertEqual(peak_coords_swath.shape, (2,))
+        assert isinstance(target_area, np.ndarray)
+        assert isinstance(peak_coords, np.ndarray)
+        assert isinstance(nominal_coords, np.ndarray)
+        assert isinstance(peak_coords_swath, np.ndarray)
+        assert target_area.shape == self.target_area_shape
+        assert peak_coords.shape == (2,)
+        assert nominal_coords.shape == (2,)
+        assert peak_coords_swath.shape == (2,)
 
         np.testing.assert_allclose(np.abs(target_area), self._expected_target_area_case0, atol=self.tolerance, rtol=0)
         np.testing.assert_allclose(peak_coords, self._expected_peak_coords_case0, atol=self.tolerance, rtol=0)
@@ -570,14 +570,14 @@ class ExtractTargetAreaTest(unittest.TestCase):
             ale_limits=(16, 8),
             final_crop=self.target_area_shape,
         )
-        self.assertIsInstance(target_area, np.ndarray)
-        self.assertIsInstance(peak_coords, np.ndarray)
-        self.assertIsInstance(nominal_coords, np.ndarray)
-        self.assertIsInstance(peak_coords_swath, np.ndarray)
-        self.assertEqual(target_area.shape, self.target_area_shape)
-        self.assertEqual(peak_coords.shape, (2,))
-        self.assertEqual(nominal_coords.shape, (2,))
-        self.assertEqual(peak_coords_swath.shape, (2,))
+        assert isinstance(target_area, np.ndarray)
+        assert isinstance(peak_coords, np.ndarray)
+        assert isinstance(nominal_coords, np.ndarray)
+        assert isinstance(peak_coords_swath, np.ndarray)
+        assert target_area.shape == self.target_area_shape
+        assert peak_coords.shape == (2,)
+        assert nominal_coords.shape == (2,)
+        assert peak_coords_swath.shape == (2,)
 
         np.testing.assert_allclose(np.abs(target_area), self._expected_target_area_case1, atol=self.tolerance, rtol=0)
         np.testing.assert_allclose(peak_coords, self._expected_peak_coords_case1, atol=self.tolerance, rtol=0)
@@ -587,10 +587,11 @@ class ExtractTargetAreaTest(unittest.TestCase):
         )
 
 
-class AddUnitOfMeasureTest(unittest.TestCase):
+class TestAddUnitOfMeasure:
     """Testing point_target_analysis/analysis.py core _add_unit_of_measure"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.columns = [
             "azimuth_resolution",
@@ -615,13 +616,14 @@ class AddUnitOfMeasureTest(unittest.TestCase):
     def test_add_unit_of_measure(self) -> None:
         """Testing _add_unit_of_measure function"""
         cols = add_unit_of_measure_to_df_columns(self.df.columns)
-        self.assertListEqual(cols, self.expected_columns)
+        assert cols == self.expected_columns
 
 
-class ResultsToDataframeTest(unittest.TestCase):
+class TestResultsToDataframe:
     """Testing point_target_analysis/analysis.py core _results_to_dataframe"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.data = [PointTargetAnalysisOutput()]
         # expected results
@@ -630,14 +632,15 @@ class ResultsToDataframeTest(unittest.TestCase):
     def test_results_to_dataframe(self) -> None:
         """Testing _results_to_dataframe function"""
         df = analysis._results_to_dataframe(self.data)
-        self.assertIsInstance(df, pd.DataFrame)
+        assert isinstance(df, pd.DataFrame)
         np.testing.assert_array_equal(df.values.astype(float), self.expected_values)
 
 
-class ComputeAdditionalRCSValuesTest(unittest.TestCase):
+class TestComputeAdditionalRCSValues:
     """Testing point_target_analysis/analysis.py core _compute_additional_rcs_values"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.rcs_data = RCSDataOutput(
             clutter=10,
@@ -669,9 +672,5 @@ class ComputeAdditionalRCSValuesTest(unittest.TestCase):
             sensor_position=self.sat_pos,
             fc_hz=self.carrier_freq,
         )
-        self.assertIsInstance(rcs_values, tuple)
+        assert isinstance(rcs_values, tuple)
         np.testing.assert_allclose(np.array(rcs_values), np.array(self.expected_rcs), atol=self.tolerance, rtol=0)
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Target Ambiguity Ratio Analysis Module Unittest
------------------------------------------------
+Unit tests for perseo-quality target_ambiguity_ratio_analysis
 """

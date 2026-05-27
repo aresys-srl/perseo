@@ -1,15 +1,15 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for interferometric_analysis core functionalities"""
+"""Tests for interferometric_analysis core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import pytest
 from netCDF4 import Dataset
 
 from perseo_quality.core.generic_dataclasses import SARPolarization
@@ -26,10 +26,11 @@ from perseo_quality.interferometric_analysis.support import (
 )
 
 
-class TestInterferometricAnalysisFunctions(unittest.TestCase):
+class TestInterferometricAnalysisFunctions:
     """Testing Interferometric Analysis support functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         """Testing setup"""
         self._test_array_re = np.array(
             [
@@ -1913,7 +1914,7 @@ class TestInterferometricAnalysisFunctions(unittest.TestCase):
         """Testing coherence_2d_histogram_computation_core on test array"""
         config = InterferometricConfig(azimuth_blocks_number=6, range_blocks_number=9, coherence_bins_number=50)
         out = coherence_2d_histogram_computation_core(coherence=self._test_array_re, config=config)
-        self.assertIsInstance(out, InterferometricCoherence2DHistograms)
+        assert isinstance(out, InterferometricCoherence2DHistograms)
         np.testing.assert_array_equal(out.azimuth_histogram, self._az_hist)
         np.testing.assert_array_equal(out.range_histogram, self._rng_hist)
         np.testing.assert_allclose(out.coherence_bin_edges, self._coherence_bin_edges, atol=self._tolerance, rtol=0)
@@ -1938,13 +1939,13 @@ class TestInterferometricAnalysisFunctions(unittest.TestCase):
             out_file = out.joinpath("coherence_histograms.nc")
             coherence_histograms_to_netcdf(data=[data], output_dir=out)
             # results checking
-            self.assertTrue(out_file.exists())
-            self.assertTrue(out_file.is_file())
+            assert out_file.exists()
+            assert out_file.is_file()
             root = Dataset(out_file, "r", format="NETCDF4")
             group = root["S1"]["HV"]
-            self.assertEqual(group.swath, data.swath)
-            self.assertEqual(group.channel, data.channel_name)
-            self.assertEqual(group.polarization, data.polarization.name)
+            assert group.swath == data.swath
+            assert group.channel == data.channel_name
+            assert group.polarization == data.polarization.name
             np.testing.assert_array_equal(
                 group["BURST_0"].variables["coherence_bins"][:].data, data.coherence_histograms.coherence_bin_edges[:-1]
             )
@@ -1955,7 +1956,3 @@ class TestInterferometricAnalysisFunctions(unittest.TestCase):
                 group["BURST_0"].variables["range_histogram"][:].data, data.coherence_histograms.range_histogram
             )
             root.close()
-
-
-if __name__ == "__main__":
-    unittest.main()

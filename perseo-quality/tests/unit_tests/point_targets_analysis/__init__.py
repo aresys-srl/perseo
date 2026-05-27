@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Point Target Analysis Module Unittest
--------------------------------------
+Unit tests for perseo-quality point_targets_analysis
 """

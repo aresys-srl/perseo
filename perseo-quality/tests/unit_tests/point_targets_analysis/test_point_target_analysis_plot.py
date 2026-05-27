@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for point_target_analysis/graphical_output.py core functionalities"""
+"""Tests for point_target_analysis/graphical_output.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -22,7 +21,7 @@ from perseo_quality.point_targets_analysis.graphical_output import (
 )
 
 
-class PointTargetsGraphicalOutputTest(unittest.TestCase):
+class TestPointTargetsGraphicalOutput:
     """Testing Point Target Analysis graphical output functionalities"""
 
     def test_irf_graphs(self) -> None:
@@ -54,11 +53,9 @@ class PointTargetsGraphicalOutputTest(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             temp_dir = Path(temp_dir)
             irf_graphs(data_graph=data_graph, data_values=data_val, graphs_info=graphs_info, out_dir=temp_dir)
-            self.assertTrue(
-                temp_dir.joinpath(
-                    f"irf_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}.png"
-                ).is_file()
-            )
+            assert temp_dir.joinpath(
+                f"irf_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}.png"
+            ).is_file()
 
     def test_rcs_graphs(self) -> None:
         """Testing rcs_graphs"""
@@ -77,12 +74,6 @@ class PointTargetsGraphicalOutputTest(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             temp_dir = Path(temp_dir)
             rcs_graphs(data_graph=data_graph, graphs_info=graphs_info, out_dir=temp_dir)
-            self.assertTrue(
-                temp_dir.joinpath(
-                    f"rcs_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}.png"
-                ).is_file()
-            )
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert temp_dir.joinpath(
+                f"rcs_{graphs_info.channel}_trgt_{graphs_info.target}_b_{graphs_info.burst}.png"
+            ).is_file()

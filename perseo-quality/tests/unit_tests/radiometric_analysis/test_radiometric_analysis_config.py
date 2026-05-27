@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for radiometric_analysis/block_wise/config.py core functionalities"""
+"""Tests for radiometric_analysis/block_wise/config.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from dataclasses import fields
+
+import pytest
 
 from perseo_quality.radiometric_analysis.block_wise.config import (
     ProfileExtractionParameters,
@@ -17,10 +18,11 @@ from perseo_quality.radiometric_analysis.block_wise.config import (
 )
 
 
-class RadiometricProfilesConfigTest(unittest.TestCase):
+class TestRadiometricProfilesConfig:
     """Testing radiometric profiles config dataclasses core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
 
         self.rp_flags = {
@@ -55,9 +57,9 @@ class RadiometricProfilesConfigTest(unittest.TestCase):
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
             if isinstance(value, RiverMaskingMode):
-                self.assertEqual(RiverMaskingMode[item], value)
+                assert RiverMaskingMode[item] == value
             else:
-                self.assertEqual(item, value)
+                assert item == value
 
     def test_radiometric_profiles_histogram_parameters_from_dict(self):
         """Testing Radiometric2DHistogramParameters dataclass generation from dictionary"""
@@ -66,7 +68,7 @@ class RadiometricProfilesConfigTest(unittest.TestCase):
         for key, item in self.rp_hist_flags.items():
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
-            self.assertEqual(item, value)
+            assert item == value
 
     def test_radiometric_profiles_prof_parameters_from_dict(self):
         """Testing RadiometricAnalysisParameters dataclass generation from dictionary"""
@@ -76,9 +78,9 @@ class RadiometricProfilesConfigTest(unittest.TestCase):
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
             if isinstance(value, tuple):
-                self.assertEqual(tuple(item), value)
+                assert tuple(item) == value
             else:
-                self.assertEqual(item, value)
+                assert item == value
 
     def test_radiometric_profiles_config_from_dict(self):
         """Testing RadiometricProfilesConfig dataclass generation from dictionary"""
@@ -98,11 +100,11 @@ class RadiometricProfilesConfigTest(unittest.TestCase):
                     ]
                     value = getattr(dtc.profile_extraction_parameters, dataclass_key)
                     if isinstance(value, tuple):
-                        self.assertEqual(tuple(item), value)
+                        assert tuple(item) == value
                     elif key == "river_masking":
-                        self.assertEqual(RiverMaskingConfig.from_dict(item), value)
+                        assert RiverMaskingConfig.from_dict(item) == value
                     else:
-                        self.assertEqual(item, value)
+                        assert item == value
             elif key == "histogram_parameters":
                 for key, item in self.rp_hist_flags.items():
                     dataclass_key = [
@@ -110,14 +112,10 @@ class RadiometricProfilesConfigTest(unittest.TestCase):
                     ][0]
                     value = getattr(dtc.histogram_parameters, dataclass_key)
                     if isinstance(value, tuple):
-                        self.assertEqual(tuple(item), value)
+                        assert tuple(item) == value
                     else:
-                        self.assertEqual(item, value)
+                        assert item == value
             else:
                 dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
                 value = getattr(dtc, dataclass_key)
-                self.assertEqual(item, value)
-
-
-if __name__ == "__main__":
-    unittest.main()
+                assert item == value

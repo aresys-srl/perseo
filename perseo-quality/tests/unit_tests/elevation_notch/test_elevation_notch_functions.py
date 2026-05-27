@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for elevation_notch_analysis/analysis core functionalities"""
+"""Tests for elevation_notch_analysis/analysis core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_quality.elevation_notch_analysis.analysis import (
     antenna_pattern_normalization,
@@ -18,10 +17,11 @@ from perseo_quality.elevation_notch_analysis.analysis import (
 from tests.unit_tests.test_utils import generate_antenna_pattern
 
 
-class ElevationNotchAnalysisFunctionsTest(unittest.TestCase):
+class TestElevationNotchAnalysisFunctions:
     """Testing Elevation Notch Analysis main functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         """Testing setup"""
         self._antenna_profile = np.array(
             [
@@ -503,8 +503,8 @@ class ElevationNotchAnalysisFunctionsTest(unittest.TestCase):
         np.testing.assert_allclose(
             elevation_angle_rad_at_max_pos, self._expected_elevation_angle_rad_at_max_pos, atol=1e-6, rtol=0
         )
-        self.assertTrue("linear_gain" in normalized_pattern)
-        self.assertFalse("gain" in normalized_pattern)
+        assert "linear_gain" in normalized_pattern
+        assert "gain" not in normalized_pattern
         np.testing.assert_allclose(
             normalized_pattern.elevation_angles.data, self._antenna_pattern.elevation_angles.data, atol=1e-6, rtol=0
         )
@@ -551,7 +551,3 @@ class ElevationNotchAnalysisFunctionsTest(unittest.TestCase):
         np.testing.assert_allclose(mispointing_error_rad, self._expected_mispointing_error_rad, atol=1e-8, rtol=0)
         np.testing.assert_allclose(calibration_constant, self._expected_calibration_constant, atol=1e-8, rtol=0)
         np.testing.assert_allclose(noise_floor, self._expected_noise_floor, atol=1e-8, rtol=0)
-
-
-if __name__ == "__main__":
-    unittest.main()

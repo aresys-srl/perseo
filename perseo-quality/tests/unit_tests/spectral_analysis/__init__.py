@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Spectral Analysis Module Unittest
----------------------------------
+Unit tests for perseo-quality spectral_analysis
 """

@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Interferometric Coherence Analysis Module Unittest
---------------------------------------------------
+Unit tests for perseo-quality interferometric_analysis
 """

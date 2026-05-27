@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for io/layout.py core functionalities"""
+"""Tests for io/layout.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.custom_errors import (
@@ -18,10 +17,11 @@ from perseo_quality.core.custom_errors import (
 from perseo_quality.io.layout import L1BurstLayout, L1RasterLayout
 
 
-class BurstLayoutTest(unittest.TestCase):
+class TestBurstLayout:
     """Testing layout.py BurstLayout dataclass"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def _setup(self):
         self.azimuth_start_time = PreciseDateTime.from_utc_string("03-OCT-2019 14:14:24.625760000000")
         self.range_start_time_s = 0.005276013758430800300
         self.lines = 5181
@@ -42,7 +42,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertIsInstance(burst_layout, L1BurstLayout)
+        assert isinstance(burst_layout, L1BurstLayout)
 
     def test_input_variables_accessibility(self) -> None:
         """Testing retrieval of input variables"""
@@ -55,13 +55,13 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertEqual(burst_layout.burst_id, 1)
-        self.assertEqual(burst_layout.lines, self.lines)
-        self.assertEqual(burst_layout.samples, self.samples)
-        self.assertEqual(burst_layout._lines_step, self.lines_step)
-        self.assertEqual(burst_layout._samples_step, self.samples_step)
-        self.assertEqual(burst_layout.azimuth_axis[0], self.azimuth_start_time)
-        self.assertEqual(burst_layout.range_axis[0], self.range_start_time_s)
+        assert burst_layout.burst_id == 1
+        assert burst_layout.lines == self.lines
+        assert burst_layout.samples == self.samples
+        assert burst_layout._lines_step == self.lines_step
+        assert burst_layout._samples_step == self.samples_step
+        assert burst_layout.azimuth_axis[0] == self.azimuth_start_time
+        assert burst_layout.range_axis[0] == self.range_start_time_s
 
     def test_computed_azimuth_axis(self) -> None:
         """Testing azimuth axis computation"""
@@ -165,7 +165,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertTrue(burst_layout.is_azimuth_in_burst(self.azimuth_start_time + self.lines // 5 * self.lines_step))
+        assert burst_layout.is_azimuth_in_burst(self.azimuth_start_time + self.lines // 5 * self.lines_step)
 
     def test_is_azimuth_in_burst_false(self) -> None:
         """Testing is_azimuth_in_burst method, with negative outcome"""
@@ -179,7 +179,7 @@ class BurstLayoutTest(unittest.TestCase):
             samples_start=self.range_start_time_s,
         )
         for t in [-self.lines_step, self.lines * self.lines_step, (self.lines + 1) * self.lines_step]:
-            self.assertFalse(burst_layout.is_azimuth_in_burst(self.azimuth_start_time + t))
+            assert not burst_layout.is_azimuth_in_burst(self.azimuth_start_time + t)
 
     def test_is_azimuth_relative_pixel_in_burst_true(self) -> None:
         """Testing is_azimuth_relative_pixel_in_burst method, with positive outcome"""
@@ -192,7 +192,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertTrue(burst_layout.is_azimuth_relative_pixel_in_burst(850))
+        assert burst_layout.is_azimuth_relative_pixel_in_burst(850)
 
     def test_is_azimuth_relative_pixel_in_burst_false(self) -> None:
         """Testing is_azimuth_relative_pixel_in_burst method, with negative outcome"""
@@ -206,7 +206,7 @@ class BurstLayoutTest(unittest.TestCase):
             samples_start=self.range_start_time_s,
         )
         for t in [-1, 8500, self.lines]:
-            self.assertFalse(burst_layout.is_azimuth_relative_pixel_in_burst(t))
+            assert not burst_layout.is_azimuth_relative_pixel_in_burst(t)
 
     def test_is_range_in_burst_true(self) -> None:
         """Testing is_range_in_burst method, with positive outcome"""
@@ -219,7 +219,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertTrue(burst_layout.is_range_in_burst(self.range_start_time_s + self.samples // 5 * self.samples_step))
+        assert burst_layout.is_range_in_burst(self.range_start_time_s + self.samples // 5 * self.samples_step)
 
     def test_is_range_in_burst_false(self) -> None:
         """Testing is_range_in_burst method, with negative outcome"""
@@ -232,9 +232,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertFalse(
-            burst_layout.is_range_in_burst(self.range_start_time_s + (self.samples + 1) * self.samples_step)
-        )
+        assert not burst_layout.is_range_in_burst(self.range_start_time_s + (self.samples + 1) * self.samples_step)
 
     def test_is_range_relative_pixel_in_burst_true(self) -> None:
         """Testing is_range_relative_pixel_in_burst method, with positive outcome"""
@@ -247,7 +245,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        self.assertTrue(burst_layout.is_range_relative_pixel_in_burst(850))
+        assert burst_layout.is_range_relative_pixel_in_burst(850)
 
     def test_is_range_relative_pixel_in_burst_false(self) -> None:
         """Testing is_range_relative_pixel_in_burst method, with negative outcome"""
@@ -261,7 +259,7 @@ class BurstLayoutTest(unittest.TestCase):
             samples_start=self.range_start_time_s,
         )
         for t in [-1, 95000, self.samples]:
-            self.assertFalse(burst_layout.is_range_relative_pixel_in_burst(t))
+            assert not burst_layout.is_range_relative_pixel_in_burst(t)
 
     def test_azimuth_to_burst_pixel(self) -> None:
         """Testing azimuth_to_burst_pixel method"""
@@ -298,7 +296,7 @@ class BurstLayoutTest(unittest.TestCase):
         indexes = [-1, self.lines + 5]
         times = [self.azimuth_start_time + idx * self.lines_step for idx in indexes]
         for t in times:
-            with self.assertRaises(AzimuthExceedsBoundariesError):
+            with pytest.raises(AzimuthExceedsBoundariesError):
                 burst_layout.azimuth_to_burst_pixel(t)
 
     def test_range_to_burst_pixel(self) -> None:
@@ -336,7 +334,7 @@ class BurstLayoutTest(unittest.TestCase):
         indexes = [-1, self.samples + 5]
         times = [self.range_start_time_s + idx * self.samples_step for idx in indexes]
         for t in times:
-            with self.assertRaises(RangeExceedsBoundariesError):
+            with pytest.raises(RangeExceedsBoundariesError):
                 burst_layout.range_to_burst_pixel(t)
 
     def test_burst_pixel_to_azimuth_1(self) -> None:
@@ -379,7 +377,7 @@ class BurstLayoutTest(unittest.TestCase):
             samples_start=self.range_start_time_s,
         )
         for t in [-5, 8000]:
-            with self.assertRaises(AzimuthExceedsBoundariesError):
+            with pytest.raises(AzimuthExceedsBoundariesError):
                 burst_layout.burst_pixel_to_azimuth(t)
 
     def test_burst_pixel_to_range_1(self) -> None:
@@ -422,7 +420,7 @@ class BurstLayoutTest(unittest.TestCase):
             samples_start=self.range_start_time_s,
         )
         for t in [-5, 90000]:
-            with self.assertRaises(RangeExceedsBoundariesError):
+            with pytest.raises(RangeExceedsBoundariesError):
                 burst_layout.burst_pixel_to_range(t)
 
     def test_burst_pixel_to_coordinates(self) -> None:
@@ -451,7 +449,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        with self.assertRaises(AzimuthExceedsBoundariesError):
+        with pytest.raises(AzimuthExceedsBoundariesError):
             burst_layout.burst_pixels_to_coordinates(az_burst_pixel=5800.36, rng_burst_pixel=15000.12)
 
     def test_burst_pixel_to_coordinates_error_2(self) -> None:
@@ -465,7 +463,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        with self.assertRaises(RangeExceedsBoundariesError):
+        with pytest.raises(RangeExceedsBoundariesError):
             burst_layout.burst_pixels_to_coordinates(az_burst_pixel=800, rng_burst_pixel=90000)
 
     def test_coordinates_to_burst_pixels(self) -> None:
@@ -497,7 +495,7 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        with self.assertRaises(AzimuthExceedsBoundariesError):
+        with pytest.raises(AzimuthExceedsBoundariesError):
             burst_layout.coordinates_to_burst_pixels(
                 az=self.azimuth_start_time + self.lines_step * 10000,
                 rng=self.range_start_time_s + self.samples_step * 13520.634,
@@ -514,17 +512,18 @@ class BurstLayoutTest(unittest.TestCase):
             lines_start=self.azimuth_start_time,
             samples_start=self.range_start_time_s,
         )
-        with self.assertRaises(RangeExceedsBoundariesError):
+        with pytest.raises(RangeExceedsBoundariesError):
             burst_layout.coordinates_to_burst_pixels(
                 az=self.azimuth_start_time + self.lines_step * 800,
                 rng=self.range_start_time_s + self.samples_step * 103520.634,
             )
 
 
-class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
+class TestRasterLayoutOverlappingBursts:
     """Testing layout.py RasterLayout dataclass with 3 overlapping bursts"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def _setup(self):
         self.base_azimuth_start_time = PreciseDateTime.from_utc_string("03-MAR-2021 11:06:56.329529000000")
         self.base_range_start_time = 0.00436789112663711
         self.burst_lines = 1200
@@ -558,11 +557,11 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertIsInstance(raster_layout, L1RasterLayout)
+        assert isinstance(raster_layout, L1RasterLayout)
 
     def test_init_error(self) -> None:
         """Testing class init, raising error"""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             L1RasterLayout(
                 lines=self.overlapping_bursts_layout_lines,
                 samples=self.samples,
@@ -576,11 +575,11 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertEqual(raster_layout.lines, self.overlapping_bursts_layout_lines)
-        self.assertEqual(raster_layout.samples, self.samples)
-        self.assertEqual(len(raster_layout.bursts), len(self.overlapping_bursts_layout))
+        assert raster_layout.lines == self.overlapping_bursts_layout_lines
+        assert raster_layout.samples == self.samples
+        assert len(raster_layout.bursts) == len(self.overlapping_bursts_layout)
         for burst_id, burst in enumerate(self.overlapping_bursts_layout):
-            self.assertEqual(burst, raster_layout.bursts[burst_id])
+            assert burst == raster_layout.bursts[burst_id]
 
     def test_computed_burst_ids(self) -> None:
         """Testing computed properties, burst_ids"""
@@ -589,7 +588,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertListEqual(raster_layout.burst_ids, [b + 1 for b in range(self.overlapping_burst_num)])
+        assert raster_layout.burst_ids == [b + 1 for b in range(self.overlapping_burst_num)]
 
     def test_computed_burst_starting_line_offset(self) -> None:
         """Testing computed properties, burst_starting_line_offset"""
@@ -698,7 +697,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             bursts=self.overlapping_bursts_layout,
         )
         burst = raster_layout.get_burst_layout(burst_id=1)
-        self.assertEqual(burst.burst_id, 1)
+        assert burst.burst_id == 1
 
     def test_get_burst_layout_error(self) -> None:
         """Testing get_burst_layout method, raising error"""
@@ -707,7 +706,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(InvalidBurstIdError):
+        with pytest.raises(InvalidBurstIdError):
             raster_layout.get_burst_layout(burst_id=7)
 
     def test_get_burst_start_times(self) -> None:
@@ -739,7 +738,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(InvalidBurstIdError):
+        with pytest.raises(InvalidBurstIdError):
             raster_layout.get_burst_start_coordinates(burst_id=16)
 
     def test_get_burst_lines(self) -> None:
@@ -764,7 +763,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(InvalidBurstIdError):
+        with pytest.raises(InvalidBurstIdError):
             raster_layout.get_burst_lines(burst_id=16)
 
     def test_get_burst_samples(self) -> None:
@@ -789,7 +788,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(InvalidBurstIdError):
+        with pytest.raises(InvalidBurstIdError):
             raster_layout.get_burst_samples(burst_id=16)
 
     def test_check_azimuth_time_in_raster_true(self) -> None:
@@ -799,10 +798,8 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertTrue(
-            raster_layout.is_azimuth_in_raster(
-                az=self.base_azimuth_start_time + self.overlapping_bursts_layout_lines // 5 * self.lines_step
-            )
+        assert raster_layout.is_azimuth_in_raster(
+            az=self.base_azimuth_start_time + self.overlapping_bursts_layout_lines // 5 * self.lines_step
         )
 
     def test_check_azimuth_time_in_raster_false(self) -> None:
@@ -812,10 +809,8 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertFalse(
-            raster_layout.is_azimuth_in_raster(
-                az=self.base_azimuth_start_time + self.overlapping_bursts_layout_lines * 2 * self.lines_step
-            )
+        assert not raster_layout.is_azimuth_in_raster(
+            az=self.base_azimuth_start_time + self.overlapping_bursts_layout_lines * 2 * self.lines_step
         )
 
     def test_check_range_time_in_raster_true(self) -> None:
@@ -825,9 +820,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertTrue(
-            raster_layout.is_range_in_raster(rng=self.base_range_start_time + self.samples // 5 * self.samples_step)
-        )
+        assert raster_layout.is_range_in_raster(rng=self.base_range_start_time + self.samples // 5 * self.samples_step)
 
     def test_check_range_time_in_raster_false(self) -> None:
         """Testing check_range_time_in_raster, with negative outcome"""
@@ -836,8 +829,8 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertFalse(
-            raster_layout.is_range_in_raster(rng=self.base_range_start_time + self.samples * 2 * self.samples_step)
+        assert not raster_layout.is_range_in_raster(
+            rng=self.base_range_start_time + self.samples * 2 * self.samples_step
         )
 
     def test_azimuth_time_to_bursts_association_error(self) -> None:
@@ -847,7 +840,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(AzimuthExceedsBoundariesError):
+        with pytest.raises(AzimuthExceedsBoundariesError):
             raster_layout.azimuth_to_bursts_association(az=self.base_azimuth_start_time - 1)
 
     def test_azimuth_time_to_bursts_association_1(self) -> None:
@@ -857,10 +850,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[0] + self.lines_step),
-            [1],
-        )
+        assert raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[0] + self.lines_step) == [1]
 
     def test_azimuth_time_to_bursts_association_2(self) -> None:
         """Testing azimuth_time_to_bursts_association, with 2 matches"""
@@ -869,10 +859,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[1] + self.lines_step),
-            [1, 2],
-        )
+        assert raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[1] + self.lines_step) == [1, 2]
 
     def test_azimuth_time_to_bursts_association_3(self) -> None:
         """Testing azimuth_time_to_bursts_association, with 3 matches"""
@@ -881,10 +868,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[2] + self.lines_step),
-            [1, 2, 3],
-        )
+        assert raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[2] + self.lines_step) == [1, 2, 3]
 
     def test_range_time_to_bursts_association_error(self) -> None:
         """Testing range_time_to_bursts_association, raising error"""
@@ -893,7 +877,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(RangeExceedsBoundariesError):
+        with pytest.raises(RangeExceedsBoundariesError):
             raster_layout.range_to_bursts_association(rng=self.base_range_start_time - self.samples_step)
 
     def test_range_time_to_bursts_association(self) -> None:
@@ -903,10 +887,11 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.range_to_bursts_association(rng=self.base_range_start_time + self.samples_step),
-            [1, 2, 3],
-        )
+        assert raster_layout.range_to_bursts_association(rng=self.base_range_start_time + self.samples_step) == [
+            1,
+            2,
+            3,
+        ]
 
     def test_azimuth_time_to_pixel_conversion_single(self) -> None:
         """Testing azimuth_time_to_pixel_conversion"""
@@ -916,8 +901,8 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             bursts=self.overlapping_bursts_layout,
         )
         az_pixel = raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 150)
-        self.assertEqual(len(az_pixel), 1)
-        self.assertEqual(az_pixel[0][0], 1)
+        assert len(az_pixel) == 1
+        assert az_pixel[0][0] == 1
         np.testing.assert_allclose(az_pixel[0][1], 150, atol=1e-9, rtol=0)
 
     def test_azimuth_time_to_pixel_conversion_single_error(self) -> None:
@@ -927,7 +912,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(AzimuthExceedsBoundariesError):
+        with pytest.raises(AzimuthExceedsBoundariesError):
             raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 15000)
 
     def test_azimuth_time_to_pixel_conversion_multiple(self) -> None:
@@ -938,10 +923,10 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             bursts=self.overlapping_bursts_layout,
         )
         az_pixel = raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 1350)
-        self.assertEqual(len(az_pixel), 2)
-        self.assertEqual(az_pixel[0][0], 2)
+        assert len(az_pixel) == 2
+        assert az_pixel[0][0] == 2
         np.testing.assert_allclose(az_pixel[0][1], 2050, atol=1e-9, rtol=0)
-        self.assertEqual(az_pixel[1][0], 3)
+        assert az_pixel[1][0] == 3
         np.testing.assert_allclose(az_pixel[1][1], 2750, atol=1e-9, rtol=0)
 
     def test_azimuth_time_to_pixel_conversion_with_burst_id(self) -> None:
@@ -954,8 +939,8 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
         az_pixel = raster_layout.azimuth_to_pixel_conversion(
             az=self.base_azimuth_start_time + self.lines_step * 1350, burst_id=2
         )
-        self.assertEqual(len(az_pixel), 1)
-        self.assertEqual(az_pixel[0][0], 2)
+        assert len(az_pixel) == 1
+        assert az_pixel[0][0] == 2
         np.testing.assert_allclose(az_pixel[0][1], 2050, atol=1e-9, rtol=0)
 
     def test_azimuth_time_to_pixel_conversion_with_burst_id_error(self) -> None:
@@ -965,7 +950,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(InvalidBurstIdError):
+        with pytest.raises(InvalidBurstIdError):
             raster_layout.azimuth_to_pixel_conversion(
                 az=self.base_azimuth_start_time + self.lines_step * 1350, burst_id=5
             )
@@ -978,12 +963,12 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             bursts=self.overlapping_bursts_layout,
         )
         rng_pixel = raster_layout.range_to_pixel_conversion(rng=self.base_range_start_time + self.samples_step * 150)
-        self.assertEqual(len(rng_pixel), 3)
-        self.assertEqual(rng_pixel[0][0], 1)
+        assert len(rng_pixel) == 3
+        assert rng_pixel[0][0] == 1
         np.testing.assert_allclose(rng_pixel[0][1], 150, atol=1e-9, rtol=0)
-        self.assertEqual(rng_pixel[1][0], 2)
+        assert rng_pixel[1][0] == 2
         np.testing.assert_allclose(rng_pixel[1][1], 150, atol=1e-9, rtol=0)
-        self.assertEqual(rng_pixel[2][0], 3)
+        assert rng_pixel[2][0] == 3
         np.testing.assert_allclose(rng_pixel[2][1], 150, atol=1e-9, rtol=0)
 
     def test_range_time_to_pixel_conversion_multiple_error(self) -> None:
@@ -993,7 +978,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(RangeExceedsBoundariesError):
+        with pytest.raises(RangeExceedsBoundariesError):
             raster_layout.range_to_pixel_conversion(rng=self.base_range_start_time + self.samples_step * 30000)
 
     def test_range_time_to_pixel_conversion_with_burst_id(self) -> None:
@@ -1006,8 +991,8 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
         rng_pixel = raster_layout.range_to_pixel_conversion(
             rng=self.base_range_start_time + self.samples_step * 150, burst_id=2
         )
-        self.assertEqual(len(rng_pixel), 1)
-        self.assertEqual(rng_pixel[0][0], 2)
+        assert len(rng_pixel) == 1
+        assert rng_pixel[0][0] == 2
         np.testing.assert_allclose(rng_pixel[0][1], 150, atol=1e-9, rtol=0)
 
     def test_range_time_to_pixel_conversion_with_burst_id_error(self) -> None:
@@ -1017,7 +1002,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        with self.assertRaises(InvalidBurstIdError):
+        with pytest.raises(InvalidBurstIdError):
             raster_layout.range_to_pixel_conversion(
                 rng=self.base_range_start_time + self.samples_step * 150, burst_id=5
             )
@@ -1052,7 +1037,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             bursts=self.overlapping_bursts_layout,
         )
         for t in [-1, self.overlapping_bursts_layout_lines, self.overlapping_bursts_layout_lines + 10]:
-            with self.assertRaises(AzimuthExceedsBoundariesError):
+            with pytest.raises(AzimuthExceedsBoundariesError):
                 raster_layout.pixel_to_azimuth_conversion(az_pixel_index=t)
 
     def test_range_pixel_to_time_conversion(self) -> None:
@@ -1083,7 +1068,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             bursts=self.overlapping_bursts_layout,
         )
         for t in [-1, self.samples, self.samples + 10]:
-            with self.assertRaises(RangeExceedsBoundariesError):
+            with pytest.raises(RangeExceedsBoundariesError):
                 raster_layout.pixel_to_range_conversion(rng_pixel_index=t)
 
     def test_is_roi_in_raster_true(self) -> None:
@@ -1093,7 +1078,7 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertTrue(raster_layout.is_roi_in_raster(roi=[100, 1500, 850, 1653]))
+        assert raster_layout.is_roi_in_raster(roi=[100, 1500, 850, 1653])
 
     def test_is_roi_in_raster_error_false(self) -> None:
         """Testing is_roi_in_raster, false"""
@@ -1102,13 +1087,14 @@ class RasterLayoutOverlappingBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.overlapping_bursts_layout,
         )
-        self.assertFalse(raster_layout.is_roi_in_raster(roi=[-5, 1500, 850, 1653]))
+        assert not raster_layout.is_roi_in_raster(roi=[-5, 1500, 850, 1653])
 
 
-class RasterLayoutContiguousBurstsTest(unittest.TestCase):
+class TestRasterLayoutContiguousBursts:
     """Testing layout.py RasterLayout dataclass with 2 contiguous bursts"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def _setup(self):
         self.base_azimuth_start_time = PreciseDateTime.from_utc_string("03-MAR-2021 11:06:56.329529000000")
         self.base_range_start_time = 0.00436789112663711
         self.burst_lines = 1200
@@ -1147,7 +1133,7 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        self.assertIsInstance(raster_layout, L1RasterLayout)
+        assert isinstance(raster_layout, L1RasterLayout)
 
     def test_computed_burst_starting_line_offset(self) -> None:
         """Testing computed properties, burst_starting_line_offset"""
@@ -1197,10 +1183,7 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[0] + self.lines_step),
-            [1],
-        )
+        assert raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[0] + self.lines_step) == [1]
 
     def test_azimuth_time_to_bursts_association_2(self) -> None:
         """Testing azimuth_time_to_bursts_association, with 2 matches"""
@@ -1209,10 +1192,7 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[1]),
-            [1, 2],
-        )
+        assert raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[1]) == [1, 2]
 
     def test_azimuth_time_to_pixel_conversion_single(self) -> None:
         """Testing azimuth_time_to_pixel_conversion"""
@@ -1222,8 +1202,8 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             bursts=self.bursts_layout,
         )
         az_pixel = raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 150)
-        self.assertEqual(len(az_pixel), 1)
-        self.assertEqual(az_pixel[0][0], 1)
+        assert len(az_pixel) == 1
+        assert az_pixel[0][0] == 1
         np.testing.assert_allclose(az_pixel[0][1], 150, atol=1e-9, rtol=0)
 
     def test_azimuth_time_to_pixel_conversion_single_error(self) -> None:
@@ -1233,7 +1213,7 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        with self.assertRaises(AzimuthExceedsBoundariesError):
+        with pytest.raises(AzimuthExceedsBoundariesError):
             raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 15000)
 
     def test_azimuth_time_to_pixel_conversion_multiple(self) -> None:
@@ -1244,10 +1224,10 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             bursts=self.bursts_layout,
         )
         az_pixel = raster_layout.azimuth_to_pixel_conversion(az=self.burst_start_times[1])
-        self.assertEqual(len(az_pixel), 2)
-        self.assertEqual(az_pixel[0][0], 1)
+        assert len(az_pixel) == 2
+        assert az_pixel[0][0] == 1
         np.testing.assert_allclose(az_pixel[0][1], 1199, atol=1e-9, rtol=0)
-        self.assertEqual(az_pixel[1][0], 2)
+        assert az_pixel[1][0] == 2
         np.testing.assert_allclose(az_pixel[1][1], 1200, atol=1e-9, rtol=0)
 
     def test_azimuth_pixel_to_time_conversion(self) -> None:
@@ -1269,14 +1249,15 @@ class RasterLayoutContiguousBurstsTest(unittest.TestCase):
             bursts=self.bursts_layout,
         )
         for t in [-1, self.bursts_layout_lines, self.bursts_layout_lines + 10]:
-            with self.assertRaises(AzimuthExceedsBoundariesError):
+            with pytest.raises(AzimuthExceedsBoundariesError):
                 raster_layout.pixel_to_azimuth_conversion(az_pixel_index=t)
 
 
-class RasterLayoutSeparateBurstsTest(unittest.TestCase):
+class TestRasterLayoutSeparateBursts:
     """Testing layout.py RasterLayout dataclass with 2 separate bursts"""
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def _setup(self):
         self.base_azimuth_start_time = PreciseDateTime.from_utc_string("03-MAR-2021 11:06:56.329529000000")
         self.base_range_start_time = 0.00436789112663711
         self.burst_lines = 1200
@@ -1315,7 +1296,7 @@ class RasterLayoutSeparateBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        self.assertIsInstance(raster_layout, L1RasterLayout)
+        assert isinstance(raster_layout, L1RasterLayout)
 
     def test_computed_burst_starting_line_offset(self) -> None:
         """Testing computed properties, burst_starting_line_offset"""
@@ -1365,10 +1346,7 @@ class RasterLayoutSeparateBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        self.assertListEqual(
-            raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[0] + self.lines_step),
-            [1],
-        )
+        assert raster_layout.azimuth_to_bursts_association(az=self.burst_start_times[0] + self.lines_step) == [1]
 
     def test_azimuth_time_to_pixel_conversion_single(self) -> None:
         """Testing azimuth_time_to_pixel_conversion"""
@@ -1378,8 +1356,8 @@ class RasterLayoutSeparateBurstsTest(unittest.TestCase):
             bursts=self.bursts_layout,
         )
         az_pixel = raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 150)
-        self.assertEqual(len(az_pixel), 1)
-        self.assertEqual(az_pixel[0][0], 1)
+        assert len(az_pixel) == 1
+        assert az_pixel[0][0] == 1
         np.testing.assert_allclose(az_pixel[0][1], 150, atol=1e-9, rtol=0)
 
     def test_azimuth_time_to_pixel_conversion_single_error(self) -> None:
@@ -1389,7 +1367,7 @@ class RasterLayoutSeparateBurstsTest(unittest.TestCase):
             samples=self.samples,
             bursts=self.bursts_layout,
         )
-        with self.assertRaises(AzimuthExceedsBoundariesError):
+        with pytest.raises(AzimuthExceedsBoundariesError):
             raster_layout.azimuth_to_pixel_conversion(az=self.base_azimuth_start_time + self.lines_step * 15000)
 
     def test_azimuth_pixel_to_time_conversion(self) -> None:
@@ -1411,9 +1389,5 @@ class RasterLayoutSeparateBurstsTest(unittest.TestCase):
             bursts=self.bursts_layout,
         )
         for t in [-1, self.bursts_layout_lines, self.bursts_layout_lines + 10]:
-            with self.assertRaises(AzimuthExceedsBoundariesError):
+            with pytest.raises(AzimuthExceedsBoundariesError):
                 raster_layout.pixel_to_azimuth_conversion(az_pixel_index=t)
-
-
-if __name__ == "__main__":
-    unittest.main()

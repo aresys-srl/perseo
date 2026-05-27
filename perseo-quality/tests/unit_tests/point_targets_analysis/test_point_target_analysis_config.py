@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for point_target_analysis/config.py core functionalities"""
+"""Tests for point_target_analysis/config.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from dataclasses import fields
+
+import pytest
 
 from perseo_quality.core.generic_dataclasses import MaskingMethod
 from perseo_quality.point_targets_analysis.config import (
@@ -16,10 +17,11 @@ from perseo_quality.point_targets_analysis.config import (
 )
 
 
-class PointTargetDataclasses(unittest.TestCase):
+class TestPointTargetDataclasses:
     """Testing point_target_analysis/custom_dataclasses.py core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.pta_bool_flags = {
             "perform_irf": True,
@@ -54,11 +56,11 @@ class PointTargetDataclasses(unittest.TestCase):
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
             if ("peak_finding_roi_size" in key) | ("analysis_roi_size" in key):
-                self.assertEqual(tuple(item), value)
+                assert tuple(item) == value
             elif "masking_method" in key:
-                self.assertEqual(item, value)
+                assert item == value
             else:
-                self.assertEqual(item, value)
+                assert item == value
 
     def test_rcs_parameters_from_dict(self):
         """Testing RCSParameters from dict method dataclass generation from dictionary"""
@@ -68,7 +70,7 @@ class PointTargetDataclasses(unittest.TestCase):
             dataclass_key = [field.name for field in fields(dtc) if key in field.name][0]
             value = getattr(dtc, dataclass_key)
 
-            self.assertEqual(item, value)
+            assert item == value
 
     def test_point_target_analysis_config_from_dict(self):
         """Testing PointTargetAnalysisConfig dataclass generation from dictionary"""
@@ -79,33 +81,29 @@ class PointTargetDataclasses(unittest.TestCase):
         # loading it back via dataclass method
         config = PointTargetAnalysisConfig.from_dict(total_dict)
 
-        self.assertTrue(isinstance(config.irf_parameters, IRFParameters))
-        self.assertTrue(isinstance(config.rcs_parameters, RCSParameters))
+        assert isinstance(config.irf_parameters, IRFParameters)
+        assert isinstance(config.rcs_parameters, RCSParameters)
 
         # check consistency with the default one
         for key, item in self.pta_bool_flags.items():
             dataclass_key = [field.name for field in fields(config) if key in field.name][0]
             value = getattr(config, dataclass_key)
-            self.assertEqual(item, value)
+            assert item == value
 
         # irf params
         for key, item in self.irf_params.items():
             dataclass_key = [field.name for field in fields(IRFParameters) if key in field.name][0]
             value = getattr(config.irf_parameters, dataclass_key)
             if isinstance(item, list):
-                self.assertEqual(tuple(item), value)
+                assert tuple(item) == value
             else:
-                self.assertEqual(item, value)
+                assert item == value
 
         # rcs params
         for key, item in self.rcs_params.items():
             dataclass_key = [field.name for field in fields(RCSParameters) if key in field.name][0]
             value = getattr(config.rcs_parameters, dataclass_key)
             if isinstance(item, list):
-                self.assertEqual(tuple(item), value)
+                assert tuple(item) == value
             else:
-                self.assertEqual(item, value)
-
-
-if __name__ == "__main__":
-    unittest.main()
+                assert item == value

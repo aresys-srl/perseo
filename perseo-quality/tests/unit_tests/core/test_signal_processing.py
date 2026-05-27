@@ -1,14 +1,13 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for core/signal_processing.py functionalities"""
+"""Tests for core/signal_processing.py functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
 import numpy.typing as npt
+import pytest
 import scipy.signal
 
 import perseo_quality.core.generic_dataclasses as gdt
@@ -21,10 +20,11 @@ raster_right = random_rng1.random((10, 10)) + random_rng1.random((10, 10)) * 1j
 incidence_angles = np.deg2rad(np.linspace(15, 30, 10))
 
 
-class SignalProcessingTest(unittest.TestCase):
+class TestSignalProcessing:
     """Testing signal_processing.py core functionalities."""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         self.tolerance = 1e-9
         self.expected_radiometric_conversions = [
             np.array(
@@ -683,7 +683,8 @@ class SignalProcessingTest(unittest.TestCase):
         np.testing.assert_array_equal(sp.crop_array_2d(mat, (3, 3)).shape, (2, 2))
         np.testing.assert_array_equal(sp.crop_array_2d(mat, (4, 4)).shape, (4, 4))
         assert cropped.any()
-        self.assertRaises(ValueError, sp.crop_array_2d, mat, (13, 13))
+        with pytest.raises(ValueError):
+            sp.crop_array_2d(mat, (13, 13))
         assert not sp.crop_array_2d(mat, (0, 0)).any()
 
     def test_modulate_data(self) -> None:
@@ -876,10 +877,11 @@ def measure_frequency_shift(signal1: npt.NDArray[np.floating], signal2: npt.NDAr
     return lag * df
 
 
-class ShiftSpectrumTest(unittest.TestCase):
+class TestShiftSpectrum:
     """Unit tests for the shift_spectrum function."""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # Define the time domain
         self.t = np.linspace(-10, 10, 500)
         self.dt = self.t[1] - self.t[0]  # Time step
@@ -903,7 +905,9 @@ class ShiftSpectrumTest(unittest.TestCase):
 
         assert shifted_signal.shape == single_signal.shape
         np.testing.assert_allclose(np.abs(shifted_signal), np.abs(single_signal), atol=1e-9)
-        self.assertAlmostEqual(measure_frequency_shift(shifted_signal, single_signal, self.df), frequency_shift)
+        np.testing.assert_allclose(
+            measure_frequency_shift(shifted_signal, single_signal, self.df), frequency_shift, atol=1e-9
+        )
 
     def test_shift_spectrum_matrix_axis_0(self) -> None:
         """Test sp.shift_spectrum with a matrix along axis 0."""
@@ -913,9 +917,8 @@ class ShiftSpectrumTest(unittest.TestCase):
         assert shifted_signal.shape == self.signal.shape
         np.testing.assert_allclose(np.abs(shifted_signal), np.abs(self.signal), atol=1e-9)
         for single_signal, single_shifted_signal in zip(self.signal.T, shifted_signal.T, strict=True):
-            self.assertAlmostEqual(
-                measure_frequency_shift(single_shifted_signal, single_signal, self.df),
-                frequency_shift,
+            np.testing.assert_allclose(
+                measure_frequency_shift(single_shifted_signal, single_signal, self.df), frequency_shift, atol=1e-9
             )
 
     def test_shift_spectrum_matrix_axis_1(self) -> None:
@@ -926,9 +929,8 @@ class ShiftSpectrumTest(unittest.TestCase):
         assert shifted_signal.shape == self.signal.shape
         np.testing.assert_allclose(np.abs(shifted_signal), np.abs(self.signal), atol=1e-9)
         for single_signal, single_shifted_signal in zip(self.signal.T, shifted_signal.T, strict=True):
-            self.assertAlmostEqual(
-                measure_frequency_shift(single_shifted_signal, single_signal, self.df),
-                frequency_shift,
+            np.testing.assert_allclose(
+                measure_frequency_shift(single_shifted_signal, single_signal, self.df), frequency_shift, atol=1e-9
             )
 
     def test_shift_spectrum_with_array_shift(self) -> None:
@@ -942,9 +944,8 @@ class ShiftSpectrumTest(unittest.TestCase):
         for single_signal, single_shifted_signal, expected_shift in zip(
             self.signal.T, shifted_signal.T, frequency_shift, strict=True
         ):
-            self.assertAlmostEqual(
-                measure_frequency_shift(single_shifted_signal, single_signal, self.df),
-                expected_shift,
+            np.testing.assert_allclose(
+                measure_frequency_shift(single_shifted_signal, single_signal, self.df), expected_shift, atol=1e-9
             )
 
     def test_shift_spectrum_with_list_shift(self) -> None:
@@ -958,11 +959,6 @@ class ShiftSpectrumTest(unittest.TestCase):
         for single_signal, single_shifted_signal, expected_shift in zip(
             self.signal.T, shifted_signal.T, frequency_shift, strict=True
         ):
-            self.assertAlmostEqual(
-                measure_frequency_shift(single_shifted_signal, single_signal, self.df),
-                expected_shift,
+            np.testing.assert_allclose(
+                measure_frequency_shift(single_shifted_signal, single_signal, self.df), expected_shift, atol=1e-9
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

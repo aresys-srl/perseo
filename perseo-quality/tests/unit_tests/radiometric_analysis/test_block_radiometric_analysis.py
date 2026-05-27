@@ -1,13 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for radiometric_analysis/block_wise/analysis.py core functionalities"""
+"""Tests for radiometric_analysis/block_wise/analysis.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_quality.radiometric_analysis.block_wise import analysis
 from perseo_quality.radiometric_analysis.block_wise.config import ProfileExtractionParameters, RiverMaskingConfig
@@ -51,10 +50,11 @@ class MockParams:
         return RiverMaskingConfig
 
 
-class NESZProfileExtractorTest(unittest.TestCase):
+class TestNESZProfileExtractor:
     """Testing radiometric_analysis/analysis.py core nesz_profiles_extractor"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         self.params = ProfileExtractionParameters()
         self.tolerance = 1e-9
         self.expected_results = np.array(
@@ -100,10 +100,11 @@ class NESZProfileExtractorTest(unittest.TestCase):
         np.testing.assert_allclose(nesz_profile, self.expected_results_default, atol=self.tolerance, rtol=0)
 
 
-class AverageProfileExtractorTest(unittest.TestCase):
+class TestAverageProfileExtractor:
     """Testing radiometric_analysis/analysis.py core average_elevation_profile_extractor"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         self.params = ProfileExtractionParameters()
         self.tolerance = 1e-9
         self.expected_results = np.array(
@@ -150,10 +151,11 @@ class AverageProfileExtractorTest(unittest.TestCase):
         np.testing.assert_allclose(gamma_profile, self.expected_results_default, atol=self.tolerance, rtol=0)
 
 
-class ScallopingProfileExtractorTest(unittest.TestCase):
+class TestScallopingProfileExtractor:
     """Testing radiometric_analysis/analysis.py core scalloping_profiles_extractor"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         self.params = ProfileExtractionParameters()
         self.tolerance = 1e-9
         self.expected_results_default = np.array(
@@ -183,7 +185,3 @@ class ScallopingProfileExtractorTest(unittest.TestCase):
             data=abs(raster), params=scalloping_config.profile_extraction_parameters
         )
         np.testing.assert_allclose(scalloping_profile, self.expected_results_default, atol=self.tolerance, rtol=0)
-
-
-if __name__ == "__main__":
-    unittest.main()

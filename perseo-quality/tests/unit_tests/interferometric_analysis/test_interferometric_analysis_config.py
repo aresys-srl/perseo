@@ -1,20 +1,22 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for interferometric_analysis/config.py core functionalities"""
+"""Tests for interferometric_analysis/config.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from dataclasses import asdict
+
+import pytest
 
 from perseo_quality.interferometric_analysis.config import InterferometricConfig
 
 
-class InterferometricConfigTesting(unittest.TestCase):
+class TestInterferometricConfig:
     """Testing InterferometricConfig core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self._config = {
             "enable_coherence_computation": True,
@@ -29,8 +31,4 @@ class InterferometricConfigTesting(unittest.TestCase):
         dtc = InterferometricConfig.from_dict(self._config)
 
         int_config_dict = asdict(dtc)
-        self.assertDictEqual(self._config, int_config_dict)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert self._config == int_config_dict

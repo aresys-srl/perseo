@@ -1,22 +1,22 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for point_target_analysis/support.py core functionalities"""
+"""Tests for point_target_analysis/support.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 import perseo_quality.point_targets_analysis.support as support
 from tests.unit_tests.test_utils import REF_GROUND_POINT, REF_TIME, MockChannelData
 
 
-class GetSquintAngleTest(unittest.TestCase):
+class TestGetSquintAngle:
     """Testing point_target_analysis/support.py get_squint_angle function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.tolerance = 1e-9
         self.expected_res = -0.5964450004813256
@@ -54,10 +54,11 @@ class GetSquintAngleTest(unittest.TestCase):
         np.testing.assert_allclose(squint, np.repeat(self.expected_res, 4), atol=self.tolerance, rtol=0)
 
 
-class GetDopplerCentroidTest(unittest.TestCase):
+class TestGetDopplerCentroid:
     """Testing point_target_analysis/support.py get_doppler_centroid function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.tolerance = 1e-9
         self.expected_res = -153549.19005492592
@@ -93,7 +94,3 @@ class GetDopplerCentroidTest(unittest.TestCase):
             ground_point=np.tile(REF_GROUND_POINT, 4).reshape(-1, 3),
         )
         np.testing.assert_allclose(dc, np.repeat(self.expected_res, 4), atol=self.tolerance, rtol=0)
-
-
-if __name__ == "__main__":
-    unittest.main()

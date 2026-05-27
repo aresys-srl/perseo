@@ -1,15 +1,15 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for interferometric_analysis/graphical_output.py core functionalities"""
+"""Tests for interferometric_analysis/graphical_output.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import pytest
 
 from perseo_quality.core.generic_dataclasses import SARPolarization
 from perseo_quality.interferometric_analysis.custom_dataclasses import (
@@ -21,10 +21,11 @@ from perseo_quality.interferometric_analysis.graphical_output import (
 )
 
 
-class InterferometricAnalysisGraphicalOutputTest(unittest.TestCase):
+class TestInterferometricAnalysisGraphicalOutput:
     """Testing Interferometric Analysis graphical output functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # test data
         self._coherence = np.array(
             [
@@ -614,8 +615,4 @@ class InterferometricAnalysisGraphicalOutputTest(unittest.TestCase):
         with TemporaryDirectory() as temp_dir:
             temp_dir = Path(temp_dir)
             generate_coherence_graphs(data=data, output_dir=temp_dir)
-            self.assertTrue(temp_dir.joinpath("coherence_magnitude_graph_" + tag + ".png").is_file())
-
-
-if __name__ == "__main__":
-    unittest.main()
+            assert temp_dir.joinpath("coherence_magnitude_graph_" + tag + ".png").is_file()

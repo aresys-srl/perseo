@@ -1,15 +1,14 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for core/common.py functionalities"""
+"""Tests for core/common.py functionalities"""
 
 from __future__ import annotations
-
-import unittest
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import pytest
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.common import angles_computation_setup, blocks_partitioning, check_targets_visibility
@@ -28,10 +27,11 @@ class MockTrajectory:
         return np.array([-1775.9112802854143, -44.50034452228635, -7385.436916417019])
 
 
-class CheckTargetsVisibilityTest(unittest.TestCase):
+class TestCheckTargetsVisibility:
     """Testing point_target_analysis/support.py check_targets_visibility function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         data_dict = {
             "id": [0, 1, 2, 0, 1, 2],
@@ -49,10 +49,11 @@ class CheckTargetsVisibilityTest(unittest.TestCase):
         pd.testing.assert_frame_equal(targets_visibility, self.reference_df)
 
 
-class AnglesComputationSetupTest(unittest.TestCase):
+class TestAnglesComputationSetup:
     """Testing radiometric_analysis/support.py angles_computation_setup function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # reference results
         self.tolerance = 1e-7
         self._trajectory = MockTrajectory()
@@ -218,10 +219,11 @@ class AnglesComputationSetupTest(unittest.TestCase):
         np.testing.assert_allclose(nadir, self._ref_nadir, atol=self.tolerance, rtol=0)
 
 
-class BlocksDefinitionTest(unittest.TestCase):
+class TestBlocksDefinition:
     """Testing radiometric_analysis/support.py blocks_definition function"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self._az_axis = np.zeros(2500)
         self._rng_axis = np.zeros(4500)
@@ -243,7 +245,7 @@ class BlocksDefinitionTest(unittest.TestCase):
             range_axis=self._rng_axis,
         )
         np.testing.assert_array_equal(blocks_data[0], self.expected_res_0[0])
-        self.assertEqual(blocks_data[1], self.expected_res_0[1])
+        assert blocks_data[1] == self.expected_res_0[1]
         np.testing.assert_array_equal(blocks_data[2], self.expected_res_0[2])
 
     def test_blocks_definition_1(self):
@@ -254,8 +256,4 @@ class BlocksDefinitionTest(unittest.TestCase):
             lines_per_burst=np.array([self._lines_per_burst[0]]),
             range_axis=self._rng_axis,
         )
-        self.assertListEqual(list(blocks_data), self.expected_res_1)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert list(blocks_data) == self.expected_res_1

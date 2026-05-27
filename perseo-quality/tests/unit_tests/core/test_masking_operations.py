@@ -1,23 +1,23 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for core/masking_operations.py functionalities"""
+"""Tests for core/masking_operations.py functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 import perseo_quality.core.masking_operations as masking
 from perseo_quality.core.generic_dataclasses import MaskingMethod
 from tests.unit_tests import test_utils
 
 
-class MaskingOperationsTest(unittest.TestCase):
+class TestMaskingOperations:
     """Testing masking_operations.py functions"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         # benchmarking values
         self.reference_values = {
@@ -77,8 +77,8 @@ class MaskingOperationsTest(unittest.TestCase):
         main_lobe_mask = masking.generate_peak_mask(data)
         main_lobe = main_lobe_mask[main_lobe_mask != 0]
 
-        self.assertEqual(main_lobe.size, self.reference_values["main_lobe_mask_filling_size_peak"])
-        self.assertFalse(any(main_lobe != 1))
+        assert main_lobe.size == self.reference_values["main_lobe_mask_filling_size_peak"]
+        assert not any(main_lobe != 1)
 
     def test_generate_peak_mask_lobes_0(self):
         """Testing generate_peak_mask_lobes function on testing data, case 0"""
@@ -89,8 +89,8 @@ class MaskingOperationsTest(unittest.TestCase):
 
         np.testing.assert_array_equal(rng_idx[rng_idx != 0], self.reference_values["indexes_lobes"][:-1])
         np.testing.assert_array_equal(az_idx[az_idx != 0], self.reference_values["indexes_lobes"])
-        self.assertEqual(main_lobe.size, self.reference_values["main_lobe_mask_lobes_filling_size"])
-        self.assertFalse(any(main_lobe != 1))
+        assert main_lobe.size == self.reference_values["main_lobe_mask_lobes_filling_size"]
+        assert not any(main_lobe != 1)
 
     def test_generate_peak_mask_lobes_1(self):
         """Testing generate_peak_mask_lobes function on testing data, case 1"""
@@ -103,8 +103,8 @@ class MaskingOperationsTest(unittest.TestCase):
 
         np.testing.assert_array_equal(rng_idx[rng_idx != 0], self.reference_values["indexes_lobes"])
         np.testing.assert_array_equal(az_idx[az_idx != 0], self.reference_values["indexes_lobes"][:-1])
-        self.assertEqual(main_lobe.size, self.reference_values["main_lobe_mask_lobes_filling_size"])
-        self.assertFalse(any(main_lobe != 1))
+        assert main_lobe.size == self.reference_values["main_lobe_mask_lobes_filling_size"]
+        assert not any(main_lobe != 1)
 
     def test_generate_rectangular_mask(self):
         """Testing generate_rectangular_mask function on testing data"""
@@ -118,9 +118,9 @@ class MaskingOperationsTest(unittest.TestCase):
         )
         filled_mask = rect_mask[rect_mask != 0]
 
-        self.assertEqual(rect_mask.shape, self.reference_values["rect_mask_shape"])
-        self.assertEqual(filled_mask.size, self.reference_values["rect_mask_filling_size"])
-        self.assertFalse(any(filled_mask != 1))
+        assert rect_mask.shape == self.reference_values["rect_mask_shape"]
+        assert filled_mask.size == self.reference_values["rect_mask_filling_size"]
+        assert not any(filled_mask != 1)
 
     def test_generate_resolution_mask(self):
         """Testing generate_resolution_mask function on testing data"""
@@ -134,9 +134,9 @@ class MaskingOperationsTest(unittest.TestCase):
         )
         filled_mask = res_mask[res_mask != 0]
 
-        self.assertEqual(res_mask.shape, self.reference_values["rect_mask_shape"])
-        self.assertEqual(filled_mask.size, self.reference_values["rect_mask_filling_size"])
-        self.assertFalse(any(filled_mask != 1))
+        assert res_mask.shape == self.reference_values["rect_mask_shape"]
+        assert filled_mask.size == self.reference_values["rect_mask_filling_size"]
+        assert not any(filled_mask != 1)
 
     def test_generate_resolution_mask_lobes(self):
         """Testing generate_resolution_mask_lobes function on testing data"""
@@ -153,13 +153,13 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_rng_idx = rng_idx[rng_idx != 0]
         filled_az_idx = az_idx[az_idx != 0]
 
-        self.assertEqual(rng_idx.size, main_lobe_mask.shape[1])
-        self.assertEqual(az_idx.size, main_lobe_mask.shape[0])
-        self.assertEqual(filled_rng_idx.size, self.reference_values["resolution_mask_lobes_rng_size"])
-        self.assertEqual(filled_az_idx.size, self.reference_values["resolution_mask_lobes_az_size"])
-        self.assertEqual(main_lobe_mask.shape, self.reference_values["rect_mask_shape"])
-        self.assertEqual(filled_mask.size, self.reference_values["resolution_mask_lobes_size"])
-        self.assertFalse(any(filled_mask != 1))
+        assert rng_idx.size == main_lobe_mask.shape[1]
+        assert az_idx.size == main_lobe_mask.shape[0]
+        assert filled_rng_idx.size == self.reference_values["resolution_mask_lobes_rng_size"]
+        assert filled_az_idx.size == self.reference_values["resolution_mask_lobes_az_size"]
+        assert main_lobe_mask.shape == self.reference_values["rect_mask_shape"]
+        assert filled_mask.size == self.reference_values["resolution_mask_lobes_size"]
+        assert not any(filled_mask != 1)
 
     def test_pslr_masking_peak(self):
         """Testing pslr_masking functions on testing data, PEAK method"""
@@ -173,9 +173,9 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_mask = pslr_mask[pslr_mask != 0]
 
         # testing mask
-        self.assertEqual(pslr_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(filled_mask.size, self.reference_values["pslr_filling_size_peak"])
-        self.assertFalse(any(filled_mask != 1))
+        assert pslr_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert filled_mask.size == self.reference_values["pslr_filling_size_peak"]
+        assert not any(filled_mask != 1)
 
     def test_pslr_masking_peak_lobes(self):
         """Testing pslr_masking functions on testing data, PEAK method with lobes"""
@@ -189,9 +189,9 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_mask = pslr_mask[pslr_mask != 0]
 
         # testing mask
-        self.assertEqual(pslr_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(filled_mask.size, self.reference_values["pslr_filling_size_peak_lobes"])
-        self.assertFalse(any(filled_mask != 1))
+        assert pslr_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert filled_mask.size == self.reference_values["pslr_filling_size_peak_lobes"]
+        assert not any(filled_mask != 1)
 
     def test_pslr_masking_resolution(self):
         """Testing pslr_masking functions on testing data, RESOLUTION method"""
@@ -205,9 +205,9 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_mask = pslr_mask[pslr_mask != 0]
 
         # testing mask
-        self.assertEqual(pslr_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(filled_mask.size, self.reference_values["pslr_filling_size_res"])
-        self.assertFalse(any(filled_mask != 1))
+        assert pslr_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert filled_mask.size == self.reference_values["pslr_filling_size_res"]
+        assert not any(filled_mask != 1)
 
     def test_pslr_masking_resolution_lobes(self):
         """Testing pslr_masking functions on testing data, RESOLUTION method with side lobes"""
@@ -221,9 +221,9 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_mask = pslr_mask[pslr_mask != 0]
 
         # testing mask
-        self.assertEqual(pslr_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(filled_mask.size, self.reference_values["pslr_filling_size_res_lobes"])
-        self.assertFalse(any(filled_mask != 1))
+        assert pslr_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert filled_mask.size == self.reference_values["pslr_filling_size_res_lobes"]
+        assert not any(filled_mask != 1)
 
     def test_islr_masking_peak(self):
         """Testing islr_masking + islr_profile_cutting functions on testing data, PEAK method"""
@@ -238,12 +238,12 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_islr_mask = islr_mask[islr_mask != 0]
 
         # testing masks
-        self.assertEqual(main_lobe_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(main_lobe_mask.shape, islr_mask.shape)
-        self.assertEqual(filled_main_mask.size, self.reference_values["main_lobe_mask_filling_size_peak"])
-        self.assertFalse(any(filled_main_mask != 1))
-        self.assertEqual(filled_islr_mask.size, self.reference_values["islr_filling_size_peak"])
-        self.assertFalse(any(filled_islr_mask != 1))
+        assert main_lobe_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert main_lobe_mask.shape == islr_mask.shape
+        assert filled_main_mask.size == self.reference_values["main_lobe_mask_filling_size_peak"]
+        assert not any(filled_main_mask != 1)
+        assert filled_islr_mask.size == self.reference_values["islr_filling_size_peak"]
+        assert not any(filled_islr_mask != 1)
 
     def test_islr_masking_peak_lobes(self):
         """Testing islr_masking + islr_profile_cutting functions on testing data, PEAK method, with lobes"""
@@ -258,12 +258,12 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_islr_mask = islr_mask[islr_mask != 0]
 
         # testing masks
-        self.assertEqual(main_lobe_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(main_lobe_mask.shape, islr_mask.shape)
-        self.assertEqual(filled_main_mask.size, self.reference_values["main_lobe_mask_filling_size_peak_lobes"])
-        self.assertFalse(any(filled_main_mask != 1))
-        self.assertEqual(filled_islr_mask.size, self.reference_values["islr_filling_size_peak_lobes"])
-        self.assertFalse(any(filled_islr_mask != 1))
+        assert main_lobe_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert main_lobe_mask.shape == islr_mask.shape
+        assert filled_main_mask.size == self.reference_values["main_lobe_mask_filling_size_peak_lobes"]
+        assert not any(filled_main_mask != 1)
+        assert filled_islr_mask.size == self.reference_values["islr_filling_size_peak_lobes"]
+        assert not any(filled_islr_mask != 1)
 
     def test_islr_masking_resolution(self):
         """Testing islr_masking + islr_profile_cutting functions on testing data, RESOLUTION method"""
@@ -278,12 +278,12 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_islr_mask = islr_mask[islr_mask != 0]
 
         # testing masks
-        self.assertEqual(main_lobe_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(main_lobe_mask.shape, islr_mask.shape)
-        self.assertEqual(filled_main_mask.size, self.reference_values["main_lobe_mask_filling_size_res"])
-        self.assertFalse(any(filled_main_mask != 1))
-        self.assertEqual(filled_islr_mask.size, self.reference_values["islr_filling_size_res"])
-        self.assertFalse(any(filled_islr_mask != 1))
+        assert main_lobe_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert main_lobe_mask.shape == islr_mask.shape
+        assert filled_main_mask.size == self.reference_values["main_lobe_mask_filling_size_res"]
+        assert not any(filled_main_mask != 1)
+        assert filled_islr_mask.size == self.reference_values["islr_filling_size_res"]
+        assert not any(filled_islr_mask != 1)
 
     def test_islr_masking_resolution_lobes(self):
         """Testing islr_masking + islr_profile_cutting functions on testing data, RESOLUTION method with lobes"""
@@ -298,12 +298,12 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_islr_mask = islr_mask[islr_mask != 0]
 
         # testing masks
-        self.assertEqual(main_lobe_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(main_lobe_mask.shape, islr_mask.shape)
-        self.assertEqual(filled_main_mask.size, self.reference_values["main_lobe_mask_filling_size_res_lobes"])
-        self.assertFalse(any(filled_main_mask != 1))
-        self.assertEqual(filled_islr_mask.size, self.reference_values["islr_filling_size_res_lobes"])
-        self.assertFalse(any(filled_islr_mask != 1))
+        assert main_lobe_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert main_lobe_mask.shape == islr_mask.shape
+        assert filled_main_mask.size == self.reference_values["main_lobe_mask_filling_size_res_lobes"]
+        assert not any(filled_main_mask != 1)
+        assert filled_islr_mask.size == self.reference_values["islr_filling_size_res_lobes"]
+        assert not any(filled_islr_mask != 1)
 
     def test_sslr_masking(self):
         """Testing sslr_masking functions on testing data"""
@@ -316,9 +316,9 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_sslr_mask = sslr_mask[sslr_mask != 0]
 
         # testing mask
-        self.assertEqual(sslr_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(filled_sslr_mask.size, self.reference_values["sslr_filling_size"])
-        self.assertFalse(any(filled_sslr_mask != 1))
+        assert sslr_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert filled_sslr_mask.size == self.reference_values["sslr_filling_size"]
+        assert not any(filled_sslr_mask != 1)
 
     def test_sslr_masking_lobes(self):
         """Testing sslr_masking functions on testing data"""
@@ -331,9 +331,9 @@ class MaskingOperationsTest(unittest.TestCase):
         filled_sslr_mask = sslr_mask[sslr_mask != 0]
 
         # testing mask
-        self.assertEqual(sslr_mask.shape, (self.reference_values["samples"], self.reference_values["lines"]))
-        self.assertEqual(filled_sslr_mask.size, self.reference_values["sslr_filling_size_lobes"])
-        self.assertFalse(any(filled_sslr_mask != 1))
+        assert sslr_mask.shape == (self.reference_values["samples"], self.reference_values["lines"])
+        assert filled_sslr_mask.size == self.reference_values["sslr_filling_size_lobes"]
+        assert not any(filled_sslr_mask != 1)
 
     def test_pslr_profile_cutting(self):
         """Testing pslr_profile_cutting functions on testing data"""
@@ -348,10 +348,10 @@ class MaskingOperationsTest(unittest.TestCase):
         az_cut_data = az_cut[az_cut != 0]
 
         # testing profile cutting
-        self.assertEqual(rng_cut_data.size, self.reference_values["pslr_cut_filling"])
-        self.assertEqual(az_cut_data.size, self.reference_values["pslr_cut_filling"])
-        self.assertEqual(rng_cut.size, self.reference_values["samples"])
-        self.assertEqual(az_cut.size, self.reference_values["lines"])
+        assert rng_cut_data.size == self.reference_values["pslr_cut_filling"]
+        assert az_cut_data.size == self.reference_values["pslr_cut_filling"]
+        assert rng_cut.size == self.reference_values["samples"]
+        assert az_cut.size == self.reference_values["lines"]
 
     def test_pslr_profile_cutting_lobes(self):
         """Testing pslr_profile_cutting functions on testing data, with side lobes"""
@@ -366,10 +366,10 @@ class MaskingOperationsTest(unittest.TestCase):
         az_cut_data = az_cut[az_cut != 0]
 
         # testing profile cutting
-        self.assertEqual(rng_cut_data.size, self.reference_values["pslr_cut_filling"])
-        self.assertEqual(az_cut_data.size, self.reference_values["pslr_cut_filling"])
-        self.assertEqual(rng_cut.size, self.reference_values["samples"])
-        self.assertEqual(az_cut.size, self.reference_values["lines"])
+        assert rng_cut_data.size == self.reference_values["pslr_cut_filling"]
+        assert az_cut_data.size == self.reference_values["pslr_cut_filling"]
+        assert rng_cut.size == self.reference_values["samples"]
+        assert az_cut.size == self.reference_values["lines"]
 
     def test_islr_profile_cutting(self):
         """Testing islr_profile_cutting functions on testing data"""
@@ -397,14 +397,14 @@ class MaskingOperationsTest(unittest.TestCase):
         side_az_filling = side_cut_az[side_cut_az != 0]
 
         # testing profile cutting
-        self.assertEqual(main_rng_filling.size, self.reference_values["islr_main_cut_filling"])
-        self.assertEqual(main_az_filling.size, self.reference_values["islr_main_cut_filling"])
-        self.assertEqual(side_rng_filling.size, self.reference_values["islr_side_cut_filling"])
-        self.assertEqual(side_az_filling.size, self.reference_values["islr_side_cut_filling"])
-        self.assertEqual(main_cut_rng.size, self.reference_values["samples"])
-        self.assertEqual(main_cut_az.size, self.reference_values["lines"])
-        self.assertEqual(side_cut_rng.size, self.reference_values["samples"])
-        self.assertEqual(side_cut_az.size, self.reference_values["lines"])
+        assert main_rng_filling.size == self.reference_values["islr_main_cut_filling"]
+        assert main_az_filling.size == self.reference_values["islr_main_cut_filling"]
+        assert side_rng_filling.size == self.reference_values["islr_side_cut_filling"]
+        assert side_az_filling.size == self.reference_values["islr_side_cut_filling"]
+        assert main_cut_rng.size == self.reference_values["samples"]
+        assert main_cut_az.size == self.reference_values["lines"]
+        assert side_cut_rng.size == self.reference_values["samples"]
+        assert side_cut_az.size == self.reference_values["lines"]
 
     def test_islr_profile_cutting_lobes(self):
         """Testing islr_profile_cutting functions on testing data, with side lobes"""
@@ -432,14 +432,14 @@ class MaskingOperationsTest(unittest.TestCase):
         side_az_filling = side_cut_az[side_cut_az != 0]
 
         # testing profile cutting
-        self.assertEqual(main_rng_filling.size, self.reference_values["islr_main_cut_filling"])
-        self.assertEqual(main_az_filling.size, self.reference_values["islr_main_cut_filling"])
-        self.assertEqual(side_rng_filling.size, self.reference_values["islr_side_cut_filling_rng_lobes"])
-        self.assertEqual(side_az_filling.size, self.reference_values["islr_side_cut_filling_az_lobes"])
-        self.assertEqual(main_cut_rng.size, self.reference_values["samples"])
-        self.assertEqual(main_cut_az.size, self.reference_values["lines"])
-        self.assertEqual(side_cut_rng.size, self.reference_values["samples"])
-        self.assertEqual(side_cut_az.size, self.reference_values["lines"])
+        assert main_rng_filling.size == self.reference_values["islr_main_cut_filling"]
+        assert main_az_filling.size == self.reference_values["islr_main_cut_filling"]
+        assert side_rng_filling.size == self.reference_values["islr_side_cut_filling_rng_lobes"]
+        assert side_az_filling.size == self.reference_values["islr_side_cut_filling_az_lobes"]
+        assert main_cut_rng.size == self.reference_values["samples"]
+        assert main_cut_az.size == self.reference_values["lines"]
+        assert side_cut_rng.size == self.reference_values["samples"]
+        assert side_cut_az.size == self.reference_values["lines"]
 
     def test_sslr_profile_cutting(self):
         """Testing sslr_profile_cutting functions on testing data"""
@@ -456,10 +456,10 @@ class MaskingOperationsTest(unittest.TestCase):
         az_cut_data = az_cut[az_cut != 0]
 
         # testing profile cutting
-        self.assertEqual(rng_cut_data.size, self.reference_values["sslr_cut_filling"])
-        self.assertEqual(az_cut_data.size, self.reference_values["sslr_cut_filling"])
-        self.assertEqual(rng_cut.size, self.reference_values["samples"])
-        self.assertEqual(az_cut.size, self.reference_values["lines"])
+        assert rng_cut_data.size == self.reference_values["sslr_cut_filling"]
+        assert az_cut_data.size == self.reference_values["sslr_cut_filling"]
+        assert rng_cut.size == self.reference_values["samples"]
+        assert az_cut.size == self.reference_values["lines"]
 
     def test_sslr_profile_cutting_lobes(self):
         """Testing sslr_profile_cutting functions on testing data, with side lobes"""
@@ -474,8 +474,8 @@ class MaskingOperationsTest(unittest.TestCase):
         )
 
         # testing profile cutting
-        self.assertEqual(rng_cut_max, self.reference_values["sslr_cut_rng_max_lobes"])
-        self.assertEqual(az_cut_max, self.reference_values["sslr_cut_az_max_lobes"])
+        assert rng_cut_max == self.reference_values["sslr_cut_rng_max_lobes"]
+        assert az_cut_max == self.reference_values["sslr_cut_az_max_lobes"]
 
     def test_masking_outliers(self):
         """Testing masking_outliers function"""
@@ -587,7 +587,3 @@ class MaskingOperationsTest(unittest.TestCase):
             data=np.abs(self.data[10:20, 150:160]),
         )
         np.testing.assert_allclose(masked_array, expected_mask, atol=1e-10, rtol=0)
-
-
-if __name__ == "__main__":
-    unittest.main()

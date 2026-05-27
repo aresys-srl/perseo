@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Block-Wise Radiometric Analysis Module Unittest
------------------------------------------------
+Unit tests for perseo-quality radiometric_analysis
 """

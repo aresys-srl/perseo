@@ -1,22 +1,22 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Unittest for point_target_analysis/core/rcs.py core functionalities"""
+"""Tests for point_target_analysis/core/rcs.py core functionalities"""
 
 from __future__ import annotations
 
-import unittest
-
 import numpy as np
+import pytest
 
 from perseo_quality.point_targets_analysis.core.rcs import compute_point_target_rcs
 from tests.unit_tests import test_utils
 
 
-class PointTargetRCSTest(unittest.TestCase):
+class TestPointTargetRCS:
     """Testing point_target_analysis/core/rcs.py core functionalities"""
 
-    def setUp(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _setup(self) -> None:
         # creating test data
         self.data, self.peak_pos, self.target_pos = test_utils.generate_data_for_test(
             lines=test_utils.default_input_data_generation["lines"],
@@ -52,10 +52,6 @@ class PointTargetRCSTest(unittest.TestCase):
         )
         np.testing.assert_array_equal(self.peak_corners, peak_corners)
         np.testing.assert_array_equal(self.background_corners, roi_background_corners)
-        self.assertAlmostEqual(rcs.peak_value_complex, self.peak_value_complex)
-        self.assertAlmostEqual(rcs.clutter, self.clutter)
-        self.assertAlmostEqual(rcs.scr, self.scr)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        np.testing.assert_allclose(rcs.peak_value_complex, self.peak_value_complex, atol=1e-9, rtol=0)
+        np.testing.assert_allclose(rcs.clutter, self.clutter, atol=1e-9, rtol=0)
+        np.testing.assert_allclose(rcs.scr, self.scr, atol=1e-9, rtol=0)
