@@ -30,10 +30,11 @@ from pyproj import CRS, Transformer
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 LLH_CRS = CRS.from_epsg(4326)
+ECEF_CRS = CRS.from_epsg(4978)
 UTM_EPSG_NORTH_BASE = 32600
 UTM_EPSG_SOUTH_BASE = 32700
-xyz2llh_transformer = Transformer.from_proj("epsg:4978", "epsg:4326")
-llh2xyz_transformer = Transformer.from_proj("epsg:4326", "epsg:4978")
+xyz2llh_transformer = Transformer.from_crs(ECEF_CRS, LLH_CRS)
+llh2xyz_transformer = Transformer.from_crs(LLH_CRS, ECEF_CRS)
 
 
 def _get_utm_epsg_code(zone: str) -> int:
