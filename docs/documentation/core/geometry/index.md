@@ -21,7 +21,7 @@ to angular computations (squint, incidence, look), Doppler analysis, direct and 
 
 <div class="result" markdown>
 
-:lucide-axis-3d:{ .lg .middle } [__Coordinates__](coordinates/index.md#coords){ data-preview } : XYZ ↔ LLH and ECEF ↔ ECI conversions
+:lucide-axis-3d:{ .lg .middle } [__Coordinates__](coordinates/index.md#coords){ data-preview } : XYZ ↔ LLH, UTM ↔ LLH and ECEF ↔ ECI conversions
 
 :lucide-map:{ .lg .middle } [__Geocoding__](geocoding/index.md#geocoding){ data-preview } : direct and inverse geocoding, monostatic and bistatic
 

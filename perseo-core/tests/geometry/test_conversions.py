@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 
-from perseo_core.geometry.coords_conversions import ecef2eci, eci2ecef, llh2xyz, xyz2llh
+from perseo_core.geometry.coords_conversions import ecef2eci, eci2ecef, llh2utm, llh2xyz, utm2llh, xyz2llh
 
 
 class TestXYZ_LLHCoordsConversions:
@@ -317,3 +317,134 @@ class TestECEF_ECICoordsConversions:
             ecef_eci_coords_conversions_test_data["eci_velocities"],
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
+
+
+class TestUTM_LLHCoordsConversions:
+    """Test coordinate conversion functions utm2llh and llh2utm with various input types and options."""
+
+    CASE_NAMES = ["case_1", "case_2", "case_3", "case_4"]
+
+    @pytest.fixture(autouse=True)
+    def setup_tolerances(self, utm2llh_coords_conversions_test_data):
+        self.tol_llh = utm2llh_coords_conversions_test_data["tolerance_llh"]
+        self.tol_utm = utm2llh_coords_conversions_test_data["tolerance_utm"]
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_utm2llh_scalar_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh, scalar, output in degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh_deg = utm2llh(coordinates=case["utm"][0, :], zone=case["zone"], radians=False)
+        assert llh_deg.shape == (3,)
+        np.testing.assert_allclose(llh_deg, case["llh_deg"][0, :], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_utm2llh_scalar_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh, scalar, output in radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh = utm2llh(coordinates=case["utm"][0, :], zone=case["zone"], radians=True)
+        llh[:2] = np.rad2deg(llh[:2])
+        assert llh.shape == (3,)
+        np.testing.assert_allclose(llh, case["llh_deg"][0, :], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_utm2llh_vect_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh, vectorized, output in degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh_deg = utm2llh(coordinates=case["utm"], zone=case["zone"], radians=False)
+        assert llh_deg.shape == case["utm"].shape
+        np.testing.assert_allclose(llh_deg, case["llh_deg"], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_utm2llh_vect_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh, vectorized, output in radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh = utm2llh(coordinates=case["utm"], zone=case["zone"], radians=True)
+        llh[:, :2] = np.rad2deg(llh[:, :2])
+        assert llh.shape == case["utm"].shape
+        np.testing.assert_allclose(llh, case["llh_deg"], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_llh2utm_scalar_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test llh2utm, scalar, output in degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        utm = llh2utm(coordinates=case["llh_deg"][0, :], zone=case["zone"], radians=False)
+        assert utm.shape == (3,)
+        np.testing.assert_allclose(utm, case["utm"][0, :], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_llh2utm_scalar_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test llh2utm, scalar, output in radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        coords = case["llh_deg"][0, :].copy()
+        coords[:2] = np.deg2rad(coords[:2])
+        utm = llh2utm(coordinates=coords, zone=case["zone"], radians=True)
+        assert utm.shape == (3,)
+        np.testing.assert_allclose(utm, case["utm"][0, :], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_llh2utm_vect_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test llh2utm, vectorized, output in degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        utm = llh2utm(coordinates=case["llh_deg"], zone=case["zone"], radians=False)
+        assert utm.shape == case["llh_deg"].shape
+        np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_llh2utm_vect_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test llh2utm, vectorized, output in radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        coords = case["llh_deg"].copy()
+        coords[:, :2] = np.deg2rad(coords[:, :2])
+        utm = llh2utm(coordinates=coords, zone=case["zone"], radians=True)
+        assert utm.shape == case["llh_deg"].shape
+        np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_round_trip_vectorized_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh and llh2utm round trip for vectorized input, degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh_deg = utm2llh(coordinates=case["utm"], zone=case["zone"], radians=False)
+        utm = llh2utm(coordinates=llh_deg, zone=case["zone"], radians=False)
+        np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_round_trip_vectorized_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh and llh2utm round trip for vectorized input, radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        coords = case["llh_deg"].copy()
+        coords[:, :2] = np.deg2rad(coords[:, :2])
+        utm = llh2utm(coordinates=coords, zone=case["zone"], radians=True)
+        llh_deg = utm2llh(coordinates=utm, zone=case["zone"], radians=False)
+        np.testing.assert_allclose(llh_deg, case["llh_deg"], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    def test_invalid_zone_format(self, utm2llh_coords_conversions_test_data) -> None:
+        """Test that invalid zone format raises ValueError."""
+        case1 = utm2llh_coords_conversions_test_data["case_1"]
+        with pytest.raises(TypeError):
+            utm2llh(case1["utm"], zone=33)
+        with pytest.raises(TypeError):
+            llh2utm(case1["llh_deg"], zone=33, radians=False)
+
+    def test_invalid_zone_format_2(self, utm2llh_coords_conversions_test_data) -> None:
+        """Test that invalid zone format raises ValueError."""
+        case1 = utm2llh_coords_conversions_test_data["case_1"]
+        with pytest.raises(ValueError, match="Zone must be string format"):
+            utm2llh(case1["utm"], zone="33 N")
+        with pytest.raises(ValueError, match="Zone must be string format"):
+            llh2utm(case1["llh_deg"], zone="33 N", radians=False)
+
+    def test_invalid_zone_number(self, utm2llh_coords_conversions_test_data) -> None:
+        """Test that invalid zone number raises ValueError."""
+        case1 = utm2llh_coords_conversions_test_data["case_1"]
+        with pytest.raises(ValueError, match="zone number must be between 1 and 60"):
+            utm2llh(case1["utm"], zone="61N")
+        with pytest.raises(ValueError, match="zone number must be between 1 and 60"):
+            llh2utm(case1["llh_deg"], zone="61N", radians=False)
+
+    def test_invalid_hemisphere(self, utm2llh_coords_conversions_test_data) -> None:
+        """Test that invalid hemisphere raises ValueError."""
+        case1 = utm2llh_coords_conversions_test_data["case_1"]
+        with pytest.raises(ValueError, match="Hemisphere must be 'N' or 'S'"):
+            utm2llh(case1["utm"], zone="33X")
+        with pytest.raises(ValueError, match="Hemisphere must be 'N' or 'S'"):
+            llh2utm(case1["llh_deg"], zone="33X", radians=False)

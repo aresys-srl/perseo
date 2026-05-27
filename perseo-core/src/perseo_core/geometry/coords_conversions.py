@@ -9,7 +9,8 @@ for geodetic conversions and `Astropy` for precise celestial frame transformatio
 ### Coordinate Systems Supported
 
 - **ECEF (EPSG:4978)**: Earth-Centered Earth-Fixed cartesian coordinates (X, Y, Z) in meters
-- **LLH (EPSG:4326)**: Geodetic coordinates - Latitude, Longitude in radians/degrees, Height in meters
+- **LLH (EPSG:4326)**: Geodetic coordinates, Latitude, Longitude in radians/degrees, Height in meters
+- **UTM (EPSG:326xx/327xx)**: Universal Transverse Mercator coordinates (Easting, Northing, Height) in meters
 - **ECI (GCRS)**: Earth-Centered Inertial (Geocentric Celestial Reference System)
 
 All functions support both single point (shape (3,)) and batch operations on arrays
@@ -24,12 +25,51 @@ import numpy.typing as npt
 from astropy import units
 from astropy.coordinates import GCRS, ITRS, CartesianDifferential, CartesianRepresentation
 from astropy.time import Time
-from pyproj import Transformer
+from pyproj import CRS, Transformer
 
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
+LLH_CRS = CRS.from_epsg(4326)
+UTM_EPSG_NORTH_BASE = 32600
+UTM_EPSG_SOUTH_BASE = 32700
 xyz2llh_transformer = Transformer.from_proj("epsg:4978", "epsg:4326")
 llh2xyz_transformer = Transformer.from_proj("epsg:4326", "epsg:4978")
+
+
+def _get_utm_epsg_code(zone: str) -> int:
+    """Convert UTM zone string in format ZZH (e.g., '33N', '33S') to EPSG codes for transformations.
+
+    Parameters
+    ----------
+    zone : str
+        UTM zone in format 'ZZH' where ZZ is zone number (1-60) and H is hemisphere ('N' or 'S')
+
+    Returns
+    -------
+    int
+        UTM epsg code, 326XX for northern hemisphere, 327XX for southern
+
+    Raises
+    ------
+    ValueError
+        if zone format is invalid or zone number is out of range
+    """
+    if len(zone) not in (2, 3):
+        raise ValueError(f"Zone must be string format like '1N' or '33S', not {zone}")
+
+    hemisphere = zone[-1].upper()
+    try:
+        zone_num = int(zone[:-1])
+    except ValueError as e:
+        raise ValueError(f"Invalid zone format '{zone}'. Expected format like '33N' or '33S'") from e
+
+    if zone_num < 1 or zone_num > 60:
+        raise ValueError(f"UTM zone number must be between 1 and 60, not {zone_num}")
+
+    if hemisphere not in ("N", "S"):
+        raise ValueError(f"Hemisphere must be 'N' or 'S', got '{hemisphere}'")
+
+    return UTM_EPSG_NORTH_BASE + zone_num if hemisphere == "N" else UTM_EPSG_SOUTH_BASE + zone_num
 
 
 def xyz2llh(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.NDArray[np.floating]:
@@ -187,3 +227,73 @@ def eci2ecef(
     if is_scalar:
         return positions_ecef[0], velocities_ecef[0]
     return positions_ecef, velocities_ecef
+
+
+def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = True) -> npt.NDArray[np.floating]:
+    """Conversion from UTM (Easting[m], Northing [m], Height [m]) coordinates (epsg:326xx or 327xx) to
+    LLH (latitude [rad/deg], longitude [rad/deg], height [m]) geodetic coordinates (epsg:4326).
+
+    Parameters
+    ----------
+    coordinates : npt.NDArray[np.floating]
+        UTM coordinates with shape (3,), (1, 3) or (N, 3), with 3 being Easting, Northing, and Height in meters
+    zone : str
+        UTM zone in format 'ZZH' where ZZ is zone number (1-60) and H is hemisphere ('N' for northern, 'S' for southern)
+        Example: '33N', '33S', '1N', '60S'
+    radians : bool, optional
+        if output latitude and longitude must be expressed in radians, otherwise they are provided in deg,
+        by default True
+
+    Returns
+    -------
+    npt.NDArray[np.floating]
+        LLH geodetic coordinates (epsg:4326), with shape (3,), (1, 3) or (N, 3), with 3 being Lat [rad/deg],
+        Lon [rad/deg] and H [m]
+
+    Raises
+    ------
+    ValueError
+        if zone format is invalid or zone number is out of range (1-60)
+    """
+    utm_epsg = _get_utm_epsg_code(zone)
+    transformer = Transformer.from_crs(CRS.from_epsg(utm_epsg), LLH_CRS)
+
+    coordinates = np.atleast_2d(coordinates)
+    return np.c_[
+        transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)
+    ].squeeze()
+
+
+def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = True) -> npt.NDArray[np.floating]:
+    """Conversion from LLH (latitude [rad/deg], longitude [rad/deg], height [m]) geodetic coordinates (epsg:4326) to
+    UTM (Easting[m], Northing [m], Height [m]) coordinates (epsg:326xx or 327xx).
+
+    Parameters
+    ----------
+    coordinates : npt.NDArray[np.floating]
+        LLH geodetic coordinates (epsg:4326), with shape (3,), (1, 3) or (N, 3), with 3 being Lat [rad/deg],
+        Lon [rad/deg] and H [m]
+    zone : str
+        UTM zone in format 'ZZH' where ZZ is zone number (1-60) and H is hemisphere ('N' for northern, 'S' for southern)
+        Example: '33N', '33S', '1N', '60S'
+    radians : bool, optional
+        if input latitude and longitude are expressed in radians, otherwise they can be provided in deg,
+        by default True
+
+    Returns
+    -------
+    npt.NDArray[np.floating]
+        UTM coordinates, with shape (3,), (1, 3) or (N, 3), with 3 being Easting [m], Northing [m], and Height [m]
+
+    Raises
+    ------
+    ValueError
+        if zone format is invalid or zone number is out of range (1-60)
+    """
+    utm_epsg = _get_utm_epsg_code(zone)
+    transformer = Transformer.from_crs(LLH_CRS, CRS.from_epsg(utm_epsg))
+
+    coordinates = np.atleast_2d(coordinates)
+    return np.c_[
+        transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)
+    ].squeeze()

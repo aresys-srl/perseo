@@ -14,6 +14,8 @@ The main functions available in ``perseo_core.geometry.coords_conversions`` are:
 
 - [`xyz2llh`][perseo_core.geometry.coords_conversions.xyz2llh]: Convert XYZ ECEF cartesian coordinates to geodetic LLH (latitude, longitude, height)
 - [`llh2xyz`][perseo_core.geometry.coords_conversions.llh2xyz]: Convert geodetic LLH coordinates to XYZ ECEF cartesian coordinates
+- [`utm2llh`][perseo_core.geometry.coords_conversions.utm2llh]: Convert UTM (Easting, Northing, Height) coordinates to geodetic LLH (latitude, longitude, height)
+- [`llh2utm`][perseo_core.geometry.coords_conversions.llh2utm]: Convert geodetic LLH (latitude, longitude, height) coordinates to UTM (Easting, Northing, Height)
 - [`ecef2eci`][perseo_core.geometry.coords_conversions.ecef2eci]: Transform positions and velocities from ECEF (ITRS) to ECI (GCRS) frame
 - [`eci2ecef`][perseo_core.geometry.coords_conversions.eci2ecef]: Transform positions and velocities from ECI (GCRS) to ECEF (ITRS) frame
 
@@ -21,35 +23,73 @@ All functions support both scalar inputs and batch operations on arrays of coord
 
 ## ECEF <-> LLH conversion
 
-Convert Earth-Centered Earth-Fixed (ECEF) cartesian coordinates to geodetic Latitude, Longitude, Height (LLH) and
-vice versa.
+Convert Earth-Centered Earth-Fixed (ECEF) cartesian coordinates to geodetic Latitude, Longitude, Height (LLH) and vice versa.
 
 ```python title="Batch coordinate conversion"
 import numpy as np
 from perseo_core.geometry.coords_conversions import xyz2llh, llh2xyz
 
 # multiple points (N, 3) array, lat [deg]/lon[deg]/height[m]
-llh_coords_deg = np.array([
-    [-26.83470987, 151.1656039, 409.4544],  # Point 1
-    [-26.94651144, 151.1438779, 390.5168],  # Point 2
-    [-27.08563567, 150.2596331, 371.1494],  # Point 3
-    [-27.30887139, 151.2719591, 385.242],   # Point 4
-])
+llh_coords_deg = np.array(
+    [
+        [-26.83470987, 151.1656039, 409.4544],  # Point 1
+        [-26.94651144, 151.1438779, 390.5168],  # Point 2
+        [-27.08563567, 150.2596331, 371.1494],  # Point 3
+        [-27.30887139, 151.2719591, 385.2427],  # Point 4
+    ]
+)
 
-# convert all points at once
-xyz_array_from_deg = llh2xyz(llh_coords_deg, radians=False)  # Returns (N, 3) array
+# convert all points at once, return (N, 3) array
+xyz_array_from_deg = llh2xyz(coordinates=llh_coords_deg, radians=False)  
 
 # this is equivalent to:
 llh_coords_rad = llh_coords_deg.copy()
 llh_coords_rad[:, :2] = np.deg2rad(llh_coords_deg[:, :2])
 
-xyz_array_from_rad = llh2xyz(llh_coords_rad)  # Returns (N, 3) array
+# returns (N, 3) array
+xyz_array_from_rad = llh2xyz(coordinates=llh_coords_rad)
 
 # assessing equivalence
 np.testing.assert_allclose(xyz_array_from_rad, xyz_array_from_deg, atol=1e-9)
 
 # convert back
-llh_coords_rad_back = xyz2llh(xyz_array_from_rad)
+llh_coords_rad_back = xyz2llh(coordinates=xyz_array_from_rad)
+
+# assessing equivalence
+np.testing.assert_allclose(llh_coords_rad_back, llh_coords_rad, atol=1e-9)
+```
+
+## UTM <-> LLH conversion
+
+Convert Universal Transverse Mercator (UTM) coordinates to geodetic Latitude, Longitude, Height (LLH) and vice versa.
+
+```python title="Batch coordinate conversion"
+import numpy as np
+from perseo_core.geometry.coords_conversions import utm2llh, llh2utm
+
+# multiple points (N, 3) array, lat [deg]/lon[deg]/height[m]
+llh_coords_deg = np.array(
+    [
+        [45.46426566000277, 15.189507795238633, 0.0],    # Point 1
+        [41.90278563201284, 12.496360621280552, 10.0],   # Point 2
+        [40.85299745751111, 14.305005283852463, 175.0],  # Point 3
+    ]
+)
+
+# convert all points at once, return (N, 3) array
+utm_array_from_deg = llh2utm(coordinates=llh_coords_deg, zone="33N", radians=False)
+
+# this is equivalent to:
+llh_coords_rad = llh_coords_deg.copy()
+llh_coords_rad[:, :2] = np.deg2rad(llh_coords_deg[:, :2])
+
+utm_array_from_rad = llh2utm(coordinates=llh_coords_rad, zone="33N")
+
+# assessing equivalence
+np.testing.assert_allclose(utm_array_from_rad, utm_array_from_deg, atol=1e-9)
+
+# convert back
+llh_coords_rad_back = utm2llh(coordinates=utm_array_from_rad, zone="33N")
 
 # assessing equivalence
 np.testing.assert_allclose(llh_coords_rad_back, llh_coords_rad, atol=1e-9)
