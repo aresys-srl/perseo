@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import numpy.typing as npt
 from scipy.constants import speed_of_light as LIGHT_SPEED
 
 import perseo_quality.core.signal_processing as sp
@@ -25,9 +26,9 @@ def compute_point_target_rcs(
     target_area: np.ndarray,
     range_resolution_px: float,
     azimuth_resolution_px: float,
-    target_pos_real: np.ndarray,
+    target_pos_real: npt.NDArray[np.floating],
     rcs_interp_factor: int,
-    rcs_roi: np.ndarray,
+    rcs_roi: npt.NDArray[np.floating],
     k_lin: float = 1,
     s_f: float = 1,
 ) -> tuple[RCSDataOutput, np.ndarray, list, list]:
@@ -46,7 +47,7 @@ def compute_point_target_rcs(
         position of the signal peak in pixels, range_px[0] and azimuth_px[1]
     rcs_interp_factor : int
         rcs interpolation factor
-    rcs_roi : np.ndarray
+    rcs_roi : npt.NDArray[np.floating]
         region of interest for RCS computation
     k_lin : float, optional
         a value of 1 means absolutely calibrated, by default 1
@@ -55,10 +56,10 @@ def compute_point_target_rcs(
 
     Returns
     -------
-    pdt.RCSDataOutput
+    RCSDataOutput
         dataclass object containing all computed export variables
-    pdt.RCSGraphDataOutput
-        dataclass object containing all data needed for plotting graphs outside
+    np.ndarray
+        roi target data
     list
         background intensity corners, a list pixels for each square corner region
     list
@@ -140,7 +141,7 @@ def compute_additional_rcs_values(
     interp_factor: int,
     polarization: SARPolarization,
     target_info: PointTarget,
-    sensor_position: np.ndarray,
+    sensor_position: npt.NDArray[np.floating],
     fc_hz: float,
 ) -> tuple[float, float, float, float]:
     """Adjust rcs output values and calculate peak phase error.
@@ -157,7 +158,7 @@ def compute_additional_rcs_values(
         polarization value [V/V, H/H, H/V, V/H]
     target_info : PointTarget
         target info as PointTarget
-    sensor_position : np.ndarray
+    sensor_position : npt.NDArray[np.floating]
         satellite position at given azimuth time
     fc_hz : float
         carrier frequency
@@ -194,23 +195,27 @@ def compute_additional_rcs_values(
     return rcs, rcs_db, rcs_error, peak_phase_error
 
 
-def _roi_extraction(data: np.ndarray, roi: np.ndarray, target_pos: np.ndarray = None) -> tuple[int, int, np.ndarray]:
+def _roi_extraction(
+    data: np.ndarray, roi: npt.NDArray[np.floating], target_pos: npt.NDArray[np.floating] = None
+) -> tuple[int, int, np.ndarray]:
     """Extraction of a roi from the input array.
 
     Parameters
     ----------
     data : np.ndarray
         input array
-    roi : np.ndarray
+    roi : npt.NDArray[np.floating]
         roi_size [row number, col number]
-    target_pos : np.ndarray, optional
+    target_pos : npt.NDArray[np.floating], optional
         position of the target peak. If None, it is calculated from input array, by default None
 
     Returns
     -------
-    tuple[int, int, np.ndarray]
+    int
         row max index
+    int
         column max index
+    np.ndarray
         roi extracted from input array
     """
 
@@ -240,7 +245,7 @@ def _roi_extraction(data: np.ndarray, roi: np.ndarray, target_pos: np.ndarray = 
 
 def _peak_extraction(
     data: np.ndarray,
-    target_position: np.ndarray | None = None,
+    target_position: npt.NDArray[np.floating] | None = None,
     max_indexes: tuple[float, float] | None = None,
     interp_factor: int = 8,
 ) -> tuple[float, float]:
@@ -250,17 +255,18 @@ def _peak_extraction(
     ----------
     data : np.ndarray
         2D input array
-    target_position : Optional[np.ndarray], optional
+    target_position : npt.NDArray[np.floating] | None, optional
         position of the target peak, by default None
-    max_indexes : Optional[tuple[float, float]], optional
+    max_indexes : tuple[float, float] | None, optional
         row and column indexes of the max. If None, it is calculated from the input array, by default None
     interp_factor : int, optional
         interpolation factor, by default 8
 
     Returns
     -------
-    tuple[float, float]
+    float
         peak row index
+    float
         peak column index
     """
 

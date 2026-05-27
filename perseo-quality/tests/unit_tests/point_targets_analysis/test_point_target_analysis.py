@@ -8,6 +8,7 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from perseo_quality.core.generic_dataclasses import (
@@ -30,7 +31,9 @@ raster = random_rng1.random((500, 650)) + random_rng1.random((500, 650)) * 1j
 class MockChannelData:
     """Mock channel to simulate a ChannelData object"""
 
-    def read_data(self, azimuth_index: int, range_index: int, burst: int, cropping_size=tuple[int, int]) -> np.ndarray:
+    def read_data(
+        self, azimuth_index: int, range_index: int, burst: int, cropping_size=tuple[int, int]
+    ) -> npt.NDArray[np.floating]:
         """Mocking the read data method.
 
         Parameters
@@ -46,7 +49,7 @@ class MockChannelData:
 
         Returns
         -------
-        np.ndarray
+        npt.NDArray[np.floating]
             cropped array
         """
         return raster[range_index : range_index + cropping_size[0], azimuth_index : azimuth_index + cropping_size[1]]

@@ -9,6 +9,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 
 from perseo_quality.interferometric_analysis.config import InterferometricConfig
 from perseo_quality.interferometric_analysis.custom_dataclasses import (
@@ -50,7 +51,7 @@ def generate_coherence_graphs(
 
 
 def coherence_graph_core(
-    coherence: np.ndarray,
+    coherence: npt.NDArray[np.floating],
     histograms: InterferometricCoherence2DHistograms,
     output_dir: Path,
     tag: str = "",

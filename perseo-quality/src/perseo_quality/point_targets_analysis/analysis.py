@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
 from arepytools.timing.precisedatetime import PreciseDateTime
@@ -466,9 +467,9 @@ def _results_to_dataframe(results: list[ptdt.PointTargetAnalysisOutput]) -> pd.D
 def point_target_analysis_core_computation(
     target_area: np.ndarray,
     location_data: gdt.LocationData,
-    target_pos_real: np.ndarray,
-    target_pos_nominal: np.ndarray,
-    sensor_position_at_target: np.ndarray,
+    target_pos_real: npt.NDArray[np.floating],
+    target_pos_nominal: npt.NDArray[np.floating],
+    sensor_position_at_target: npt.NDArray[np.floating],
     side_lobes_directions: SideLobesDirections,
     projection: gdt.SARProjection,
     polarization: gdt.SARPolarization,
@@ -486,11 +487,11 @@ def point_target_analysis_core_computation(
         target area to be analyzed
     location_data : gdt.LocationData
         location data
-    target_pos_real : np.ndarray
+    target_pos_real : npt.NDArray[np.floating]
         real peak position of the target as detected by the SAR product
-    target_pos_nominal : np.ndarray
+    target_pos_nominal : npt.NDArray[np.floating]
         nominal target position
-    sensor_position_at_target : np.ndarray
+    sensor_position_at_target : npt.NDArray[np.floating]
         sensor position in orbit at target location
     side_lobes_directions : SideLobesDirections
         range and azimuth cuts angular coefficients in samples
@@ -703,11 +704,11 @@ def irf_analysis_profiles(
 
 def rcs_analysis(
     target_area: np.ndarray,
-    target_pos_real: np.ndarray,
+    target_pos_real: npt.NDArray[np.floating],
     rcs_parameters: RCSParameters,
     polarization: gdt.SARPolarization,
     target_info: PointTarget,
-    sensor_position_at_target: np.ndarray,
+    sensor_position_at_target: npt.NDArray[np.floating],
     carrier_frequency: float,
     range_resolution_px: float,
     azimuth_resolution_px: float,
@@ -719,7 +720,7 @@ def rcs_analysis(
     ----------
     target_area : np.ndarray
         target area to be analyzed
-    target_pos_real : np.ndarray
+    target_pos_real : npt.NDArray[np.floating]
         real peak position of the target as detected by the SAR product
     rcs_parameters : RCSParameters
         rcs parameters
@@ -727,7 +728,7 @@ def rcs_analysis(
         SAR product polarization
     target_info : PointTarget
         current target to be analyzed
-    sensor_position_at_target : np.ndarray
+    sensor_position_at_target : npt.NDArray[np.floating]
         sensor position in orbit at target location
     carrier_frequency : float
         signal carrier frequency

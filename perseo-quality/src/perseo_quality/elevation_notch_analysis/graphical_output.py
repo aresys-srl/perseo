@@ -9,6 +9,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.typing as npt
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import ConnectionPatch, Rectangle
 from numpy.polynomial import Polynomial
@@ -169,7 +170,9 @@ def plot_elevation_notch_analysis(data: list[ElevationNotchOutput], output_dir: 
         plt.close("all")
 
 
-def _compute_average_parabolic_fit(blocks_info: list[ElevationNotchOutput]) -> tuple[np.ndarray, np.ndarray]:
+def _compute_average_parabolic_fit(
+    blocks_info: list[ElevationNotchOutput],
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Computing the average parabolic fit for the given blocks info.
 
     Parameters
@@ -179,9 +182,9 @@ def _compute_average_parabolic_fit(blocks_info: list[ElevationNotchOutput]) -> t
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         average parabolic fit axis
-    np.ndarray
+    npt.NDArray[np.floating]
         average parabolic fit values
     """
     min_axis = np.min([blk.parabolic_fit_axis_deg[0] + blk.annotated_roll_deg for blk in blocks_info])
@@ -192,7 +195,9 @@ def _compute_average_parabolic_fit(blocks_info: list[ElevationNotchOutput]) -> t
     return avg_parabolic_axis, 10 * np.log10(parabola(np.deg2rad(avg_parabolic_axis)))
 
 
-def _compute_average_antenna_model(blocks_info: list[ElevationNotchOutput]) -> tuple[np.ndarray, np.ndarray]:
+def _compute_average_antenna_model(
+    blocks_info: list[ElevationNotchOutput],
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Computing average antenna model across all blocks for the current channel.
 
     Parameters
@@ -202,9 +207,9 @@ def _compute_average_antenna_model(blocks_info: list[ElevationNotchOutput]) -> t
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         average look angles
-    np.ndarray
+    npt.NDArray[np.floating]
         average antenna model
     """
     antenna_angles = np.stack([b.antenna_angles_deg for b in blocks_info])

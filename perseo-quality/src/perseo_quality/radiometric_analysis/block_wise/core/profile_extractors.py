@@ -10,6 +10,7 @@ from collections.abc import Callable
 from functools import wraps
 
 import numpy as np
+import numpy.typing as npt
 from numba import jit, prange
 from scipy.ndimage import convolve
 from scipy.signal import convolve2d, medfilt2d
@@ -24,7 +25,9 @@ from perseo_quality.radiometric_analysis.block_wise.core.common import (
 )
 
 # custom profile extractor callable type to be matched
-RadiometricProfileExtractorType = Callable[[np.ndarray, ProfileExtractionParameters], np.ndarray]
+RadiometricProfileExtractorType = Callable[
+    [npt.NDArray[np.floating], ProfileExtractionParameters], npt.NDArray[np.floating]
+]
 
 PROFILE_EXTRACTORS_REGISTRY: dict[str, RadiometricProfileExtractorType] = {}
 
@@ -34,7 +37,7 @@ def register_profile_extractor(
 ) -> Callable[[RadiometricProfileExtractorType], RadiometricProfileExtractorType]:
     def decorator(func: RadiometricProfileExtractorType) -> RadiometricProfileExtractorType:
         @wraps(func)
-        def wrapper(*args, **kwargs) -> np.ndarray:
+        def wrapper(*args, **kwargs) -> npt.NDArray[np.floating]:
             return func(*args, **kwargs)
 
         PROFILE_EXTRACTORS_REGISTRY[name] = wrapper
@@ -44,7 +47,7 @@ def register_profile_extractor(
 
 
 @jit(nopython=True, parallel=True, cache=True)
-def _compute_num_bins(data: np.ndarray) -> np.ndarray:
+def _compute_num_bins(data: npt.NDArray[np.floating]) -> npt.NDArray[np.floating]:
     # Freedman Diaconis Estimator
     rows = data.shape[0]
     result = np.empty(rows)
@@ -67,7 +70,7 @@ def _compute_num_bins(data: np.ndarray) -> np.ndarray:
 
 
 @jit(nopython=True, cache=True)
-def _compute_histogram_peak(data: np.ndarray, num_bins: int) -> float:
+def _compute_histogram_peak(data: npt.NDArray[np.floating], num_bins: int) -> float:
     if num_bins <= 0 or not np.isfinite(num_bins):
         return np.nan
 
@@ -80,19 +83,19 @@ def _compute_histogram_peak(data: np.ndarray, num_bins: int) -> float:
     return (bin_edges[max_idx] + bin_edges[max_idx + 1]) / 2
 
 
-def _fill_nans(arr: np.ndarray, radius: int = 1) -> np.ndarray:
+def _fill_nans(arr: npt.NDArray[np.floating], radius: int = 1) -> npt.NDArray[np.floating]:
     """NaN filling using convolution-based approach
 
     Parameters
     ----------
-    arr : np.ndarray
+    arr : npt.NDArray[np.floating]
         Input array with NaN values
     radius : int, optional
         Neighborhood radius, by default 1
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Array with NaNs filled
     """
 
@@ -122,19 +125,21 @@ def _fill_nans(arr: np.ndarray, radius: int = 1) -> np.ndarray:
 
 
 @register_profile_extractor("nesz")
-def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
+def nesz_profiles_extractor(
+    data: npt.NDArray[np.floating], params: ProfileExtractionParameters
+) -> npt.NDArray[np.floating]:
     """Profiles extraction function for NESZ analysis.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         2D target block to be processed
     params : ProfileExtractionParameters
         radiometric profiles configuration
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         nesz profile
     """
     # azimuth profile as a sum over range
@@ -174,19 +179,21 @@ def nesz_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameter
 
 
 @register_profile_extractor("average_elevation")
-def average_elevation_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
+def average_elevation_profiles_extractor(
+    data: npt.NDArray[np.floating], params: ProfileExtractionParameters
+) -> npt.NDArray[np.floating]:
     """Profiles extraction function for generic average elevation radiometric profiles analysis.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         2D target block to be processed
     params : ProfileExtractionParameters
         radiometric profiles configuration
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         average elevation profile
     """
     if params.smoothening_filter:
@@ -217,19 +224,21 @@ def average_elevation_profiles_extractor(data: np.ndarray, params: ProfileExtrac
 
 
 @register_profile_extractor("scalloping")
-def scalloping_profiles_extractor(data: np.ndarray, params: ProfileExtractionParameters) -> np.ndarray:
+def scalloping_profiles_extractor(
+    data: npt.NDArray[np.floating], params: ProfileExtractionParameters
+) -> npt.NDArray[np.floating]:
     """Profiles extraction function for Scalloping analysis.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         2D target block to be processed
     params : ProfileExtractionParameters
         radiometric profiles configuration
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         scalloping profile
     """
     if params.outlier_removal:

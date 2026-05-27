@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.geometry.geometric_functions import (
     compute_incidence_angles_from_trajectory,
     compute_look_angles_from_trajectory,
@@ -327,7 +328,7 @@ def _get_pixels_from_times(
     azimuth_times: list[PreciseDateTime] | None,
     range_times: list[float] | None,
     bursts: list[int],
-) -> tuple[np.ndarray | None, np.ndarray | None]:
+) -> tuple[npt.NDArray[np.floating] | None, npt.NDArray[np.floating] | None]:
     """Get pixel indexes from input times.
 
     Parameters
@@ -343,9 +344,9 @@ def _get_pixels_from_times(
 
     Returns
     -------
-    np.ndarray | None
+    npt.NDArray[np.floating] | None
         azimuth pixels corresponding to input times or None
-    np.ndarray | None
+    npt.NDArray[np.floating] | None
         range pixels corresponding to input times or None
     """
     # overwriting pixel initialized arrays with real pixel values
@@ -375,7 +376,7 @@ def _get_times_from_pixels(
     azimuth_pixels: list[int] | None,
     range_pixels: list[int] | None,
     bursts: list[int],
-    az_avg_times: np.ndarray | None,
+    az_avg_times: npt.NDArray[np.floating] | None,
 ) -> tuple[np.ndarray | None, np.ndarray | None]:
     """Get time value from corresponding pixel.
 
@@ -608,13 +609,13 @@ def _radiometric_swath_processing(
     input_quantity: SARRadiometricQuantity,
     direction: RadiometricAnalysisDirection,
     config: PointWiseRadiometricAnalysisConfig,
-    incidence_angles: np.ndarray | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
+    incidence_angles: npt.NDArray[np.floating] | None = None,
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """This function orchestrates the whole process of processing input 2D swath portion.
 
     Parameters
     ----------
-    target_area : np.ndarray
+    target_area : npt.NDArray[np.floating]
         target area 2D array to be processed to extract profiles
     input_quantity : SARRadiometricQuantity
         input radiometric quantity
@@ -622,14 +623,14 @@ def _radiometric_swath_processing(
         direction of radiometric analysis
     config : PointWiseRadiometricAnalysisConfig
         radiometric analysis config dataclass
-    incidence_angles : np.ndarray, optional
+    incidence_angles : npt.NDArray[np.floating], optional
         incidence angles array, by default None
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         smoothed average profile
-    np.ndarray
+    npt.NDArray[np.floating]
         original average profile
     """
 
@@ -674,18 +675,18 @@ def _radiometric_swath_processing(
 
 
 def _extract_radiometric_profiles(
-    data: np.ndarray,
+    data: npt.NDArray[np.floating],
     direction: RadiometricAnalysisDirection,
     config_params: RadiometricAnalysisParameters,
     smoothening: bool = True,
     outlier: bool = False,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Extract an average and a smoothed radiometric profile from input swath portion in the selected direction.
     Outliers can be removed if the input flag is True.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         portion of the swath
     direction : RadiometricAnalysisDirection
         direction of profile extraction (range or azimuth)
@@ -698,9 +699,9 @@ def _extract_radiometric_profiles(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         smoothed average profile
-    np.ndarray
+    npt.NDArray[np.floating]
         average profile
     """
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 import scipy.signal
 
 import perseo_quality.core.generic_dataclasses as gdt
@@ -848,18 +849,22 @@ class SignalProcessingTest(unittest.TestCase):
         )
 
 
-def measure_frequency_shift(signal1, signal2, df) -> float:
+def measure_frequency_shift(signal1: npt.NDArray[np.floating], signal2: npt.NDArray[np.floating], df: float) -> float:
     """Measure the frequency delay between two signals using cross-correlation.
 
     Parameters
     ----------
-    signal1 (np.ndarray): The first signal.
-    signal2 (np.ndarray): The second signal.
+    signal1 : npt.NDArray[np.floating]
+        first signal
+    signal2 : npt.NDArray[np.floating]
+        second signal
+    df : float
+        frequency step in Hz
 
     Returns
     -------
-    float: the frequency shift in Hertz.
-
+    float
+        the frequency shift in Hertz.
     """
     spectrum1 = np.fft.fft(signal1)
     spectrum2 = np.fft.fft(signal2)

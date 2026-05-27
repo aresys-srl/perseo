@@ -10,6 +10,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from netCDF4 import Dataset, Group
 from numpy.polynomial import Polynomial
@@ -145,28 +146,31 @@ def _fill_group(group: Group, item: RadiometricProfilesOutput, mode: str) -> Non
 
 
 def compute_2d_histogram(
-    x_data: np.ndarray, y_data: np.ndarray, x_axis: np.ndarray, config: Radiometric2DHistogramParameters
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    x_data: npt.NDArray[np.floating],
+    y_data: npt.NDArray[np.floating],
+    x_axis: npt.NDArray[np.floating],
+    config: Radiometric2DHistogramParameters,
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Compute 2D histogram from input data.
 
     Parameters
     ----------
-    x_data : np.ndarray
+    x_data : npt.NDArray[np.floating]
         data along the selected x axis
-    y_data : np.ndarray
+    y_data : npt.NDArray[np.floating]
         data along the selected y axis
-    x_axis : np.ndarray
+    x_axis : npt.NDArray[np.floating]
         histogram x axis
     config : Radiometric2DHistogramParameters
         configuration parameters for the 2D histogram
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         2D histogram
-    np.ndarray
+    npt.NDArray[np.floating]
         x bins axis
-    np.ndarray
+    npt.NDArray[np.floating]
         y bins axis
     """
 
@@ -196,13 +200,13 @@ def compute_2d_histogram(
 
 
 def masking_outliers_by_percentiles(
-    data: np.ndarray, kernel: tuple[int, int], percentile_boundaries: tuple[int, int]
-) -> np.ndarray:
+    data: npt.NDArray[np.floating], kernel: tuple[int, int], percentile_boundaries: tuple[int, int]
+) -> npt.NDArray[np.floating]:
     """Masking outliers outside of provided percentile boundaries setting them to NaN.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         input 2D array
     kernel : tuple[int, int]
         kernel size, height and width in pixels
@@ -211,7 +215,7 @@ def masking_outliers_by_percentiles(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         input array with NaN where outliers lie
     """
     filter_kernel = np.ones(kernel)
@@ -229,14 +233,16 @@ def masking_outliers_by_percentiles(
     return data
 
 
-def compute_profile_variability_index(profile: np.ndarray, look_angles_deg: np.ndarray) -> tuple[float, float]:
+def compute_profile_variability_index(
+    profile: npt.NDArray[np.floating], look_angles_deg: npt.NDArray[np.floating]
+) -> tuple[float, float]:
     """Computing radiometric variability index for the current profile, with respect to the look angles axis.
 
     Parameters
     ----------
-    profile : np.ndarray
+    profile : npt.NDArray[np.floating]
         current radiometric profile in [dB]
-    look_angles_deg : np.ndarray
+    look_angles_deg : npt.NDArray[np.floating]
         look angles axis of the provided profile in degrees
 
     Returns
@@ -279,21 +285,23 @@ def radiometric_statistical_analysis_to_df(data: list[RadiometricProfilesOutput]
     return pd.concat(item_df).reset_index(drop=True)
 
 
-def _interp_profiles(profiles: np.ndarray, axes: np.ndarray, common_axis: np.ndarray) -> np.ndarray:
+def _interp_profiles(
+    profiles: npt.NDArray[np.floating], axes: npt.NDArray[np.floating], common_axis: npt.NDArray[np.floating]
+) -> npt.NDArray[np.floating]:
     """Interpolating profiles along the common axis.
 
     Parameters
     ----------
-    profiles : np.ndarray
+    profiles : npt.NDArray[np.floating]
         profiles to be interpolated
-    axes : np.ndarray
+    axes : npt.NDArray[np.floating]
         axes along which profiles are interpolated
-    common_axis : np.ndarray
+    common_axis : npt.NDArray[np.floating]
         common axis along which profiles are interpolated
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         interpolated profiles
     """
     interp_profiles = []

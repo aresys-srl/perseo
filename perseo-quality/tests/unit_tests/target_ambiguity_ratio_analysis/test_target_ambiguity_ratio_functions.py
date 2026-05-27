@@ -6,6 +6,7 @@
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.common import detect_burst_from_pixel
@@ -32,7 +33,7 @@ class ChannelDataMock:
 class TrajectoryMock:
     """Mocking trajectory class"""
 
-    def evaluate(self, time: PreciseDateTime) -> np.ndarray:
+    def evaluate(self, time: PreciseDateTime) -> npt.NDArray[np.floating]:
         """Mocking evaluate method"""
         if time == TIMESTAMP:
             return np.array([5097170.677138778, 382444.54075094324, 4883009.133504967])

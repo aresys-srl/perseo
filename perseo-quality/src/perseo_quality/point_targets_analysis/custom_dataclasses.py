@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, fields
 from datetime import datetime
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import SAROrbitDirection, SARPolarization
@@ -192,12 +193,12 @@ class IRFGraphDataOutput:
     """Dataclass needed to store data for generating graphical output for IRF"""
 
     image: np.ndarray | None = None
-    rng_axis: np.ndarray | None = None
-    rng_profile: np.ndarray | None = None
+    rng_axis: npt.NDArray[np.floating] | None = None
+    rng_profile: npt.NDArray[np.floating] | None = None
     rng_resolution: float | None = None
     rng_step_distance: float | None = None
     az_axis: np.ndarray | None = None
-    az_profile: np.ndarray | None = None
+    az_profile: npt.NDArray[np.floating] | None = None
     az_resolution: float | None = None
     az_step_distance: float | None = None
     side_lobes_directions: SideLobesDirections | None = None
@@ -213,7 +214,7 @@ class RCSGraphDataOutput:
     roi_peak: list | None = None
     rng_step_distance: float | None = None
     az_step_distance: float | None = None
-    roi_size: np.ndarray | None = None
+    roi_size: npt.NDArray[np.floating] | None = None
     interp_factor: int | None = None
     rcs_lin: float | None = None
     rcs_db: float | None = None

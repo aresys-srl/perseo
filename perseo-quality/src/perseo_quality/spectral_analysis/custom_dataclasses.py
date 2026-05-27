@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 from numpy.polynomial import Polynomial
 
@@ -56,19 +57,19 @@ class SpectralAnalysisTargetInfo:
     target_range_pixel: float | None = None
     azimuth_time: PreciseDateTime | None = None
     range_time: float | None = None
-    azimuth_frequency_axis: np.ndarray | None = None
-    range_frequency_axis: np.ndarray | None = None
-    spectrum_db: np.ndarray | None = None
-    spectrum_deg: np.ndarray | None = None
-    spectrogram_db: np.ndarray | None = None
-    spectrogram_frequencies: np.ndarray | None = None
-    spectrogram_times: np.ndarray | None = None
-    range_profiles_db: list[np.ndarray] | None = None
-    azimuth_profiles_db: list[np.ndarray] | None = None
-    range_profiles_deg: list[np.ndarray] | None = None
-    range_profiles_norm_deg: list[np.ndarray] | None = None
-    azimuth_profiles_deg: list[np.ndarray] | None = None
-    azimuth_profiles_norm_deg: list[np.ndarray] | None = None
+    azimuth_frequency_axis: npt.NDArray[np.floating] | None = None
+    range_frequency_axis: npt.NDArray[np.floating] | None = None
+    spectrum_db: npt.NDArray[np.floating] | None = None
+    spectrum_deg: npt.NDArray[np.floating] | None = None
+    spectrogram_db: npt.NDArray[np.floating] | None = None
+    spectrogram_frequencies: npt.NDArray[np.floating] | None = None
+    spectrogram_times: npt.NDArray[np.floating] | None = None
+    range_profiles_db: list[npt.NDArray[np.floating]] | None = None
+    azimuth_profiles_db: list[npt.NDArray[np.floating]] | None = None
+    range_profiles_deg: list[npt.NDArray[np.floating]] | None = None
+    range_profiles_norm_deg: list[npt.NDArray[np.floating]] | None = None
+    azimuth_profiles_deg: list[npt.NDArray[np.floating]] | None = None
+    azimuth_profiles_norm_deg: list[npt.NDArray[np.floating]] | None = None
     target_phase_value_deg: float | None = None
     target_doppler_centroid_Hz: float | None = None
     range_polynomial_fit: Polynomial | None = None
@@ -86,14 +87,14 @@ class SpectralAnalysisBlockInfo:
     lines_block: int | None = None
     samples_block: int | None = None
     doppler_centroid_mid_block: float | None = None
-    azimuth_frequency_axis: np.ndarray | None = None
-    range_frequency_axis: np.ndarray | None = None
-    spectrum_db: np.ndarray | None = None
-    spectrum_deg: np.ndarray | None = None
-    spectrogram_db: np.ndarray | None = None
-    spectrogram_frequencies: np.ndarray | None = None
-    spectrogram_times: np.ndarray | None = None
-    range_profiles_db: list[np.ndarray] | None = None
-    azimuth_profiles_db: list[np.ndarray] | None = None
-    range_profiles_deg: list[np.ndarray] | None = None
-    azimuth_profiles_deg: list[np.ndarray] | None = None
+    azimuth_frequency_axis: npt.NDArray[np.floating] | None = None
+    range_frequency_axis: npt.NDArray[np.floating] | None = None
+    spectrum_db: npt.NDArray[np.floating] | None = None
+    spectrum_deg: npt.NDArray[np.floating] | None = None
+    spectrogram_db: npt.NDArray[np.floating] | None = None
+    spectrogram_frequencies: npt.NDArray[np.floating] | None = None
+    spectrogram_times: npt.NDArray[np.floating] | None = None
+    range_profiles_db: list[npt.NDArray[np.floating]] | None = None
+    azimuth_profiles_db: list[npt.NDArray[np.floating]] | None = None
+    range_profiles_deg: list[npt.NDArray[np.floating]] | None = None
+    azimuth_profiles_deg: list[npt.NDArray[np.floating]] | None = None

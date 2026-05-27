@@ -8,6 +8,7 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from arepytools.timing.precisedatetime import PreciseDateTime
 
@@ -18,11 +19,11 @@ from tests.unit_tests.test_utils import REF_POINTS, MockProduct
 class MockTrajectory:
     """Mocking trajectory class"""
 
-    def evaluate(self, time) -> np.ndarray:
+    def evaluate(self, time) -> npt.NDArray[np.floating]:
         """Mocking position interpolation"""
         return np.array([3319265.6853109375, -6203680.762160135, -768545.9597902696])
 
-    def evaluate_first_derivatives(self, time) -> np.ndarray:
+    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
         """Mocking velocity interpolation"""
         return np.array([-1775.9112802854143, -44.50034452228635, -7385.436916417019])
 

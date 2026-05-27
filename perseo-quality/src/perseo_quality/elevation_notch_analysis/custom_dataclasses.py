@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+import numpy.typing as npt
 
 from perseo_quality.core.generic_dataclasses import SARPolarization
 
@@ -30,13 +31,13 @@ class ElevationNotchBlockInfo:
     altitude_m: float | None = None
     annotated_roll_deg: float | None = None
     estimated_roll_deg: float | None = None
-    antenna_profile_from_data_db: np.ndarray | None = None
-    antenna_profile_from_model_db: np.ndarray | None = None
-    antenna_profile_parabolic_fit_db: np.ndarray | None = None
-    parabolic_fit_axis_deg: np.ndarray | None = None
+    antenna_profile_from_data_db: npt.NDArray[np.floating] | None = None
+    antenna_profile_from_model_db: npt.NDArray[np.floating] | None = None
+    antenna_profile_parabolic_fit_db: npt.NDArray[np.floating] | None = None
+    parabolic_fit_axis_deg: npt.NDArray[np.floating] | None = None
     parabola_minimum_deg: float | None = None
-    parabola_coefficients: np.ndarray | None = None
-    antenna_angles_deg: np.ndarray | None = None
+    parabola_coefficients: npt.NDArray[np.floating] | None = None
+    antenna_angles_deg: npt.NDArray[np.floating] | None = None
     mispointing_error_deg: float | None = None
     calibration_constant: float | None = None
     noise_floor: float | None = None

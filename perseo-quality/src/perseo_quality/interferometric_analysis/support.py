@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 from netCDF4 import Dataset
 from scipy.signal import convolve2d
 
@@ -89,7 +90,7 @@ def coherence_histograms_to_netcdf(data: list[InterferometricCoherenceOutput], o
 
 
 def coherence_2d_histogram_computation_core(
-    coherence: np.ndarray, config: InterferometricConfig
+    coherence: npt.NDArray[np.floating], config: InterferometricConfig
 ) -> InterferometricCoherence2DHistograms:
     """Computing 2D coherence histograms along range and azimuth directions
 
@@ -99,7 +100,7 @@ def coherence_2d_histogram_computation_core(
 
     Parameters
     ----------
-    coherence : np.ndarray
+    coherence : npt.NDArray[np.floating]
         coherence map array
     config : InterferometricConfig
         InterferometricConfig configuration dataclass
@@ -144,7 +145,9 @@ def coherence_2d_histogram_computation_core(
     )
 
 
-def coherence_computation_interferogram_core(data: np.ndarray, kernel_size: int | tuple[int, int] = 15) -> np.ndarray:
+def coherence_computation_interferogram_core(
+    data: np.ndarray, kernel_size: int | tuple[int, int] = 15
+) -> npt.NDArray[np.floating]:
     """Core algorithm to compute coherence by 2D convolution of input interferogram data with a boxcar filter.
 
     Coherence is defined as the ratio between the interferogram convolution with a boxcar filter of the complex data
@@ -164,7 +167,7 @@ def coherence_computation_interferogram_core(data: np.ndarray, kernel_size: int 
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         coherence array
     """
     # creating kernel "boxcar" from kernel_size
@@ -191,7 +194,7 @@ def coherence_computation_interferogram_core(data: np.ndarray, kernel_size: int 
 
 def coherence_computation_co_registered_core(
     data_1: np.ndarray, data_2: np.ndarray, kernel_size: int | tuple[int, int] = 15
-) -> np.ndarray:
+) -> npt.NDArray[np.floating]:
     """Core algorithm to compute coherence by 2D convolution of input co-registered products with a boxcar filter.
 
     Coherence is defined as the ratio between the interferogram convolution with a boxcar filter of the complex data
@@ -218,7 +221,7 @@ def coherence_computation_co_registered_core(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         coherence array
     """  # noqa: E501
 
@@ -249,7 +252,7 @@ def coherence_computation_co_registered_core(
     return np.ma.masked_where(np.abs(coherence) > 1, coherence)
 
 
-def boxcar_kernel_setup(kernel_size: int | tuple[int, int]) -> np.ndarray:
+def boxcar_kernel_setup(kernel_size: int | tuple[int, int]) -> npt.NDArray[np.floating]:
     """Creating the normalized boxcar kernel from its size.
 
     Parameters
@@ -259,7 +262,7 @@ def boxcar_kernel_setup(kernel_size: int | tuple[int, int]) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         normalized boxcar kernel of the given size
     """
 

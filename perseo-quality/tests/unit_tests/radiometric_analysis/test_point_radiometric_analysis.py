@@ -7,6 +7,7 @@ import unittest
 from dataclasses import fields
 
 import numpy as np
+import numpy.typing as npt
 
 from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.radiometric_analysis.custom_dataclasses import (
@@ -96,7 +97,7 @@ class RadiometricAnalysis(unittest.TestCase):
     @staticmethod
     def _generate_gaussian_kernel(
         size_x: int, size_y: int = None, sigma_x: float = 5.0, sigma_y: float = None
-    ) -> np.ndarray:
+    ) -> npt.NDArray[np.floating]:
         """Generating a 2D gaussian kernel.
 
         Parameters
@@ -112,7 +113,7 @@ class RadiometricAnalysis(unittest.TestCase):
 
         Returns
         -------
-        np.ndarray
+        npt.NDArray[np.floating]
             2D centered gaussian kernel
         """
 

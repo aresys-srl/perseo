@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 import xarray as xr
 from arepytools.geometry.geometric_functions import (
     compute_incidence_angles,
@@ -282,18 +283,18 @@ def elevation_notch_analysis(
 
 
 def compute_parabolic_profile_fit(
-    profile: np.ndarray,
-    off_boresight_angles_rad: np.ndarray,
+    profile: npt.NDArray[np.floating],
+    off_boresight_angles_rad: npt.NDArray[np.floating],
     fitting_interval_rad: float | None = None,
     smoothing_kernel_size: int = 201,
-) -> tuple[np.ndarray, np.ndarray, float, list[float]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], float, list[float]]:
     """Computing a parabolic fit for the given profile and off-boresight angles around the minimum.
 
     Parameters
     ----------
-    profile : np.ndarray
+    profile : npt.NDArray[np.floating]
         azimuth block average profile
-    off_boresight_angles_rad : np.ndarray
+    off_boresight_angles_rad : npt.NDArray[np.floating]
         antenna off boresight angles in radians
     fitting_interval_rad : float | None, optional
         fitting interval in radians, if not provided 0.3 deg in radians is used, by default None
@@ -302,9 +303,9 @@ def compute_parabolic_profile_fit(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         antenna off boresight angles axis for the parabolic fit, in radians
-    np.ndarray
+    npt.NDArray[np.floating]
         parabolic fit values
     float
         parabola minimum in radians
@@ -333,7 +334,7 @@ def compute_parabolic_profile_fit(
 
 
 def antenna_pattern_normalization(
-    antenna_pattern: xr.Dataset, antenna_angles_rad: np.ndarray
+    antenna_pattern: xr.Dataset, antenna_angles_rad: npt.NDArray[np.floating]
 ) -> tuple[xr.Dataset, float]:
     """Antenna pattern linearization and normalization in the data region.
 
@@ -341,7 +342,7 @@ def antenna_pattern_normalization(
     ----------
     antenna_pattern : xr.Dataset
         antenna pattern for the current swath and polarization
-    antenna_angles_rad : np.ndarray
+    antenna_angles_rad : npt.NDArray[np.floating]
         data antenna angles in radians
 
     Returns
@@ -368,18 +369,18 @@ def antenna_pattern_normalization(
 
 
 def profile_normalization(
-    profile: np.ndarray,
-    antenna_angles_rad: np.ndarray,
+    profile: npt.NDArray[np.floating],
+    antenna_angles_rad: npt.NDArray[np.floating],
     elevation_angle_rad_at_max_pos: float,
     mask_margin_rad: float = 0.001745,
-) -> np.ndarray:
+) -> npt.NDArray[np.floating]:
     """Normalize the profile to the antenna pattern maximum.
 
     Parameters
     ----------
-    profile : np.ndarray
+    profile : npt.NDArray[np.floating]
         profile to be normalized
-    antenna_angles_rad : np.ndarray
+    antenna_angles_rad : npt.NDArray[np.floating]
         data antenna angles in radians
     elevation_angle_rad_at_max_pos : float
         elevation angle in radians at antenna pattern maximum in data region
@@ -388,7 +389,7 @@ def profile_normalization(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         normalized profile at antenna pattern maximum
     """
     # normalize data around pattern maximum
@@ -401,11 +402,11 @@ def profile_normalization(
 
 def residuals(
     params: list[float, float, float],
-    data_profile: np.ndarray,
+    data_profile: npt.NDArray[np.floating],
     antenna_pattern: xr.Dataset,
-    noise_profile: np.ndarray,
-    antenna_angles_from_data_rad: np.ndarray,
-) -> np.ndarray:
+    noise_profile: npt.NDArray[np.floating],
+    antenna_angles_from_data_rad: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
     """Residuals function for the Least Squares optimization. It represents the difference between the data extracted
     profile and the antenna model profile, to be minimized. Parameters of optimization are
     $\\theta_{\\text{mis}})$ (mispointing angle), $k$ (gain) and $f(\\theta_{\\text{off}})$ (noise
@@ -419,18 +420,18 @@ def residuals(
     ----------
     params : list[float, float, float]
         model parameters residuals
-    data_profile : np.ndarray
+    data_profile : npt.NDArray[np.floating]
         profile pattern extracted from data
     antenna_pattern : xr.Dataset
         antenna pattern elevation profile
-    noise_profile : np.ndarray
+    noise_profile : npt.NDArray[np.floating]
         noise profile as part of the model to be optimized
-    antenna_angles_from_data_rad : np.ndarray
+    antenna_angles_from_data_rad : npt.NDArray[np.floating]
         antenna angles in radians from the data
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         residuals of data profile and antenna model
     """
     abs_pattern_interp = antenna_pattern["linear_gain"].interp(
@@ -443,9 +444,9 @@ def residuals(
 
 def antenna_pattern_pointing_mismatch(
     antenna_pattern: xr.Dataset,
-    data_profile: np.ndarray,
-    noise_profile: np.ndarray,
-    antenna_angles_from_data_rad: np.ndarray,
+    data_profile: npt.NDArray[np.floating],
+    noise_profile: npt.NDArray[np.floating],
+    antenna_angles_from_data_rad: npt.NDArray[np.floating],
     initial_guess: list[float, float, float],
 ) -> tuple[float, float, float]:
     """Computing the pointing mismatch between a given data set and the pattern obtained from the
@@ -457,11 +458,11 @@ def antenna_pattern_pointing_mismatch(
     ----------
     antenna_pattern : xr.Dataset
         antenna model elevation pattern for the current swath and polarization
-    data_profile : np.ndarray
+    data_profile : npt.NDArray[np.floating]
         profile pattern extracted from data
-    noise_profile : np.ndarray
+    noise_profile : npt.NDArray[np.floating]
         noise profile extracted from data
-    antenna_angles_from_data_rad : np.ndarray
+    antenna_angles_from_data_rad : npt.NDArray[np.floating]
         antenna angles in radians from the data
     initial_guess : list[float, float, float]
         initial guess for the least squares optimization

@@ -4,6 +4,7 @@
 """Common utilities across different analyses"""
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from arepytools.geometry.conversions import llh2xyz, xyz2llh
 from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
@@ -57,7 +58,7 @@ def check_targets_visibility(product: QualityInputProduct, point_targets: list[P
 
 def blocks_partitioning(
     azimuth_axis: np.ndarray,
-    range_axis: np.ndarray,
+    range_axis: npt.NDArray[np.floating],
     lines_per_burst: np.ndarray,
     default_block_size: int,
 ) -> tuple[np.ndarray, int, list[tuple[int, int]]]:
@@ -67,7 +68,7 @@ def blocks_partitioning(
     ----------
     azimuth_axis : np.ndarray
         azimuth axis of the whole scene
-    range_axis : np.ndarray
+    range_axis : npt.NDArray[np.floating]
         range axis of the whole scene
     lines_per_burst : np.ndarray
         lines per burst array
@@ -131,10 +132,10 @@ def detect_burst_from_pixel(lines_per_burst: np.ndarray, azimuth_px: int) -> int
 def angles_computation_setup(
     trajectory: TwiceDifferentiable3DCurve,
     azimuth_time: PreciseDateTime,
-    range_values: np.ndarray,
+    range_values: npt.NDArray[np.floating],
     look_direction: GeocodingSide | str,
     altitude: float = 0.0,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Setting up the stage to compute incidence and look angles by computing sensor position, ground points and nadir
     direction.
 
@@ -144,7 +145,7 @@ def angles_computation_setup(
         sensor trajectory
     azimuth_time : PreciseDateTime
         azimuth time at which compute the output
-    range_values : np.ndarray
+    range_values : npt.NDArray[np.floating]
         range values for which compute values
     look_direction : GeocodingSide | str
         sensor look direction
@@ -153,11 +154,11 @@ def angles_computation_setup(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         sensor position
-    np.ndarray
+    npt.NDArray[np.floating]
         ground points
-    np.ndarray
+    npt.NDArray[np.floating]
         nadir direction
     """
     look_direction = GeocodingSide(look_direction)

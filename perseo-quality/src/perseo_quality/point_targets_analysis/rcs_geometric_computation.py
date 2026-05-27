@@ -7,13 +7,16 @@ Point Target Analysis: Radar Cross Section (RCS) Geometric Estimation for Corner
 """
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.geometry.conversions import xyz2llh
-from numpy.typing import ArrayLike
 
 
 def compute_rcs_trihedral_corner_reflector(
-    cr_arm_length_m: float, wavelength_m: float, elevation_rad: ArrayLike, azimuth_rad: ArrayLike
-) -> ArrayLike:
+    cr_arm_length_m: float,
+    wavelength_m: float,
+    elevation_rad: npt.NDArray[np.floating],
+    azimuth_rad: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
     """Computes the Radar Cross Section (RCS) of a trihedral corner reflector (CR) as observed by a radar source
     emitting at a certain wavelength.
     The function requires in input the size (arm length) of the CR, the frequency of the radar source, and the angular
@@ -34,14 +37,14 @@ def compute_rcs_trihedral_corner_reflector(
         Length of the arm of the trihedral corner reflector, expressed in m
     wavelength_m : float
         Wavelength of the radio wave impinging on the corner reflector, expressed in m
-    elevation_rad : np.ndarray
+    elevation_rad : npt.NDArray[np.floating]
         Elevation angle at which the corner reflector sees the source of radio waves, expressed in radians
-    azimuth_rad : np.ndarray
+    azimuth_rad : npt.NDArray[np.floating]
         Azimuth angle at which the corner reflector sees the source of radio waves, expressed in radians
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Radar Cross Section (RCS) of the trihedral corner reflector, expressed in meters squared
     """
     is_scalar = False if isinstance(elevation_rad, np.ndarray) else True
@@ -81,7 +84,9 @@ def compute_rcs_trihedral_corner_reflector(
     return result if not is_scalar else result[0]
 
 
-def _compute_enu_axes(latitude_rad: float, longitude_rad: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _compute_enu_axes(
+    latitude_rad: float, longitude_rad: float
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Find the three vectors describing the axes of the ENU (East-North-Up)
     local reference frame for a point on Earth.
     Requires in input the angular coordinates of the point on Earth where to
@@ -98,11 +103,11 @@ def _compute_enu_axes(latitude_rad: float, longitude_rad: float) -> tuple[np.nda
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         east enu axis
-    np.ndarray
+    npt.NDArray[np.floating]
         north enu axis
-    np.ndarray
+    npt.NDArray[np.floating]
         up enu axis
     """
 
@@ -118,7 +123,9 @@ def _compute_enu_axes(latitude_rad: float, longitude_rad: float) -> tuple[np.nda
     return east_unit_vector, north_unit_vector, up_unit_vector
 
 
-def compute_elevation_azimuth_wrt_enu(pos_cr: np.ndarray, pos_sat: np.ndarray) -> tuple[float, float]:
+def compute_elevation_azimuth_wrt_enu(
+    pos_cr: npt.NDArray[np.floating], pos_sat: npt.NDArray[np.floating]
+) -> tuple[float, float]:
     """Computes the looking angles (elevation and azimuth) at which a point on ground (e.g. a corner reflector) sees
     another point in the sky (e.g. a satellite), with respect to its local ENU reference frame.
 
@@ -141,9 +148,9 @@ def compute_elevation_azimuth_wrt_enu(pos_cr: np.ndarray, pos_sat: np.ndarray) -
 
     Parameters
     ----------
-    pos_cr : np.ndarray
+    pos_cr : npt.NDArray[np.floating]
         numpy array, expressing the 3D Cartesian position of a corner reflector on ground, with shape (3,)
-    pos_sat : np.ndarray
+    pos_sat : npt.NDArray[np.floating]
         numpy array, expressing the 3D Cartesian position of a satellite observing the corner reflector, with shape (3,)
 
     Returns

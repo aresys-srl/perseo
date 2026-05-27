@@ -11,6 +11,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 
@@ -28,11 +29,11 @@ from perseo_quality.radiometric_analysis.custom_dataclasses import (
 class MockTrajectory:
     """Mocking trajectory class"""
 
-    def evaluate(self, time) -> np.ndarray:
+    def evaluate(self, time) -> npt.NDArray[np.floating]:
         """Mocking position interpolation"""
         return [5634298.570491991, -4277813.834855013, 183850.74790036504]
 
-    def evaluate_first_derivatives(self, time) -> np.ndarray:
+    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
         """Mocking velocity interpolation"""
         return [-797.011102366091, -1383.8309567802658, -7427.764230040876]
 

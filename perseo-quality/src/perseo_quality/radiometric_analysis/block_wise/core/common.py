@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from numpy.polynomial import Polynomial
 from scipy.ndimage import (
     binary_dilation,
@@ -20,13 +21,13 @@ from perseo_quality.radiometric_analysis.block_wise.config import RiverMaskingCo
 
 
 def masking_outliers_by_percentiles(
-    data: np.ndarray, kernel: tuple[int, int], percentile_boundaries: tuple[int, int]
-) -> np.ndarray:
+    data: npt.NDArray[np.floating], kernel: tuple[int, int], percentile_boundaries: tuple[int, int]
+) -> npt.NDArray[np.floating]:
     """Masking outliers outside of provided percentile boundaries setting them to NaN.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         input 2D array
     kernel : tuple[int, int]
         kernel size, height and width in pixels
@@ -35,7 +36,7 @@ def masking_outliers_by_percentiles(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         input array with NaN where outliers lie
     """
     filter_kernel = np.ones(kernel)
@@ -53,14 +54,16 @@ def masking_outliers_by_percentiles(
     return data
 
 
-def compute_profile_variability_index(profile: np.ndarray, look_angles_deg: np.ndarray) -> tuple[float, float]:
+def compute_profile_variability_index(
+    profile: npt.NDArray[np.floating], look_angles_deg: npt.NDArray[np.floating]
+) -> tuple[float, float]:
     """Computing radiometric variability index for the current profile, with respect to the look angles axis.
 
     Parameters
     ----------
-    profile : np.ndarray
+    profile : npt.NDArray[np.floating]
         current radiometric profile in [dB]
-    look_angles_deg : np.ndarray
+    look_angles_deg : npt.NDArray[np.floating]
         look angles axis of the provided profile in degrees
 
     Returns
@@ -82,21 +85,23 @@ def compute_profile_variability_index(profile: np.ndarray, look_angles_deg: np.n
     return float(linear_fit_params.coef[1]), float(variability_index)
 
 
-def compute_local_statistics(data: np.ndarray, window: int) -> tuple[np.ndarray, np.ndarray]:
+def compute_local_statistics(
+    data: npt.NDArray[np.floating], window: int
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Compute local mean and local coefficient of variation
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         Target area
     window : int
         Side length of the square sliding window for computing local mean and CV.
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Local mean raster, same shape as data
-    np.ndarray
+    npt.NDArray[np.floating]
         Local coefficient of variation, same shape as data
     """
     data = np.where(np.isnan(data), 0.0, data)
@@ -110,12 +115,12 @@ def compute_local_statistics(data: np.ndarray, window: int) -> tuple[np.ndarray,
 
 
 def threshold_mask(
-    local_mean: np.ndarray,
-    local_cv: np.ndarray,
+    local_mean: npt.NDArray[np.floating],
+    local_cv: npt.NDArray[np.floating],
     backscatter_thresh: float,
     cv_lower_thresh: float,
     cv_upper_thresh: float,
-) -> np.ndarray:
+) -> npt.NDArray[np.floating]:
     """Classify pixels as river where both conditions hold:
 
     1) local mean < backscatter threshold
@@ -123,9 +128,9 @@ def threshold_mask(
 
     Parameters
     ----------
-    local_mean : np.ndarray
+    local_mean : npt.NDArray[np.floating]
         Local mean raster
-    local_cv : np.ndarray
+    local_cv : npt.NDArray[np.floating]
         Local coefficient of variation raster
     backscatter_thresh : float
         Backscatter threshold
@@ -136,24 +141,26 @@ def threshold_mask(
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Boolean mask: True if river pixel is identified
     """
     return (local_mean < backscatter_thresh) & ((local_cv > cv_upper_thresh) | (local_cv < cv_lower_thresh))
 
 
-def _disk_structuring_element(radius: int) -> np.ndarray:
+def _disk_structuring_element(radius: int) -> npt.NDArray[np.floating]:
     """Create a circular (disk) binary structuring element."""
     y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
     return x**2 + y**2 <= radius**2
 
 
-def morphological_cleaning(binary_mask: np.ndarray, opening_radius: int, min_area_px_percentile: int) -> np.ndarray:
+def morphological_cleaning(
+    binary_mask: npt.NDArray[np.floating], opening_radius: int, min_area_px_percentile: int
+) -> npt.NDArray[np.floating]:
     """Remove isolated speckles from a binary mask
 
     Parameters
     ----------
-    binary_mask : np.ndarray
+    binary_mask : npt.NDArray[np.floating]
         Binary mask
     opening_radius : int
         radius of disk structuring element for opening
@@ -162,7 +169,7 @@ def morphological_cleaning(binary_mask: np.ndarray, opening_radius: int, min_are
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Cleaned binary mask
     """
     opening_structure = _disk_structuring_element(opening_radius)
@@ -177,21 +184,23 @@ def morphological_cleaning(binary_mask: np.ndarray, opening_radius: int, min_are
     return cleaned
 
 
-def region_growing(seed_mask: np.ndarray, candidate_mask: np.ndarray, n_iterations: int) -> np.ndarray:
+def region_growing(
+    seed_mask: npt.NDArray[np.floating], candidate_mask: npt.NDArray[np.floating], n_iterations: int
+) -> npt.NDArray[np.floating]:
     """Expand a binary mask if neighboring pixels pass the relaxed intensity threshold
 
     Parameters
     ----------
-    seed_mask : np.ndarray
+    seed_mask : npt.NDArray[np.floating]
         Binary mask to be expanded
-    candidate_mask : np.ndarray
+    candidate_mask : npt.NDArray[np.floating]
         Pixels eligible to be added to seed mask
     n_iterations : int
         number of dilation steps
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Expanded binary mask
     """
     # Connectivity structure: 8-connected
@@ -206,19 +215,21 @@ def region_growing(seed_mask: np.ndarray, candidate_mask: np.ndarray, n_iteratio
     return grown
 
 
-def full_river_masking(data: np.ndarray, config: RiverMaskingConfig = RiverMaskingConfig) -> np.ndarray:
+def full_river_masking(
+    data: npt.NDArray[np.floating], config: RiverMaskingConfig = RiverMaskingConfig
+) -> npt.NDArray[np.floating]:
     """Mask rivers in acquisition over rainforest, computationally expensive
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         Data raster
     config : RiverMaskingConfig, optional
         Configuration dataclass for river masking algorithm, by default RiverMaskingConfig
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Masked data raster, same shape as data
     """
     nan_mask = np.isnan(data)
@@ -252,19 +263,21 @@ def full_river_masking(data: np.ndarray, config: RiverMaskingConfig = RiverMaski
     return data
 
 
-def fast_river_masking(data: np.ndarray, config: RiverMaskingConfig = RiverMaskingConfig) -> np.ndarray:
+def fast_river_masking(
+    data: npt.NDArray[np.floating], config: RiverMaskingConfig = RiverMaskingConfig
+) -> npt.NDArray[np.floating]:
     """Apply a computationally inexpensive mask for rivers in rainforest acquisitions
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         Data raster
     config : RiverMaskingConfig, optional
         Configuration dataclass for river masking algorithm, by default RiverMaskingConfig
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         Masked data raster, same shape as data
     """
     local_mean, local_cv = compute_local_statistics(data=data, window=config.local_stats_window)

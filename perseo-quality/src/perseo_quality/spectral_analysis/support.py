@@ -9,6 +9,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 from numpy.polynomial import Polynomial
@@ -101,9 +102,9 @@ def data_deramping(
 def compute_deramping_phase_exponential(
     lines_per_burst: int,
     lines_step: float,
-    doppler_centroid_axis: np.ndarray,
-    doppler_rate_axis: np.ndarray,
-    steering_rate_factor: np.ndarray | None = None,
+    doppler_centroid_axis: npt.NDArray[np.floating],
+    doppler_rate_axis: npt.NDArray[np.floating],
+    steering_rate_factor: npt.NDArray[np.floating] | None = None,
 ) -> np.ndarray:
     """Computing deramping exponential phase function. It can be used both for Scansar and Topsar acquisition modes,
     providing the azimuth steering rate for Topsar mode.
@@ -123,11 +124,11 @@ def compute_deramping_phase_exponential(
         lines per burst
     lines_step : float
         lines step in seconds
-    doppler_centroid_axis : np.ndarray
+    doppler_centroid_axis : npt.NDArray[np.floating]
         doppler centroid frequency axis, computed for each range sample, with shape (samples,)
-    doppler_rate_axis : np.ndarray
+    doppler_rate_axis : npt.NDArray[np.floating]
         doppler rate axis, computed for each range sample, with shape (samples,)
-    steering_rate_factor : np.ndarray
+    steering_rate_factor : npt.NDArray[np.floating]
         azimuth steering rate contribution, computed for each range sample, with shape (samples,)
 
     Returns
@@ -151,8 +152,11 @@ def compute_deramping_phase_exponential(
 
 
 def compute_deramping_azimuth_axis(
-    lines_per_burst: int, lines_step: float, doppler_centroid_axis: np.ndarray, doppler_rate_axis: np.ndarray
-) -> np.ndarray:
+    lines_per_burst: int,
+    lines_step: float,
+    doppler_centroid_axis: npt.NDArray[np.floating],
+    doppler_rate_axis: npt.NDArray[np.floating],
+) -> npt.NDArray[np.floating]:
     """Computing deramping phase burst azimuth relative axis.
 
     $$
@@ -165,14 +169,14 @@ def compute_deramping_azimuth_axis(
         lines per burst
     lines_step : float
         lines step in seconds
-    doppler_centroid_axis : np.ndarray
+    doppler_centroid_axis : npt.NDArray[np.floating]
         doppler centroid frequency axis, computed for each range sample, with shape (samples,)
-    doppler_rate_axis : np.ndarray
+    doppler_rate_axis : npt.NDArray[np.floating]
         doppler rate axis, computed for each range sample, with shape (samples,)
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         deramping phase burst azimuth relative axis, with shape (lines per burst, samples)
     """
 
@@ -187,8 +191,8 @@ def compute_deramping_azimuth_axis(
 def compute_demodulation_phase_exponential(
     lines_per_burst: int,
     lines_step: float,
-    doppler_centroid_axis: np.ndarray,
-    doppler_rate_axis: np.ndarray,
+    doppler_centroid_axis: npt.NDArray[np.floating],
+    doppler_rate_axis: npt.NDArray[np.floating],
 ) -> np.ndarray:
     """Computing demodulation exponential phase function.
 
@@ -202,9 +206,9 @@ def compute_demodulation_phase_exponential(
         lines per burst
     lines_step : float
         lines step in seconds
-    doppler_centroid_axis : np.ndarray
+    doppler_centroid_axis : npt.NDArray[np.floating]
         doppler centroid frequency axis, with shape (samples,)
-    doppler_rate_axis : np.ndarray
+    doppler_rate_axis : npt.NDArray[np.floating]
         doppler rate axis, computed for each range sample, with shape (samples,)
 
     Returns
@@ -226,10 +230,10 @@ def compute_burst_deramping_function(
     mid_burst_az_time: PreciseDateTime,
     lines_per_burst: int,
     lines_step: float,
-    slant_range_axis: np.ndarray,
+    slant_range_axis: npt.NDArray[np.floating],
     doppler_centroid_poly: SARCoordinatesFunction,
     doppler_rate_poly: SARCoordinatesFunction,
-    azimuth_steering_rate_axis: np.ndarray | None = None,
+    azimuth_steering_rate_axis: npt.NDArray[np.floating] | None = None,
     sensor_velocity_norm_mid_burst: float | None = None,
     wavelength: float | None = None,
 ) -> np.ndarray:
@@ -247,13 +251,13 @@ def compute_burst_deramping_function(
         number of lines of the selected burst
     lines_step : float
         azimuth lines step in seconds
-    slant_range_axis : np.ndarray
+    slant_range_axis : npt.NDArray[np.floating]
         slant range values
     doppler_centroid_poly : SARCoordinatesFunction
         doppler centroid polynomial
     doppler_rate_poly : SARCoordinatesFunction
         doppler rate polynomial
-    azimuth_steering_rate_axis : np.ndarray | None, optional
+    azimuth_steering_rate_axis : npt.NDArray[np.floating] | None, optional
         steering rate axis, needed for Topsar deramping, by default None
     sensor_velocity_norm_mid_burst : float | None, optional
         normalized sensor velocity at mid burst, needed for Topsar deramping, by default None
@@ -304,8 +308,8 @@ def compute_burst_deramping_function(
 
 
 def compute_steering_rate_factor(
-    sensor_velocity_norm_mid_burst: float, wavelength: float, azimuth_steering_rate_axis: np.ndarray
-) -> np.ndarray:
+    sensor_velocity_norm_mid_burst: float, wavelength: float, azimuth_steering_rate_axis: npt.NDArray[np.floating]
+) -> npt.NDArray[np.floating]:
     """Computing steering rate factor for Topsar deramping.
 
     Parameters
@@ -314,28 +318,28 @@ def compute_steering_rate_factor(
         normalized sensor velocity at mid burst
     wavelength : float
         sensor wavelength
-    azimuth_steering_rate_axis : np.ndarray
+    azimuth_steering_rate_axis : npt.NDArray[np.floating]
         azimuth steering rate axis
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         steering rate factor for deramping
     """
     return 2 * sensor_velocity_norm_mid_burst / wavelength * azimuth_steering_rate_axis
 
 
-def recenter_data(data: np.ndarray) -> np.ndarray:
+def recenter_data(data: npt.NDArray[np.floating]) -> npt.NDArray[np.floating]:
     """Centering target area on point target signal peak.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         target area 2D array
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         recentered 2D array
     """
     _, row_peak_pos, col_peak_pos = locate_max_2d_interp(data=data)
@@ -349,22 +353,22 @@ def recenter_data(data: np.ndarray) -> np.ndarray:
 
 
 def compute_spectrogram_db(
-    data: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    data: npt.NDArray[np.floating],
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """Computing the spectrogram and its time and frequency axes.
 
     Parameters
     ----------
-    data : np.ndarray
+    data : npt.NDArray[np.floating]
         target area 2D
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         spectrogram in dB
-    np.ndarray
+    npt.NDArray[np.floating]
         spectrogram frequency axis
-    np.ndarray
+    npt.NDArray[np.floating]
         spectrogram times axis
     """
     _, _, near_spectrogram = spectrogram(
@@ -397,14 +401,16 @@ def compute_spectrogram_db(
     return fftshift(spectrogram_db, axes=0), fftshift(spectrogram_freq), spectrogram_times
 
 
-def compute_polynomial_fit(profile: np.ndarray, freq_axis: np.ndarray, boundaries: tuple[float, float]) -> Polynomial:
+def compute_polynomial_fit(
+    profile: npt.NDArray[np.floating], freq_axis: npt.NDArray[np.floating], boundaries: tuple[float, float]
+) -> Polynomial:
     """FItting polynomial on profile portion.
 
     Parameters
     ----------
-    profile : np.ndarray
+    profile : npt.NDArray[np.floating]
         profile to be fit
-    freq_axis : np.ndarray
+    freq_axis : npt.NDArray[np.floating]
         frequency axis
     boundaries : tuple[float, float]
         fitting region boundaries
@@ -418,20 +424,20 @@ def compute_polynomial_fit(profile: np.ndarray, freq_axis: np.ndarray, boundarie
 
 
 def extract_abs_profiles(
-    data_fft: np.ndarray,
-) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    data_fft: npt.NDArray[np.floating],
+) -> tuple[list[npt.NDArray[np.floating]], list[npt.NDArray[np.floating]]]:
     """Extract range and azimuth absolute profiles in dB.
 
     Parameters
     ----------
-    data_fft : np.ndarray
+    data_fft : npt.NDArray[np.floating]
         fft of the target area
 
     Returns
     -------
-    list[np.ndarray]
+    list[npt.NDArray[np.floating]]
         3 range absolute profiles in dB
-    list[np.ndarray]
+    list[npt.NDArray[np.floating]]
         3 azimuth absolute profiles in dB
     """
     rng_profiles_starts, rng_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[1])
@@ -452,20 +458,20 @@ def extract_abs_profiles(
 
 
 def extract_phase_profiles(
-    data_fft: np.ndarray,
-) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    data_fft: npt.NDArray[np.floating],
+) -> tuple[list[npt.NDArray[np.floating]], list[npt.NDArray[np.floating]]]:
     """Extract range and azimuth phase profiles in deg.
 
     Parameters
     ----------
-    data_fft : np.ndarray
+    data_fft : npt.NDArray[np.floating]
         fft of the target area
 
     Returns
     -------
-    list[np.ndarray]
+    list[npt.NDArray[np.floating]]
         3 range phase profiles in deg
-    list[np.ndarray]
+    list[npt.NDArray[np.floating]]
         3 azimuth phase profiles in deg
     """
     rng_profiles_starts, rng_profiles_stops = _compute_profiles_extraction_boundaries(data_fft.shape[1])
@@ -485,12 +491,12 @@ def extract_phase_profiles(
     return range_profiles_deg, azimuth_profiles_deg
 
 
-def compute_spectrum_boundaries(profile: np.ndarray) -> tuple[int, int]:
+def compute_spectrum_boundaries(profile: npt.NDArray[np.floating]) -> tuple[int, int]:
     """Computing relevant spectrum boundaries from profile.
 
     Parameters
     ----------
-    profile : np.ndarray
+    profile : npt.NDArray[np.floating]
         profile to be analyzed
 
     Returns
@@ -718,12 +724,14 @@ def spectral_analysis_profiles_to_netcdf(
     return output_file
 
 
-def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1) -> np.ndarray:
+def _frequency_axis_generation(
+    freq_vect: npt.NDArray[np.floating], samples: int, prf: int = 1
+) -> npt.NDArray[np.floating]:
     """Compute frequency axis.
 
     Parameters
     ----------
-    freq_vect : np.ndarray
+    freq_vect : npt.NDArray[np.floating]
         frequency vector
     samples : int
         samples
@@ -732,7 +740,7 @@ def _frequency_axis_generation(freq_vect: np.ndarray, samples: int, prf: int = 1
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         frequency axis
     """
     freq_shift = freq_vect % prf

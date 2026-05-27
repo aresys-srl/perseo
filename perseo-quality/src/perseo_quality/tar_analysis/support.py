@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 from scipy.constants import speed_of_light
 
@@ -18,12 +19,14 @@ from perseo_quality.core.signal_processing import (
 from perseo_quality.io.quality_input_protocol import ChannelData
 from perseo_quality.tar_analysis.config import AmbiguityRatioConfig
 
-AmbiguityRatioComputingFunction = Callable[[np.ndarray, np.ndarray, np.ndarray, AmbiguityRatioConfig], float]
+AmbiguityRatioComputingFunction = Callable[
+    [npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating], AmbiguityRatioConfig], float
+]
 
 
 def compute_ambiguities_locations(
     channel_data: ChannelData,
-    point_target_xyz_coords: np.ndarray,
+    point_target_xyz_coords: npt.NDArray[np.floating],
     point_target_azimuth_time: PreciseDateTime,
     point_target_range_time: float,
     doppler_rate: float,
@@ -36,7 +39,7 @@ def compute_ambiguities_locations(
     ----------
     channel_data : ChannelData
         current product channel data object
-    point_target_xyz_coords : np.ndarray
+    point_target_xyz_coords : npt.NDArray[np.floating]
         ECEF xyz point target nominal coordinates
     point_target_azimuth_time : PreciseDateTime
         azimuth time for point target location
@@ -84,20 +87,20 @@ def compute_ambiguities_locations(
 
 
 def ptar_computing_function_wrapper(
-    point_target_roi: np.ndarray,
-    right_ambiguity_roi: np.ndarray,
-    left_ambiguity_roi: np.ndarray,
+    point_target_roi: npt.NDArray[np.floating],
+    right_ambiguity_roi: npt.NDArray[np.floating],
+    left_ambiguity_roi: npt.NDArray[np.floating],
     config: AmbiguityRatioConfig,
 ) -> float:
     """Point Target Ambiguity Ratio computing function wrapper for dependency injection.
 
     Parameters
     ----------
-    point_target_roi : np.ndarray
+    point_target_roi : npt.NDArray[np.floating]
         raster data portion centered on the point target location
-    right_ambiguity_roi : np.ndarray
+    right_ambiguity_roi : npt.NDArray[np.floating]
         raster data portion centered on the point target right ambiguity
-    left_ambiguity_roi : np.ndarray
+    left_ambiguity_roi : npt.NDArray[np.floating]
         raster data portion centered on the point target left ambiguity
     config : AmbiguityRatioConfig
         ambiguity ratio computation configuration parameters
@@ -116,20 +119,20 @@ def ptar_computing_function_wrapper(
 
 
 def dtar_computing_function_wrapper(
-    point_target_roi: np.ndarray,
-    right_ambiguity_roi: np.ndarray,
-    left_ambiguity_roi: np.ndarray,
+    point_target_roi: npt.NDArray[np.floating],
+    right_ambiguity_roi: npt.NDArray[np.floating],
+    left_ambiguity_roi: npt.NDArray[np.floating],
     config: AmbiguityRatioConfig,
 ) -> float:
     """Distributed Target Ambiguity Ratio computing function wrapper for dependency injection.
 
     Parameters
     ----------
-    point_target_roi : np.ndarray
+    point_target_roi : npt.NDArray[np.floating]
         raster data portion centered on the target location
-    right_ambiguity_roi : np.ndarray
+    right_ambiguity_roi : npt.NDArray[np.floating]
         raster data portion centered on the target right ambiguity
-    left_ambiguity_roi : np.ndarray
+    left_ambiguity_roi : npt.NDArray[np.floating]
         raster data portion centered on the target left ambiguity
     config : AmbiguityRatioConfig
         ambiguity ratio computation configuration parameters

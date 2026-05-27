@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 import numpy as np
+import numpy.typing as npt
 
 from perseo_quality.core.generic_dataclasses import SARPolarization
 
@@ -28,7 +29,7 @@ class InterferometricCoherenceOutput:
     swath: str
     burst: int
     polarization: SARPolarization
-    coherence: np.ndarray
+    coherence: npt.NDArray[np.floating]
     coherence_histograms: InterferometricCoherence2DHistograms
 
 
@@ -36,6 +37,6 @@ class InterferometricCoherenceOutput:
 class InterferometricCoherence2DHistograms:
     """Interferometric Coherence 2D histograms output"""
 
-    coherence_bin_edges: np.ndarray
-    azimuth_histogram: np.ndarray
-    range_histogram: np.ndarray
+    coherence_bin_edges: npt.NDArray[np.floating]
+    azimuth_histogram: npt.NDArray[np.floating]
+    range_histogram: npt.NDArray[np.floating]

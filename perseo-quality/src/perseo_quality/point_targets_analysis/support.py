@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
 from arepytools.geometry.geometric_functions import get_geometric_squint
 from arepytools.geometry.inverse_geocoding_core import (
@@ -19,7 +20,9 @@ from perseo_quality.core.generic_dataclasses import SideLobesDirections
 from perseo_quality.io.quality_input_protocol import ChannelData
 
 
-def get_squint_angle(channel_data: ChannelData, azimuth_time: PreciseDateTime, ground_point: np.ndarray) -> float:
+def get_squint_angle(
+    channel_data: ChannelData, azimuth_time: PreciseDateTime, ground_point: npt.NDArray[np.floating]
+) -> float:
     """Compute squint angle (radians) for a given azimuth time and ground point.
 
     Parameters
@@ -28,7 +31,7 @@ def get_squint_angle(channel_data: ChannelData, azimuth_time: PreciseDateTime, g
         ChannelManager instance
     azimuth_time : PreciseDateTime
         azimuth time at which compute the squint angle
-    ground_point : np.ndarray
+    ground_point : npt.NDArray[np.floating]
         ground point seen by the sensor at the provided azimuth time
 
     Returns
@@ -44,7 +47,9 @@ def get_squint_angle(channel_data: ChannelData, azimuth_time: PreciseDateTime, g
     )
 
 
-def get_doppler_centroid(channel_data: ChannelData, azimuth_time: PreciseDateTime, ground_point: np.ndarray) -> float:
+def get_doppler_centroid(
+    channel_data: ChannelData, azimuth_time: PreciseDateTime, ground_point: npt.NDArray[np.floating]
+) -> float:
     """Computing doppler centroid frequency from azimuth time and its corresponding squint angle.
 
     Parameters
@@ -53,7 +58,7 @@ def get_doppler_centroid(channel_data: ChannelData, azimuth_time: PreciseDateTim
         ChannelManager instance
     azimuth_time : PreciseDateTime
         azimuth time at which compute doppler centroid frequency
-    ground_point : np.ndarray
+    ground_point : npt.NDArray[np.floating]
         ground point seen by the sensor at the provided azimuth time
 
     Returns

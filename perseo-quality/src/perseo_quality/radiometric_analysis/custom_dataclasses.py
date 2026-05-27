@@ -10,6 +10,7 @@ from datetime import datetime
 from enum import Enum, auto
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import SARPolarization, SARProjection, SARRadiometricQuantity
@@ -45,18 +46,18 @@ class RadiometricProfilesOutput:
     general_info: RadiometricOutputProductGeneralInfo | None = None
     direction: RadiometricAnalysisDirection | None = None
     kpi: list[AverageElevationRadiometricKPI] | list[NESZRadiometricKPI] | list[ScallopingRadiometricKPI] | None = None
-    azimuth_block_centers: np.ndarray | None = None
-    range_block_centers: np.ndarray | None = None
+    azimuth_block_centers: npt.NDArray[np.floating] | None = None
+    range_block_centers: npt.NDArray[np.floating] | None = None
     blocks_num: int | None = None
     azimuth_start_time: PreciseDateTime | None = None
-    profiles: np.ndarray | None = None
-    noise_vectors: np.ndarray | None = None
-    look_angles: np.ndarray | None = None
-    incidence_angles: np.ndarray | None = None
+    profiles: npt.NDArray[np.floating] | None = None
+    noise_vectors: npt.NDArray[np.floating] | None = None
+    look_angles: npt.NDArray[np.floating] | None = None
+    incidence_angles: npt.NDArray[np.floating] | None = None
     block_azimuth_times: np.ndarray | None = None
-    hist_2d: np.ndarray | None = None
-    hist_x_bins_axis: np.ndarray | None = None
-    hist_y_bins_axis: np.ndarray | None = None
+    hist_2d: npt.NDArray[np.floating] | None = None
+    hist_x_bins_axis: npt.NDArray[np.floating] | None = None
+    hist_y_bins_axis: npt.NDArray[np.floating] | None = None
 
 
 @dataclass
@@ -68,9 +69,9 @@ class PointWiseRadiometricAnalysisOutput:
     channel: str | int | None = None
     polarization: SARPolarization | None = None
     projection: SARProjection | None = None
-    original_profile_db: np.ndarray | None = None
-    smoothed_profile_db: np.ndarray | None = None
-    axis: np.ndarray | None = None
+    original_profile_db: npt.NDArray[np.floating] | None = None
+    smoothed_profile_db: npt.NDArray[np.floating] | None = None
+    axis: npt.NDArray[np.floating] | None = None
     time: float | str | np.ndarray | None = None
     direction: RadiometricAnalysisDirection | None = None
     value_type: RadiometricAnalysisValue | None = None
@@ -154,7 +155,7 @@ class RadiometricOutputProductGeneralInfo:
 class RadiometricProfileAxes:
     """Axes corresponding to the computed radiometric profile"""
 
-    incidence_angles_deg: np.ndarray
-    look_angles_deg: np.ndarray
-    slant_range: np.ndarray
+    incidence_angles_deg: npt.NDArray[np.floating]
+    look_angles_deg: npt.NDArray[np.floating]
+    slant_range: npt.NDArray[np.floating]
     azimuth: np.ndarray

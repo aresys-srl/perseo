@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import numpy as np
+import numpy.typing as npt
 import xarray as xr
 from arepytools.timing.precisedatetime import PreciseDateTime
 from scipy.fft import fft2, ifft2
@@ -46,12 +47,12 @@ default_input_data_generation = {
 
 def generate_target_data(
     bandwidths: tuple[float, float],
-    axes: tuple[np.ndarray, np.ndarray],
+    axes: tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]],
     target_relative_pos: tuple[float, float],
     swath_range_start: float,
     fc_hz: float,
-    window: np.ndarray | None = None,
-) -> np.ndarray:
+    window: npt.NDArray[np.floating] | None = None,
+) -> npt.NDArray[np.floating]:
     """Generating theoretical target response data matrix from input swath axes and raster parameters. It also applies a
     weighting window if provided.
 
@@ -59,7 +60,7 @@ def generate_target_data(
     ----------
     bandwidths : tuple[float, float]
         range [0] and azimuth [1] signal bandwidths
-    axes : tuple[np.ndarray, np.ndarray]
+    axes : tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]
         range [0] and azimuth [1] axes
     target_relative_pos : tuple[float, float]
         range [0] and azimuth [1] relative times in the swath (start times not included), both floats
@@ -67,12 +68,12 @@ def generate_target_data(
         range start time of the swath
     fc_hz : int
         carrier frequency in Hz
-    window : np.ndarray | None, optional
+    window : npt.NDArray[np.floating] | None, optional
         weighting window for generated data, by default None
 
     Returns
     -------
-    np.ndarray
+    npt.NDArray[np.floating]
         data 2D array containing the target response
     """
 
@@ -98,8 +99,8 @@ def generate_data_for_test(
     samples_start: float,
     fc_hz: float,
     perc: float = 0.9,
-    window: np.ndarray | None = None,
-) -> tuple[np.ndarray, tuple[float, float], tuple[float, float]]:
+    window: npt.NDArray[np.floating] | None = None,
+) -> tuple[npt.NDArray[np.floating], tuple[float, float], tuple[float, float]]:
     """Generating testing data from generic setup info.
 
     Parameters
@@ -118,12 +119,12 @@ def generate_data_for_test(
         carrier frequency
     perc : float, optional
         optional percentage value, by default 0.9
-    window : np.ndarray | None, optional
+    window : npt.NDArray[np.floating] | None, optional
         2D weighting window
 
     Returns
     -------
-    tuple[np.ndarray, tuple[float, float], tuple[float, float]]
+    tuple[npt.NDArray[np.floating], tuple[float, float], tuple[float, float]]
         2D generated data array
         peak position in the generated array, row[0] and col[0] subpixel precision
         target position in the generated array, row[0] and col[0]
@@ -511,14 +512,14 @@ def generate_antenna_pattern() -> xr.Dataset:
 class MockTrajectory:
     """Mocking trajectory class"""
 
-    def evaluate(self, time) -> np.ndarray:
+    def evaluate(self, time) -> npt.NDArray[np.floating]:
         """Mocking position interpolation"""
         out = [-381087.525550857, 932485.770149446, -7007146.93083064]
         if np.size(time) == 1:
             return np.array(out)
         return np.stack([out] * np.size(time))
 
-    def evaluate_first_derivatives(self, time) -> np.ndarray:
+    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
         """Mocking velocity interpolation"""
         out = [7057.60934660782, 2768.35602191122, -0.259400938909807]
         if np.size(time) == 1:
@@ -553,7 +554,7 @@ class MockChannelData:
         """Exposing mock carrier_frequency"""
         return 5405000000
 
-    def ground_points_to_burst_association(self, coordinates: np.ndarray) -> list:
+    def ground_points_to_burst_association(self, coordinates: npt.NDArray[np.floating]) -> list:
         """Mocking ground_points_to_burst_association function"""
         if self.channel_id == 1:
             return [[0], None, [1]]

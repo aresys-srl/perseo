@@ -9,6 +9,7 @@ from dataclasses import InitVar, dataclass, field
 from itertools import compress
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.custom_errors import (
@@ -33,7 +34,7 @@ class L1BurstLayout:
     samples_step: InitVar[float]
     samples_start: InitVar[float]
     azimuth_axis: np.ndarray = field(init=False)
-    range_axis: np.ndarray = field(init=False)
+    range_axis: npt.NDArray[np.floating] = field(init=False)
     mid_burst_azimuth: PreciseDateTime = field(init=False)
     mid_burst_range: float = field(init=False)
 
@@ -256,7 +257,7 @@ class L1RasterLayout:
     burst_ids: list[int] = field(init=False)
     burst_starting_line_offsets: np.ndarray = field(init=False)
     raster_azimuth_axis: np.ndarray = field(init=False)
-    raster_range_axis: np.ndarray = field(init=False)
+    raster_range_axis: npt.NDArray[np.floating] = field(init=False)
     mid_swath_azimuth: PreciseDateTime = field(init=False)
     mid_swath_range: PreciseDateTime = field(init=False)
 

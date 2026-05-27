@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 import numpy as np
+import numpy.typing as npt
 from arepytools.geometry.curve import Generic3DCurve
 from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
 from arepytools.timing.precisedatetime import PreciseDateTime
@@ -161,11 +162,11 @@ class ChannelData(Protocol):
         """Channel doppler rate polynomial wrapper"""
 
     @property
-    def range_axis(self) -> np.ndarray:
+    def range_axis(self) -> npt.NDArray[np.floating]:
         """Range axis"""
 
     @property
-    def slant_range_axis(self) -> np.ndarray:
+    def slant_range_axis(self) -> npt.NDArray[np.floating]:
         """Slant range axis"""
 
     @property
