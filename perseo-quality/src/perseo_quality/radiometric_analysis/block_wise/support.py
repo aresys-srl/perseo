@@ -13,7 +13,6 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from netCDF4 import Dataset, Group
-from numpy.polynomial import Polynomial
 from scipy.signal import convolve2d
 
 from perseo_quality.core.generic_dataclasses import SARAcquisitionMode
@@ -231,37 +230,6 @@ def masking_outliers_by_percentiles(
     data[np.where(mask)] = np.nan
 
     return data
-
-
-def compute_profile_variability_index(
-    profile: npt.NDArray[np.floating], look_angles_deg: npt.NDArray[np.floating]
-) -> tuple[float, float]:
-    """Computing radiometric variability index for the current profile, with respect to the look angles axis.
-
-    Parameters
-    ----------
-    profile : npt.NDArray[np.floating]
-        current radiometric profile in [dB]
-    look_angles_deg : npt.NDArray[np.floating]
-        look angles axis of the provided profile in degrees
-
-    Returns
-    -------
-    float
-        slope with respect to look angles axis in [dB/deg]
-    float
-        radiometric variability index in [dB]
-    """
-    # linear fit
-    linear_fit_params = Polynomial.fit(look_angles_deg[~profile.mask], profile.compressed(), deg=1).convert()
-
-    # homogeneity index
-    regression_line = linear_fit_params.coef[0] + linear_fit_params.coef[1] * look_angles_deg
-    radiometric_profiles_de_sloped = profile - regression_line
-    variability_index = np.percentile(radiometric_profiles_de_sloped.compressed(), 90) - np.percentile(
-        radiometric_profiles_de_sloped.compressed(), 10
-    )
-    return float(linear_fit_params.coef[1]), float(variability_index)
 
 
 def radiometric_statistical_analysis_to_df(data: list[RadiometricProfilesOutput]) -> pd.DataFrame:
