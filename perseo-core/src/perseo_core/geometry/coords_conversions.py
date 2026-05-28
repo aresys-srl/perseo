@@ -81,7 +81,7 @@ def xyz2llh(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     Parameters
     ----------
     coordinates : npt.NDArray[np.floating]
-        XYZ EEF coordinates (epsg:4978), with shape (3,), (1, 3) or (N, 3), with 3 being X, Y and Z in meters
+        XYZ EEF coordinates (epsg:4978), with shape (3,) or (N, 3), with 3 being X, Y and Z in meters
     radians : bool, optional
         if output latitude and longitude must be expressed in radians, otherwise they are provided in deg,
         by default True
@@ -89,13 +89,17 @@ def xyz2llh(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     Returns
     -------
     npt.NDArray[np.floating]
-        LLH geodetic coordinates (epsg:4326), with shape (3,), (1, 3) or (N, 3), with 3 being Lat [rad/deg],
+        LLH geodetic coordinates (epsg:4326), with shape (3,) or (N, 3), with 3 being Lat [rad/deg],
         Lon [rad/deg] and H [m]
     """
+    is_1d = np.ndim(coordinates) == 1
     coordinates = np.atleast_2d(coordinates)
-    return np.c_[
+    result = np.c_[
         xyz2llh_transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)
-    ].squeeze()
+    ]
+    if is_1d:
+        return result.squeeze()
+    return result
 
 
 def llh2xyz(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.NDArray[np.floating]:
@@ -105,7 +109,7 @@ def llh2xyz(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     Parameters
     ----------
     coordinates : npt.NDArray[np.floating]
-        llh geodetic coordinates (epsg:4326), with shape (3,), (1, 3) or (N, 3), with 3 being Lat [rad/deg],
+        llh geodetic coordinates (epsg:4326), with shape (3,) or (N, 3), with 3 being Lat [rad/deg],
         Lon [rad/deg] and H [m]
     radians : bool, optional
         if input latitude and longitude are expressed in radians, otherwise they can be provided in deg,
@@ -114,12 +118,16 @@ def llh2xyz(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     Returns
     -------
     npt.NDArray[np.floating]
-        XYZ EEF coordinates (epsg:4978), with shape (3,), (1, 3) or (N, 3), with 3 being X, Y and Z in meters
+        XYZ EEF coordinates (epsg:4978), with shape (3,) or (N, 3), with 3 being X, Y and Z in meters
     """
+    is_1d = np.ndim(coordinates) == 1
     coordinates = np.atleast_2d(coordinates)
-    return np.c_[
+    result = np.c_[
         llh2xyz_transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)
-    ].squeeze()
+    ]
+    if is_1d:
+        return result.squeeze()
+    return result
 
 
 def ecef2eci(
@@ -147,7 +155,7 @@ def ecef2eci(
         XYZ ECI velocities coordinates expressed in [m/s], with shape (3,) or (N, 3)
     """
 
-    is_scalar = positions.ndim == 1
+    is_1d = np.ndim(positions) == 1
     times = np.atleast_1d(times)
     observation_times = Time([t.isoformat() for t in times], scale="utc")
 
@@ -171,7 +179,7 @@ def ecef2eci(
 
     positions_eci = np.moveaxis(eci.cartesian.xyz.to_value("m"), 0, -1)
     velocities_eci = np.moveaxis(eci.cartesian.differentials["s"].d_xyz.to_value("m/s"), 0, -1)
-    if is_scalar:
+    if is_1d:
         return positions_eci[0], velocities_eci[0]
     return positions_eci, velocities_eci
 
@@ -201,7 +209,7 @@ def eci2ecef(
         XYZ ECI velocities coordinates expressed in [m/s], with shape (3,) or (N, 3)
     """
 
-    is_scalar = positions.ndim == 1
+    is_1d = np.ndim(positions) == 1
     times = np.atleast_1d(times)
     observation_times = Time([t.isoformat() for t in times], scale="utc")
 
@@ -225,7 +233,7 @@ def eci2ecef(
 
     positions_ecef = np.moveaxis(ecef.cartesian.xyz.to_value("m"), 0, -1)
     velocities_ecef = np.moveaxis(ecef.cartesian.differentials["s"].d_xyz.to_value("m/s"), 0, -1)
-    if is_scalar:
+    if is_1d:
         return positions_ecef[0], velocities_ecef[0]
     return positions_ecef, velocities_ecef
 
@@ -237,7 +245,7 @@ def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     Parameters
     ----------
     coordinates : npt.NDArray[np.floating]
-        UTM coordinates with shape (3,), (1, 3) or (N, 3), with 3 being Easting, Northing, and Height in meters
+        UTM coordinates with shape (3,) or (N, 3), with 3 being Easting, Northing, and Height in meters
     zone : str
         UTM zone in format 'ZZH' where ZZ is zone number (1-60) and H is hemisphere ('N' for northern, 'S' for southern)
         Example: '33N', '33S', '1N', '60S'
@@ -248,7 +256,7 @@ def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     Returns
     -------
     npt.NDArray[np.floating]
-        LLH geodetic coordinates (epsg:4326), with shape (3,), (1, 3) or (N, 3), with 3 being Lat [rad/deg],
+        LLH geodetic coordinates (epsg:4326), with shape (3,) or (N, 3), with 3 being Lat [rad/deg],
         Lon [rad/deg] and H [m]
 
     Raises
@@ -259,10 +267,12 @@ def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     utm_epsg = _get_utm_epsg_code(zone)
     transformer = Transformer.from_crs(CRS.from_epsg(utm_epsg), LLH_CRS)
 
+    is_1d = np.ndim(coordinates) == 1
     coordinates = np.atleast_2d(coordinates)
-    return np.c_[
-        transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)
-    ].squeeze()
+    result = np.c_[transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)]
+    if is_1d:
+        return result.squeeze()
+    return result
 
 
 def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = True) -> npt.NDArray[np.floating]:
@@ -272,7 +282,7 @@ def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     Parameters
     ----------
     coordinates : npt.NDArray[np.floating]
-        LLH geodetic coordinates (epsg:4326), with shape (3,), (1, 3) or (N, 3), with 3 being Lat [rad/deg],
+        LLH geodetic coordinates (epsg:4326), with shape (3,) or (N, 3), with 3 being Lat [rad/deg],
         Lon [rad/deg] and H [m]
     zone : str
         UTM zone in format 'ZZH' where ZZ is zone number (1-60) and H is hemisphere ('N' for northern, 'S' for southern)
@@ -284,7 +294,7 @@ def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     Returns
     -------
     npt.NDArray[np.floating]
-        UTM coordinates, with shape (3,), (1, 3) or (N, 3), with 3 being Easting [m], Northing [m], and Height [m]
+        UTM coordinates, with shape (3,) or (N, 3), with 3 being Easting [m], Northing [m], and Height [m]
 
     Raises
     ------
@@ -294,7 +304,9 @@ def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     utm_epsg = _get_utm_epsg_code(zone)
     transformer = Transformer.from_crs(LLH_CRS, CRS.from_epsg(utm_epsg))
 
+    is_1d = np.ndim(coordinates) == 1
     coordinates = np.atleast_2d(coordinates)
-    return np.c_[
-        transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)
-    ].squeeze()
+    result = np.c_[transformer.transform(coordinates[:, 0], coordinates[:, 1], coordinates[:, 2], radians=radians)]
+    if is_1d:
+        return result.squeeze()
+    return result

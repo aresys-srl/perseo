@@ -100,6 +100,31 @@ class TestXYZ_LLHCoordsConversions:
         assert xyz.shape == self.llh_vec.shape
         np.testing.assert_allclose(xyz, self.xyz_vec, atol=self.atol, rtol=self.rtol)
 
+    def test_xyz2llh_from_array_1_3(self) -> None:
+        """Test xyz2llh with numpy array (1, 3) input in radians mode."""
+        llh = xyz2llh(self.xyz_vec[:1])
+        assert llh.shape == (1, 3)
+        np.testing.assert_allclose(llh, self.llh_vec[:1], atol=self.atol, rtol=self.rtol)
+
+    def test_xyz2llh_from_array_1_3_deg(self) -> None:
+        """Test xyz2llh with numpy array (1, 3) input in degrees mode."""
+        llh = xyz2llh(self.xyz_vec[:1], radians=False)
+        llh[:, :2] = np.deg2rad(llh[:, :2])
+        assert llh.shape == (1, 3)
+        np.testing.assert_allclose(llh, self.llh_vec[:1], atol=self.atol, rtol=self.rtol)
+
+    def test_llh2xyz_from_array_1_3(self) -> None:
+        """Test llh2xyz with numpy array (1, 3) input in radians mode."""
+        xyz = llh2xyz(self.llh_vec[:1])
+        assert xyz.shape == (1, 3)
+        np.testing.assert_allclose(xyz, self.xyz_vec[:1], atol=self.atol, rtol=self.rtol)
+
+    def test_llh2xyz_from_array_1_3_deg(self) -> None:
+        """Test llh2xyz with numpy array (1, 3) input in degrees mode."""
+        xyz = llh2xyz(self.llh_vec_deg[:1], radians=False)
+        assert xyz.shape == (1, 3)
+        np.testing.assert_allclose(xyz, self.xyz_vec[:1], atol=self.atol, rtol=self.rtol)
+
     def test_multiple_application_1(self) -> None:
         """Testing application of xyz2llh and llh2xyz from array 2D"""
         llh = xyz2llh(self.xyz_vec)
@@ -398,6 +423,41 @@ class TestUTM_LLHCoordsConversions:
         utm = llh2utm(coordinates=coords, zone=case["zone"], radians=True)
         assert utm.shape == case["llh_deg"].shape
         np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_utm2llh_vect_1_3_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh, (1, 3) vectorized, output in degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh_deg = utm2llh(coordinates=case["utm"][:1], zone=case["zone"], radians=False)
+        assert llh_deg.shape == (1, 3)
+        np.testing.assert_allclose(llh_deg, case["llh_deg"][:1], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_utm2llh_vect_1_3_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test utm2llh, (1, 3) vectorized, output in radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        llh = utm2llh(coordinates=case["utm"][:1], zone=case["zone"], radians=True)
+        llh[:, :2] = np.rad2deg(llh[:, :2])
+        assert llh.shape == (1, 3)
+        np.testing.assert_allclose(llh, case["llh_deg"][:1], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_llh2utm_vect_1_3_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test llh2utm, (1, 3) vectorized, output in degrees."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        utm = llh2utm(coordinates=case["llh_deg"][:1], zone=case["zone"], radians=False)
+        assert utm.shape == (1, 3)
+        np.testing.assert_allclose(utm, case["utm"][:1], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
+
+    @pytest.mark.parametrize("case_name", CASE_NAMES)
+    def test_llh2utm_vect_1_3_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+        """Test llh2utm, (1, 3) vectorized, output in radians."""
+        case = utm2llh_coords_conversions_test_data[case_name]
+        coords = case["llh_deg"][:1].copy()
+        coords[:, :2] = np.deg2rad(coords[:, :2])
+        utm = llh2utm(coordinates=coords, zone=case["zone"], radians=True)
+        assert utm.shape == (1, 3)
+        np.testing.assert_allclose(utm, case["utm"][:1], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
     def test_round_trip_vectorized_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
