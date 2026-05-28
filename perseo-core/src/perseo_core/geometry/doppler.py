@@ -254,7 +254,7 @@ def compute_theoretical_doppler_rate(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
+    trajectory : Trajectory
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time when to evaluate the doppler rate
@@ -300,7 +300,7 @@ def compute_steering_doppler_frequency(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
+    trajectory : Trajectory
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the steering frequency

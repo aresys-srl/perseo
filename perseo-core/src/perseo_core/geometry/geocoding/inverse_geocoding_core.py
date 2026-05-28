@@ -44,8 +44,8 @@ def inverse_geocoding_monostatic_core(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory : Trajectory
+        sensor trajectory
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : PreciseDateTime | np.datetime64 | npt.NDArray
@@ -185,10 +185,10 @@ def inverse_geocoding_bistatic_core(
 
     Parameters
     ----------
-    trajectory_rx : TwiceDifferentiable3DCurve
-        receiving sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
-    trajectory_tx : TwiceDifferentiable3DCurve
-        transmitting sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory_rx : Trajectory
+        receiving sensors trajectory
+    trajectory_tx : Trajectory
+        transmitting sensor trajectory
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : PreciseDateTime | np.datetime64 | npt.NDArray
@@ -410,8 +410,8 @@ def inverse_geocoding_monostatic_init_core(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory : Trajectory
+        sensor trajectory
     time_axis : np.ndarray
         trajectory's time axis array
     ground_points : npt.NDArray[np.floating]
@@ -486,14 +486,14 @@ def inverse_geocoding_bistatic_init_core(
 
     Parameters
     ----------
-    trajectory_rx : TwiceDifferentiable3DCurve
-        receiving sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
-    trajectory_tx : TwiceDifferentiable3DCurve
-        transmitting sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory_rx : Trajectory
+        receiving sensor trajectory
+    trajectory_tx : Trajectory
+        transmitting sensor trajectory
     time_axis_rx : npt.NDArray
-        receiving sensor's trajectory time axis array
+        receiving sensor trajectory time axis array
     time_axis_tx : npt.NDArray
-        transmitting sensor's trajectory time axis array
+        transmitting sensor trajectory time axis array
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     doppler_frequencies : float | npt.NDArray[np.floating]
@@ -627,9 +627,9 @@ def inverse_geocoding_attitude_core(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        general sar orbit polynomial 3D curve wrapper
-    boresight_normal : TwiceDifferentiable3DCurve
+    trajectory : Trajectory
+        sensor trajectory
+    boresight_normal : Trajectory
         boresight normal vector from attitude polynomial 3D curve
     ground_points : npt.NDArray[np.floating]
         earth points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)

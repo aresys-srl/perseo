@@ -62,12 +62,12 @@ def compute_incidence_angles(
     carrier_wavelength: float | None = None,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
-    """Compute incidence angles in radians/degrees from sensor trajectory (TwiceDifferentiable3DCurve compliant object).
+    """Compute incidence angles in radians/degrees from sensor trajectory.
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
+    trajectory : Trajectory
+        sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the incidence angles corresponding to the input range times
     range_times : float | npt.NDArray[np.floating]
@@ -115,12 +115,12 @@ def compute_look_angles(
     carrier_wavelength: float | None = None,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
-    """Compute look angles in radians/degrees from sensor trajectory (TwiceDifferentiable3DCurve compliant object).
+    """Compute look angles in radians/degrees from sensor trajectory.
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        sensor trajectory compliant with the TwiceDifferentiable3DCurve protocol
+    trajectory : Trajectory
+        sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the look a angles corresponding to the input range times
     range_times : float | npt.NDArray[np.floating]

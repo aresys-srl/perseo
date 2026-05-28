@@ -30,8 +30,8 @@ def _doppler_equation_residual(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        3D curve trajectory from orbit
+    trajectory : Trajectory
+        sensor trajectory
     az_times : npt.ArrayLike
         azimuth times at which evaluate the equation
     ground_points : np.ndarray

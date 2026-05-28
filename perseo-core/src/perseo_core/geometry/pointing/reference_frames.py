@@ -242,7 +242,7 @@ def compute_sensor_local_axis(
     Returns
     -------
     npt.NDArray[np.floating]
-        sensor's local axis as a numpy array with shape (3, 3) or (N, 3, 3)
+        sensor local axis as a numpy array with shape (3, 3) or (N, 3, 3)
 
     Examples
     --------

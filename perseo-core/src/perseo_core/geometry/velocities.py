@@ -33,7 +33,7 @@ def compute_ground_velocity(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
+    trajectory : Trajectory
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the ground velocity

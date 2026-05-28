@@ -40,8 +40,8 @@ def inverse_geocoding_monostatic(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory : Trajectory
+        sensor trajectory
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     doppler_frequencies : float | npt.NDArray[np.floating]
@@ -121,12 +121,12 @@ def inverse_geocoding_monostatic_init(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
-        sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory : Trajectory
+        sensor trajectory
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     time_axis : npt.NDArray
-        sensor's trajectory time axis array
+        sensor trajectory time axis array
     doppler_frequencies : float | npt.NDArray[np.floating]
         doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
         the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
@@ -176,10 +176,10 @@ def inverse_geocoding_bistatic(
 
     Parameters
     ----------
-    trajectory_rx : TwiceDifferentiable3DCurve
-        receiving sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
-    trajectory_tx : TwiceDifferentiable3DCurve
-        transmitting sensor's trajectory, compliant to the TwiceDifferentiable3DCurve protocol
+    trajectory_rx : Trajectory
+        receiving sensor trajectory
+    trajectory_tx : Trajectory
+        transmitting sensor trajectory
     ground_points : npt.NDArray[np.floating]
         ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     doppler_frequencies : float | npt.NDArray[np.floating]
