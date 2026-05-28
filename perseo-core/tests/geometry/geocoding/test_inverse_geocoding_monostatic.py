@@ -12,8 +12,12 @@ import pytest
 from perseo_core.geometry.geocoding.inverse_geocoding import (
     inverse_geocoding_monostatic,
     inverse_geocoding_monostatic_init,
+    inverse_geocoding_monostatic_with_attitude,
 )
-from perseo_core.geometry.geocoding.inverse_geocoding_core import inverse_geocoding_monostatic_core
+from perseo_core.geometry.geocoding.inverse_geocoding_core import (
+    inverse_geocoding_monostatic_attitude_core,
+    inverse_geocoding_monostatic_core,
+)
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
@@ -685,3 +689,359 @@ class TestInverseGeocodingMonostaticInit:
             self.result,
             self.tolerance["atol"],
         )
+
+
+class TestInverseGeocodingMonostaticAttitudeCore:
+    """Testing inverse geocoding monostatic with attitude core using parametrize."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, inverse_geocoding_test_data):
+        self.trajectory = inverse_geocoding_test_data["trajectory"]
+        self.attitude = inverse_geocoding_test_data["attitude"]
+        self.init_guess = inverse_geocoding_test_data["init_guess"]
+        self.ground_point = inverse_geocoding_test_data["ground_point"]
+        self.N = inverse_geocoding_test_data["az_reps"]
+        self.M = inverse_geocoding_test_data["rng_reps"]
+        self.azimuth_res = inverse_geocoding_test_data["expected_azimuth_attitude"]
+        self.range_res = inverse_geocoding_test_data["expected_range_attitude"]
+        self.tolerance = inverse_geocoding_test_data["tolerance"]
+
+    @pytest.mark.parametrize(
+        "case",
+        [
+            pytest.param(
+                {
+                    "name": "case0a: 1 ground point (3,), 1 init guess PDT",
+                    "ground_points": "ground_point",
+                    "initial_guesses": "init_guess",
+                    "expected_size": None,
+                },
+                id="case0a",
+            ),
+            pytest.param(
+                {
+                    "name": "case0b: 1 ground point (1,3), 1 init guess PDT",
+                    "ground_points": "ground_point_1_3",
+                    "initial_guesses": "init_guess",
+                    "expected_size": 1,
+                },
+                id="case0b",
+            ),
+            pytest.param(
+                {
+                    "name": "case1a: N ground points (N, 3), 1 init guess PDT",
+                    "ground_points": "ground_point_N_3",
+                    "initial_guesses": "init_guess",
+                    "expected_size": "N",
+                },
+                id="case1a",
+            ),
+            pytest.param(
+                {
+                    "name": "case1b: N ground points (N, 3), N init guesses (N,)",
+                    "ground_points": "ground_point_N_3",
+                    "initial_guesses": "init_guess_N",
+                    "expected_size": "N",
+                },
+                id="case1b",
+            ),
+            pytest.param(
+                {
+                    "name": "case2a: 1 ground point (3,), N init guesses (N,)",
+                    "ground_points": "ground_point",
+                    "initial_guesses": "init_guess_N",
+                    "expected_size": "N",
+                },
+                id="case2a",
+            ),
+            pytest.param(
+                {
+                    "name": "case2b: 1 ground point (1,3), N init guesses (N,)",
+                    "ground_points": "ground_point_1_3",
+                    "initial_guesses": "init_guess_N",
+                    "expected_size": "N",
+                },
+                id="case2b",
+            ),
+        ],
+    )
+    def test_inverse_geocoding_monostatic_core_cases(self, case) -> None:
+        """Testing inverse_geocoding_monostatic_core with parametrize."""
+        N = self.N
+        value_map = {
+            "ground_point": self.ground_point,
+            "ground_point_1_3": self.ground_point.reshape(1, 3),
+            "ground_point_N_3": _reshape_ground_points(self.ground_point, N),
+            "init_guess": self.init_guess,
+            "init_guess_N": np.repeat(self.init_guess, N),
+        }
+
+        ground_points = value_map[case["ground_points"]]
+        initial_guesses = value_map[case["initial_guesses"]]
+        expected_size = N if case["expected_size"] == "N" else case["expected_size"]
+
+        az_times, rng_times = inverse_geocoding_monostatic_attitude_core(
+            trajectory=self.trajectory,
+            attitude=self.attitude,
+            ground_points=ground_points,
+            initial_guesses=initial_guesses,
+        )
+
+        _assert_inverse_geocoding_output(
+            az_times,
+            rng_times,
+            expected_size,
+            self.azimuth_res,
+            self.range_res,
+            self.tolerance["atol"],
+            self.tolerance["atol"],
+        )
+
+    @pytest.mark.parametrize(
+        "case",
+        [
+            pytest.param(
+                {
+                    "name": "case4a: N ground points (N, 3), M init guesses (M,)",
+                    "ground_points": "ground_point_N_3",
+                    "initial_guesses": "init_guess_M",
+                },
+                id="case4a",
+            )
+        ],
+    )
+    def test_inverse_geocoding_monostatic_core_error_cases(self, case) -> None:
+        """Testing inverse_geocoding_monostatic_core error cases with parametrize."""
+        N, M = self.N, self.M
+        value_map = {
+            "ground_point_N_3": _reshape_ground_points(self.ground_point, N),
+            "init_guess": self.init_guess,
+            "init_guess_M": np.repeat(self.init_guess, M),
+        }
+
+        ground_points = value_map[case["ground_points"]]
+        initial_guesses = value_map[case["initial_guesses"]]
+
+        with pytest.raises(RuntimeError):
+            inverse_geocoding_monostatic_attitude_core(
+                trajectory=self.trajectory,
+                attitude=self.attitude,
+                ground_points=ground_points,
+                initial_guesses=initial_guesses,
+            )
+
+
+class TestInverseGeocodingMonostaticAttitude:
+    """Testing inverse geocoding monostatic with attitude using parametrize."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, inverse_geocoding_test_data):
+        self.trajectory = inverse_geocoding_test_data["trajectory"]
+        self.time_step = self.trajectory.times[1] - self.trajectory.times[0]
+        self.attitude = inverse_geocoding_test_data["attitude"]
+        self.wavelength = inverse_geocoding_test_data["wavelength"]
+        self.doppler_freq = inverse_geocoding_test_data["doppler_frequency"]
+        self.init_guess = inverse_geocoding_test_data["init_guess"]
+        self.ground_point = inverse_geocoding_test_data["ground_point"]
+        self.N = inverse_geocoding_test_data["az_reps"]
+        self.M = inverse_geocoding_test_data["rng_reps"]
+        self.azimuth_res = inverse_geocoding_test_data["expected_azimuth_attitude"]
+        self.range_res = inverse_geocoding_test_data["expected_range_attitude"]
+        self.tolerance = inverse_geocoding_test_data["tolerance"]
+        self.residual_tolerance = inverse_geocoding_test_data["residual_tolerance"]
+        self.rng_tolerance = inverse_geocoding_test_data["low_tolerance"]
+
+    @pytest.mark.parametrize(
+        "case",
+        [
+            pytest.param(
+                {
+                    "name": "case0a: 1 ground point (3,), 1 doppler freq, no init guess",
+                    "ground_points": "ground_point",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": 1,
+                    "initial_guesses": None,
+                    "expected_size": None,
+                },
+                id="case0a",
+            ),
+            pytest.param(
+                {
+                    "name": "case0b: 1 ground point (1,3), 1 doppler freq, no init guess",
+                    "ground_points": "ground_point_1_3",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": "time_step",
+                    "initial_guesses": None,
+                    "expected_size": 1,
+                },
+                id="case0b",
+            ),
+            pytest.param(
+                {
+                    "name": "case0c: 1 ground point (3,), 1 doppler freq, 1 init guess",
+                    "ground_points": "ground_point",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": None,
+                    "initial_guesses": "init_guess",
+                    "expected_size": None,
+                },
+                id="case0c",
+            ),
+            pytest.param(
+                {
+                    "name": "case0d: 1 ground point (3,), 1 doppler freq, 1 init guess (1,)",
+                    "ground_points": "ground_point",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": None,
+                    "initial_guesses": "init_guess_1",
+                    "expected_size": 1,
+                },
+                id="case0d",
+            ),
+            pytest.param(
+                {
+                    "name": "case1a: 1 ground point (3,), M doppler freqs",
+                    "ground_points": "ground_point",
+                    "frequencies": "doppler_freq_M",
+                    "search_time_step": 1,
+                    "initial_guesses": None,
+                    "expected_size": "M",
+                },
+                id="case1a",
+            ),
+            pytest.param(
+                {
+                    "name": "case1c: 1 ground point (1,3), M doppler freqs",
+                    "ground_points": "ground_point_1_3",
+                    "frequencies": "doppler_freq_M",
+                    "search_time_step": "time_step",
+                    "initial_guesses": None,
+                    "expected_size": "M",
+                },
+                id="case1b",
+            ),
+            pytest.param(
+                {
+                    "name": "case2a: N ground points (N, 3), 1 doppler freq",
+                    "ground_points": "ground_point_N_3",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": 1,
+                    "initial_guesses": None,
+                    "expected_size": "N",
+                },
+                id="case2a",
+            ),
+            pytest.param(
+                {
+                    "name": "case2b: N ground points (N, 3), 1 doppler freq, 1 init guess",
+                    "ground_points": "ground_point_N_3",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": None,
+                    "initial_guesses": "init_guess",
+                    "expected_size": "N",
+                },
+                id="case2b",
+            ),
+            pytest.param(
+                {
+                    "name": "case2c: N ground points (N, 3), 1 doppler freq, N init guesses",
+                    "ground_points": "ground_point_N_3",
+                    "frequencies": "doppler_freq",
+                    "search_time_step": None,
+                    "initial_guesses": "init_guess_N",
+                    "expected_size": "N",
+                },
+                id="case2c",
+            ),
+            pytest.param(
+                {
+                    "name": "case3a: N ground points (N, 3), N doppler freqs",
+                    "ground_points": "ground_point_N_3",
+                    "frequencies": "doppler_freq_N",
+                    "search_time_step": "time_step",
+                    "initial_guesses": None,
+                    "expected_size": "N",
+                },
+                id="case3a",
+            ),
+            pytest.param(
+                {
+                    "name": "case3b: N ground points (N, 3), N doppler freqs, 1 init guess",
+                    "ground_points": "ground_point_N_3",
+                    "frequencies": "doppler_freq_N",
+                    "search_time_step": None,
+                    "initial_guesses": "init_guess",
+                    "expected_size": "N",
+                },
+                id="case3b",
+            ),
+            pytest.param(
+                {
+                    "name": "case3c: N ground points (N, 3), N doppler freqs, N init guesses",
+                    "ground_points": "ground_point_N_3",
+                    "frequencies": "doppler_freq_N",
+                    "search_time_step": None,
+                    "initial_guesses": "init_guess_N",
+                    "expected_size": "N",
+                },
+                id="case3c",
+            ),
+        ],
+    )
+    def test_inverse_geocoding_monostatic_cases(self, case) -> None:
+        """Testing inverse_geocoding_monostatic with parametrize."""
+        N, M = self.N, self.M
+        value_map = {
+            "ground_point": self.ground_point,
+            "ground_point_1_3": self.ground_point.reshape(1, 3),
+            "ground_point_N_3": _reshape_ground_points(self.ground_point, N),
+            "doppler_freq": self.doppler_freq,
+            "doppler_freq_M": np.repeat(self.doppler_freq, M),
+            "doppler_freq_N": np.repeat(self.doppler_freq, N),
+            "init_guess": self.init_guess,
+            "init_guess_1": np.array([self.init_guess]),
+            "init_guess_N": np.repeat(self.init_guess, N),
+            "time_step": self.time_step,
+        }
+
+        ground_points = value_map[case["ground_points"]]
+        frequencies = value_map[case["frequencies"]]
+        search_time_step = value_map.get(case["search_time_step"], case["search_time_step"])
+        initial_guesses = value_map.get(case["initial_guesses"], case["initial_guesses"])
+        expected_size = (
+            N if case["expected_size"] == "N" else M if case["expected_size"] == "M" else case["expected_size"]
+        )
+
+        kwargs = {
+            "trajectory": self.trajectory,
+            "attitude": self.attitude,
+            "ground_points": ground_points,
+            "doppler_frequencies": frequencies,
+            "wavelength": self.wavelength,
+        }
+        if search_time_step is not None:
+            kwargs["init_guess_search_time_step"] = search_time_step
+        if initial_guesses is not None:
+            kwargs["az_initial_time_guesses"] = initial_guesses
+
+        az_times, rng_times = inverse_geocoding_monostatic_with_attitude(**kwargs)
+        _assert_inverse_geocoding_output(
+            az_times,
+            rng_times,
+            expected_size,
+            self.azimuth_res,
+            self.range_res,
+            self.tolerance["atol"],
+            self.rng_tolerance["atol"],
+        )
+
+    def test_inverse_geocoding_monostatic_with_attitude_error_cases(self) -> None:
+        """Testing inverse_geocoding_monostatic_with_attitude error cases."""
+        with pytest.raises(RuntimeError):
+            inverse_geocoding_monostatic_with_attitude(
+                trajectory=self.trajectory,
+                attitude=self.attitude,
+                ground_points=_reshape_ground_points(self.ground_point, self.N),
+                doppler_frequencies=np.repeat(self.doppler_freq, self.N),
+                wavelength=self.wavelength,
+            )

@@ -105,6 +105,7 @@ The main implemented functions are:
 
 - [`inverse_geocoding_monostatic`][perseo_core.geometry.geocoding.inverse_geocoding.inverse_geocoding_monostatic]
 - [`inverse_geocoding_bistatic`][perseo_core.geometry.geocoding.inverse_geocoding.inverse_geocoding_bistatic]
+- [`inverse_geocoding_monostatic_with_attitude`][perseo_core.geometry.geocoding.inverse_geocoding.inverse_geocoding_monostatic_with_attitude]
 
 All functions support vectorized operations on `(N, 3)` coordinate arrays.
 

@@ -7,7 +7,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 
 from perseo_core.timing.precise_datetime import PreciseDateTime
-from tests.fixtures.models_data import get_testing_trajectory
+from tests.fixtures.models_data import get_testing_attitude, get_testing_trajectory
 
 
 def get_direct_geocoding_with_looks_test_data() -> dict[str, object]:
@@ -131,12 +131,15 @@ def get_inverse_geocoding_test_data() -> dict[str, object]:
     # expected results
     azimuth_res = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.482637823016")
     azimuth_res_mono = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.480826322795")
+    azimuth_res_attitude = PreciseDateTime.from_utc_string("13-FEB-2023 09:34:00.629921460211")
     range_res = 0.0036229998783991087
     range_res_mono = 0.0036229998773038815
+    range_res_attitude = 0.0036245410151209715
     init_guess_res = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.500000000000")
     init_guess_res_mono = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.000000000000")
     return {
         "trajectory": trajectory,
+        "attitude": get_testing_attitude(),
         "wavelength": wavelength,
         "doppler_frequency": doppler_freq,
         "init_guess": init_guess,
@@ -145,8 +148,10 @@ def get_inverse_geocoding_test_data() -> dict[str, object]:
         "rng_reps": rng_reps,
         "expected_azimuth": azimuth_res,
         "expected_azimuth_mono": azimuth_res_mono,
+        "expected_azimuth_attitude": azimuth_res_attitude,
         "expected_range": range_res,
         "expected_range_mono": range_res_mono,
+        "expected_range_attitude": range_res_attitude,
         "expected_init_guess": init_guess_res,
         "expected_init_guess_mono": init_guess_res_mono,
         "tolerance": {"atol": 1e-10, "rtol": 0},

@@ -11,6 +11,7 @@ from scipy.constants import speed_of_light
 from scipy.interpolate import interp1d
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
+from perseo_core.geometry.pointing.attitude import Attitude
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
@@ -145,7 +146,7 @@ def inverse_geocoding_monostatic_core(
 
     else:
         raise RuntimeError(
-            "Newton did not converge: maximum number of iterations" + f"{max_iter} reached. Residual error {delta_err}"
+            "Newton did not converge: maximum number of iterations " + f"{max_iter} reached. Residual error {delta_err}"
         )
 
     # re-evaluating slant range
@@ -372,7 +373,7 @@ def inverse_geocoding_bistatic_core(
 
     else:
         raise RuntimeError(
-            "Newton did not converge: maximum number of iterations" + f"{max_iter} reached. Residual error {delta_err}"
+            "Newton did not converge: maximum number of iterations " + f"{max_iter} reached. Residual error {delta_err}"
         )
 
     if one_size_array:
@@ -608,11 +609,12 @@ def inverse_geocoding_bistatic_init_core(
     return azimuth_init_guesses
 
 
-def inverse_geocoding_attitude_core(
+def inverse_geocoding_monostatic_attitude_core(
     trajectory: Trajectory,
-    boresight_normal: Trajectory,
+    attitude: Attitude,
     ground_points: npt.NDArray[np.floating],
     initial_guesses: PreciseDateTime | np.datetime64 | npt.NDArray,
+    dt: float = 0.1,
     abs_time_tolerance: float = 1e-8,
     max_iter: int = 8,
 ) -> tuple[PreciseDateTime | np.datetime64 | npt.NDArray, float | npt.NDArray[np.floating]]:
@@ -629,13 +631,15 @@ def inverse_geocoding_attitude_core(
     ----------
     trajectory : Trajectory
         sensor trajectory
-    boresight_normal : Trajectory
-        boresight normal vector from attitude polynomial 3D curve
+    attitude : Attitude
+        sensor attitude
     ground_points : npt.NDArray[np.floating]
         earth points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
     initial_guesses : PreciseDateTime | np.datetime64 | npt.NDArray
         initial guesses for newton resolution method, initial guess can be a
         single PDT value or an array of PDT (N,)
+    dt : float, optional
+        time step for computing the approximate derivative of the boresight normal unit vector, by default 0.1
     abs_time_tolerance : float, optional
         absolute time tolerance for newton convergence criteria, by default 1e-8
     max_iter : int, optional
@@ -675,8 +679,9 @@ def inverse_geocoding_attitude_core(
         sensor_pos_curr = trajectory.position(azimuth_times)
         sensor_vel_curr = trajectory.velocity(azimuth_times)
 
-        arf1_curr = boresight_normal.position(azimuth_times)
-        arf1_derivative_curr = boresight_normal.velocity(azimuth_times)
+        arf1_curr = attitude.evaluate(azimuth_times)[..., 0, :]
+        arf1_curr_dt = attitude.evaluate(azimuth_times + dt)[..., 0, :]
+        arf1_derivative_curr = (arf1_curr_dt - arf1_curr) / dt
 
         # slant range correspondent to the actual position of satellite
         line_of_sight = ground_points - sensor_pos_curr
@@ -703,13 +708,16 @@ def inverse_geocoding_attitude_core(
             break
     else:
         raise RuntimeError(
-            "Newton did not converge: maximum number of iterations" + f"{max_iter} reached. Residual error {delta_err}"
+            "Newton did not converge: maximum number of iterations " + f"{max_iter} reached. Residual error {delta_err}"
         )
 
     # re-evaluating slant range
     sensor_pos_curr = trajectory.position(azimuth_times)
     line_of_sight = ground_points - sensor_pos_curr
     slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
+
+    if np.ndim(slant_range) == 0:
+        slant_range = float(slant_range)
 
     return azimuth_times, slant_range
 

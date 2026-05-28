@@ -8,6 +8,11 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from perseo_core.geometry.pointing.attitude import (
+    Attitude,
+    compute_antenna_attitude_from_euler_angles,
+)
+from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
 from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
@@ -113,6 +118,25 @@ def get_testing_trajectory() -> CubicSplineTrajectory:
         times=state_vectors.time_axis,
         positions=state_vectors.sensor_positions,
         velocities=state_vectors.sensor_velocities,
+    )
+
+
+def get_testing_attitude() -> Attitude:
+    """Getting a testing attitude object"""
+    trajectory = get_testing_trajectory()
+    angles_rad = np.zeros_like(trajectory.positions)
+    angles_rad[:, 2] = np.deg2rad(-30.0)
+
+    # this is the Zero Doppler reference frame expressed in ECEF coordinates
+    zero_doppler_local_axis = compute_sensor_local_axis(
+        sensor_positions=trajectory.position(trajectory.times),
+        sensor_velocities=trajectory.velocity(trajectory.times),
+        reference_frame="ZERODOPPLER",
+    )
+
+    # compute antenna attitude in ECEF from Euler angles
+    return compute_antenna_attitude_from_euler_angles(
+        ypr_rad=angles_rad, rotation_order="YPR", times=trajectory.times, sensor_local_axis=zero_doppler_local_axis
     )
 
 

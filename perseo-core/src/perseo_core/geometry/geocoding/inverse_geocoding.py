@@ -20,6 +20,7 @@ import numpy as np
 import numpy.typing as npt
 
 import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
+from perseo_core.geometry.pointing.attitude import Attitude
 from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
@@ -100,6 +101,87 @@ def inverse_geocoding_monostatic(
     )
 
     return azimuth_times, range_times
+
+
+def inverse_geocoding_monostatic_with_attitude(
+    trajectory: Trajectory,
+    attitude: Attitude,
+    ground_points: npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
+    wavelength: float,
+    dt: float = 0.1,
+    az_initial_time_guesses: PreciseDateTime | np.datetime64 | npt.NDArray | None = None,
+    init_guess_search_time_step: float | None = None,
+) -> tuple[PreciseDateTime | np.datetime64 | npt.NDArray, float | npt.NDArray[np.floating]]:
+    """Monostatic inverse geocoding with attitude computation.
+
+    !!! note "Initial guesses"
+
+        One between `az_initial_time_guesses` and `init_guess_search_time_step` inputs must be provided.
+
+    Parameters
+    ----------
+    trajectory : Trajectory
+        sensor trajectory
+    attitude : Attitude
+        sensor attitude
+    ground_points : npt.NDArray[np.floating]
+        ground points to inverse geocode in XYZ coordinates, in the form (3,) or (N, 3)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        doppler frequencies centroid values to perform the inverse geocoding, in the form float or (N,).
+        the number of frequencies must be 1 or equal to the number of points provided (if more than 1).
+        If just 1 ground point is provided, several frequencies can be given to compute inverse geocoding at
+        each different input value
+    wavelength : float
+        carrier signal wavelength
+    dt : float, optional
+        time step for computing the approximate derivative of the boresight normal unit vector, by default 0.1
+    az_initial_time_guesses : PreciseDateTime | np.datetime64 | npt.NDArray | None, optional
+        azimuth times initial guesses to limit and guide the search of solutions, in the form (N,) or as a single time.
+        If None, it is automatically computed, by default None
+    init_guess_search_time_step : float | None, optional
+        if an azimuth initial guess for the Newton method is not provided, this parameter will be used to generate a
+        time axis with this time step and the same time domain as the input trajectory to automatically compute the
+        guess, the same step is used for both trajectories, by default None
+
+    Returns
+    -------
+    PreciseDateTime | np.datetime64 | npt.NDArray
+        azimuth times array
+    float | npt.NDArray[np.floating]
+        range times array
+    """
+
+    ground_points = np.asarray(ground_points)
+
+    if az_initial_time_guesses is not None:
+        az_initial_time_guesses = np.asarray(az_initial_time_guesses)
+    else:
+        if init_guess_search_time_step is None:
+            raise RuntimeError(
+                "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
+            )
+        # computing an initial guess for the Newton method
+        time_axis = (
+            np.arange(0, trajectory.domain[1] - trajectory.domain[0], init_guess_search_time_step)
+            + trajectory.domain[0]
+        )
+        # computing an initial guess for the Newton method
+        az_initial_time_guesses = inverse_geocoding_monostatic_init(
+            trajectory=trajectory,
+            ground_points=ground_points,
+            time_axis=time_axis,
+            doppler_frequencies=doppler_frequencies,
+            wavelength=wavelength,
+        )
+
+    return inverse_core.inverse_geocoding_monostatic_attitude_core(
+        trajectory=trajectory,
+        attitude=attitude,
+        ground_points=ground_points,
+        initial_guesses=az_initial_time_guesses,
+        dt=dt,
+    )
 
 
 def inverse_geocoding_monostatic_init(
