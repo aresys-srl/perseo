@@ -8,12 +8,12 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.spatial.transform import Rotation
 
+from perseo_core.geometry.navigation.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.geometry.pointing.attitude import (
     Attitude,
     compute_antenna_attitude_from_euler_angles,
 )
 from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
-from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 

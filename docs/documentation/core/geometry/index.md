@@ -27,7 +27,7 @@ to angular computations (squint, incidence, look), Doppler analysis, direct and 
 
 :lucide-bow-arrow:{ .lg .middle } [__Pointing__](pointing/index.md#pointing){ data-preview } : reference frames, antenna reference frame, and attitude
 
-:lucide-orbit:{ .lg .middle } [__Trajectory__](trajectory/index.md#traj){ data-preview } : interpolated trajectory, velocity, and acceleration
+:lucide-orbit:{ .lg .middle } [__Navigation__](navigation/index.md#traj){ data-preview } : interpolated trajectory, velocity, and acceleration
 
 </div>
 

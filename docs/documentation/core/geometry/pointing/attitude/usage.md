@@ -152,7 +152,7 @@ An example of common use case is the following:
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
+from perseo_core.geometry.navigation.cubic_spline_trajectory import CubicSplineTrajectory
 from perseo_core.geometry.pointing.antenna_reference_frame import compute_euler_angles_from_antenna_reference_frame
 from perseo_core.geometry.pointing.attitude import Attitude
 from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
@@ -211,7 +211,7 @@ import numpy as np
 from perseo_core.geometry.pointing.attitude import compute_antenna_attitude_from_euler_angles
 from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
 from perseo_core.geometry.pointing.rotations import euler_angles_to_rotation
-from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
+from perseo_core.geometry.navigation.cubic_spline_trajectory import CubicSplineTrajectory
 
 # Init ECEF sensor trajectory
 times = np.array([0.0, 1.0, 2.0])

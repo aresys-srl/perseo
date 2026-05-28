@@ -24,7 +24,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.interpolate import CubicSpline
 
-from perseo_core.models.trajectory import Trajectory
+from perseo_core.geometry.navigation.trajectory import Trajectory
 
 T = TypeVar("T", bound=np.generic)
 

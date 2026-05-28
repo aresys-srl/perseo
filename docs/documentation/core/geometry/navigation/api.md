@@ -9,8 +9,8 @@ tags:
 
 ## Trajectory
 
-::: perseo_core.models.trajectory
+::: perseo_core.geometry.navigation.trajectory
 
 ## Cubic Spline Trajectory
 
-::: perseo_core.models.cubic_spline_trajectory
+::: perseo_core.geometry.navigation.cubic_spline_trajectory

@@ -20,8 +20,8 @@ import numpy as np
 import numpy.typing as npt
 
 import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
+from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.geometry.pointing.attitude import Attitude
-from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 

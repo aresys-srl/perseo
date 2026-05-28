@@ -11,8 +11,8 @@ from scipy.constants import speed_of_light
 from scipy.interpolate import interp1d
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
+from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.geometry.pointing.attitude import Attitude
-from perseo_core.models.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 

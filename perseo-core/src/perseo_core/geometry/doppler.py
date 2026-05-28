@@ -10,7 +10,7 @@ import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles import get_geometric_squint_angle
-from perseo_core.models.trajectory import Trajectory
+from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 

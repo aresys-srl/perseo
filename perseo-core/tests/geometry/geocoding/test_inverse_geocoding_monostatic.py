@@ -18,7 +18,7 @@ from perseo_core.geometry.geocoding.inverse_geocoding_core import (
     inverse_geocoding_monostatic_attitude_core,
     inverse_geocoding_monostatic_core,
 )
-from perseo_core.models.trajectory import Trajectory
+from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 

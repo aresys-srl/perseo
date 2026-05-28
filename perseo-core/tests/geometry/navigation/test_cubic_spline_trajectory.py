@@ -6,8 +6,8 @@
 import numpy as np
 import pytest
 
-from perseo_core.models.cubic_spline_trajectory import CubicSplineTrajectory
-from perseo_core.models.trajectory import Trajectory
+from perseo_core.geometry.navigation.cubic_spline_trajectory import CubicSplineTrajectory
+from perseo_core.geometry.navigation.trajectory import Trajectory
 
 
 class TestTrajectory:

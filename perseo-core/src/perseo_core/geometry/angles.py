@@ -13,7 +13,7 @@ from perseo_core.geometry.geocoding.direct_geocoding import (
     SensorLookDirection,
     direct_geocoding_monostatic,
 )
-from perseo_core.models.trajectory import Trajectory
+from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
