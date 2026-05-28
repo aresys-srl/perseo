@@ -23,7 +23,7 @@ build_docs:
     - .tags_manylinux_2_28_std
   script:
     - python3.12 -m pip install nox
-    - python3.12 -m nox -f ./nox_common.py -s build_doc
+    - python3.12 -m nox -s build_doc
   artifacts:
     expire_in: 2 weeks
     paths:
