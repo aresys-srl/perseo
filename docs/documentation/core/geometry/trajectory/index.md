@@ -10,7 +10,7 @@ tags:
 
 # Trajectory { #traj data-toc-label="Trajectory" }
 
-The `trajectory` module defines the interface and implementations for sensor trajectory modeling in the PERSEO framework. It provides an abstract base class [`Trajectory`][perseo_core.models.trajectory.Trajectory] that specifies the contract for position, velocity, and acceleration queries at arbitrary times, along with a concrete [`CubicSplineTrajectory`][perseo_core.models.trajectory.cubic_spline_trajectory.CubicSplineTrajectory] implementation using Scipy's [`CubicSpline`][scipy.interpolate.CubicSpline] interpolator. All trajectories support vectorized evaluation.
+The `trajectory` module defines the interface and implementations for sensor trajectory modeling in the PERSEO framework. It provides an abstract base class [`Trajectory`][perseo_core.models.trajectory.Trajectory] that specifies the contract for position, velocity, and acceleration queries at arbitrary times, along with a concrete [`CubicSplineTrajectory`][perseo_core.models.cubic_spline_trajectory.CubicSplineTrajectory] implementation using Scipy's [`CubicSpline`][scipy.interpolate.CubicSpline] interpolator. All trajectories support vectorized evaluation.
 
 The `CubicSplineTrajectory` implementation ensures is the preferred trajectory for all PERSEO modules that require interpolated trajectory state vectors.
 
