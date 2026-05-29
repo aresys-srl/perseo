@@ -104,7 +104,7 @@ class PerseoLogger(logging.Logger):
 
 
 logging.setLoggerClass(PerseoLogger)
-_PERSEO_LOGGER = logging.getLogger("perseo")
+_PERSEO_LOGGER: PerseoLogger = logging.getLogger("perseo")
 _PERSEO_LOGGER.addHandler(logging.NullHandler())
 
 
@@ -195,9 +195,9 @@ def set_log_level(level: int):
     _PERSEO_LOGGER.setLevel(level)
 
 
-def get_logger() -> logging.Logger:
+def get_logger() -> PerseoLogger:
     """Get the Perseo logger instance."""
     return _PERSEO_LOGGER
 
 
-logger: logging.Logger = _PERSEO_LOGGER
+logger: PerseoLogger = _PERSEO_LOGGER
