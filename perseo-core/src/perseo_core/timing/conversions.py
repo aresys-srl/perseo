@@ -11,12 +11,8 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-from numpydantic import NDArray, Shape
 
 from perseo_core.timing.precise_datetime import PreciseDateTime
-
-PreciseDateTimeArrayType = NDArray[Shape["*"], PreciseDateTime]  # type: ignore
-NumpyDateTimeArrayType = NDArray[Shape["*"], np.datetime64]  # type: ignore
 
 _GPS_START_DATE = datetime(year=1980, month=1, day=6)
 
@@ -63,19 +59,19 @@ def date_to_gps_week(date: PreciseDateTime | datetime) -> tuple[int, int]:
 
 
 def precise_datetime_to_numpy(
-    times: PreciseDateTime | PreciseDateTimeArrayType,
-) -> np.datetime64 | NumpyDateTimeArrayType:
+    times: PreciseDateTime | np.ndarray,
+) -> np.datetime64 | np.ndarray:
     """Converting Perseo internal timing object PreciseDateTime (picoseconds precision) to numpy.datetime64 data type,
     truncated to nanoseconds precision.
 
     Parameters
     ----------
-    times : PreciseDateTime | PreciseDateTimeArrayType
+    times : PreciseDateTime | np.ndarray
         times to be converted from PreciseDateTime format to numpy.datetime64[ns]
 
     Returns
     -------
-    np.datetime64 | NumpyDateTimeArrayType
+    np.datetime64 | np.ndarray
         numpy.datetime64[ns] at nanoseconds precision corresponding to the input times
     """
     with warnings.catch_warnings():

@@ -8,7 +8,6 @@ license = { file = "LICENSE.txt" }
 dependencies = [
     "numpy>2",
     "scipy>1.15",
-    "numpydantic>=1.6",
     "pyproj>=3.5",
     "python-dateutil",
     "rich>=13.0.0",
