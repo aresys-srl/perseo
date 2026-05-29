@@ -119,45 +119,6 @@ def wheel_builder(session: nox.Session) -> None:
     session.run("python", "-m", "build", "--wheel", silent=True)
 
 
-def unittest_executor(session: nox.Session, project: str) -> None:
-    """Executor of unittest from nox session.
-
-    Parameters
-    ----------
-    session : nox.Session
-        nox session
-    project_source : str
-        project name, with "-" as separator for namespace sub-packages
-    """
-    Path("_build").mkdir(exist_ok=True)
-
-    project = project.replace("-", "_")
-
-    session.install("-e", ".[test]", silent=True)
-
-    session.run(
-        "python",
-        "-m",
-        "coverage",
-        "run",
-        f"--source={project}",
-        "-m",
-        "xmlrunner",
-        "--output-file",
-        f"_build/unittest-report-{PLATFORM}-py{session.python}.xml",
-        "discover",
-    )
-    session.run("python", "-m", "coverage", "report", "-m")
-    session.run(
-        "python",
-        "-m",
-        "coverage",
-        "xml",
-        "-o",
-        f"_build/unittest-coverage-{PLATFORM}-py{session.python}.xml",
-    )
-
-
 @nox.session()
 def fix_format(session: nox.Session):
     """Fix formatting current project folder"""
@@ -217,13 +178,6 @@ def build_conda_pkg(session: nox.Session):
         project_name=cwd.name,
     )
     conda_package_builder(session, project=cwd.name)
-
-
-@nox.session(python=PY_VERSIONS)
-def unittest(session: nox.Session):
-    """Module testing with unittest"""
-    cwd = Path.cwd()
-    unittest_executor(session, project=cwd.name)
 
 
 @nox.session()
