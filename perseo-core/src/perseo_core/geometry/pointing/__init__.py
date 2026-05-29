@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-PERSEO - CORE: Pointing
------------------------
+Pointing utilities for the PERSEO framework.
 """

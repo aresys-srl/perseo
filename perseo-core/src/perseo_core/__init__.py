@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Python Ecosystem for Remote Sensing & Earth Observation - PERSEO: CORE Functionalities
---------------------------------------------------------------------------------------
+Python Ecosystem for Remote Sensing & Earth Observation - PERSEO: CORE
 """
 
 __version__ = "1.0.0"

@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Geometry - Direct and Inverse Geocoding
----------------------------------------
+Direct and inverse geocoding utilities for the PERSEO framework.
 """

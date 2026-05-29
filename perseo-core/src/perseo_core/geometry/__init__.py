@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-PERSEO - CORE: Geometry-related Functionalities
------------------------------------------------
+Geometry utilities for the PERSEO framework.
 """

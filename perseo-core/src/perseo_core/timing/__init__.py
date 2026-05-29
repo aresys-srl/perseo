@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-PERSEO - CORE: Precise Timing definition
-----------------------------------------
+Precise Timing definitions for the PERSEO framework.
 """

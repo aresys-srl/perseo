@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-PERSEO - CORE: Generic Data Models, Dataclasses, Enums and Structures
----------------------------------------------------------------------
+Generic Data Models, trajectory, and related utilities for the PERSEO framework.
 """

@@ -2,6 +2,5 @@
 # SPDX-License-Identifier: MIT
 
 """
-Geometry - Utilities
---------------------
+Generic utilities for geometry operations.
 """
