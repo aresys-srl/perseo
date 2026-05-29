@@ -98,8 +98,8 @@ def inverse_geocoding_monostatic_core(
     ):
         raise RuntimeError(
             "Ambiguous matching between initial guess times "
-            + f"{initial_guesses.shape} and "
-            + f"ground points {ground_points.shape}"
+            + f"{np.shape(initial_guesses)} and "
+            + f"ground points {np.shape(ground_points)}"
         )
 
     if np.size(doppler_frequencies) != ground_points.size // 3 and not (
@@ -107,8 +107,8 @@ def inverse_geocoding_monostatic_core(
     ):
         raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
-            + f"{doppler_frequencies.shape} and "
-            + f"ground points {ground_points.shape}"
+            + f"{np.shape(doppler_frequencies)} and "
+            + f"ground points {np.shape(ground_points)}"
         )
 
     # starting the newton method to solve the equation
@@ -248,7 +248,7 @@ def inverse_geocoding_bistatic_core(
     ):
         raise RuntimeError(
             "Ambiguous matching between initial guess times "
-            + f"{initial_guesses.shape} and "
+            + f"{np.shape(initial_guesses)} and "
             + f"ground points {ground_points.shape}"
         )
 
@@ -257,7 +257,7 @@ def inverse_geocoding_bistatic_core(
     ):
         raise RuntimeError(
             "Ambiguous matching between doppler frequencies "
-            + f"{doppler_frequencies.shape} and "
+            + f"{np.shape(doppler_frequencies)} and "
             + f"ground points {ground_points.shape}"
         )
 
