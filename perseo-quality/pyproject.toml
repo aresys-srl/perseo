@@ -7,10 +7,10 @@ readme = "README.md"
 license = { file = "LICENSE.txt" }
 dependencies = [
     "numpy",
-    "pandas >= 1.4.0",
-    "scipy > 1.13",
+    "pandas>=1.4.0",
+    "scipy>1.13",
     "netCDF4==1.7.2",
-    "arepytools >= 1.7.6",
+    "arepytools>=1.7.6",
     "pydantic",
     "numba>=0.61",
     "xarray",
@@ -38,7 +38,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-graphs = ["matplotlib >= 3.5"]
+graphs = ["matplotlib>=3.5"]
 dev = ["ruff", "pylint", "nox"]
 test = ["pytest", "pytest-cov"]
 local_testing = [
@@ -82,6 +82,11 @@ addopts = [
 branch = true
 source = ["src"]
 
+[tool.coverage.report]
+skip_covered = true
+show_missing = true
+fail_under = 50
+
 [tool.ruff]
 line-length = 120
 output-format = "grouped"
@@ -116,7 +121,5 @@ sort = "ruff check --select I --fix-only"
 lint_check = "ruff check"
 lint_fix = "ruff check --show-fixes --fix-only"
 test = "python -m pytest ./tests -v"
-clean_doc = "python -m sphinx -M clean docs/source {args}"
-build_doc = "python -m sphinx -b html docs/source {args}"
 check_code = { composite = ["format_check", "lint_check"] }
 fix_format = { composite = ["format", "sort", "lint_fix"] }
