@@ -26,37 +26,39 @@ This always operates on the single ``"perseo"`` logger instance. No explicit log
 
 ## Initialization
 
-The logger is **silent by default** (a ``NullHandler`` is attached). A host application must call [`initialize_logger`][perseo_core.logger.initialize_logger] once at startup to enable output:
+The logger is **silent by default** (a ``NullHandler`` is attached). A host application must call [`initialize`][perseo_core.logger.initialize] once at startup to enable output:
 
 ```python title="Logger initialization"
 import logging
-from perseo_core import initialize_logger
+
+from perseo_core import logger
 
 # Minimal — console only
-initialize_logger()
+logger.initialize()
 
 # With a log file (parent directories created automatically)
-initialize_logger(log_file="logs/app.log", log_level=logging.DEBUG)
+logger.initialize(log_file="logs/app.log", log_level=logging.DEBUG)
 
 # Production — INFO level
-initialize_logger(log_file="/var/log/perseo/app.log", log_level=logging.INFO)
+logger.initialize(log_file="/var/log/perseo/app.log", log_level=logging.INFO)
 ```
 
 After initialization, two Rich console handlers (stdout / stderr) are added, plus an optional plain-text file handler. Rich tracebacks are also installed globally.
 
 !!! warning
 
-    Call [`initialize_logger`][perseo_core.logger.initialize_logger] **only once** from your application entry point. Calling it a second time removes all existing handlers and re-creates them.
+    Call [`initialize`][perseo_core.logger.initialize] **only once** from your application entry point. Calling it a second time removes all existing handlers and re-creates them.
 
 
 ## Changing log level at runtime
 
 ```python title="Changing level"
-from perseo_core import set_log_level
 import logging
 
-set_log_level(logging.WARNING)   # suppress DEBUG / INFO
-set_log_level(logging.DEBUG)     # re-enable verbose output
+from perseo_core import logger
+
+logger.set_level(logging.WARNING)   # suppress DEBUG / INFO
+logger.set_level(logging.DEBUG)     # re-enable verbose output
 ```
 
 ### Custom levels
@@ -123,11 +125,11 @@ The [`CustomFileHandler`][perseo_core.logger.CustomFileHandler] writes in UTF-8 
 If you need to add custom handlers, filters, or modify the logger directly:
 
 ```python title="Low level logger customization"
-from perseo_core import get_logger
+from perseo_core.logger import get_logger
 
-logger = get_logger()
-logger.addHandler(my_custom_handler)
-logger.addFilter(my_custom_filter)
+perseo_logger = get_logger()
+perseo_logger.addHandler(my_custom_handler)
+perseo_logger.addFilter(my_custom_filter)
 ```
 
 This is also the *recommended way to integrate with third-party logging

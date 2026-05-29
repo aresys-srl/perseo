@@ -12,6 +12,7 @@ import pytest
 from rich.console import Console
 from rich.logging import RichHandler
 
+from perseo_core import logger
 from perseo_core.logger import (
     FAIL,
     SUCCESS,
@@ -21,22 +22,9 @@ from perseo_core.logger import (
     StdErrRichHandler,
     StdOutRichHandler,
     get_logger,
-    initialize_logger,
-    set_log_level,
+    initialize,
+    set_level,
 )
-
-
-@pytest.fixture(autouse=True)
-def _logger_cleanup():
-    logger_obj = get_logger()
-    for handler in logger_obj.handlers[:]:
-        if not isinstance(handler, logging.NullHandler):
-            logger_obj.removeHandler(handler)
-    logger_obj.setLevel(logging.DEBUG)
-    yield
-    for handler in logger_obj.handlers[:]:
-        if not isinstance(handler, logging.NullHandler):
-            logger_obj.removeHandler(handler)
 
 
 class TestCustomLogLevels:
@@ -71,37 +59,43 @@ class TestLoggerObjectMethods:
         get_logger().addHandler(handler)
 
     def test_trace(self):
-        logger = get_logger()
-        logger.setLevel(TRACE)
+        logger.set_level(TRACE)
         logger.trace("Trace test message")
         assert "Trace test message" in self.stream.getvalue()
 
     def test_debug(self):
-        get_logger().debug("Debug test message")
+        logger.set_level(logging.DEBUG)
+        logger.debug("Debug test message")
         assert "Debug test message" in self.stream.getvalue()
 
     def test_info(self):
-        get_logger().info("Info test message")
+        logger.set_level(logging.INFO)
+        logger.info("Info test message")
         assert "Info test message" in self.stream.getvalue()
 
     def test_warning(self):
-        get_logger().warning("Warning test message")
+        logger.set_level(logging.WARNING)
+        logger.warning("Warning test message")
         assert "Warning test message" in self.stream.getvalue()
 
     def test_error(self):
-        get_logger().error("Error test message")
+        logger.set_level(logging.ERROR)
+        logger.error("Error test message")
         assert "Error test message" in self.stream.getvalue()
 
     def test_critical(self):
-        get_logger().critical("Critical test message")
+        logger.set_level(logging.CRITICAL)
+        logger.critical("Critical test message")
         assert "Critical test message" in self.stream.getvalue()
 
     def test_fail(self):
-        get_logger().fail("Fail test message")
+        logger.set_level(FAIL)
+        logger.fail("Fail test message")
         assert "Fail test message" in self.stream.getvalue()
 
     def test_success(self):
-        get_logger().success("Success test message")
+        logger.set_level(SUCCESS)
+        logger.success("Success test message")
         assert "Success test message" in self.stream.getvalue()
 
 
@@ -124,44 +118,50 @@ class TestStreamSeparation:
         logger.addHandler(stderr_handler)
 
     def test_trace_goes_to_stdout(self):
-        logger = get_logger()
-        logger.setLevel(TRACE)
+        logger.set_level(TRACE)
         logger.trace("Trace message")
         assert "Trace message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_debug_goes_to_stdout(self):
-        get_logger().debug("Debug message")
+        logger.set_level(logging.DEBUG)
+        logger.debug("Debug message")
         assert "Debug message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_info_goes_to_stdout(self):
-        get_logger().info("Info message")
+        logger.set_level(logging.INFO)
+        logger.info("Info message")
         assert "Info message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_warning_goes_to_stdout(self):
-        get_logger().warning("Warning message")
+        logger.set_level(logging.WARNING)
+        logger.warning("Warning message")
         assert "Warning message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_error_goes_to_stderr(self):
-        get_logger().error("Error message")
+        logger.set_level(logging.ERROR)
+        logger.error("Error message")
         assert "Error message" in self.stderr_stream.getvalue()
         assert self.stdout_stream.getvalue() == ""
 
     def test_critical_goes_to_stderr(self):
-        get_logger().critical("Critical message")
+        logger.set_level(logging.CRITICAL)
+        logger.critical("Critical message")
         assert "Critical message" in self.stderr_stream.getvalue()
         assert self.stdout_stream.getvalue() == ""
 
     def test_fail_goes_to_stdout(self):
-        get_logger().fail("Fail message")
+        logger.set_level(FAIL)
+        logger.fail("Fail message")
         assert "Fail message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
     def test_success_goes_to_stdout(self):
-        get_logger().success("Success message")
+        logger.set_level(SUCCESS)
+        logger.success("Success message")
         assert "Success message" in self.stdout_stream.getvalue()
         assert self.stderr_stream.getvalue() == ""
 
@@ -187,7 +187,7 @@ class TestInitializeLogger:
     """Test initialize_logger function."""
 
     def test_initialize_without_file(self):
-        initialize_logger(log_file=None, log_level=logging.INFO)
+        initialize(log_file=None, log_level=logging.INFO)
 
         handlers = [h for h in get_logger().handlers if not isinstance(h, logging.NullHandler)]
         handler_types = [type(h).__name__ for h in handlers]
@@ -200,7 +200,7 @@ class TestInitializeLogger:
             temp_file = f.name
 
         try:
-            initialize_logger(log_file=temp_file, log_level=logging.DEBUG)
+            initialize(log_file=temp_file, log_level=logging.DEBUG)
 
             handlers = [h for h in get_logger().handlers if not isinstance(h, logging.NullHandler)]
             handler_types = [type(h).__name__ for h in handlers]
@@ -216,7 +216,7 @@ class TestInitializeLogger:
             Path(temp_file).unlink(missing_ok=True)
 
     def test_initialize_sets_log_level(self):
-        initialize_logger(log_level=logging.WARNING)
+        initialize(log_level=logging.WARNING)
         assert get_logger().level == logging.WARNING
 
 
@@ -224,7 +224,7 @@ class TestSetLogLevel:
     """Test set_log_level function."""
 
     def test_set_log_level(self):
-        set_log_level(logging.ERROR)
+        set_level(logging.ERROR)
         assert get_logger().level == logging.ERROR
 
 

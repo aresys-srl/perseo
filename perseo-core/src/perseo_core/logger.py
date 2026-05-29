@@ -5,15 +5,17 @@
 This module provides a pre-configured logger for the Perseo framework with support for
 custom log levels (TRACE, FAIL, SUCCESS), Rich-formatted console output, and plain file logging.
 
-The logger separates output streams:
+The logger is designed to be flexible and easy to use, with sensible defaults for console output
+and optional file logging. By default, it uses Rich handlers to provide visually appealing and
+informative log messages in the console, while file output is plain text for compatibility.
 
-   - TRACE, DEBUG, INFO, WARNING, FAIL, SUCCESS -> stdout
-   - ERROR, CRITICAL -> stderr
+This module is the primary way to log throughout the Perseo ecosystem.
 
-The ``logger`` object is the primary way to log throughout the Perseo ecosystem.
-Custom log levels can be enabled programmatically, and handlers can be customized as needed.
+To initialize the logger with sensible defaults, use the ``initialize`` function.
+Otherwise, the logger has a null handler by default and it will be silent until configured.
 
-The logger has a null handler by default so that by default the perseo framework is silent.
+For advanced usage, you can access the underlying logger instance via the ``get_logger()`` function
+and customize handlers, formatters, or log levels as needed.
 
 ### Custom Log Levels
 
@@ -21,15 +23,22 @@ The logger has a null handler by default so that by default the perseo framework
 - FAIL (21): indicates a failed validation or test.
 - SUCCESS (22): indicates a successful validation or test.
 
+### Console log default output streams
+
+The logger separates output streams:
+
+   - TRACE, DEBUG, INFO, WARNING, FAIL, SUCCESS -> stdout
+   - ERROR, CRITICAL -> stderr
+
 ### Examples
 
 Basic usage:
 
 ```python
+import logging
 from perseo_core import logger
-from perseo_core.logger import initialize_logger
 
-initialize_logger(log_file="perseo.log", log_level=20)  # INFO
+logger.initialize(log_file="perseo.log", log_level=logging.INFO)
 
 logger.info("Processing started")
 logger.error("An error occurred")
@@ -40,15 +49,14 @@ logger.success("Operation completed")
 Bypass initialization and add a different file handler:
 
 ```python
-from perseo_core import get_logger
+from perseo_core.logger import get_logger
 
 get_logger().addHandler(handler)
 ```
 
 !!! note
     The logger is initialized with both stdout and stderr Rich handlers by default.
-    To customize handlers or log levels, access the underlying logger via
-    ``get_logger()`` or the ``logger`` alias.
+    To customize handlers or log levels, access the underlying logger via ``get_logger()``.
 
 """
 
@@ -57,6 +65,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
+from typing import Any
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -85,27 +94,6 @@ _RICH_THEME = Theme(
 )
 
 FILE_FORMAT = "| %(levelname)-9s @ %(module)-30.30s| %(asctime)s | %(message)s"
-
-
-class PerseoLogger(logging.Logger):
-    """Logger subclass with trace(), fail(), success() convenience methods."""
-
-    def trace(self, msg, *args, **kwargs):
-        if self.isEnabledFor(TRACE):
-            self._log(TRACE, msg, args, kwargs)
-
-    def fail(self, msg, *args, **kwargs):
-        if self.isEnabledFor(FAIL):
-            self._log(FAIL, msg, args, kwargs)
-
-    def success(self, msg, *args, **kwargs):
-        if self.isEnabledFor(SUCCESS):
-            self._log(SUCCESS, msg, args, kwargs)
-
-
-logging.setLoggerClass(PerseoLogger)
-_PERSEO_LOGGER: PerseoLogger = logging.getLogger("perseo")
-_PERSEO_LOGGER.addHandler(logging.NullHandler())
 
 
 class StdOutRichHandler(RichHandler):
@@ -155,7 +143,11 @@ class CustomFileHandler(logging.FileHandler):
         self.setFormatter(PlainFileFormatter())
 
 
-def initialize_logger(log_file: str | None = None, log_level: int = logging.DEBUG):
+_PERSEO_LOGGER: logging.Logger = logging.getLogger("perseo")
+_PERSEO_LOGGER.addHandler(logging.NullHandler())
+
+
+def initialize(log_file: str | None = None, log_level: int = logging.DEBUG):
     """Initialize the Perseo logger with Rich console and optional file handler.
 
     Parameters
@@ -183,21 +175,38 @@ def initialize_logger(log_file: str | None = None, log_level: int = logging.DEBU
     install_rich_tracebacks(show_locals=True)
 
 
-def set_log_level(level: int):
+def set_level(level: int):
     """Set the logging level for the Perseo logger.
 
     Parameters
     ----------
     level : int
         One of ``TRACE`` (5), ``logging.DEBUG`` (10), ``logging.INFO`` (20),
-        ``logging.WARNING`` (30), ``logging.ERROR`` (40), ``logging.CRITICAL`` (50).
+        ``FAIL`` (21), ``SUCCESS`` (22), ``logging.WARNING`` (30),
+        ``logging.ERROR`` (40), ``logging.CRITICAL`` (50).
     """
     _PERSEO_LOGGER.setLevel(level)
 
 
-def get_logger() -> PerseoLogger:
+def get_logger() -> logging.Logger:
     """Get the Perseo logger instance."""
     return _PERSEO_LOGGER
 
 
-logger: PerseoLogger = _PERSEO_LOGGER
+info = _PERSEO_LOGGER.info
+debug = _PERSEO_LOGGER.debug
+warning = _PERSEO_LOGGER.warning
+error = _PERSEO_LOGGER.error
+critical = _PERSEO_LOGGER.critical
+
+
+def fail(msg: str, *args: object, **kwargs: Any) -> None:
+    return _PERSEO_LOGGER.log(FAIL, msg, *args, **kwargs)
+
+
+def success(msg: str, *args: object, **kwargs: Any) -> None:
+    return _PERSEO_LOGGER.log(SUCCESS, msg, *args, **kwargs)
+
+
+def trace(msg: str, *args: object, **kwargs: Any) -> None:
+    return _PERSEO_LOGGER.log(TRACE, msg, *args, **kwargs)

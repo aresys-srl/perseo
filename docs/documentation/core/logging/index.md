@@ -21,4 +21,4 @@ Key features:
 - Plain text file logging (never markup in files)
 - Rich tracebacks on unhandled exceptions
 - Logger object convenience (``logger.info()``, ``logger.fail()``, etc.)
-- Silent by default (``NullHandler``) until [`initialize_logger`][perseo_core.logger.initialize_logger] is called
+- Silent by default (``NullHandler``) until [`initialize`][perseo_core.logger.initialize] is called
