@@ -288,7 +288,7 @@ def inverse_geocoding_bistatic(
 
     Raises
     ------
-    inverse_core.OrbitsNotOverlappedError
+    RuntimeError
         if the input sensors' trajectories are overlapping
     """
 
@@ -327,8 +327,8 @@ def inverse_geocoding_bistatic(
     axis_end_time = np.min([trajectory_tx.domain[-1], trajectory_rx.domain[-1]])
     axis_length = axis_end_time - axis_start_time
 
-    if axis_length < 0:
-        raise inverse_core.OrbitsNotOverlappedError
+    if axis_length <= 0:
+        raise RuntimeError("Invalid input trajectories: the two orbits are not overlapped")
 
     # performing actual inverse geocoding bistatic
     azimuth_times, range_times = inverse_core.inverse_geocoding_bistatic_core(
