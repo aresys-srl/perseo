@@ -135,6 +135,7 @@ def inverse_geocoding_monostatic_core(
 
     else:
         raise RuntimeError(
+            # pyrefly: ignore [unbound-name]
             "Newton did not converge: maximum number of iterations " + f"{max_iter} reached. Residual error {delta_err}"
         )
 
@@ -356,6 +357,7 @@ def inverse_geocoding_bistatic_core(
 
     else:
         raise RuntimeError(
+            # pyrefly: ignore [unbound-name]
             "Newton did not converge: maximum number of iterations " + f"{max_iter} reached. Residual error {delta_err}"
         )
 
@@ -681,6 +683,7 @@ def inverse_geocoding_monostatic_attitude_core(
             break
     else:
         raise RuntimeError(
+            # pyrefly: ignore [unbound-name]
             "Newton did not converge: maximum number of iterations " + f"{max_iter} reached. Residual error {delta_err}"
         )
 

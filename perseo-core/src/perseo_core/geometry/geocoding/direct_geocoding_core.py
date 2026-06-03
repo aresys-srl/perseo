@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
@@ -344,6 +346,7 @@ def _direct_geocoding_monostatic_newton(
     else:
         raise RuntimeError(
             f"Newton did not converge: maximum number of iterations {max_iterations} reached."
+            # pyrefly: ignore [unbound-name]
             + f"Residual error {delta_err}"
         )
 
@@ -469,6 +472,7 @@ def _direct_geocoding_bistatic_newton(
     else:
         raise RuntimeError(
             f"Newton did not converge: maximum number of iterations {max_iterations} reached."
+            # pyrefly: ignore [unbound-name]
             + f"Residual error {delta_err}"
         )
 
@@ -476,7 +480,7 @@ def _direct_geocoding_bistatic_newton(
 
 
 def _inv_3x3_transpose(
-    jac: list[list[npt.NDArray[np.floating]]], func: list[npt.NDArray[np.floating]]
+    jac: Sequence[Sequence[float | npt.NDArray[np.floating]]], func: Sequence[float | npt.NDArray[np.floating]]
 ) -> npt.NDArray[np.floating]:
     """Perform inverse of 3x3 matrix using explicit form."""
     det = (
@@ -503,7 +507,7 @@ def _inv_3x3_transpose(
         + func[2] * (jac[0][0] * jac[1][1] - jac[1][0] * jac[0][1])
     )
 
-    return (np.stack([x_val, y_val, z_val], axis=-1) / det[..., np.newaxis]).squeeze()
+    return (np.stack([x_val, y_val, z_val], axis=-1) / np.asarray(det)[..., np.newaxis]).squeeze()
 
 
 def _ellipse_equation(coords: npt.NDArray[np.floating], r_ee2: float, r_ep2: float) -> npt.NDArray[np.floating]:

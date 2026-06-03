@@ -233,12 +233,12 @@ def inverse_geocoding_monostatic_init(
     )
 
     # keeping only first solution for each point
-    az_initial_time_guesses = np.array([g[0] for g in az_initial_time_guesses])
+    az_initial_time_guess = np.array([g[0] for g in az_initial_time_guesses])
 
-    if az_initial_time_guesses.size == 1 and ground_points.ndim == 1:
-        az_initial_time_guesses = az_initial_time_guesses[0]
+    if az_initial_time_guess.size == 1 and ground_points.ndim == 1:
+        return az_initial_time_guess[0]
 
-    return az_initial_time_guesses
+    return az_initial_time_guess
 
 
 def inverse_geocoding_bistatic(
@@ -291,11 +291,6 @@ def inverse_geocoding_bistatic(
     RuntimeError
         if the input sensors' trajectories are overlapping
     """
-
-    doppler_frequencies = (
-        np.asarray(doppler_frequencies) if not np.isscalar(doppler_frequencies) else doppler_frequencies
-    )
-
     if az_initial_time_guesses is not None:
         az_initial_time_guesses = np.asarray(az_initial_time_guesses)
     else:
