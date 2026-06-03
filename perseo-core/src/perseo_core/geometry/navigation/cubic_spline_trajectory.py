@@ -156,3 +156,6 @@ class CubicSplineTrajectory(Trajectory[T]):
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 2, extrapolate=False)
+
+
+__all__ = ["CubicSplineTrajectory"]

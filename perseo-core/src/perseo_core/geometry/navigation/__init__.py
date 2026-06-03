@@ -1,4 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Models module testing"""
+"""Navigation module"""
+
+from perseo_core.geometry.navigation.cubic_spline_trajectory import *
+from perseo_core.geometry.navigation.trajectory import *

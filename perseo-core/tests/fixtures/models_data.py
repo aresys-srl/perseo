@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from perseo_core.geometry.navigation.cubic_spline_trajectory import CubicSplineTrajectory
+from perseo_core.geometry.navigation import CubicSplineTrajectory
 from perseo_core.geometry.pointing.attitude import (
     Attitude,
     compute_antenna_attitude_from_euler_angles,

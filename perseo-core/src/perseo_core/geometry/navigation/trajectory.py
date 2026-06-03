@@ -112,3 +112,6 @@ class Trajectory(ABC, Generic[T]):
             position, velocity and acceleration with shape (3,) or (N, 3)
         """
         return self.position(time), self.velocity(time), self.acceleration(time)
+
+
+__all__ = ["Trajectory"]
