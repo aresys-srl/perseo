@@ -57,14 +57,11 @@ def compute_ground_velocity(
     """
 
     # generating the averaging time interval axis
-    averaging_time_axis = (
-        np.linspace(
-            averaging_interval_relative_origin,
-            averaging_interval_duration,
-            averaging_interval_num_points,
-        )
-        + azimuth_time
+    relative_averaging_time_axis = np.linspace(
+        averaging_interval_relative_origin, averaging_interval_duration, averaging_interval_num_points
     )
+
+    averaging_time_axis = relative_averaging_time_axis + azimuth_time  # type: ignore
     sensor_positions = trajectory.position(averaging_time_axis)
     sensor_velocities = trajectory.velocity(averaging_time_axis)
 

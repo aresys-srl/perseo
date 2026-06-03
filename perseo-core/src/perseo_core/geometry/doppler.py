@@ -324,4 +324,4 @@ def compute_steering_doppler_frequency(
     # antenna modulation rate
     antenna_modulation_rate = -doppler_rate * az_steering_rate_hz_s / (az_steering_rate_hz_s - doppler_rate)
 
-    return antenna_modulation_rate * (azimuth_time - az_mid_burst_time)
+    return antenna_modulation_rate * (azimuth_time - az_mid_burst_time)  # type: ignore

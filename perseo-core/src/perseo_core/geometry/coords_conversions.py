@@ -156,7 +156,7 @@ def ecef2eci(
     """
 
     is_1d = np.ndim(positions) == 1
-    times = np.atleast_1d(times)
+    times = np.array([times]) if isinstance(times, PreciseDateTime) else np.atleast_1d(times)
     observation_times = Time([t.isoformat() for t in times], scale="utc")
 
     # Build representation with velocity
@@ -210,7 +210,7 @@ def eci2ecef(
     """
 
     is_1d = np.ndim(positions) == 1
-    times = np.atleast_1d(times)
+    times = np.array([times]) if isinstance(times, PreciseDateTime) else np.atleast_1d(times)
     observation_times = Time([t.isoformat() for t in times], scale="utc")
 
     # build representation with velocity
