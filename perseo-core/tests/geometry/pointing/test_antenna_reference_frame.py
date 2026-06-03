@@ -9,12 +9,12 @@ from typing import get_args
 import numpy as np
 import pytest
 
-from perseo_core.geometry.pointing.antenna_reference_frame import (
+from perseo_core.geometry.pointing import (
+    RotationOrder,
     compute_antenna_reference_frame_from_euler_angles,
     compute_euler_angles_from_antenna_reference_frame,
     compute_pointing_directions,
 )
-from perseo_core.geometry.pointing.rotations import RotationOrder
 from tests.common import compute_antenna_angles_a_posteriori
 
 

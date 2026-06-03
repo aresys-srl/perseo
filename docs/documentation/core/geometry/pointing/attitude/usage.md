@@ -53,7 +53,7 @@ Example:
 ```python title="Attitude from reference frames"
 import numpy as np
 
-from perseo_core.geometry.pointing.attitude import Attitude
+from perseo_core.geometry.pointing import Attitude
 
 times = np.array([0.0, 1.0, 2.0])
 
@@ -75,7 +75,7 @@ Example:
 ```python title="Attitude from quaternions"
 import numpy as np
 
-from perseo_core.geometry.pointing.attitude import Attitude
+from perseo_core.geometry.pointing import Attitude
 
 times = np.array([0.0, 1.0, 2.0])
 
@@ -97,7 +97,7 @@ Example:
 ```python title="Attitude from Euler angles"
 import numpy as np
 
-from perseo_core.geometry.pointing.attitude import Attitude
+from perseo_core.geometry.pointing import Attitude
 
 times = np.array([0.0, 2.0, 4.0])
 
@@ -126,7 +126,7 @@ reference_frames = attitude.evaluate(query_times)
 # Convert to Euler angles if needed
 from scipy.spatial.transform import Rotation
 
-from perseo_core.geometry.pointing.rotations import rotation_to_euler_angles
+from perseo_core.geometry.pointing import rotation_to_euler_angles
 
 euler_angles = rotation_to_euler_angles(Rotation.from_matrix(reference_frames), order="YPR")
 ```
@@ -153,10 +153,12 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.navigation import CubicSplineTrajectory
-from perseo_core.geometry.pointing.antenna_reference_frame import compute_euler_angles_from_antenna_reference_frame
-from perseo_core.geometry.pointing.attitude import Attitude
-from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
-from perseo_core.geometry.pointing.rotations import rotation_to_euler_angles
+from perseo_core.geometry.pointing import (
+    Attitude,
+    compute_euler_angles_from_antenna_reference_frame,
+    compute_sensor_local_axis,
+    rotation_to_euler_angles,
+)
 
 # Init ECEF sensor trajectory
 times = np.array([0.0, 1.0, 2.0])
@@ -208,10 +210,13 @@ Another example of common use case is the following:
 
 ```python title="Attitude from sensor Euler angles"
 import numpy as np
-from perseo_core.geometry.pointing.attitude import compute_antenna_attitude_from_euler_angles
-from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
-from perseo_core.geometry.pointing.rotations import euler_angles_to_rotation
+
 from perseo_core.geometry.navigation import CubicSplineTrajectory
+from perseo_core.geometry.pointing import (
+    compute_antenna_attitude_from_euler_angles,
+    compute_sensor_local_axis,
+    euler_angles_to_rotation,
+)
 
 # Init ECEF sensor trajectory
 times = np.array([0.0, 1.0, 2.0])

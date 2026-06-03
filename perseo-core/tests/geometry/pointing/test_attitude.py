@@ -8,7 +8,7 @@ import pytest
 from numpy.testing import assert_allclose
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.geometry.pointing.attitude import (
+from perseo_core.geometry.pointing import (
     Attitude,
     compute_antenna_attitude_from_euler_angles,
     compute_sensor_attitude_from_state_vectors,

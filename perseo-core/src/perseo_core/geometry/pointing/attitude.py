@@ -302,3 +302,10 @@ def compute_sensor_attitude_from_state_vectors(
         sensor_positions=position, sensor_velocities=velocity, reference_frame=reference_frame
     )
     return Attitude(reference_frames=sensor_local_axis, times=times)
+
+
+__all__ = [
+    "Attitude",
+    "compute_antenna_attitude_from_euler_angles",
+    "compute_sensor_attitude_from_state_vectors",
+]

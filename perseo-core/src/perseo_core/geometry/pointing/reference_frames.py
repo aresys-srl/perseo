@@ -429,3 +429,6 @@ def _ze_xy(x: float, y: float) -> float:
 
 def _ze_xx(x: float, y: float) -> float:
     return -_semi_axis_ratio_sqr / _ze(x, y) + (_semi_axis_ratio_sqr * x) / _ze(x, y) ** 2 * _ze_x(x, y)
+
+
+__all__ = ["compute_sensor_local_axis", "ReferenceFrame"]

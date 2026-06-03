@@ -69,8 +69,11 @@ Basic usage:
 
 ```python
 import numpy as np
-from perseo_core.geometry.pointing.antenna_reference_frame import compute_antenna_reference_frame_from_euler_angles
-from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
+
+from perseo_core.geometry.pointing import (
+    compute_antenna_reference_frame_from_euler_angles,
+    compute_sensor_local_axis,
+)
 
 # Define rotation angles
 ypr_deg = np.array([5, 1, 30])  # yaw, pitch, roll in degrees
@@ -277,3 +280,10 @@ def compute_pointing_directions(
     local_directions = local_directions / np.linalg.norm(local_directions, axis=-1, keepdims=True)
 
     return np.einsum("...ij,...j->...i", antenna_reference_frame, local_directions)
+
+
+__all__ = [
+    "compute_antenna_reference_frame_from_euler_angles",
+    "compute_euler_angles_from_antenna_reference_frame",
+    "compute_pointing_directions",
+]

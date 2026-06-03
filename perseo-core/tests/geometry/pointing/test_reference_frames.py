@@ -6,12 +6,12 @@
 import numpy as np
 import pytest
 
+from perseo_core.geometry.pointing import compute_sensor_local_axis
 from perseo_core.geometry.pointing.reference_frames import (
     compute_geocentric_reference_frame,
     compute_geodetic_point,
     compute_geodetic_reference_frame,
     compute_inertial_velocity,
-    compute_sensor_local_axis,
     compute_zerodoppler_reference_frame,
 )
 

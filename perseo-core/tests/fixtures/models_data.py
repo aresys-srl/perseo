@@ -9,11 +9,11 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.navigation import CubicSplineTrajectory
-from perseo_core.geometry.pointing.attitude import (
+from perseo_core.geometry.pointing import (
     Attitude,
     compute_antenna_attitude_from_euler_angles,
+    compute_sensor_local_axis,
 )
-from perseo_core.geometry.pointing.reference_frames import compute_sensor_local_axis
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 

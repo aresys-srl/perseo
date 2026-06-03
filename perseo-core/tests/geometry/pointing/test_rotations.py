@@ -8,8 +8,10 @@ from typing import get_args
 import numpy as np
 import pytest
 
-from perseo_core.geometry.pointing.rotations import (
+from perseo_core.geometry.pointing import (
     RotationOrder,
+)
+from perseo_core.geometry.pointing.rotations import (
     euler_angles_to_rotation,
     rotation_to_euler_angles,
 )
