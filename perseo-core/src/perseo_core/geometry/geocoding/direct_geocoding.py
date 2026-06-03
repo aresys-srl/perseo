@@ -75,21 +75,13 @@ def direct_geocoding_with_looking_direction(
     """
     inflated_ellipsoid = create_inflated_WGS84_ellipsoid(altitude)
 
-    intersections = compute_line_ellipsoid_intersections(
+    first_intersections, _ = compute_line_ellipsoid_intersections(
         line_directions=looking_directions,
         line_origins=sensor_positions,
         ellipsoid=inflated_ellipsoid,
     )
 
-    points = np.empty(np.broadcast_shapes(np.shape(looking_directions), np.shape(sensor_positions)))
-
-    if points.ndim == 1:
-        intersections = (intersections,)
-
-    for intersections_pair, point in zip(intersections, points.reshape((-1, 3)), strict=False):
-        point[:] = intersections_pair[0] if len(intersections_pair) > 0 else np.nan
-
-    return points
+    return first_intersections
 
 
 def direct_geocoding_with_look_angles(

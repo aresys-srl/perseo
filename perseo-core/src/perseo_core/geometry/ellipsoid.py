@@ -29,13 +29,15 @@ def create_inflated_WGS84_ellipsoid(height: float) -> Geod:
 
 
 def compute_line_ellipsoid_intersections(
-    line_directions: npt.NDArray[np.floating], line_origins: npt.NDArray[np.floating], ellipsoid: Geod
-) -> tuple[tuple[np.ndarray]] | tuple[np.ndarray]:
-    """Compute the intersections between lines and an ellipsoid
+    line_directions: npt.NDArray[np.floating],
+    line_origins: npt.NDArray[np.floating],
+    ellipsoid: Geod,
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
+    """Compute the intersections between lines and an ellipsoid.
 
-    For each line it returns the intersections.
-
-    When two intersections are found they are sorted by the closest to line_origin.
+    For each line, returns two intersection arrays. When a line does not intersect the ellipsoid,
+    both arrays contain NaN. When a line is tangent, both arrays contain the same point.
+    The first array always contains the intersection closest to line_origin.
 
     Parameters
     ----------
@@ -48,10 +50,10 @@ def compute_line_ellipsoid_intersections(
 
     Returns
     -------
-    tuple[tuple[np.ndarray]] | tuple[np.ndarray]
-        The intersections or a tuple of intersections, depending on N.
-        Intersections are stored as a tuple of points (np.array (3,)).
-        The number of points depends on the intersection results can be 0, 1 or 2.
+    tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]
+        A pair (first_intersections, second_intersections) each with shape (3,) for a single
+        line or (N, 3) for multiple lines. first_intersections is the intersection closest
+        to line_origin; np.nan is used as a placeholder where no intersection exists.
 
     Raises
     ------
@@ -61,44 +63,48 @@ def compute_line_ellipsoid_intersections(
     Examples
     --------
 
-    empty intersection
+    no intersection
 
-    >>> intersections = compute_line_ellipsoid_intersections(
-                    [0, 0, 100], [-5, 0, 2], Ellipsoid(1, 2)
-                )
-    >>> print(intersections)
-    ()
+    >>> first, second = compute_line_ellipsoid_intersections([0, 0, 100], [-5, 0, 2], Geod(a=2, b=1))
+    >>> print(first, second)
+    [nan nan nan] [nan nan nan]
 
-    single intersection
+    tangent intersection (first == second)
 
-    >>> intersections = compute_line_ellipsoid_intersections(
-                    [100, 0, 0], [-5, 0, 1], Ellipsoid(1, 2)
-                )
-    >>> print(intersections)
-    (array([-8.8817842e-16,  0.0000000e+00,  1.0000000e+00]),)
+    >>> first, second = compute_line_ellipsoid_intersections([100, 0, 0], [-5, 0, 1], Geod(a=2, b=1))
+    >>> print(first, second)
+    [0. 0. 1.] [0. 0. 1.]
 
     two intersections, first one is closer to line_origin
 
-    >>> intersections = compute_line_ellipsoid_intersections(
-                    [100, 0, 0], [-5, 0, 0], Ellipsoid(1, 2)
-                )
-    >>> print(intersections)
-    (array([-2.,  0.,  0.]), array([2., 0., 0.]))
+    >>> first, second = compute_line_ellipsoid_intersections([100, 0, 0], [-5, 0, 0], Geod(a=2, b=1))
+    >>> print(first, second)
+    [-2.  0.  0.] [2. 0. 0.]
 
     multiple lines
 
     >>> line_origins = np.array([[-5, 0, 2], [-5, 0, 1], [-5, 0, 0]])
     >>> line_directions = np.array([[0, 0, 100], [100, 0, 0], [100, 0, 0]])
-    >>> intersections = compute_line_ellipsoid_intersections(
-                line_directions, line_origins, Ellipsoid(1, 2)
-            )
-    >>> print(intersections)
-    ((), (array([-8.8817842e-16,  0.0000000e+00,  1.0000000e+00]),),
-         (array([-2.,  0.,  0.]), array([2., 0., 0.])))
+    >>> first, second = compute_line_ellipsoid_intersections(line_directions, line_origins, Geod(a=2, b=1))
+    >>> print(first, second)
+    [[nan nan nan]
+     [ 0.  0.  1.]
+     [-2.  0.  0.]] [[nan nan nan]
+     [ 0.  0.  1.]
+     [ 2.  0.  0.]]
+
+    extract validity mask for multiple lines
+
+    >>> line_origins = np.array([[-5, 0, 2], [-5, 0, 1], [-5, 0, 0]])
+    >>> line_directions = np.array([[0, 0, 100], [100, 0, 0], [100, 0, 0]])
+    >>> first, second = compute_line_ellipsoid_intersections(line_directions, line_origins, Geod(a=2, b=1))
+    >>> valid_mask = ~np.isnan(first[:, 0])
+    >>> print(first[valid_mask], second[valid_mask])
+    [[ 0.  0.  1.]
+     [-2.  0.  0.]] [[0. 0. 1.]
+     [2. 0. 0.]]
+
     """
-
-    # TODO: return always two solutions or None and check where this is used to update code accordingly
-
     line_directions = np.asarray(line_directions)
     line_origins = np.asarray(line_origins)
 
@@ -144,24 +150,34 @@ def compute_line_ellipsoid_intersections(
     linear_terms = np.broadcast_to(linear_terms, (num_lines,))
     constant_terms = np.broadcast_to(constant_terms, (num_lines,))
 
-    polynomials = (
-        np.polynomial.Polynomial(coeffs) for coeffs in zip(constant_terms, linear_terms, quadratic_terms, strict=False)
-    )
+    # Normalize the quadratic so the leading coefficient is 1, then use the half-b form:
+    #   t^2 + 2*b*t + c = 0  with  b = linear_terms / (2 * quadratic_terms),  c = constant_terms / quadratic_terms
+    # Discriminant: d = b^2 - c
+    # Stable root (larger |t|, avoids cancellation): r_stable = -b - sign(b)*sqrt(d)  (sign chosen so terms add)
+    # Other root via Vieta's formula (smaller |t|, closest to line_origin): r_other = c / r_stable
+    # Special case b=0: r_stable = sqrt(d), r_other = -sqrt(d)  (equal absolute values)
+    b = linear_terms / (2 * quadratic_terms)
+    c_norm = constant_terms / quadratic_terms
+
+    d = b * b - c_norm
+    sqrt_d = np.sqrt(np.maximum(d, 0))
+
+    r_stable = -b - np.copysign(sqrt_d, b)
+    r_other = np.where(r_stable != 0, c_norm / r_stable, -sqrt_d)
+
+    no_intersection = d < 0
+    r_first = np.where(no_intersection, np.nan, r_other)
+    r_second = np.where(no_intersection, np.nan, r_stable)
 
     line_origins = np.broadcast_to(line_origins, (num_lines, 3))
     line_directions = np.broadcast_to(line_directions, (num_lines, 3))
 
-    def solve_equation(poly: np.polynomial.Polynomial) -> tuple:
-        return tuple(sorted(np.unique([root for root in poly.roots() if np.isreal(root)]), key=abs))
+    first_intersections = line_origins + r_first[:, np.newaxis] * line_directions
+    second_intersections = line_origins + r_second[:, np.newaxis] * line_directions
 
-    assert isinstance(line_directions, np.ndarray)
-    assert isinstance(line_origins, np.ndarray)
-    intersections_tuple = tuple(
-        tuple(origin + root * direction for root in solve_equation(poly))
-        for poly, origin, direction in zip(polynomials, line_origins, line_directions, strict=False)
-    )
-
-    return intersections_tuple[0] if ndim == 1 else intersections_tuple
+    if ndim == 1:
+        return first_intersections[0], second_intersections[0]
+    return first_intersections, second_intersections
 
 
 __all__ = ["WGS84", "create_inflated_WGS84_ellipsoid", "compute_line_ellipsoid_intersections"]
