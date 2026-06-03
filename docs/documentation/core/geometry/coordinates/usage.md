@@ -27,6 +27,7 @@ Convert Earth-Centered Earth-Fixed (ECEF) cartesian coordinates to geodetic Lati
 
 ```python title="Batch coordinate conversion"
 import numpy as np
+
 from perseo_core.geometry.coords_conversions import xyz2llh, llh2xyz
 
 # multiple points (N, 3) array, lat [deg]/lon[deg]/height[m]
@@ -65,6 +66,7 @@ Convert Universal Transverse Mercator (UTM) coordinates to geodetic Latitude, Lo
 
 ```python title="Batch coordinate conversion"
 import numpy as np
+
 from perseo_core.geometry.coords_conversions import utm2llh, llh2utm
 
 # multiple points (N, 3) array, lat [deg]/lon[deg]/height[m]
@@ -102,6 +104,7 @@ This transformation accounts for Earth rotation at specific UTC times.
 
 ```python title="Batch ECEF to ECI"
 import numpy as np
+
 from perseo_core.geometry.coords_conversions import ecef2eci
 from perseo_core.timing.precise_datetime import PreciseDateTime
 

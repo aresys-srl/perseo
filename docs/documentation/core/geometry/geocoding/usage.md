@@ -31,6 +31,7 @@ Here are some examples on how to use the direct geocoding functions:
 
 ```python title=""
 import numpy as np
+
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
 
 sensor_position = np.array(
@@ -55,6 +56,7 @@ ground_points = direct_geocoding_monostatic(
 
 ```python title=""
 import numpy as np
+
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_bistatic
 
 sensor_position = np.array(
@@ -81,6 +83,7 @@ ground_points = direct_geocoding_bistatic(
 
 ```python title=""
 import numpy as np
+
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_looking_direction
 
 sensor_positions = np.array(
@@ -115,6 +118,7 @@ Here are some examples on how to use the inverse geocoding functions:
 
 ```python title=""
 import numpy as np
+
 from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_monostatic
 
 trajectory = ... # (1)!
@@ -138,6 +142,7 @@ azimuth_times, range_times = inverse_geocoding_monostatic(
 
 ```python title=""
 import numpy as np
+
 from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_bistatic
 
 trajectory_rx = ... # (1)!

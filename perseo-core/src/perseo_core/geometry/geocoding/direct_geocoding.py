@@ -57,7 +57,7 @@ def direct_geocoding_with_looking_direction(
 
     The looking direction defines a line: its norm and sign do not matter.
 
-    Based on :meth:`perseo.geometry.utilities.ellipsoid.compute_line_ellipsoid_intersections`
+    Based on :meth:`perseo_core.geometry.utilities.ellipsoid.compute_line_ellipsoid_intersections`
 
     Parameters
     ----------
@@ -101,7 +101,7 @@ def direct_geocoding_with_look_angles(
 ) -> npt.NDArray[np.floating]:
     """Compute the points at a given altitude over WGS84 ellipsoid seen with the given look angles.
 
-    Based on :meth:`perseo.geometry.geocoding.direct_geocoding.direct_geocoding_with_looking_direction`
+    Based on :meth:`perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_with_looking_direction`
 
     Parameters
     ----------
