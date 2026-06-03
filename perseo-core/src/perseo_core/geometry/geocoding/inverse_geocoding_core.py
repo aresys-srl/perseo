@@ -8,7 +8,6 @@ from __future__ import annotations
 import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
-from scipy.interpolate import interp1d
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
 from perseo_core.geometry.navigation.trajectory import Trajectory
@@ -81,24 +80,14 @@ def inverse_geocoding_monostatic_core(
     RuntimeError
         Newton method could not converge
     """
-
-    # input conversion and management
-    ground_points = np.asarray(ground_points)
     azimuth_times = np.asarray(initial_guesses).copy()
-    doppler_frequencies = (
-        np.asarray(doppler_frequencies) if not np.isscalar(doppler_frequencies) else doppler_frequencies
-    )
-    if scene_velocity is None:
-        scene_velocity = np.zeros(3)
-    else:
-        scene_velocity = np.asarray(scene_velocity)
 
-    if np.size(initial_guesses) != ground_points.size // 3 and not (
-        ground_points.size // 3 == 1 or np.size(initial_guesses) == 1
-    ):
+    scene_velocity = np.zeros(3) if scene_velocity is None else scene_velocity
+
+    if azimuth_times.size != ground_points.size // 3 and not (ground_points.size // 3 == 1 or azimuth_times.size == 1):
         raise RuntimeError(
             "Ambiguous matching between initial guess times "
-            + f"{np.shape(initial_guesses)} and "
+            + f"{azimuth_times.shape} and "
             + f"ground points {np.shape(ground_points)}"
         )
 
@@ -222,18 +211,12 @@ def inverse_geocoding_bistatic_core(
     RuntimeError
         Newton method could not converge
     """
-
-    # input conversion and management
-    ground_points = np.asarray(ground_points)
     num_points = ground_points.size // 3
     one_size_array = 0
     if ground_points.ndim != 1 and ground_points.size // 3 == 1:
         one_size_array = 1
-    azimuth_times_rx = np.asarray(initial_guesses).copy()
+    azimuth_times_rx = np.array(initial_guesses).copy()
     azimuth_times_tx = azimuth_times_rx.copy()
-    doppler_frequencies = (
-        np.asarray(doppler_frequencies) if not np.isscalar(doppler_frequencies) else doppler_frequencies
-    )
 
     if azimuth_times_rx.size > ground_points.size // 3 == 1:
         ground_points = np.full((azimuth_times_rx.size, 3), ground_points)
@@ -243,12 +226,12 @@ def inverse_geocoding_bistatic_core(
         ground_points = np.full((np.size(doppler_frequencies), 3), ground_points)
         num_points = ground_points.size // 3
 
-    if np.size(initial_guesses) != ground_points.size // 3 and not (
-        ground_points.size // 3 == 1 or np.size(initial_guesses) == 1
+    if azimuth_times_rx.size != ground_points.size // 3 and not (
+        ground_points.size // 3 == 1 or azimuth_times_rx.size == 1
     ):
         raise RuntimeError(
             "Ambiguous matching between initial guess times "
-            + f"{np.shape(initial_guesses)} and "
+            + f"{azimuth_times_rx.shape} and "
             + f"ground points {ground_points.shape}"
         )
 
@@ -452,26 +435,17 @@ def inverse_geocoding_monostatic_init_core(
             doppler_frequency=doppler_frequencies[id_point],
             wavelength=wavelength,
         )
-
+        assert isinstance(doppler_centroid_equation, np.ndarray)
         zero_crossing_indexes = _compute_zero_downcrossings(doppler_centroid_equation)
 
-        interval_index = []
-        if zero_crossing_indexes:
-            azimuth_time = _interpolate_axis(axis=time_axis, values=np.asarray(zero_crossing_indexes) - 0.5)
-            interval_index = _get_interval_id_from_axis(axis=time_axis, values=azimuth_time).tolist()
-
+        if zero_crossing_indexes.size > 0:
+            zero_crossing_pts_idx.append(zero_crossing_indexes)  # left interval edge
+        elif abs(doppler_centroid_equation[0]) < abs(doppler_centroid_equation[-1]):
+            zero_crossing_pts_idx.append(np.array([0]))
         else:
-            if abs(doppler_centroid_equation[0]) < abs(doppler_centroid_equation[-1]):
-                interval_index.append(0)
-            else:
-                interval_index.append(np.size(doppler_centroid_equation) - 1)
+            zero_crossing_pts_idx.append(np.array([doppler_centroid_equation.size - 1]))
 
-        zero_crossing_pts_idx.append(np.array(interval_index))
-
-    # converting indexes to times
-    az_initial_time_guesses = _interpolate_axis(axis=time_axis, values=zero_crossing_pts_idx)
-
-    return az_initial_time_guesses
+    return [time_axis[idx] for idx in zero_crossing_pts_idx]
 
 
 def inverse_geocoding_bistatic_init_core(
@@ -523,7 +497,7 @@ def inverse_geocoding_bistatic_init_core(
         points = points.reshape(1, points.size)
 
     array_one_dim = 0
-    doppler_frequencies = np.asarray(doppler_frequencies)
+    doppler_frequencies = np.array(doppler_frequencies)
     if doppler_frequencies.ndim == 1:
         array_one_dim = 1
     doppler_frequencies = np.atleast_1d(doppler_frequencies)
@@ -557,7 +531,7 @@ def inverse_geocoding_bistatic_init_core(
     common_time_axis = axis_start_time + np.arange(axis_length / d_t) * d_t
     relative_time_axis = (common_time_axis - axis_start_time).astype(float)
 
-    zero_crossing_pts_idx = []
+    zero_crossing_pts_idx: list[int] = []
     for id_point, point in enumerate(points):
         # computing doppler equations at zero doppler for both orbits
         doppler_centroid_equation_rx = doppler_equation_monostatic_residuals(
@@ -593,18 +567,17 @@ def inverse_geocoding_bistatic_init_core(
 
         zero_crossing_indexes = _compute_zero_downcrossings(residual)
 
-        if len(zero_crossing_indexes) == 0:
-            if abs(residual[0]) < abs(residual[-1]):
-                zero_crossing_indexes.append(0)
-            else:
-                zero_crossing_indexes.append(len(residual) - 1)
-
-        # saving only the first zero crossing occurrence, that is the smallest time
-        zero_crossing_pts_idx.append(zero_crossing_indexes[0])
+        if zero_crossing_indexes.size > 0:
+            # saving only the first zero crossing occurrence, that is the smallest time
+            zero_crossing_pts_idx.append(zero_crossing_indexes[0] + 1)  # right interval edge
+        elif abs(residual[0]) < abs(residual[-1]):
+            zero_crossing_pts_idx.append(0)
+        else:
+            zero_crossing_pts_idx.append(residual.size - 1)
 
     azimuth_init_guesses = common_time_axis[zero_crossing_pts_idx]
     if azimuth_init_guesses.size == 1 and ground_points.ndim == 1 and array_one_dim == 0:
-        azimuth_init_guesses = azimuth_init_guesses[0]
+        return azimuth_init_guesses[0]
 
     return azimuth_init_guesses
 
@@ -659,19 +632,19 @@ def inverse_geocoding_monostatic_attitude_core(
     RuntimeError
         Newton method could not converge
     """
+    intial_guess_size = 1 if isinstance(initial_guesses, (PreciseDateTime, np.datetime64)) else np.size(initial_guesses)
 
-    ground_points = np.asarray(ground_points)
-
-    if np.size(initial_guesses) != ground_points.size // 3 and not (
-        ground_points.size // 3 == 1 or np.size(initial_guesses) == 1
-    ):
+    if intial_guess_size != ground_points.size // 3 and not (ground_points.size // 3 == 1 or intial_guess_size == 1):
+        initial_guess_shape = (
+            () if isinstance(initial_guesses, (PreciseDateTime, np.datetime64)) else np.shape(initial_guesses)
+        )
         raise RuntimeError(
             "Ambiguous matching between initial guess times "
-            + f"{np.shape(initial_guesses)} and "
+            + f"{initial_guess_shape} and "
             + f"ground points {ground_points.shape}"
         )
 
-    azimuth_times = np.asarray(initial_guesses).copy()
+    azimuth_times = np.array(initial_guesses).copy()
 
     # starting the newton method to solve the equation
     for _ in range(max_iter):
@@ -722,104 +695,7 @@ def inverse_geocoding_monostatic_attitude_core(
     return azimuth_times, slant_range
 
 
-def _compute_zero_downcrossings(values: np.ndarray) -> list[int]:
-    """Compute the indexes of the descending zero crossing values.
-
-    Parameters
-    ----------
-    values : np.ndarray
-        values to analyse
-
-    Returns
-    -------
-    list[int]
-        list of indexes after a descending zero crossing
-    """
-    return [k for k in range(1, len(values)) if (values[k] * values[k - 1] <= 0 and values[k] < values[k - 1])]
-
-
-def _get_interval_id_from_axis(axis: np.ndarray, values: np.ndarray) -> np.ndarray:
-    """Get the interval indexes of the input axis corresponding to the input values.
-
-    Parameters
-    ----------
-    axis : np.ndarray
-        axis to get interval from
-    values : np.ndarray
-        values from which to get the closest axis index
-
-    Returns
-    -------
-    np.ndarray
-        indexes of the axis corresponding to the input values
-
-    Raises
-    ------
-    RuntimeError
-        if the axis is not monotone
-    """
-
-    axis_origin = axis[0]
-    relative_axis = np.array(axis - axis_origin, dtype=float)
-    relative_values = np.array(np.atleast_1d(values) - axis_origin, dtype=float)
-    steps = np.diff(relative_axis)
-    mean_step = np.mean(steps)
-
-    # assess axis monotony
-    if (steps > 0).all():
-        is_increasing_axis = True
-    elif (steps < 0).all():
-        is_increasing_axis = False
-    else:
-        raise RuntimeError("Expecting monotone axis")
-
-    # assess axis regularity
-    is_regular_axis = False
-    if np.all(np.isclose(steps, steps[0])):
-        is_regular_axis = True
-
-    if is_regular_axis:
-
-        def to_int_and_clip(value):
-            return np.clip(int(np.floor(value)), 0, relative_axis.size - 1)
-
-        val = relative_values / mean_step
-
-        if isinstance(val, np.ndarray):
-            return np.array([to_int_and_clip(v) for v in val])
-
-        return np.array([to_int_and_clip(val)])
-
-    else:
-        out = []
-        for val in relative_values:
-            closest_pos = np.argmin(np.abs((relative_axis - val)))
-            if is_increasing_axis:
-                if relative_axis[closest_pos] > val:
-                    out.append(closest_pos - 1)
-                else:
-                    out.append(closest_pos)
-            else:
-                if relative_axis[closest_pos] < val:
-                    out.append(closest_pos - 1)
-                else:
-                    out.append(closest_pos)
-        return np.clip(np.array(out, dtype=int), 0, relative_values.size - 1)
-
-
-def _interpolate_axis(axis: np.ndarray, values: np.ndarray) -> np.ndarray:
-    """Interpolate input axis at the selected values.
-
-    Parameters
-    ----------
-    axis : np.ndarray
-        axis to be interpolate
-    values : np.ndarray
-        values at which interpolate the axis
-
-    Returns
-    -------
-    np.ndarray
-        interpolated values
-    """
-    return interp1d(range(axis.size), axis - axis[0])(values) + axis[0]
+def _compute_zero_downcrossings(values: np.ndarray) -> npt.NDArray[np.integer]:
+    """Compute the indexes of the descending zero crossing values."""
+    mask = (values[1:] * values[:-1] <= 0) & (values[1:] < values[:-1])
+    return np.where(mask)[0]
