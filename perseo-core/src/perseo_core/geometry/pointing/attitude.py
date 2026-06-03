@@ -104,7 +104,7 @@ class Attitude(Generic[T]):
 
     def _check_time_validity(self, time: T | npt.NDArray[T]) -> None:
         """Check input times validity with respect to attitude time domain."""
-        if np.any(time < self.domain[0]) or np.any(time > self.domain[1]):
+        if np.any(time < self.domain[0]) or np.any(time > self.domain[1]):  # type: ignore
             raise RuntimeError("One (or more) of the input times is outside of attitude time domain.")
 
     def evaluate(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
@@ -123,7 +123,7 @@ class Attitude(Generic[T]):
             reference system of the input reference frames
         """
         self._check_time_validity(time)
-        relative_times = time - self.domain[0]
+        relative_times: npt.NDArray[np.floating] = time - self.domain[0]  # type: ignore
         return self._slerp(relative_times).as_matrix()
 
     @classmethod

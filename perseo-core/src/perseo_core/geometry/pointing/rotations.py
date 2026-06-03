@@ -13,8 +13,14 @@ from scipy.spatial.transform import Rotation
 
 RotationOrder = Literal["YPR", "YRP", "PRY", "PYR", "RYP", "RPY"]
 
-
-_ROT_TRANSLATION_TABLE = str.maketrans({"Y": "Z", "P": "Y", "R": "X"})
+_ROT_ORDER_TO_EULER_SEQ: dict[RotationOrder, Literal["ZYX", "ZXY", "YXZ", "YZX", "XZY", "XYZ"]] = {
+    "YPR": "ZYX",
+    "YRP": "ZXY",
+    "PRY": "YXZ",
+    "PYR": "YZX",
+    "RYP": "XZY",
+    "RPY": "XYZ",
+}
 
 
 def euler_angles_to_rotation(
@@ -61,7 +67,10 @@ def euler_angles_to_rotation(
 
     >>> euler_angles_to_rotation("YPR", euler_angles=[[0, 0, np.deg2rad(30.0)]])
     """
-    euler_sequence = order.translate(_ROT_TRANSLATION_TABLE)
+    if order not in get_args(RotationOrder):
+        raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
+
+    euler_sequence = _ROT_ORDER_TO_EULER_SEQ[order]
     euler_angles = ypr_rad[..., ["YPR".index(rotation_axis) for rotation_axis in order]]
     return Rotation.from_euler(euler_sequence, euler_angles)
 
@@ -88,7 +97,7 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> npt.ND
     if order not in get_args(RotationOrder):
         raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
 
-    euler_sequence = order.translate(_ROT_TRANSLATION_TABLE)
+    euler_sequence = _ROT_ORDER_TO_EULER_SEQ[order]
     euler_angles = rotation.as_euler(euler_sequence)
 
     indices = [order.index(axis) for axis in "YPR"]

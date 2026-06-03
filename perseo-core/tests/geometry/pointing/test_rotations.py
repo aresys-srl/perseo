@@ -198,7 +198,7 @@ class TestRotation:
         with pytest.raises(ValueError):
             euler_angles_to_rotation(order="PPP", ypr_rad=self._euler_angles)
 
-        with pytest.raises(AttributeError):
+        with pytest.raises(ValueError):
             euler_angles_to_rotation(order=None, ypr_rad=self._euler_angles)
 
         with pytest.raises(ValueError):
