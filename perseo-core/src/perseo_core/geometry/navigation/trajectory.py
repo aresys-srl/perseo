@@ -49,7 +49,7 @@ class Trajectory(ABC, Generic[T]):
         """Check if time is within the trajectory domain."""
         start, end = self.domain
         time_array = np.atleast_1d(time)
-        return bool(np.all((time_array >= start) & (time_array <= end)))
+        return bool(np.all((time_array >= start) & (time_array <= end)))  # type: ignore
 
     @abstractmethod
     def position(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:

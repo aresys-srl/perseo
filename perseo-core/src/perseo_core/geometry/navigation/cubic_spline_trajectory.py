@@ -79,7 +79,7 @@ class CubicSplineTrajectory(Trajectory[T]):
         self._interpolator = CubicSpline(
             x=np.array(times - times[0], dtype=float),
             y=self._positions,
-            bc_type=boundary_conditions,
+            bc_type=boundary_conditions,  # type: ignore
             extrapolate=False,
         )
 
@@ -107,7 +107,7 @@ class CubicSplineTrajectory(Trajectory[T]):
         """Retrieve relative times from given absolute times."""
         if not self._is_time_valid(time):
             raise RuntimeError("One (or more) of the input times is outside of trajectory time boundaries")
-        return time - self.domain[0]
+        return time - self.domain[0]  # type: ignore
 
     def position(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Evaluate x, y, z position at given time.
