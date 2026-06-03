@@ -37,6 +37,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["ruff", "pylint", "nox"]
+type = ["mypy", "types-python-dateutil", "scipy-stubs"]
 test = ["pytest>8.0.0", "pytest-cov>7.0.0"]
 docs = ["zensical", "mkdocstrings-python"]
 
@@ -97,6 +98,10 @@ disable = ["import-error", "logging-fstring-interpolation", "logging-not-lazy"]
 [tool.pylint.format]
 max-line-length = 120
 
+[[tool.mypy.overrides]]
+module = ["pyproj.*", "astropy.*"]
+ignore_missing_imports = true
+
 [tool.pdm]
 distribution = true
 
@@ -112,3 +117,7 @@ lint_fix = "ruff check --show-fixes --fix-only"
 test = "python -m pytest ./tests -v"
 check_code = { composite = ["format_check", "lint_check"] }
 fix_format = { composite = ["format", "sort", "lint_fix"] }
+
+[tool.pyrefly]
+project-includes = ["src/**/*.py*"]
+min-severity = "warn"

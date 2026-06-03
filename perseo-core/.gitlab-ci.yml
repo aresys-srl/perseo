@@ -42,6 +42,22 @@ check_code_compliance_pylint:
     - python3.12 -m pip install nox
     - python3.12 -m nox -s pylint
 
+check_types_mypy:
+  stage: analysis
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - python3.12 -m pip install -e .[type]
+    - python3.12 -m mypy ./src/perseo_core
+
+check_types_pyrefly:
+  stage: analysis
+  extends:
+    - .tags_manylinux_2_28
+  script:
+    - python3.12 -m pip install -e . pyrefly
+    - python3.12 -m pyrefly check --python-interpreter-path $(python3.12 -c "import sys; print(sys.executable)")
+
 # === test - unittest ========================================================
 # ============================================================================
 unittest_linux:
