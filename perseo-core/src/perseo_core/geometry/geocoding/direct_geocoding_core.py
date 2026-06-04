@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
 
-from perseo_core.geometry.utilities.ellipsoid import WGS84
+from perseo_core.geometry.ellipsoid import WGS84
 
 
 def direct_geocoding_monostatic_core(

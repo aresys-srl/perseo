@@ -26,6 +26,10 @@ from numpy import typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
+from perseo_core.geometry.ellipsoid import (
+    compute_line_ellipsoid_intersections,
+    create_inflated_WGS84_ellipsoid,
+)
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_bistatic_core,
     direct_geocoding_monostatic_core,
@@ -38,10 +42,6 @@ from perseo_core.geometry.pointing.antenna_reference_frame import (
 from perseo_core.geometry.pointing.reference_frames import (
     ReferenceFrame,
     compute_sensor_local_axis,
-)
-from perseo_core.geometry.utilities.ellipsoid import (
-    compute_line_ellipsoid_intersections,
-    create_inflated_WGS84_ellipsoid,
 )
 
 SensorLookDirection = Literal["RIGHT", "LEFT"]
@@ -57,7 +57,7 @@ def direct_geocoding_with_looking_direction(
 
     The looking direction defines a line: its norm and sign do not matter.
 
-    Based on :meth:`perseo_core.geometry.utilities.ellipsoid.compute_line_ellipsoid_intersections`
+    Based on :meth:`perseo_core.geometry.ellipsoid.compute_line_ellipsoid_intersections`
 
     Parameters
     ----------

@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.ellipsoid import WGS84
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_init, direct_geocoding_monostatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     _direct_geocoding_monostatic_newton,
@@ -17,7 +18,6 @@ from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_monostatic_core,
     direct_geocoding_monostatic_core_range_vectorized,
 )
-from perseo_core.geometry.utilities.ellipsoid import WGS84
 
 
 def _doppler_equation_residual(

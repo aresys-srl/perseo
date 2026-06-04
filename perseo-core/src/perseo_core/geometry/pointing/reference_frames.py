@@ -22,10 +22,10 @@ import numpy as np
 import numpy.typing as npt
 
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
+from perseo_core.geometry.ellipsoid import WGS84
 from perseo_core.geometry.pointing.rotations import (
     euler_angles_to_rotation,
 )
-from perseo_core.geometry.utilities.ellipsoid import WGS84
 
 _SIDEREAL_DAY = 86164.09054
 _earth_angular_velocity = 2.0 * np.pi / _SIDEREAL_DAY

@@ -162,3 +162,6 @@ def compute_line_ellipsoid_intersections(
     )
 
     return intersections_tuple[0] if ndim == 1 else intersections_tuple
+
+
+__all__ = ["WGS84", "create_inflated_WGS84_ellipsoid", "compute_line_ellipsoid_intersections"]
