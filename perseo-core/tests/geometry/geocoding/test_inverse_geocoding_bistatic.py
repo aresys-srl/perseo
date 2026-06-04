@@ -12,7 +12,7 @@ from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_b
 from perseo_core.geometry.geocoding.inverse_geocoding_core import (
     inverse_geocoding_bistatic_init_core,
 )
-from perseo_core.timing.precise_datetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 
 def _doppler_equation_residual(

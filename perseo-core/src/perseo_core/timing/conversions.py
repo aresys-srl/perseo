@@ -84,3 +84,6 @@ def precise_datetime_to_numpy(
             return np.array(np.datetime64(times.item().isoformat(), "ns"))
 
         return np.array([np.datetime64(t.isoformat(), "ns") for t in times])
+
+
+__all__ = ["date_to_gps_week"]

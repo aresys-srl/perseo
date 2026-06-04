@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Tests for timing.precise_datetime module"""
+"""Tests for timing module"""
 
 from dataclasses import dataclass
 
 import numpy as np
 import pytest
 
-from perseo_core.timing.precise_datetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 
 @dataclass(frozen=True)

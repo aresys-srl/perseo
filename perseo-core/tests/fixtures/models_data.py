@@ -14,7 +14,7 @@ from perseo_core.geometry.pointing import (
     compute_antenna_attitude_from_euler_angles,
     compute_sensor_local_axis,
 )
-from perseo_core.timing.precise_datetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 
 @dataclass

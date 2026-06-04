@@ -6,7 +6,7 @@
 import numpy as np
 
 from perseo_core.geometry.navigation import CubicSplineTrajectory
-from perseo_core.timing.precise_datetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 
 def get_angles_from_trajectory_test_data() -> dict[str, object]:

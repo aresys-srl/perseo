@@ -676,3 +676,6 @@ class PreciseDateTime:
             timespec=timespec,
         )
         return f"{date}{sep:s}{time}Z"
+
+
+__all__ = ["PreciseDateTime"]

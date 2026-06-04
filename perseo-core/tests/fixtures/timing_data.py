@@ -7,7 +7,7 @@ from datetime import datetime
 
 import numpy as np
 
-from perseo_core.timing.precise_datetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 
 def get_gps_week_conversion_test_data():

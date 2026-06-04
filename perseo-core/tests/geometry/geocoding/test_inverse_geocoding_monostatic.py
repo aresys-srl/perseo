@@ -19,7 +19,7 @@ from perseo_core.geometry.geocoding.inverse_geocoding_core import (
     inverse_geocoding_monostatic_core,
 )
 from perseo_core.geometry.navigation import Trajectory
-from perseo_core.timing.precise_datetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 
 def _doppler_equation_residual(

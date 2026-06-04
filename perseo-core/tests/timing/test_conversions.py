@@ -6,7 +6,7 @@
 import numpy as np
 import pytest
 
-import perseo_core.timing.conversions as conv
+from perseo_core.timing import conversions
 
 
 class TestGPSWeekConversion:
@@ -21,7 +21,7 @@ class TestGPSWeekConversion:
 
     def test_date_to_gps_week_conversion(self) -> None:
         """Test that date_to_gps_week returns correct GPS week and day of week."""
-        gps_week, day_of_week = conv.date_to_gps_week(self.input_date)
+        gps_week, day_of_week = conversions.date_to_gps_week(self.input_date)
 
         assert isinstance(gps_week, int)
         assert isinstance(day_of_week, int)
@@ -31,7 +31,7 @@ class TestGPSWeekConversion:
     def test_date_to_gps_week_conversion_with_error(self) -> None:
         """Test that date_to_gps_week raises ValueError for dates outside valid GPS epoch range."""
         with pytest.raises(ValueError):
-            conv.date_to_gps_week(self.input_date_2)
+            conversions.date_to_gps_week(self.input_date_2)
 
 
 class TestPreciseDateTimeToNumpy:
@@ -46,12 +46,12 @@ class TestPreciseDateTimeToNumpy:
 
     def test_single_time_conversion(self) -> None:
         """Test that precise_datetime_to_numpy correctly converts single PreciseDateTime to numpy datetime64."""
-        conv_time = conv.precise_datetime_to_numpy(times=self.input_date + self.time_deltas[0])
+        conv_time = conversions.precise_datetime_to_numpy(times=self.input_date + self.time_deltas[0])
         np.testing.assert_equal(float(conv_time - self.ref_results[0]), 0.0)
 
     def test_multiple_times_conversion(self) -> None:
         """Test that precise_datetime_to_numpy correctly converts list of PreciseDateTime objects."""
-        conv_times = conv.precise_datetime_to_numpy(times=[self.input_date + t for t in self.time_deltas])
+        conv_times = conversions.precise_datetime_to_numpy(times=[self.input_date + t for t in self.time_deltas])
         np.testing.assert_equal(
             (conv_times - self.ref_results).astype(float), np.zeros_like(self.ref_results, dtype=float)
         )
