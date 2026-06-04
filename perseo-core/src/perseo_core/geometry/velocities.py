@@ -85,3 +85,6 @@ def compute_ground_velocity(
     ground_velocities = np.array([np.sum(v, axis=-1) / averaging_interval_duration for v in ground_velocities_norm])
 
     return ground_velocities if not isinstance(look_angles_rad, float) else ground_velocities[0]
+
+
+__all__ = ["compute_ground_velocity"]

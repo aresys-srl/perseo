@@ -241,3 +241,6 @@ def compute_nadir_from_sensor_positions(
     sensor_position_ground = llh2xyz(sensor_position_ground)
 
     return sensor_position_ground - sensor_positions
+
+
+__all__ = ["get_geometric_squint_angle", "compute_look_angles_core", "compute_incidence_angles_core"]
