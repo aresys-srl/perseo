@@ -65,8 +65,8 @@ from __future__ import annotations
 
 import logging
 import sys
+from functools import partial
 from pathlib import Path
-from typing import Any
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -100,7 +100,7 @@ FILE_FORMAT = "| %(levelname)-9s @ %(module)-30.30s| %(asctime)s | %(message)s"
 class StdOutRichHandler(RichHandler):
     """Rich console handler for stdout (non-error messages)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the StdOutRichHandler with a custom Rich theme and filter for non-error levels."""
         super().__init__(
             console=Console(file=sys.stdout, theme=_RICH_THEME),
@@ -117,7 +117,7 @@ class StdOutRichHandler(RichHandler):
 class StdErrRichHandler(RichHandler):
     """Rich console handler for stderr (error messages)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the StdErrRichHandler with a custom Rich theme and filter for error levels."""
         super().__init__(
             console=Console(file=sys.stderr, theme=_RICH_THEME),
@@ -134,7 +134,7 @@ class StdErrRichHandler(RichHandler):
 class PlainFileFormatter(logging.Formatter):
     """Plain text formatter for file output (no Rich markup)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the PlainFileFormatter with a plain format string."""
         super().__init__(fmt=FILE_FORMAT)
 
@@ -142,7 +142,7 @@ class PlainFileFormatter(logging.Formatter):
 class CustomFileHandler(logging.FileHandler):
     """File handler with plain text formatting and UTF-8 encoding."""
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str) -> None:
         """Initialize the CustomFileHandler with a plain text formatter and UTF-8 encoding."""
         super().__init__(filename=filename, encoding="utf-8")
         self.setFormatter(PlainFileFormatter())
@@ -152,7 +152,7 @@ _PERSEO_LOGGER: logging.Logger = logging.getLogger("perseo")
 _PERSEO_LOGGER.addHandler(logging.NullHandler())
 
 
-def initialize(log_file: str | None = None, log_level: int = logging.DEBUG):
+def initialize(log_file: str | None = None, log_level: int = logging.DEBUG) -> None:
     """Initialize the Perseo logger with Rich console and optional file handler.
 
     Parameters
@@ -181,7 +181,7 @@ def initialize(log_file: str | None = None, log_level: int = logging.DEBUG):
     install_rich_tracebacks(show_locals=True)
 
 
-def set_level(level: int):
+def set_level(level: int) -> None:
     """Set the logging level for the Perseo logger.
 
     Parameters
@@ -207,16 +207,6 @@ error = _PERSEO_LOGGER.error
 critical = _PERSEO_LOGGER.critical
 
 
-def fail(msg: str, *args: object, **kwargs: Any) -> None:
-    """Log a message with the custom FAIL level."""
-    return _PERSEO_LOGGER.log(FAIL, msg, *args, **kwargs)
-
-
-def success(msg: str, *args: object, **kwargs: Any) -> None:
-    """Log a message with the custom SUCCESS level."""
-    return _PERSEO_LOGGER.log(SUCCESS, msg, *args, **kwargs)
-
-
-def trace(msg: str, *args: object, **kwargs: Any) -> None:
-    """Log a message with the custom TRACE level."""
-    return _PERSEO_LOGGER.log(TRACE, msg, *args, **kwargs)
+fail = partial(_PERSEO_LOGGER.log, FAIL)
+success = partial(_PERSEO_LOGGER.log, SUCCESS)
+trace = partial(_PERSEO_LOGGER.log, TRACE)
