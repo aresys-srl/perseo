@@ -150,14 +150,12 @@ An example of common use case is the following:
 
 ```python title="Attitude from ECEF quaternions"
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from perseo_core.geometry.navigation import CubicSplineTrajectory
 from perseo_core.geometry.pointing import (
     Attitude,
     compute_euler_angles_from_antenna_reference_frame,
     compute_sensor_local_axis,
-    rotation_to_euler_angles,
 )
 
 # Init ECEF sensor trajectory
@@ -215,7 +213,6 @@ from perseo_core.geometry.navigation import CubicSplineTrajectory
 from perseo_core.geometry.pointing import (
     compute_antenna_attitude_from_euler_angles,
     compute_sensor_local_axis,
-    euler_angles_to_rotation,
 )
 
 # Init ECEF sensor trajectory

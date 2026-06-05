@@ -80,23 +80,23 @@ def compute_look_angles_core(
 
     1 position, nadir -- 1 point
 
-    >>> look_angle = compute_look_angles(position, nadir_dir, point)
+    >>> look_angle = compute_look_angles_core(position, nadir_dir, point)
 
     N positions, nadirs -- 1 point -- point is broadcasted
 
-    >>> look_angles = compute_look_angles(positions, nadir_directions, point)
+    >>> look_angles = compute_look_angles_core(positions, nadir_directions, point)
 
     1 position, nadir -- N points -- position and nadir are broadcasted
 
-    >>> look_angles = compute_look_angles(position, nadir_dir, points)
+    >>> look_angles = compute_look_angles_core(position, nadir_dir, points)
 
     N positions, nadirs -- N points
 
-    >>> look_angles = compute_look_angles(positions, nadir_directions, points)
+    >>> look_angles = compute_look_angles_core(positions, nadir_directions, points)
 
     Skip normalization of nadir direction
 
-    >>> look_angle = compute_look_angles(position, nadir_dir, point, assume_nadir_directions_normalized=True)
+    >>> look_angle = compute_look_angles_core(position, nadir_dir, point, assume_nadir_directions_normalized=True)
 
     """
     sensor_positions = np.asarray(sensor_positions)
@@ -168,25 +168,25 @@ def compute_incidence_angles_core(
 
     1 position -- 1 point
 
-    >>> incidence_angle = compute_incidence_angles(position, point)
+    >>> incidence_angle = compute_incidence_angles_core(position, point)
 
     N positions -- 1 point -- point is broadcasted
 
-    >>> incidence_angles = compute_incidence_angles(positions, point)
+    >>> incidence_angles = compute_incidence_angles_core(positions, point)
 
     1 position -- N points -- position is broadcasted
 
-    >>> incidence_angles = compute_incidence_angles(position, points)
+    >>> incidence_angles = compute_incidence_angles_core(position, points)
 
     N positions -- N points
 
-    >>> incidence_angles = compute_incidence_angles(positions, points)
+    >>> incidence_angles = compute_incidence_angles_core(positions, points)
 
     User defined surface normal with normalization skipping
 
-    >>> incidence_angle = compute_incidence_angles(position, point,
+    >>> incidence_angle = compute_incidence_angles_core(position, point,
             surface_normals=surf_norm,
-            assume_nadir_directions_normalized=True)
+            assume_surface_normals_normalized=True)
     """
 
     sensor_positions = np.asarray(sensor_positions)

@@ -136,7 +136,7 @@ azimuth_times, range_times = inverse_geocoding_monostatic(
 )
 ```
 
-1. Refer to the [trajectory tutorial](../trajectory/usage.md) for further information on how to create a trajectory object.
+1. Refer to the [trajectory tutorial](../navigation/usage.md) for further information on how to create a trajectory object.
 
 ### Inverse geocoding bistatic
 
@@ -158,8 +158,8 @@ azimuth_times, range_times = inverse_geocoding_bistatic(
     ground_points=ground_point,
     doppler_frequencies=0.0,
     wavelength=1.0,
-    az_initial_time_guesses=trajectory.domain[0] + 0.5,
+    az_initial_time_guesses=trajectory_rx.domain[0] + 0.5,
 )
 ```
 
-1. Refer to the [trajectory tutorial](../trajectory/usage.md) for further information on how to create a trajectory object.
+1. Refer to the [trajectory tutorial](../navigation/usage.md) for further information on how to create a trajectory object.

@@ -65,7 +65,7 @@ def euler_angles_to_rotation(
 
     rotation order as string
 
-    >>> euler_angles_to_rotation("YPR", euler_angles=[[0, 0, np.deg2rad(30.0)]])
+    >>> euler_angles_to_rotation("YPR", ypr_rad=[[0, 0, np.deg2rad(30.0)]])
     """
     if order not in get_args(RotationOrder):
         raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")

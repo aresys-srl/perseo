@@ -105,7 +105,7 @@ This transformation accounts for Earth rotation at specific UTC times.
 ```python title="Batch ECEF to ECI"
 import numpy as np
 
-from perseo_core.geometry.coords_conversions import ecef2eci
+from perseo_core.geometry.coords_conversions import ecef2eci, eci2ecef
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 # Multiple positions at different times
