@@ -50,7 +50,8 @@ def date_to_gps_week(date: PreciseDateTime | datetime) -> tuple[int, int]:
     delta = date - _GPS_START_DATE
 
     if delta.days < 0:
-        raise ValueError(f"Invalid date: {date} cannot be before {_GPS_START_DATE}")
+        msg = f"Invalid date: {date} cannot be before {_GPS_START_DATE}"
+        raise ValueError(msg)
 
     weeks = delta.days // 7
     day_of_week = delta.days % 7

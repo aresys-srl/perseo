@@ -9,7 +9,7 @@ import datetime
 import functools
 import math
 import re
-from typing import overload
+from typing import Self, overload
 
 from dateutil import parser, tz
 
@@ -18,13 +18,14 @@ _ISO_TIME_SEPARATOR = ":"
 _ISO_FRACTION_REGEX = re.compile("[\\.,]([0-9]+)")
 
 
-def _parse_isoformat_date(date_string):
+def _parse_isoformat_date(date_string: str) -> tuple[tuple[int, int, int], str]:
     """Parse string formatted according to ISO, returns date components and remaining chars to parse."""
-    # parse year
-    if len(date_string) < 4:
-        raise ValueError("Incomplete year component")
-    year = int(date_string[:4])
-    date_string = date_string[4:]
+    year_length = 4
+    if len(date_string) < year_length:
+        msg = "Incomplete year component"
+        raise ValueError(msg)
+    year = int(date_string[:year_length])
+    date_string = date_string[year_length:]
     if not date_string:
         return (year, 1, 1), date_string
 
@@ -33,36 +34,40 @@ def _parse_isoformat_date(date_string):
     if has_separator:
         date_string = date_string[1:]
 
-    # parse month
-    if len(date_string) < 2:
-        raise ValueError("Incomplete month component")
-    month = int(date_string[:2])
-    date_string = date_string[2:]
+    month_length = 2
+    if len(date_string) < month_length:
+        msg = "Incomplete month component"
+        raise ValueError(msg)
+    month = int(date_string[:month_length])
+    date_string = date_string[month_length:]
     if not date_string:
         if has_separator:
             return (year, month, 1), date_string
-        raise ValueError("Invalid ISO date")
+        msg = "Invalid ISO date"
+        raise ValueError(msg)
 
     # skip separator if present
     if has_separator:
         if date_string[0] != _ISO_DATE_SEPARATOR:
-            raise ValueError("Unexpected date separator")
+            msg = "Unexpected date separator"
+            raise ValueError(msg)
         date_string = date_string[1:]
 
-    # parse day
-    if len(date_string) < 2:
-        raise ValueError("Incomplete day component")
-    day = int(date_string[:2])
-    date_string = date_string[2:]
+    day_length = 2
+    if len(date_string) < day_length:
+        msg = "Incomplete day component"
+        raise ValueError(msg)
+    day = int(date_string[:day_length])
+    date_string = date_string[day_length:]
 
     return (year, month, day), date_string
 
 
-def _isoformat_date(year, month, day):
+def _isoformat_date(year: int, month: int, day: int) -> str:
     return f"{year:04d}-{month:02d}-{day:02d}"
 
 
-def _parse_isoformat_tz(time_string):
+def _parse_isoformat_tz(time_string: str) -> tuple[datetime.tzinfo | None, str]:
     if not time_string:
         return None, time_string
 
@@ -70,61 +75,79 @@ def _parse_isoformat_tz(time_string):
         return tz.UTC, time_string[1:]
 
     if time_string[0] == "+" or time_string[0] == "-":
-        raise ValueError("Unsupported timezone")
+        msg = "Unsupported timezone"
+        raise ValueError(msg)
 
     return None, time_string
 
 
-def _parse_isoformat_time(time_string):
+def _strip_timezone(time: tuple[int, int, int, int, datetime.tzinfo | None]) -> tuple[int, int, int, int]:
+    timezone = time[-1]
+    if timezone is not None and timezone != tz.UTC:
+        msg = f"Unsupported timezone: {timezone}"
+        raise ValueError(msg)
+    return time[:-1]
+
+
+def _parse_isoformat_section(time_string: str, tag: str, length: int = 2) -> tuple[int, str]:
+    if len(time_string) < length:
+        msg = f"Incomplete {tag} component"
+        raise ValueError(msg)
+    value = int(time_string[:length])
+    time_string = time_string[length:]
+    return value, time_string
+
+
+def _parse_isoformat_hour(time_string: str) -> tuple[int, str]:
+    return _parse_isoformat_section(time_string, "hour")
+
+
+def _parse_isoformat_minute(time_string: str) -> tuple[int, str]:
+    return _parse_isoformat_section(time_string, "minute")
+
+
+def _parse_isoformat_second(time_string: str) -> tuple[int, str]:
+    return _parse_isoformat_section(time_string, "second")
+
+
+def _skip_separator(time_string: str, separator: str = _ISO_TIME_SEPARATOR) -> tuple[str, bool]:
+    if time_string and time_string[0] == separator:
+        return time_string[1:], True
+    return time_string, False
+
+
+def _parse_isoformat_time(time_string: str) -> tuple[tuple[int, int, int, int, datetime.tzinfo | None], str]:
     """Parse string formatted according to ISO, returns time components and remaining chars to parse."""
-    hour, minute, second, picosecond, timezone = 0, 0, 0, 0, None
+    minute, second, picosecond, timezone = 0, 0, 0, None
 
-    # parse hour
-    if len(time_string) < 2:
-        raise ValueError("Incomplete hour component")
-    hour = int(time_string[:2])
-    time_string = time_string[2:]
+    hour, time_string = _parse_isoformat_hour(time_string)
     if not time_string:
         return (hour, minute, second, picosecond, timezone), time_string
 
-    # time zone
     timezone, time_string = _parse_isoformat_tz(time_string)
     if timezone is not None:
         return (hour, minute, second, picosecond, timezone), time_string
 
-    # skip separator
-    has_separator = time_string[0] == _ISO_TIME_SEPARATOR
-    if has_separator:
-        time_string = time_string[1:]
+    time_string, has_separator = _skip_separator(time_string)
 
-    # parse minute
-    if len(time_string) < 2:
-        raise ValueError("Incomplete minute component")
-    minute = int(time_string[:2])
-    time_string = time_string[2:]
+    minute, time_string = _parse_isoformat_minute(time_string)
     if not time_string:
         return (hour, minute, second, picosecond, timezone), time_string
 
-    # time zone
     timezone, time_string = _parse_isoformat_tz(time_string)
     if timezone is not None:
         return (hour, minute, second, picosecond, timezone), time_string
 
-    # skip separator
     if has_separator:
         if time_string[0] != _ISO_TIME_SEPARATOR:
-            raise ValueError("Unexpected time separator")
+            msg = "Unexpected time separator"
+            raise ValueError(msg)
         time_string = time_string[1:]
 
-    # parse second
-    if len(time_string) < 2:
-        raise ValueError("Incomplete second component")
-    second = int(time_string[:2])
-    time_string = time_string[2:]
+    second, time_string = _parse_isoformat_second(time_string)
     if not time_string:
         return (hour, minute, second, picosecond, timezone), time_string
 
-    # time zone
     timezone, time_string = _parse_isoformat_tz(time_string)
     if timezone is not None:
         return (hour, minute, second, picosecond, timezone), time_string
@@ -141,13 +164,12 @@ def _parse_isoformat_time(time_string):
 
         time_string = time_string[len(fraction_match.group()) :]
 
-    # time zone
     timezone, time_string = _parse_isoformat_tz(time_string)
 
     return (hour, minute, second, picosecond, timezone), time_string
 
 
-def _isoformat_time(hour, minute, second, picosecond, timespec="auto"):
+def _isoformat_time(hour: int, minute: int, second: int, picosecond: int, timespec: str = "auto") -> str:
     fmt_specs = {
         "hours": "{:02d}",
         "minutes": "{:02d}:{:02d}",
@@ -158,7 +180,7 @@ def _isoformat_time(hour, minute, second, picosecond, timespec="auto"):
         "picoseconds": "{:02d}:{:02d}:{:02d}.{:012d}",
     }
 
-    fraction_of_second = int(picosecond)
+    fraction_of_second = picosecond
     if timespec == "auto":
         timespec = "picoseconds" if picosecond else "seconds"
     elif timespec == "milliseconds":
@@ -171,7 +193,8 @@ def _isoformat_time(hour, minute, second, picosecond, timespec="auto"):
     try:
         fmt = fmt_specs[timespec]
     except KeyError as exc:
-        raise ValueError("Unknown timespec value") from exc
+        msg = "Unknown timespec value"
+        raise ValueError(msg) from exc
 
     return fmt.format(hour, minute, second, fraction_of_second)
 
@@ -216,7 +239,7 @@ class PreciseDateTime:
     _PRECISION = 1e-12  # Precision of the decimal part
     _SECONDS_IN_A_DAY = 24 * 60 * 60
 
-    def __init__(self, seconds: float = 0.0, picoseconds: float = 0.0):
+    def __init__(self, seconds: float = 0.0, picoseconds: float = 0.0) -> None:
         """Initialize the PreciseDateTime object with the specified time point.
 
         Parameters
@@ -234,7 +257,9 @@ class PreciseDateTime:
         """
         self._set_state(seconds, picoseconds)
 
-    def _set_state(self, seconds: float, picoseconds: float):
+    __hash__ = None  # type: ignore[assignment]
+
+    def _set_state(self, seconds: float, picoseconds: float) -> None:
         """Set the object at the required time point.
 
         Parameters
@@ -256,24 +281,28 @@ class PreciseDateTime:
 
         # if 'tot_picoseconds' is too small the "normalized_picoseconds" may round up
         # to 1e12 that is not allowed as an internal state.
-        if -1.0e-2 < tot_picoseconds < 1.0e-2:
-            tot_picoseconds = round(tot_picoseconds, ndigits=2)
+        ndigits = 2
+        picoseconds_threhsold = 10**-ndigits
+        if -picoseconds_threhsold < tot_picoseconds < picoseconds_threhsold:
+            tot_picoseconds = round(tot_picoseconds, ndigits=ndigits)
 
         seconds_adj = math.floor(tot_picoseconds * self._PRECISION)
         normalized_seconds = int(seconds) + seconds_adj
         normalized_picoseconds = tot_picoseconds % (1 / self._PRECISION)
 
         if normalized_seconds < 0:
-            raise ValueError("The specified time is before the reference date")
+            msg = "The specified time is before the reference date"
+            raise ValueError(msg)
 
-        assert normalized_seconds >= 0 and 0 <= normalized_picoseconds < 1 / self._PRECISION
+        assert normalized_seconds >= 0
+        assert 0 <= normalized_picoseconds < 1 / self._PRECISION
 
         self._seconds = normalized_seconds
         self._picoseconds = normalized_picoseconds
 
         assert isinstance(self._seconds, int)
 
-    def __iadd__(self, seconds: float) -> PreciseDateTime:  # type: ignore[misc]
+    def __iadd__(self, seconds: float) -> Self:
         """Add the input seconds to the current time point.
 
         Parameters
@@ -297,7 +326,7 @@ class PreciseDateTime:
         )
         return self
 
-    def __isub__(self, seconds: float) -> PreciseDateTime:  # type: ignore[misc]
+    def __isub__(self, seconds: float) -> Self:  # type: ignore[misc]
         """Subtract the input seconds from the current time point.
 
         Parameters
@@ -395,14 +424,14 @@ class PreciseDateTime:
 
         return absolute_datetime.strftime(updated_string_format) + tmp_str
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare the current time point with another PreciseDateTime object for equality."""
         if isinstance(other, self.__class__):
             return (other._seconds == self._seconds) and (other._picoseconds == self._picoseconds)
 
         return NotImplemented
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: object) -> bool:
         """Compare the current time point with another PreciseDateTime object."""
         if isinstance(other, self.__class__):
             return self._seconds < other._seconds or (
@@ -549,7 +578,8 @@ class PreciseDateTime:
             seconds_fraction = float("0." + utc_str.split(".")[1].strip())
             absolute_datetime = parser.parse(utc_str).replace(microsecond=0)
         except Exception as exc:
-            raise ValueError(f"Invalid utc string: {utc_str}") from exc
+            msg = f"Invalid utc string: {utc_str}"
+            raise ValueError(msg) from exc
 
         time_diff_from_reference_date = absolute_datetime - cls._REFERENCE_DATETIME
 
@@ -601,7 +631,8 @@ class PreciseDateTime:
         """
         absolute_datetime = datetime.datetime(year, month, day, hours, minutes, seconds)
         if not 0 <= picoseconds < 1 / cls._PRECISION:
-            raise ValueError(f"Picoseconds must be non-negative and less than {1 / cls._PRECISION}")
+            msg = f"Picoseconds must be non-negative and less than {1 / cls._PRECISION}"
+            raise ValueError(msg)
 
         time_diff_from_reference_date = absolute_datetime - cls._REFERENCE_DATETIME
         total_seconds = time_diff_from_reference_date.total_seconds()
@@ -630,32 +661,28 @@ class PreciseDateTime:
             in case of an invalid input datetime string
 
         """
-        if not isinstance(datetime_string, str):
-            raise ValueError("fromisoformat: argument must be a str")
-
         date_string = datetime_string
         try:
             date, time_string = _parse_isoformat_date(date_string)
         except ValueError as exc:
-            raise ValueError(f"Invalid isoformat string: {datetime_string}") from exc
+            msg = f"Invalid isoformat string: {datetime_string}"
+            raise ValueError(msg) from exc
 
-        time = ()
+        time: tuple[int, ...] = ()
         if time_string:
             if time_string[0] == sep:
                 time_string = time_string[1:]
 
             try:
-                time, unparsed_string = _parse_isoformat_time(time_string)
-
-                timezone = time[-1]
-                if timezone is not None and timezone != tz.UTC:
-                    raise ValueError(f"Unsupported timezone: {timezone}")
-                time = time[:-1]
+                time_tz, unparsed_string = _parse_isoformat_time(time_string)
+                time = _strip_timezone(time_tz)
             except ValueError as exc:
-                raise ValueError(f"Invalid isoformat string: {datetime_string}") from exc
+                msg = f"Invalid isoformat string: {datetime_string}"
+                raise ValueError(msg) from exc
 
             if unparsed_string:
-                raise ValueError(f"Invalid isoformat string: {datetime_string}")
+                msg = f"Invalid isoformat string: {datetime_string}"
+                raise ValueError(msg)
 
         return cls.from_numeric_datetime(*(date + time))
 
@@ -684,7 +711,7 @@ class PreciseDateTime:
             absolute_datetime.hour,
             absolute_datetime.minute,
             absolute_datetime.second,
-            self._picoseconds,
+            int(self._picoseconds),
             timespec=timespec,
         )
         return f"{date}{sep:s}{time}Z"
