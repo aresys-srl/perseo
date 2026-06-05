@@ -5,13 +5,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_look_angles
-from perseo_core.geometry.navigation.trajectory import Trajectory
-from perseo_core.geometry.pointing.reference_frames import ReferenceFrame
-from perseo_core.timing.precise_datetime import PreciseDateTime
+
+if TYPE_CHECKING:
+    from perseo_core.geometry.navigation.trajectory import Trajectory
+    from perseo_core.geometry.pointing.reference_frames import ReferenceFrame
+    from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 def compute_ground_velocity(
@@ -66,17 +70,17 @@ def compute_ground_velocity(
     # computing ground points at each sensor position/velocity in the selected averaging time interval, for each
     # input look angle
     look_angles = np.atleast_1d(look_angles_rad)
-    ground_points = []
-    for angle in look_angles:
-        ground_points.append(
-            direct_geocoding_with_look_angles(
-                sensor_positions=sensor_positions,
-                sensor_velocities=sensor_velocities,
-                reference_frame=reference_frame,
-                look_angles=angle,
-                altitude=geodetic_altitude,
-            )
+    ground_points = [
+        direct_geocoding_with_look_angles(
+            sensor_positions=sensor_positions,
+            sensor_velocities=sensor_velocities,
+            reference_frame=reference_frame,
+            look_angles=angle,
+            altitude=geodetic_altitude,
         )
+        for angle in look_angles
+    ]
+
     # computing ground velocity components (as ground points coordinates diff) for each time interval, for each
     # input look angle, and then computing their norm
     ground_velocities_norm = [np.linalg.norm(np.diff(g, axis=0), axis=-1) for g in ground_points]

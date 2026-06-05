@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 
@@ -16,8 +18,10 @@ from perseo_core.geometry.geocoding.direct_geocoding import (
     SensorLookDirection,
     direct_geocoding_monostatic,
 )
-from perseo_core.geometry.navigation.trajectory import Trajectory
-from perseo_core.timing.precise_datetime import PreciseDateTime
+
+if TYPE_CHECKING:
+    from perseo_core.geometry.navigation.trajectory import Trajectory
+    from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 def compute_incidence_angles(
@@ -28,6 +32,7 @@ def compute_incidence_angles(
     geodetic_altitude: float | None = None,
     doppler_frequencies: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
+    *,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
     """Compute incidence angles in radians/degrees from sensor trajectory.
@@ -82,6 +87,7 @@ def compute_look_angles(
     geodetic_altitude: float | None = None,
     doppler_frequencies: float | npt.NDArray[np.floating] | None = None,
     carrier_wavelength: float | None = None,
+    *,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
     """Compute look angles in radians/degrees from sensor trajectory.

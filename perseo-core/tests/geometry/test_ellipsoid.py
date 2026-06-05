@@ -10,23 +10,23 @@ from pyproj import Geod
 from perseo_core.geometry.ellipsoid import (
     WGS84,
     compute_line_ellipsoid_intersections,
-    create_inflated_WGS84_ellipsoid,
+    create_inflated_wgs84_ellipsoid,
 )
 
 
 class TestCreateInflatedWGS84Ellipsoid:
     def test_inflate_positive(self):
-        inflated = create_inflated_WGS84_ellipsoid(5)
+        inflated = create_inflated_wgs84_ellipsoid(5)
         assert inflated.a == pytest.approx(WGS84.a + 5)
         assert inflated.b == pytest.approx(WGS84.b + 5)
 
     def test_inflate_zero(self):
-        inflated = create_inflated_WGS84_ellipsoid(0)
+        inflated = create_inflated_wgs84_ellipsoid(0)
         assert inflated.a == pytest.approx(WGS84.a)
         assert inflated.b == pytest.approx(WGS84.b)
 
     def test_inflate_negative(self):
-        inflated = create_inflated_WGS84_ellipsoid(-0.5)
+        inflated = create_inflated_wgs84_ellipsoid(-0.5)
         assert inflated.a == pytest.approx(WGS84.a - 0.5)
         assert inflated.b == pytest.approx(WGS84.b - 0.5)
 

@@ -17,8 +17,6 @@ The trajectory is initialized from three arrays of equal length:
 - `velocities`: Velocity state vectors (N, 3) as [vx, vy, vz] components
 """
 
-# ruff: noqa: PLR2004
-
 from __future__ import annotations
 
 from typing import TypeVar

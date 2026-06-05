@@ -58,19 +58,23 @@ def _get_utm_epsg_code(zone: str) -> int:
 
     """
     if len(zone) not in (2, 3):
-        raise ValueError(f"Zone must be string format like '1N' or '33S', not {zone}")
+        msg = f"Zone must be string format like '1N' or '33S', not {zone}"
+        raise ValueError(msg)
 
     hemisphere = zone[-1].upper()
     try:
         zone_num = int(zone[:-1])
     except ValueError as e:
-        raise ValueError(f"Invalid zone format '{zone}'. Expected format like '33N' or '33S'") from e
+        msg = f"Invalid zone format '{zone}'. Expected format like '33N' or '33S'"
+        raise ValueError(msg) from e
 
     if zone_num < 1 or zone_num > 60:
-        raise ValueError(f"UTM zone number must be between 1 and 60, not {zone_num}")
+        msg = f"UTM zone number must be between 1 and 60, not {zone_num}"
+        raise ValueError(msg)
 
     if hemisphere not in ("N", "S"):
-        raise ValueError(f"Hemisphere must be 'N' or 'S', got '{hemisphere}'")
+        msg = f"Hemisphere must be 'N' or 'S', got '{hemisphere}'"
+        raise ValueError(msg)
 
     return UTM_EPSG_NORTH_BASE + zone_num if hemisphere == "N" else UTM_EPSG_SOUTH_BASE + zone_num
 
@@ -315,4 +319,4 @@ def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, *, radians: bool =
     return result
 
 
-__all__ = ["xyz2llh", "llh2xyz", "ecef2eci", "eci2ecef", "utm2llh", "llh2utm"]
+__all__ = ["ecef2eci", "eci2ecef", "llh2utm", "llh2xyz", "utm2llh", "xyz2llh"]

@@ -29,7 +29,7 @@ from scipy.constants import speed_of_light
 from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
 from perseo_core.geometry.ellipsoid import (
     compute_line_ellipsoid_intersections,
-    create_inflated_WGS84_ellipsoid,
+    create_inflated_wgs84_ellipsoid,
 )
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     direct_geocoding_bistatic_core,
@@ -75,7 +75,7 @@ def direct_geocoding_with_looking_direction(
         ground points with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
 
     """
-    inflated_ellipsoid = create_inflated_WGS84_ellipsoid(altitude)
+    inflated_ellipsoid = create_inflated_wgs84_ellipsoid(altitude)
 
     first_intersections, _ = compute_line_ellipsoid_intersections(
         line_directions=looking_directions,

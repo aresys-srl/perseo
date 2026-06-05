@@ -51,6 +51,7 @@ def compute_look_angles_core(
     sensor_positions: npt.NDArray[np.floating],
     ground_points: npt.NDArray[np.floating],
     nadir_directions: npt.NDArray[np.floating] | None = None,
+    *,
     assume_nadir_directions_normalized: bool = False,
 ) -> float | npt.NDArray[np.floating]:
     """Compute the look angles in radians from sensor positions and ground points.
@@ -107,13 +108,16 @@ def compute_look_angles_core(
         nadir_directions = np.asarray(nadir_directions)
 
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
-        raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     if nadir_directions.ndim > 2 or nadir_directions.shape[-1] != 3:
-        raise ValueError(f"nadir_directions has invalid shape: {nadir_directions.shape}, it should be (3,) or (N, 3)")
+        msg = f"nadir_directions has invalid shape: {nadir_directions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     if ground_points.ndim > 2 or ground_points.shape[-1] != 3:
-        raise ValueError(f"points has invalid shape: {ground_points.shape}, it should be (3,) or (N, 3)")
+        msg = f"points has invalid shape: {ground_points.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     los_directions = ground_points - sensor_positions
     with np.errstate(invalid="ignore", divide="ignore"):
@@ -130,6 +134,7 @@ def compute_look_angles_core(
 def compute_incidence_angles_core(
     sensor_positions: npt.NDArray[np.floating],
     ground_points: npt.NDArray[np.floating],
+    *,
     surface_normals: npt.NDArray[np.floating] | None = None,
     assume_surface_normals_normalized: bool = False,
 ) -> float | npt.NDArray[np.floating]:
@@ -192,15 +197,18 @@ def compute_incidence_angles_core(
     ground_points = np.asarray(ground_points)
 
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
-        raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     if ground_points.ndim > 2 or ground_points.shape[-1] != 3:
-        raise ValueError(f"points has invalid shape: {ground_points.shape}, it should be (3,) or (N, 3)")
+        msg = f"points has invalid shape: {ground_points.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     if surface_normals is not None:
         surface_normals = np.asarray(surface_normals)
         if surface_normals.ndim > 2 or surface_normals.shape[-1] != 3:
-            raise ValueError(f"surface_normals has invalid shape: {surface_normals.shape}, it should be (3,) or (N, 3)")
+            msg = f"surface_normals has invalid shape: {surface_normals.shape}, it should be (3,) or (N, 3)"
+            raise ValueError(msg)
 
     los_directions = ground_points - sensor_positions
     los_directions = los_directions / np.linalg.norm(los_directions, axis=-1, keepdims=True)
@@ -243,4 +251,4 @@ def compute_nadir_from_sensor_positions(
     return sensor_position_ground - sensor_positions
 
 
-__all__ = ["get_geometric_squint_angle", "compute_look_angles_core", "compute_incidence_angles_core"]
+__all__ = ["compute_incidence_angles_core", "compute_look_angles_core", "get_geometric_squint_angle"]

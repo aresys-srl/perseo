@@ -5,13 +5,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.angles_core import get_geometric_squint_angle
-from perseo_core.geometry.navigation.trajectory import Trajectory
-from perseo_core.timing.precise_datetime import PreciseDateTime
+
+if TYPE_CHECKING:
+    from perseo_core.geometry.navigation.trajectory import Trajectory
+    from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 def doppler_equation(
@@ -98,10 +102,12 @@ def doppler_equation_monostatic_residuals(
 
     """
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
-        raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     if sensor_velocities.ndim > 2 or sensor_velocities.shape[-1] != 3:
-        raise ValueError(f"sensor_velocities has invalid shape: {sensor_velocities.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_velocities has invalid shape: {sensor_velocities.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     is_scalar = ground_point.ndim == 1 and sensor_positions.ndim == 1 and sensor_velocities.ndim == 1
 
@@ -112,7 +118,9 @@ def doppler_equation_monostatic_residuals(
     line_of_sight = ground_point - sensor_positions
     line_of_sight_norm = np.linalg.norm(line_of_sight, axis=1)
 
-    def col_wise_scalar_product(matrix_a, matrix_b):
+    def col_wise_scalar_product(
+        matrix_a: npt.NDArray[np.floating], matrix_b: npt.NDArray[np.floating]
+    ) -> npt.NDArray[np.floating]:
         return np.einsum("ij,ij->i", matrix_a, matrix_b)  # Einstein notation -- col wise dot product.
 
     result = (

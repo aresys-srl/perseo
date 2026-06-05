@@ -12,7 +12,7 @@ from pyproj import Geod
 WGS84 = Geod(ellps="WGS84")
 
 
-def create_inflated_WGS84_ellipsoid(height: float) -> Geod:
+def create_inflated_wgs84_ellipsoid(height: float) -> Geod:
     """Create an inflated WGS84 ellipsoid.
 
     Parameters
@@ -111,14 +111,16 @@ def compute_line_ellipsoid_intersections(
     ndim = max(line_origins.ndim, line_directions.ndim)
 
     if line_directions.shape[-1] != 3:
-        raise ValueError(f"Invalid line_direction shape: {line_directions.shape} should be (3,) or (N,3)")
+        msg = f"Invalid line_direction shape: {line_directions.shape} should be (3,) or (N,3)"
+        raise ValueError(msg)
 
     if line_origins.shape[-1] != 3:
-        raise ValueError(f"Invalid line_origin shape: {line_origins.shape} should be (3,) or (N,3)")
+        msg = f"Invalid line_origin shape: {line_origins.shape} should be (3,) or (N,3)"
+        raise ValueError(msg)
 
     line_directions = line_directions / np.linalg.norm(line_directions, axis=-1, keepdims=True)
 
-    # line: x = line_origin + t * line_direction
+    # line: x = line_origin + t times line_direction
     # equation: t ** 2 + b t + c  = 0
 
     assert isinstance(line_directions, np.ndarray)
@@ -152,7 +154,7 @@ def compute_line_ellipsoid_intersections(
 
     # Normalize the quadratic so the leading coefficient is 1, then use the half-b form:
     #   t^2 + 2*b*t + c = 0  with  b = linear_terms / (2 * quadratic_terms),  c = constant_terms / quadratic_terms
-    # Discriminant: d = b^2 - c
+    # Discriminant is d = b^2 - c
     # Stable root (larger |t|, avoids cancellation): r_stable = -b - sign(b)*sqrt(d)  (sign chosen so terms add)
     # Other root via Vieta's formula (smaller |t|, closest to line_origin): r_other = c / r_stable
     # Special case b=0: r_stable = sqrt(d), r_other = -sqrt(d)  (equal absolute values)
@@ -180,4 +182,4 @@ def compute_line_ellipsoid_intersections(
     return first_intersections, second_intersections
 
 
-__all__ = ["WGS84", "create_inflated_WGS84_ellipsoid", "compute_line_ellipsoid_intersections"]
+__all__ = ["WGS84", "compute_line_ellipsoid_intersections", "create_inflated_wgs84_ellipsoid"]
