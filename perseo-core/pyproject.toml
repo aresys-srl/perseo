@@ -77,32 +77,6 @@ skip_covered = true
 show_missing = true
 fail_under = 70
 
-[tool.ruff]
-line-length = 120
-output-format = "grouped"
-extend-exclude = [".venv", "docs", "scripts"]
-
-[tool.ruff.format]
-docstring-code-format = true
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "A", "B", "I", "D"]
-ignore = [
-    "D203", # incorrect-blank-line-before-class
-    "D213", # multi-line-summary-second-line
-]
-
-[tool.ruff.lint.per-file-ignores]
-"__init__.py" = [
-    "F403", # undefined-local-with-import-star
-]
-"tests/**" = [
-    "D", # docstrings rules are not enforced
-]
-"noxfile.py" = [
-    "D", # docstrings rules are not enforced
-]
-
 [tool.pylint.master]
 fail-under = 8
 fail-on = ["unused-import"]
