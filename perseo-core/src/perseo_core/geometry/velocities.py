@@ -13,8 +13,6 @@ from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.geometry.pointing.reference_frames import ReferenceFrame
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
-# TODO: add effective velocity computation
-
 
 def compute_ground_velocity(
     trajectory: Trajectory,
