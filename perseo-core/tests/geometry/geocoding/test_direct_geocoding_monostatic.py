@@ -58,7 +58,7 @@ def _doppler_equation_residual(
         sensor_velocity=sensor_vel,
         distance=distance.reshape(-1),
         wavelength=wavelength,
-        doppler_frequency=doppler_freq,
+        doppler_frequencies=doppler_freq,
     )
     return np.array(doppler_residual)
 

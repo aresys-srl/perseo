@@ -241,8 +241,8 @@ def direct_geocoding_bistatic_core(
             initial_guesses=initial_guesses,
             sensor_position_tx=items[2],
             sensor_velocity_tx=items[3],
-            range_time=items[0],
-            doppler_frequency=items[1],
+            range_times=items[0],
+            doppler_frequencies=items[1],
             altitude=altitude,
             wavelength=wavelength,
         )
@@ -257,8 +257,8 @@ def _direct_geocoding_monostatic_newton(
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
     initial_guesses: npt.NDArray[np.floating],
-    range_times: float,
-    doppler_frequencies: float,
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     altitude: float,
     max_iterations: int = 8,
@@ -274,10 +274,10 @@ def _direct_geocoding_monostatic_newton(
         sensor velocities with shape (3,) or (N, 3)
     initial_guesses : npt.NDArray[np.floating]
         initial guesses with shape (3,) or (N, 3)
-    range_time : float
-        range time
-    doppler_frequency : float
-        doppler frequency
+    range_times : float | npt.NDArray[np.floating]
+        range times with shape float or (N,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        doppler frequencies with shape float or (N,)
     wavelength : float
         carrier signal wavelength
     altitude : float
@@ -318,7 +318,7 @@ def _direct_geocoding_monostatic_newton(
             sensor_velocity=sensor_velocities,
             distance=distance,
             wavelength=wavelength,
-            doppler_frequency=doppler_frequencies,
+            doppler_frequencies=doppler_frequencies,
         )
 
         residuals = [
@@ -357,8 +357,8 @@ def _direct_geocoding_bistatic_newton(
     initial_guesses: npt.NDArray[np.floating],
     sensor_position_tx: npt.NDArray[np.floating],
     sensor_velocity_tx: npt.NDArray[np.floating],
-    range_time: float,
-    doppler_frequency: float,
+    range_times: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
     altitude: float,
     max_iterations: int = 8,
@@ -378,10 +378,10 @@ def _direct_geocoding_bistatic_newton(
         sensor tx position, with shape (3,)
     sensor_velocity_tx : npt.NDArray[np.floating]
         sensor tx velocity, with shape (3,)
-    range_time : float
-        range time
-    doppler_frequency : float
-        doppler frequency
+    range_times : float | npt.NDArray[np.floating]
+        range times with shape float or (N,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        doppler frequencies with shape float or (N,)
     wavelength : float
         carrier signal wavelength
     altitude : float
@@ -399,7 +399,7 @@ def _direct_geocoding_bistatic_newton(
 
     tolerance_squared = tolerance * tolerance
 
-    range_distance_square = (speed_of_light * range_time) ** 2
+    range_distance_square = (speed_of_light * range_times) ** 2
     geoid_r_min = WGS84.b + altitude
     geoid_r_max = WGS84.a + altitude
     r_ep2 = geoid_r_min**2
@@ -430,7 +430,7 @@ def _direct_geocoding_bistatic_newton(
             wavelength=wavelength,
             pv_scalar=los_vel_product_rx,
             distance=distance_rx,
-            doppler_frequency=doppler_frequency,
+            doppler_frequencies=doppler_frequencies,
             sensor_velocity=sensor_velocities_rx,
             los=line_of_sight_rx,
         )
@@ -438,7 +438,7 @@ def _direct_geocoding_bistatic_newton(
             wavelength=wavelength,
             pv_scalar=los_vel_product_tx,
             distance=distance_tx,
-            doppler_frequency=doppler_frequency,
+            doppler_frequencies=doppler_frequencies,
             sensor_velocity=sensor_velocity_tx,
             los=line_of_sight_tx,
         )
@@ -561,7 +561,7 @@ def _doppler_equation(
     wavelength: float,
     pv_scalar: float | npt.NDArray[np.floating],
     distance: float | npt.NDArray[np.floating],
-    doppler_frequency: float | npt.NDArray[np.floating],
+    doppler_frequencies: float | npt.NDArray[np.floating],
     sensor_velocity: npt.NDArray[np.floating],
     los: npt.NDArray[np.floating],
 ) -> tuple[float | npt.NDArray[np.floating], npt.NDArray[np.floating]]:
@@ -573,10 +573,10 @@ def _doppler_equation(
         carrier signal wavelength
     pv_scalar : float | npt.NDArray[np.floating],
         scalar product between sensor velocity and line of sight scalar or shape (N,)
-    distance : float
+    distance : float | npt.NDArray[np.floating]
         ground point - sensor position distance scalar or shape (N,)
-    doppler_frequency : float
-        doppler frequency scalar or shape (N,)
+    doppler_frequencies : float | npt.NDArray[np.floating]
+        doppler frequencies scalar or shape (N,)
     sensor_velocity : npt.NDArray[np.floating]
         sensor velocity (3,) or shape (N, 3)
     los : npt.NDArray[np.floating]
@@ -591,7 +591,7 @@ def _doppler_equation(
     """
 
     c_factor = 2.0 / wavelength / distance
-    doppler_equation = c_factor * pv_scalar + doppler_frequency
+    doppler_equation = c_factor * pv_scalar + doppler_frequencies
     norm_pv = pv_scalar / distance**2
     grad_doppler_equation = (c_factor * (-sensor_velocity + (norm_pv * los.T).T).T).T
     return doppler_equation, grad_doppler_equation

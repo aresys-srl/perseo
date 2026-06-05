@@ -1132,8 +1132,8 @@ class TestNewtonForDirectGeocodingBistatic:
             initial_guesses=initial_guesses,
             sensor_position_tx=self.position,
             sensor_velocity_tx=self.velocity,
-            range_time=self.range_times[0],
-            doppler_frequency=self.doppler_frequency,
+            range_times=self.range_times[0],
+            doppler_frequencies=self.doppler_frequency,
             wavelength=self.wavelength,
             altitude=self.altitude,
         )
