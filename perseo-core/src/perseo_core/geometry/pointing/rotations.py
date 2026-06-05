@@ -5,11 +5,13 @@
 
 from __future__ import annotations
 
-from typing import Literal, get_args
+from typing import TYPE_CHECKING, Literal, get_args
 
-import numpy as np
-import numpy.typing as npt
 from scipy.spatial.transform import Rotation
+
+if TYPE_CHECKING:
+    import numpy as np
+    import numpy.typing as npt
 
 RotationOrder = Literal["YPR", "YRP", "PRY", "PYR", "RYP", "RPY"]
 
@@ -68,7 +70,8 @@ def euler_angles_to_rotation(
 
     """
     if order not in get_args(RotationOrder):
-        raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
+        msg = f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}"
+        raise ValueError(msg)
 
     euler_sequence = _ROT_ORDER_TO_EULER_SEQ[order]
     euler_angles = ypr_rad[..., ["YPR".index(rotation_axis) for rotation_axis in order]]
@@ -96,7 +99,8 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> npt.ND
     """
     # upper case / lower case axis character matters
     if order not in get_args(RotationOrder):
-        raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
+        msg = f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}"
+        raise ValueError(msg)
 
     euler_sequence = _ROT_ORDER_TO_EULER_SEQ[order]
     euler_angles = rotation.as_euler(euler_sequence)

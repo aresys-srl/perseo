@@ -17,6 +17,8 @@ The trajectory is initialized from three arrays of equal length:
 - `velocities`: Velocity state vectors (N, 3) as [vx, vy, vz] components
 """
 
+# ruff: noqa: PLR2004
+
 from __future__ import annotations
 
 from typing import TypeVar
@@ -57,16 +59,20 @@ class CubicSplineTrajectory(Trajectory[T]):
 
         """
         if times.ndim != 1:
-            raise ValueError("Times must be a 1D array")
+            msg = "Times must be a 1D array"
+            raise ValueError(msg)
 
         if positions.ndim != 2 or positions.shape[1] != 3:
-            raise ValueError("Positions must be a 2D array with shape (N, 3)")
+            msg = "Positions must be a 2D array with shape (N, 3)"
+            raise ValueError(msg)
 
         if velocities.ndim != 2 or velocities.shape[1] != 3:
-            raise ValueError("Velocities must be a 2D array with shape (N, 3)")
+            msg = "Velocities must be a 2D array with shape (N, 3)"
+            raise ValueError(msg)
 
         if not (len(times) == positions.shape[0] == velocities.shape[0]):
-            raise ValueError("Times, positions and velocities must have the same number of samples")
+            msg = "Times, positions and velocities must have the same number of samples"
+            raise ValueError(msg)
 
         self._positions = positions
         self._velocities = velocities
@@ -108,7 +114,8 @@ class CubicSplineTrajectory(Trajectory[T]):
     def _relative_times(self, time: T | npt.NDArray[T]) -> float | npt.NDArray[np.floating]:
         """Retrieve relative times from given absolute times."""
         if not self._is_time_valid(time):
-            raise RuntimeError("One (or more) of the input times is outside of trajectory time boundaries")
+            msg = "One (or more) of the input times is outside of trajectory time boundaries"
+            raise RuntimeError(msg)
         return time - self.domain[0]  # type: ignore
 
     def position(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:

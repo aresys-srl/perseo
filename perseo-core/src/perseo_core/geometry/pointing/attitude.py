@@ -73,11 +73,13 @@ class Attitude(Generic[T]):
 
         """
         if reference_frames.ndim not in (2, 3) or reference_frames.shape[-2:] != (3, 3):
-            raise ValueError("reference_frames must have shape (3, 3) or (N, 3, 3)")
+            msg = "reference_frames must have shape (3, 3) or (N, 3, 3)"
+            raise ValueError(msg)
 
         n_frames = 1 if reference_frames.ndim == 2 else reference_frames.shape[0]
         if n_frames != len(times):
-            raise ValueError("reference_frames and times must contain the same number of samples")
+            msg = "reference_frames and times must contain the same number of samples"
+            raise ValueError(msg)
 
         self._rotations = Rotation.from_matrix(reference_frames)
 
@@ -107,7 +109,8 @@ class Attitude(Generic[T]):
     def _check_time_validity(self, time: T | npt.NDArray[T]) -> None:
         """Check input times validity with respect to attitude time domain."""
         if np.any(time < self.domain[0]) or np.any(time > self.domain[1]):  # type: ignore
-            raise RuntimeError("One (or more) of the input times is outside of attitude time domain.")
+            msg = "One (or more) of the input times is outside of attitude time domain."
+            raise RuntimeError(msg)
 
     def evaluate(self, time: T | npt.NDArray[T]) -> npt.NDArray[np.floating]:
         """Retrieve attitude reference frame at given times.

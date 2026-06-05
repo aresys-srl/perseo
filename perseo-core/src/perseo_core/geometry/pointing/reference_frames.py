@@ -75,10 +75,11 @@ def compute_zerodoppler_reference_frame(
 
     """
     if sensor_positions.shape != sensor_velocities.shape:
-        raise ValueError(
+        msg = (
             "sensor_position and sensor_velocity have different shapes "
-            + f"{sensor_positions.shape} != {sensor_velocities.shape}"
+            f"{sensor_positions.shape} != {sensor_velocities.shape}"
         )
+        raise ValueError(msg)
 
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
         raise ValueError(
@@ -131,12 +132,12 @@ def compute_geocentric_reference_frame(
 
     """
     if sensor_positions.shape != sensor_velocities.shape:
-        raise ValueError(
-            f"positions and velocities have different shapes {sensor_positions.shape} != {sensor_velocities.shape}"
-        )
+        msg = f"positions and velocities have different shapes {sensor_positions.shape} != {sensor_velocities.shape}"
+        raise ValueError(msg)
 
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
-        raise ValueError(f"sensor_position has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_position has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     unit_vector_z = -sensor_positions
     unit_vector_z = unit_vector_z / np.linalg.norm(unit_vector_z, axis=-1, keepdims=True)
@@ -177,13 +178,15 @@ def compute_geodetic_reference_frame(
 
     """
     if sensor_positions.shape != sensor_velocities.shape:
-        raise ValueError(
+        msg = (
             "sensor_positions and sensor_velocities have different shapes "
-            + f"{sensor_positions.shape} != {sensor_velocities.shape}"
+            f"{sensor_positions.shape} != {sensor_velocities.shape}"
         )
+        raise ValueError(msg)
 
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
-        raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     geodetic_point = compute_geodetic_point(sensor_positions=sensor_positions)
 
@@ -272,10 +275,11 @@ def compute_sensor_local_axis(
         case "ZERODOPPLER":
             return compute_zerodoppler_reference_frame(sensor_positions, sensor_velocities)
         case _:
-            raise ValueError(
+            msg = (
                 f"Unexpected reference_frame value: {reference_frame}. "
                 "Must be one of 'GEOCENTRIC', 'GEODETIC', or 'ZERODOPPLER'."
             )
+            raise ValueError(msg)
 
 
 def compute_inertial_velocity(
@@ -328,7 +332,8 @@ def compute_geodetic_point(sensor_positions: npt.NDArray[np.floating]) -> npt.ND
 
     """
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
-        raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
+        msg = f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)"
+        raise ValueError(msg)
 
     sensor_positions = sensor_positions.copy()
     change_sign = sensor_positions[..., 2] < 0
@@ -432,4 +437,4 @@ def _ze_xx(x: float, y: float) -> float:
     return -_semi_axis_ratio_sqr / _ze(x, y) + (_semi_axis_ratio_sqr * x) / _ze(x, y) ** 2 * _ze_x(x, y)
 
 
-__all__ = ["compute_sensor_local_axis", "ReferenceFrame"]
+__all__ = ["ReferenceFrame", "compute_sensor_local_axis"]

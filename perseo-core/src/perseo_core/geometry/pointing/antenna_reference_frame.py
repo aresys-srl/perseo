@@ -148,7 +148,7 @@ def compute_antenna_reference_frame_from_rotation(
     #       arf_initial_frame_coords = rotation.as_matrix() @ np.eye(3) = rotation.as_matrix()
     # 4. Finally, we convert the antenna reference frame from initial_reference_frame coordinates to the original
     #    coordinates of the initial_reference_frame by applying the change of basis:
-    #      arf_original_coords = initial_reference_frame @ arf_initial_frame_coords
+    #      arf_original_coords = initial_reference_frame mat mul arf_initial_frame_coords
     # The compact formula is used.
 
     arf_in_initial_frame_coords = rotation.as_matrix()
@@ -185,10 +185,10 @@ def compute_rotation_from_antenna_reference_frame(
     # The reasoning is the opposite of the one in compute_antenna_reference_frame_from_rotation.
     # 1. We convert the antenna reference frame from the original coordinates to the initial_reference_frame coordinates
     #    by applying the change of basis:
-    #      arf_initial_frame_coords = initial_reference_frame.T @ antenna_reference_frame
+    #      arf_initial_frame_coords = initial_reference_frame.T mat mul antenna_reference_frame
     # 2. Now the 3 axes of the antenna reference frame are described by x,y,z components that are the axis along which
     #    we want to define
-    #       rotation = Rotation.from_matrix(initial_reference_frame.T @ antenna_reference_frame)
+    #       rotation = Rotation.from_matrix(initial_reference_frame.T mat mul antenna_reference_frame)
 
     initial_ref_transposed = np.swapaxes(initial_reference_frame, -2, -1)
     return Rotation.from_matrix(initial_ref_transposed @ antenna_reference_frame)
