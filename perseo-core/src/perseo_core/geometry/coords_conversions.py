@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Coordinate Transformations module.
+
 This module provides vectorized coordinate transformations for terrestrial and celestial
 reference frames commonly used in SAR and orbital geometry computations. It leverages `pyproj`
 for geodetic conversions and `Astropy` for precise celestial frame transformations.
@@ -54,6 +55,7 @@ def _get_utm_epsg_code(zone: str) -> int:
     ------
     ValueError
         if zone format is invalid or zone number is out of range
+
     """
     if len(zone) not in (2, 3):
         raise ValueError(f"Zone must be string format like '1N' or '33S', not {zone}")
@@ -73,15 +75,15 @@ def _get_utm_epsg_code(zone: str) -> int:
     return UTM_EPSG_NORTH_BASE + zone_num if hemisphere == "N" else UTM_EPSG_SOUTH_BASE + zone_num
 
 
-def xyz2llh(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.NDArray[np.floating]:
-    """Conversion from XYZ ECEF coordinates (epsg:4978) in [m] to LLH (latitude [rad/deg], longitude [rad/deg],
-    height [m]) geodetic coordinates (epsg:4326). Output latitude and longitude may be returned in [deg] if *radians*
-    input flag is set to False.
+def xyz2llh(coordinates: npt.NDArray[np.floating], *, radians: bool = True) -> npt.NDArray[np.floating]:
+    """Convert XYZ ECEF coordinates (epsg:4978) to LLH geodetic coordinates (epsg:4326).
+
+    Output latitude and longitude may be returned in [deg] if *radians* input flag is set to False.
 
     Parameters
     ----------
     coordinates : npt.NDArray[np.floating]
-        XYZ EEF coordinates (epsg:4978), with shape (3,) or (N, 3), with 3 being X, Y and Z in meters
+        XYZ EEF coordinates [m] (epsg:4978), with shape (3,) or (N, 3), with 3 being X, Y and Z in meters
     radians : bool, optional
         if output latitude and longitude must be expressed in radians, otherwise they are provided in deg,
         by default True
@@ -91,6 +93,7 @@ def xyz2llh(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     npt.NDArray[np.floating]
         LLH geodetic coordinates (epsg:4326), with shape (3,) or (N, 3), with 3 being Lat [rad/deg],
         Lon [rad/deg] and H [m]
+
     """
     is_1d = np.ndim(coordinates) == 1
     coordinates = np.atleast_2d(coordinates)
@@ -102,9 +105,10 @@ def xyz2llh(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     return result
 
 
-def llh2xyz(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.NDArray[np.floating]:
-    """Conversion from LLH geodetic coordinates (epsg:4326) in [rad/deg, rad/deg, m] to XYZ ECEF coordinates (epsg:4978)
-    XYZ in [m]. Input latitude and longitude may be provided in [deg] if radians input flag is set to False.
+def llh2xyz(coordinates: npt.NDArray[np.floating], *, radians: bool = True) -> npt.NDArray[np.floating]:
+    """Convert from LLH geodetic coordinates (epsg:4326) to XYZ ECEF coordinates (epsg:4978).
+
+    Input latitude and longitude may be provided in [deg] if radians input flag is set to False.
 
     Parameters
     ----------
@@ -119,6 +123,7 @@ def llh2xyz(coordinates: npt.NDArray[np.floating], radians: bool = True) -> npt.
     -------
     npt.NDArray[np.floating]
         XYZ EEF coordinates (epsg:4978), with shape (3,) or (N, 3), with 3 being X, Y and Z in meters
+
     """
     is_1d = np.ndim(coordinates) == 1
     coordinates = np.atleast_2d(coordinates)
@@ -135,8 +140,7 @@ def ecef2eci(
     velocities: npt.NDArray[np.floating],
     times: PreciseDateTime | npt.NDArray,
 ) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
-    """Conversion from XYZ ECEF (epsg:4978 ITRS) positions [m] and velocities [m/s] to XYZ ECI (GCRS) coordinates
-    keeping the same unit of measurement.
+    """Convert from XYZ ECEF (epsg:4978 ITRS) positions and velocities to XYZ ECI (GCRS) coordinates.
 
     Parameters
     ----------
@@ -144,7 +148,7 @@ def ecef2eci(
         positions in ECEF coordinates expressed in [m], with shape (3,) or (N, 3)
     velocities : npt.NDArray[np.floating]
         velocities in ECEF coordinates expressed in [m/s], with shape (3,) or (N, 3)
-    times : times: PreciseDateTime | npt.NDArray
+    times : PreciseDateTime | npt.NDArray
         observation times [UTC] associated to the input positions and velocities, scalar or with shape (N,)
 
     Returns
@@ -153,8 +157,8 @@ def ecef2eci(
         XYZ ECI position coordinates expressed in [m], with shape (3,) or (N, 3)
     npt.NDArray[np.floating]
         XYZ ECI velocities coordinates expressed in [m/s], with shape (3,) or (N, 3)
-    """
 
+    """
     is_1d = np.ndim(positions) == 1
     times = np.array([times]) if isinstance(times, PreciseDateTime) else np.atleast_1d(times)
     observation_times = Time([t.isoformat() for t in times], scale="utc")
@@ -189,8 +193,7 @@ def eci2ecef(
     velocities: npt.NDArray[np.floating],
     times: PreciseDateTime | npt.NDArray,
 ) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
-    """Conversion from XYZ ECI (GCRS) positions [m] and velocities [m/s] to XYZ ECEF (epsg:4978 ITRS) coordinates
-    keeping the same unit of measurement.
+    """Convert from XYZ ECI (GCRS) positions and velocities to XYZ ECEF (epsg:4978 ITRS) coordinates.
 
     Parameters
     ----------
@@ -198,17 +201,17 @@ def eci2ecef(
         positions in ECI coordinates expressed in [m], with shape (3,) or (N, 3)
     velocities : npt.NDArray[np.floating]
         velocities in ECI coordinates expressed in [m/s], with shape (3,) or (N, 3)
-    times : times: PreciseDateTime | npt.NDArray
+    times : PreciseDateTime | npt.NDArray
         observation times [UTC] associated to the input positions and velocities, scalar or with shape (N,)
 
     Returns
     -------
     npt.NDArray[np.floating]
-        XYZ ECI position coordinates expressed in [m], with shape (3,) or (N, 3)
+        XYZ ECEF position coordinates expressed in [m], with shape (3,) or (N, 3)
     npt.NDArray[np.floating]
-        XYZ ECI velocities coordinates expressed in [m/s], with shape (3,) or (N, 3)
-    """
+        XYZ ECEF velocities coordinates expressed in [m/s], with shape (3,) or (N, 3)
 
+    """
     is_1d = np.ndim(positions) == 1
     times = np.array([times]) if isinstance(times, PreciseDateTime) else np.atleast_1d(times)
     observation_times = Time([t.isoformat() for t in times], scale="utc")
@@ -238,9 +241,8 @@ def eci2ecef(
     return positions_ecef, velocities_ecef
 
 
-def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = True) -> npt.NDArray[np.floating]:
-    """Conversion from UTM (Easting[m], Northing [m], Height [m]) coordinates (epsg:326xx or 327xx) to
-    LLH (latitude [rad/deg], longitude [rad/deg], height [m]) geodetic coordinates (epsg:4326).
+def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, *, radians: bool = True) -> npt.NDArray[np.floating]:
+    """Convert UTM (Easting, Northing, Height) coordinates (epsg:326xx/327xx) to LLH geodetic coordinates (epsg:4326).
 
     Parameters
     ----------
@@ -263,6 +265,7 @@ def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     ------
     ValueError
         if zone format is invalid or zone number is out of range (1-60)
+
     """
     utm_epsg = _get_utm_epsg_code(zone)
     transformer = Transformer.from_crs(CRS.from_epsg(utm_epsg), LLH_CRS)
@@ -275,9 +278,8 @@ def utm2llh(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     return result
 
 
-def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = True) -> npt.NDArray[np.floating]:
-    """Conversion from LLH (latitude [rad/deg], longitude [rad/deg], height [m]) geodetic coordinates (epsg:4326) to
-    UTM (Easting[m], Northing [m], Height [m]) coordinates (epsg:326xx or 327xx).
+def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, *, radians: bool = True) -> npt.NDArray[np.floating]:
+    """Convert LLH geodetic coordinates (epsg:4326) to UTM (Easting, Northing, Height) coordinates (epsg:326xx/327xx).
 
     Parameters
     ----------
@@ -300,6 +302,7 @@ def llh2utm(coordinates: npt.NDArray[np.floating], zone: str, radians: bool = Tr
     ------
     ValueError
         if zone format is invalid or zone number is out of range (1-60)
+
     """
     utm_epsg = _get_utm_epsg_code(zone)
     transformer = Transformer.from_crs(LLH_CRS, CRS.from_epsg(utm_epsg))

@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Reference Frames module.
+
 This module provides utilities for computing various reference frames used in the Perseo framework, including:
 
 - Geocentric Reference Frame
@@ -71,8 +72,8 @@ def compute_zerodoppler_reference_frame(
     ------
     ValueError
         in case of invalid input
-    """
 
+    """
     if sensor_positions.shape != sensor_velocities.shape:
         raise ValueError(
             "sensor_position and sensor_velocity have different shapes "
@@ -173,8 +174,8 @@ def compute_geodetic_reference_frame(
     npt.NDArray[np.floating]
         geodetic reference frame for each sensor position, with shape (3, 3) or (N, 3, 3)
         stored as columns of the output array.
-    """
 
+    """
     if sensor_positions.shape != sensor_velocities.shape:
         raise ValueError(
             "sensor_positions and sensor_velocities have different shapes "
@@ -221,7 +222,7 @@ def compute_sensor_local_axis(
     sensor_velocities: npt.NDArray[np.floating],
     reference_frame: ReferenceFrame,
 ) -> npt.NDArray[np.floating]:
-    """Compute the axes of the sensor reference frame
+    """Compute the axes of the sensor reference frame.
 
     Sensor positions and velocities are assumed to be expressed in ECEF coordinates.
         Reference frame is one of "GEOCENTRIC", "GEODETIC", or "ZERODOPPLER".
@@ -246,7 +247,6 @@ def compute_sensor_local_axis(
 
     Examples
     --------
-
     single position and velocity
 
     >>> print(position.shape)
@@ -281,7 +281,7 @@ def compute_sensor_local_axis(
 def compute_inertial_velocity(
     sensor_positions: npt.NDArray[np.floating], sensor_velocities: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
-    """Compute the sensor inertial velocity
+    """Compute the sensor inertial velocity.
 
     Parameters
     ----------
@@ -299,8 +299,8 @@ def compute_inertial_velocity(
     ------
     ValueError
         in case of invalid input
-    """
 
+    """
     inertial_velocity = sensor_velocities.copy()
     inertial_velocity[..., 0] += -_earth_angular_velocity * sensor_positions[..., 1]
     inertial_velocity[..., 1] += _earth_angular_velocity * sensor_positions[..., 0]
@@ -325,8 +325,8 @@ def compute_geodetic_point(sensor_positions: npt.NDArray[np.floating]) -> npt.ND
     ------
     ValueError
         sensor positions invalid shape
-    """
 
+    """
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
         raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
 
@@ -369,7 +369,7 @@ def compute_geodetic_point(sensor_positions: npt.NDArray[np.floating]) -> npt.ND
 def _compute_geodetic_jacobian(
     point: npt.NDArray[np.floating], sensor_position: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
-    """Computing the geodetic Jacobian."""
+    """Compute the geodetic Jacobian."""
     jac = np.empty(shape=(3, 3), dtype=point.dtype)
 
     zed_diff = point[2] - sensor_position[2]
@@ -390,7 +390,7 @@ def _compute_geodetic_jacobian(
 def _compute_geodetic_rhs(
     point: npt.NDArray[np.floating], sensor_position: npt.NDArray[np.floating]
 ) -> npt.NDArray[np.floating]:
-    """Computing geodetic rhs.
+    """Compute geodetic rhs.
 
     Parameters
     ----------
@@ -403,6 +403,7 @@ def _compute_geodetic_rhs(
     -------
     np.ndarray
         geodetic rhs at given point
+
     """
     rhs = np.empty(shape=(3,), dtype=float)
     los = point - sensor_position

@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-r"""
+r"""Antenna Reference Frame (ARF) module.
+
 This module provides functions to compute the Antenna Reference Frame (ARF) from rotations
 and Euler angles, and to extract Euler angles from a given ARF.
 
@@ -136,8 +137,8 @@ def compute_antenna_reference_frame_from_rotation(
     -------
     npt.NDArray[np.floating]
         antenna reference frame axes as a numpy array with shape (3, 3) or (N, 3, 3)
-    """
 
+    """
     # The full process would be:
     # 1. convert the initial_reference_frame axes from their own components to
     #    the components in the initial_reference_frame. This results in the identity matrix
@@ -176,6 +177,7 @@ def compute_rotation_from_antenna_reference_frame(
     -------
     Rotation
         rotation from the initial reference frame to the antenna reference frame
+
     """
     if initial_reference_frame is None:
         initial_reference_frame = np.eye(3)
@@ -212,6 +214,7 @@ def compute_antenna_reference_frame_from_euler_angles(
     -------
     npt.NDArray[np.floating]
         antenna reference frame as a numpy array with shape (3, 3) or (N, 3, 3)
+
     """
     rotation = euler_angles_to_rotation(order=rotation_order, ypr_rad=ypr_rad)
     return compute_antenna_reference_frame_from_rotation(
@@ -239,6 +242,7 @@ def compute_euler_angles_from_antenna_reference_frame(
     -------
     npt.NDArray[np.floating]
         euler angles in radians with shape (3,) or (N, 3) with yaw, pitch, roll order.
+
     """
     rotation = compute_rotation_from_antenna_reference_frame(
         antenna_reference_frame=antenna_reference_frame,
@@ -267,6 +271,7 @@ def compute_pointing_directions(
     -------
     npt.NDArray[np.floating]
         pointing directions, with shape (3,) or (N, 3)
+
     """
     if np.shape(azimuth_antenna_angles) != np.shape(elevation_antenna_angles):
         broadcast_shape = np.broadcast_shapes(np.shape(azimuth_antenna_angles), np.shape(elevation_antenna_angles))

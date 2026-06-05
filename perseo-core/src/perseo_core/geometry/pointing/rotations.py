@@ -46,7 +46,6 @@ def euler_angles_to_rotation(
 
     Examples
     --------
-
     single rotation
 
     >>> rotation = euler_angles_to_rotation(order="YPR", ypr_rad=[[0, 0, np.deg2rad(30.0)]])
@@ -66,6 +65,7 @@ def euler_angles_to_rotation(
     rotation order as string
 
     >>> euler_angles_to_rotation("YPR", ypr_rad=[[0, 0, np.deg2rad(30.0)]])
+
     """
     if order not in get_args(RotationOrder):
         raise ValueError(f"Invalid rotation order {order}, must be one of '{', '.join(get_args(RotationOrder))}")
@@ -92,6 +92,7 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> npt.ND
     -------
     npt.NDArray[np.floating]
         euler angles array, (N, 3) with yaw, pitch, roll order.
+
     """
     # upper case / lower case axis character matters
     if order not in get_args(RotationOrder):

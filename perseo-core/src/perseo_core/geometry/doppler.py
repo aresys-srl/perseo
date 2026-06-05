@@ -45,8 +45,8 @@ def doppler_equation(
         doppler equation solution scalar or shape (N,)
     npt.NDArray[np.floating]
         doppler equation gradient (3,) or shape (N, 3)
-    """
 
+    """
     c_factor = 2.0 / wavelength / distance
     doppler_equation = c_factor * pv_scalar + doppler_frequency
     norm_pv = pv_scalar / distance**2
@@ -61,7 +61,7 @@ def doppler_equation_monostatic_residuals(
     doppler_frequency: float,
     wavelength: float,
 ) -> float | npt.NDArray[np.floating]:
-    """Evaluate SAR doppler equation residual, assuming monostatic approximation.
+    r"""Evaluate SAR doppler equation residual, assuming monostatic approximation.
 
     *Doppler Equation*
 
@@ -95,8 +95,8 @@ def doppler_equation_monostatic_residuals(
     -------
     float | npt.NDArray[np.floating]
         doppler equation residual (Hz) for each input sensor position, scalar or (N,)
-    """
 
+    """
     if sensor_positions.ndim > 2 or sensor_positions.shape[-1] != 3:
         raise ValueError(f"sensor_positions has invalid shape: {sensor_positions.shape}, it should be (3,) or (N, 3)")
 
@@ -137,7 +137,7 @@ def doppler_equation_bistatic_residuals(
     wavelength: float,
     doppler_frequency: float,
 ) -> float | npt.NDArray[np.floating]:
-    """Evaluating doppler equation residual for bistatic sensors.
+    """Evaluate doppler equation residual for bistatic sensors.
 
     Parameters
     ----------
@@ -160,8 +160,8 @@ def doppler_equation_bistatic_residuals(
     -------
     float | npt.NDArray[np.floating]
         doppler equation residual, scalar or (N,)
-    """
 
+    """
     los_rx = sensor_pos_rx - ground_points
     los_tx = sensor_pos_tx - ground_points
     los_vel_prod_rx = np.sum(sensor_vel_rx * los_rx, axis=-1)
@@ -208,7 +208,7 @@ def get_geometric_doppler_centroid(
     ground_points: npt.NDArray[np.floating],
     wavelength: float,
 ) -> float:
-    """Calculating doppler centroid (geometrically) from squint angle.
+    """Compute doppler centroid (geometrically) from squint angle.
 
     Parameters
     ----------
@@ -225,8 +225,8 @@ def get_geometric_doppler_centroid(
     -------
     float | npt.NDArray[np.floating]
         doppler centroid in Hz, scalar or with shape (N,)
-    """
 
+    """
     # evaluating squint
     squint_angles = get_geometric_squint_angle(
         sensor_positions=sensor_positions,
@@ -266,6 +266,7 @@ def compute_theoretical_doppler_rate(
     -------
     float | npt.NDArray[np.floating]
         theoretical doppler rate in Hz/s, scalar or with shape (N,) if multiple ground points are provided
+
     """
     sensor_position = trajectory.position(azimuth_time)
     sensor_velocity = trajectory.velocity(azimuth_time)
@@ -316,6 +317,7 @@ def compute_steering_doppler_frequency(
     -------
     float
         steering doppler frequency in Hz
+
     """
     sat_vel_norm = np.linalg.norm(trajectory.velocity(azimuth_time))
     # azimuth steering rate conversion from rad/s to Hz/s

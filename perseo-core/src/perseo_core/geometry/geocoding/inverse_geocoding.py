@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Inverse Geocoding module.
+
 This module provides high-level inverse geocoding functions for computing sensor times (azimuth time, range time)
 from known ground point coordinates. Inverse geocoding is the reverse operation of direct geocoding, solving for the
 acquisition geometry that observes a specific Earth surface location.
@@ -66,8 +67,8 @@ def inverse_geocoding_monostatic(
         azimuth times array
     float | npt.NDArray[np.floating]
         range times array
-    """
 
+    """
     ground_points = np.asarray(ground_points)
 
     if az_initial_time_guesses is not None:
@@ -150,8 +151,8 @@ def inverse_geocoding_monostatic_with_attitude(
         azimuth times array
     float | npt.NDArray[np.floating]
         range times array
-    """
 
+    """
     ground_points = np.asarray(ground_points)
 
     if az_initial_time_guesses is not None:
@@ -191,7 +192,7 @@ def inverse_geocoding_monostatic_init(
     doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> PreciseDateTime | np.datetime64 | npt.NDArray:
-    """Function to compute azimuth initial guess for Newton method for monostatic inverse geocoding.
+    """Compute azimuth initial guess for Newton method for monostatic inverse geocoding.
 
     In principle each input ground point could be seen several times by the orbit if it contains multiple periods.
     In this case, only the first occurrence is taken, i.e. the solution corresponding to the first period (the smallest
@@ -221,8 +222,8 @@ def inverse_geocoding_monostatic_init(
     -------
     PreciseDateTime | np.datetime64 | npt.NDArray
         azimuth times initial guesses, one for each input point
-    """
 
+    """
     # detecting multiple azimuth solutions
     az_initial_time_guesses = inverse_core.inverse_geocoding_monostatic_init_core(
         trajectory=trajectory,
@@ -290,6 +291,7 @@ def inverse_geocoding_bistatic(
     ------
     RuntimeError
         if the input sensors' trajectories are overlapping
+
     """
     if az_initial_time_guesses is not None:
         az_initial_time_guesses = np.asarray(az_initial_time_guesses)

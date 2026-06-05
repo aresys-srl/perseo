@@ -217,7 +217,8 @@ class PreciseDateTime:
     _SECONDS_IN_A_DAY = 24 * 60 * 60
 
     def __init__(self, seconds: float = 0.0, picoseconds: float = 0.0):
-        """
+        """Initialize the PreciseDateTime object with the specified time point.
+
         Parameters
         ----------
         seconds : float, optional
@@ -229,13 +230,12 @@ class PreciseDateTime:
         ------
         ValueError
             Raised when negative values are passed as arguments
-        """
 
+        """
         self._set_state(seconds, picoseconds)
 
     def _set_state(self, seconds: float, picoseconds: float):
-        """Set the object at the time point defined by adding the specified input seconds and picoseconds to the
-        reference date.
+        """Set the object at the required time point.
 
         Parameters
         ----------
@@ -248,6 +248,7 @@ class PreciseDateTime:
         ------
         ValueError
             if the time point would be prior to PRECISEDATETIME_REFERENCE_TIME
+
         """
         seconds_fraction = seconds - int(seconds)
         picoseconds_in_seconds_fraction = seconds_fraction / self._PRECISION
@@ -273,7 +274,7 @@ class PreciseDateTime:
         assert isinstance(self._seconds, int)
 
     def __iadd__(self, seconds: float) -> PreciseDateTime:  # type: ignore[misc]
-        """Add the input seconds to the current time point
+        """Add the input seconds to the current time point.
 
         Parameters
         ----------
@@ -284,6 +285,7 @@ class PreciseDateTime:
         -------
         PreciseDateTime
             self
+
         """
         if not isinstance(seconds, (int, float)):
             return NotImplemented
@@ -296,7 +298,7 @@ class PreciseDateTime:
         return self
 
     def __isub__(self, seconds: float) -> PreciseDateTime:  # type: ignore[misc]
-        """Subtract the input seconds from the current time point
+        """Subtract the input seconds from the current time point.
 
         Parameters
         ----------
@@ -307,6 +309,7 @@ class PreciseDateTime:
         -------
         PreciseDateTime
             self
+
         """
         if not isinstance(seconds, (int, float)):
             return NotImplemented
@@ -319,7 +322,7 @@ class PreciseDateTime:
         return self
 
     def __add__(self, seconds: float) -> PreciseDateTime:
-        """Return the sum between the current time point and the specified input seconds
+        """Return the sum between the current time point and the specified input seconds.
 
         Parameters
         ----------
@@ -330,6 +333,7 @@ class PreciseDateTime:
         -------
         PreciseDateTime
             a new PreciseDateTime object initialized to the resulting time point
+
         """
         if not isinstance(seconds, (int, float)):
             return NotImplemented
@@ -349,8 +353,7 @@ class PreciseDateTime:
     def __sub__(self, other: PreciseDateTime) -> float: ...
 
     def __sub__(self, other: float | PreciseDateTime) -> float | PreciseDateTime:
-        """Return the difference between the current time point and the specified input parameter (seconds or another
-        PreciseDateTime object).
+        """Return the difference between the current time point and a float or a PreciseDateTime object.
 
         Parameters
         ----------
@@ -362,6 +365,7 @@ class PreciseDateTime:
         float | PreciseDateTime:
             if the input parameter is a PreciseDateTime object, the difference in seconds between the two time
             points; otherwise, a new PreciseDateTime object initialized to the resulting time point
+
         """
         if isinstance(other, PreciseDateTime):
             seconds_fraction = (self._picoseconds - other._picoseconds) * self._PRECISION
@@ -377,6 +381,7 @@ class PreciseDateTime:
         return NotImplemented
 
     def __repr__(self) -> str:
+        """Return a string representation of the current time point."""
         assert isinstance(self._seconds, int)
         assert 0 <= self._picoseconds < 1 / self._PRECISION
         absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
@@ -391,12 +396,14 @@ class PreciseDateTime:
         return absolute_datetime.strftime(updated_string_format) + tmp_str
 
     def __eq__(self, other) -> bool:
+        """Compare the current time point with another PreciseDateTime object for equality."""
         if isinstance(other, self.__class__):
             return (other._seconds == self._seconds) and (other._picoseconds == self._picoseconds)
 
         return NotImplemented
 
     def __lt__(self, other) -> bool:
+        """Compare the current time point with another PreciseDateTime object."""
         if isinstance(other, self.__class__):
             return self._seconds < other._seconds or (
                 self._seconds == other._seconds and self._picoseconds < other._picoseconds
@@ -406,23 +413,25 @@ class PreciseDateTime:
 
     @classmethod
     def get_precision(cls) -> float:
-        """Date-time representation precision
+        """Date-time representation precision.
 
         Returns
         -------
         float
             precision of the date-time representation in seconds
+
         """
         return cls._PRECISION
 
     @classmethod
     def get_reference_datetime(cls) -> datetime.datetime:
-        """Reference date-time
+        """Get reference date-time.
 
         Returns
         -------
         datetime.datetime
             reference date-time as a datetime object
+
         """
         return cls._REFERENCE_DATETIME
 
@@ -498,7 +507,7 @@ class PreciseDateTime:
 
     @classmethod
     def now(cls) -> PreciseDateTime:
-        """Create an object with the current time (local timezone)"""
+        """Create an object with the current time (local timezone)."""
         absolute_datetime_now = datetime.datetime.now()
         time_diff_from_reference_date = absolute_datetime_now - cls._REFERENCE_DATETIME
         seconds = time_diff_from_reference_date.total_seconds()
@@ -506,7 +515,7 @@ class PreciseDateTime:
 
     @classmethod
     def from_sec85(cls, seconds: float) -> PreciseDateTime:
-        """Create an object with the time point defined by adding the specified input seconds to PRECISEDATETIME_1985
+        """Create an object with the time point defined by adding the specified input seconds to PRECISEDATETIME_1985.
 
         Parameters
         ----------
@@ -517,6 +526,7 @@ class PreciseDateTime:
         -------
         PreciseDateTime
             the time point
+
         """
         return cls(seconds - cls._TIME_DIFF_REFERENCE_FROM_1985.total_seconds(), 0)
 
@@ -533,6 +543,7 @@ class PreciseDateTime:
         -------
         PreciseDateTime
             the time point
+
         """
         try:
             seconds_fraction = float("0." + utc_str.split(".")[1].strip())
@@ -558,7 +569,7 @@ class PreciseDateTime:
         seconds: int = 0,
         picoseconds: float = 0.0,
     ) -> PreciseDateTime:
-        """Create an object with the time point specified by the input date and time parameters
+        """Create an object with the time point specified by the input date and time parameters.
 
         Parameters
         ----------
@@ -586,6 +597,7 @@ class PreciseDateTime:
         ------
         ValueError
             in case of invalid picoseconds
+
         """
         absolute_datetime = datetime.datetime(year, month, day, hours, minutes, seconds)
         if not 0 <= picoseconds < 1 / cls._PRECISION:
@@ -598,7 +610,7 @@ class PreciseDateTime:
 
     @classmethod
     def fromisoformat(cls, datetime_string: str, sep: str = "T") -> PreciseDateTime:
-        """Create an object with the time specified by the input ISO string
+        """Create an object with the time specified by the input ISO string.
 
         Parameters
         ----------
@@ -616,6 +628,7 @@ class PreciseDateTime:
         ------
         ValueError
             in case of an invalid input datetime string
+
         """
         if not isinstance(datetime_string, str):
             raise ValueError("fromisoformat: argument must be a str")
@@ -647,7 +660,7 @@ class PreciseDateTime:
         return cls.from_numeric_datetime(*(date + time))
 
     def isoformat(self, sep: str = "T", timespec: str = "auto") -> str:
-        """ISO formatting of the time point
+        """ISO formatting of the time point.
 
         Parameters
         ----------
@@ -663,6 +676,7 @@ class PreciseDateTime:
         -------
         str
             time formatted according to ISO
+
         """
         absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(seconds=self._seconds)
         date = _isoformat_date(absolute_datetime.year, absolute_datetime.month, absolute_datetime.day)

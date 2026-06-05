@@ -79,6 +79,7 @@ def inverse_geocoding_monostatic_core(
         ambiguous association between N ground points and M frequencies
     RuntimeError
         Newton method could not converge
+
     """
     azimuth_times = np.asarray(initial_guesses).copy()
 
@@ -211,6 +212,7 @@ def inverse_geocoding_bistatic_core(
         ambiguous association between N ground points and M frequencies
     RuntimeError
         Newton method could not converge
+
     """
     num_points = ground_points.size // 3
     one_size_array = 0
@@ -380,7 +382,7 @@ def inverse_geocoding_monostatic_init_core(
     doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> list[npt.NDArray]:
-    """Function to compute initialization of inverse geocoding.
+    """Compute initial guess for Newton method for monostatic inverse geocoding.
 
     The azimuth time we are looking for is such that the doppler equation is equal to zero.
     In this function we look for the time interval where such equation crosses zero. We compute the corresponding
@@ -414,8 +416,8 @@ def inverse_geocoding_monostatic_init_core(
     -------
     list[npt.NDArray]
         list of azimuth times initial guesses arrays, one for each input ground point
-    """
 
+    """
     doppler_frequencies = np.atleast_1d(doppler_frequencies)
     points = ground_points.copy()
     if ground_points.size // 3 == 1 and ground_points.ndim == 1:
@@ -459,7 +461,7 @@ def inverse_geocoding_bistatic_init_core(
     doppler_frequencies: float | npt.NDArray[np.floating],
     wavelength: float,
 ) -> PreciseDateTime | np.datetime64 | npt.NDArray:
-    """Function to compute azimuth initial guess for Newton method for bistatic inverse geocoding.
+    """Compute azimuth initial guess for Newton method for bistatic inverse geocoding.
 
     Parameters
     ----------
@@ -492,8 +494,8 @@ def inverse_geocoding_bistatic_init_core(
         ambiguous association between N ground points and M frequencies
     RuntimeError
         if orbit rx and orbit tx are not overlapped
-    """
 
+    """
     points = ground_points.copy()
     if ground_points.size // 3 == 1 and ground_points.ndim == 1:
         points = points.reshape(1, points.size)
@@ -633,6 +635,7 @@ def inverse_geocoding_monostatic_attitude_core(
         ambiguous association between N input guesses and M earth points
     RuntimeError
         Newton method could not converge
+
     """
     intial_guess_size = 1 if isinstance(initial_guesses, (PreciseDateTime, np.datetime64)) else np.size(initial_guesses)
 

@@ -52,8 +52,8 @@ def compute_ground_velocity(
     -------
     npt.NDArray[np.floating] | float
         ground velocity in m/s
-    """
 
+    """
     # generating the averaging time interval axis
     relative_averaging_time_axis = np.linspace(
         averaging_interval_relative_origin, averaging_interval_duration, averaging_interval_num_points

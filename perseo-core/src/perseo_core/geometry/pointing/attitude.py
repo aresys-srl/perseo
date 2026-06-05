@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Attitude module.
+
 This module provides the `Attitude` class, a wrapper around scipy's Spherical Linear
 Interpolation (SLERP) for smooth attitude interpolation. The attitude can be initialized from reference frames,
 quaternions, or Euler angles, and supports interpolation at arbitrary times within the defined domain.
@@ -47,7 +48,7 @@ T = TypeVar("T", bound=np.generic)
 
 
 class Attitude(Generic[T]):
-    """Attitude based on a Spherical Linear Interpolation of Rotations (SLERP)"""
+    """Attitude based on a Spherical Linear Interpolation of Rotations (SLERP)."""
 
     def __init__(
         self,
@@ -69,6 +70,7 @@ class Attitude(Generic[T]):
         times : npt.NDArray[T]
             relative or absolute (actual dates) time axis, monotonic increasing, with shape (N,)
             interpolation times must be of the same type as the initialization times axis
+
         """
         if reference_frames.ndim not in (2, 3) or reference_frames.shape[-2:] != (3, 3):
             raise ValueError("reference_frames must have shape (3, 3) or (N, 3, 3)")
@@ -89,17 +91,17 @@ class Attitude(Generic[T]):
 
     @property
     def reference_frames(self) -> npt.NDArray[np.floating]:
-        """Attitude reference frames used for interpolation"""
+        """Attitude reference frames used for interpolation."""
         return self._rotations.as_matrix()
 
     @property
     def times(self) -> npt.NDArray[T]:
-        """Attitude times vector"""
+        """Attitude times vector."""
         return self._times
 
     @property
     def domain(self) -> tuple[T, T]:
-        """Attitude time domain"""
+        """Attitude time domain."""
         return self._domain
 
     def _check_time_validity(self, time: T | npt.NDArray[T]) -> None:
@@ -121,6 +123,7 @@ class Attitude(Generic[T]):
             interpolated attitude reference frame at each input time as a numpy array with shape (3, 3) or (M, 3, 3)
             depending on the input time shape. The interpolated reference frames are expressed in the same
             reference system of the input reference frames
+
         """
         self._check_time_validity(time)
         relative_times: npt.NDArray[np.floating] = time - self.domain[0]  # type: ignore
@@ -153,6 +156,7 @@ class Attitude(Generic[T]):
         -------
         Attitude
             interpolator object
+
         """
         return cls(reference_frames=Rotation.from_quat(quaternions).as_matrix(), times=times)
 
@@ -202,6 +206,7 @@ class Attitude(Generic[T]):
         -------
         Attitude
             interpolator object
+
         """
         return cls(
             reference_frames=euler_angles_to_rotation(order=rotation_order, ypr_rad=euler_angles_rad).as_matrix(),
@@ -297,6 +302,7 @@ def compute_sensor_attitude_from_state_vectors(
     -------
     Attitude
         interpolator object
+
     """
     sensor_local_axis = compute_sensor_local_axis(
         sensor_positions=position, sensor_velocities=velocity, reference_frame=reference_frame

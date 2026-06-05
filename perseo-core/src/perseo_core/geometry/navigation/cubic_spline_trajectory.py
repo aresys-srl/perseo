@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Cubic Spline Trajectory module.
+
 This module provides the `CubicSplineTrajectory` class, a concrete implementation of the
 `Trajectory` abstract base class that uses scipy's CubicSpline interpolator for continuous trajectory representation.
 
@@ -30,7 +31,7 @@ T = TypeVar("T", bound=np.generic)
 
 
 class CubicSplineTrajectory(Trajectory[T]):
-    """Trajectory based on a Cubic Spline interpolator"""
+    """Trajectory based on a Cubic Spline interpolator."""
 
     def __init__(
         self, times: npt.NDArray[T], positions: npt.NDArray[np.floating], velocities: npt.NDArray[np.floating]
@@ -53,6 +54,7 @@ class CubicSplineTrajectory(Trajectory[T]):
             positions as numpy array of shape (N, 3), with coordinates being x, y, z
         velocities : npt.NDArray[np.floating]
             velocities as numpy array of shape (N, 3), with coordinates being x, y, z
+
         """
         if times.ndim != 1:
             raise ValueError("Times must be a 1D array")
@@ -85,22 +87,22 @@ class CubicSplineTrajectory(Trajectory[T]):
 
     @property
     def positions(self) -> np.ndarray:
-        """Accessing trajectory positions vector"""
+        """Accessing trajectory positions vector."""
         return self._positions
 
     @property
     def velocities(self) -> np.ndarray:
-        """Accessing trajectory velocities vector"""
+        """Accessing trajectory velocities vector."""
         return self._velocities
 
     @property
     def times(self) -> np.ndarray:
-        """Accessing trajectory times vector"""
+        """Accessing trajectory times vector."""
         return self._times
 
     @property
     def domain(self) -> tuple[T, T]:
-        """Trajectory time domain"""
+        """Trajectory time domain."""
         return self._domain
 
     def _relative_times(self, time: T | npt.NDArray[T]) -> float | npt.NDArray[np.floating]:
@@ -121,6 +123,7 @@ class CubicSplineTrajectory(Trajectory[T]):
         -------
         np.ndarray
             position with shape (3,) or (N, 3) with coordinates being x, y, z
+
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 0, extrapolate=False)
@@ -137,6 +140,7 @@ class CubicSplineTrajectory(Trajectory[T]):
         -------
         np.ndarray
             velocity with shape (3,) or (N, 3) with coordinates being x, y, z
+
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 1, extrapolate=False)
@@ -153,6 +157,7 @@ class CubicSplineTrajectory(Trajectory[T]):
         -------
         np.ndarray
             acceleration with shape (3,) or (N, 3) with coordinates being x, y, z
+
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 2, extrapolate=False)

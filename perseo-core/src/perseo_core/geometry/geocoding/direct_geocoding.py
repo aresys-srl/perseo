@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Direct Geocoding module.
+
 This module provides high-level direct geocoding functions for computing ground point coordinates from sensor
 state vectors at given sensor times. It supports both monostatic (single sensor) and bistatic
 (separate transmitter/receiver) configurations.
@@ -72,6 +73,7 @@ def direct_geocoding_with_looking_direction(
     -------
     npt.NDArray[np.floating]
         ground points with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
+
     """
     inflated_ellipsoid = create_inflated_WGS84_ellipsoid(altitude)
 
@@ -112,6 +114,7 @@ def direct_geocoding_with_look_angles(
     -------
     npt.NDArray[np.floating]
         ground points with shape (3,) or (N, 3), np.nan is a place-holder in case of impossible geocoding
+
     """
     local_axis = compute_sensor_local_axis(
         sensor_positions=sensor_positions, sensor_velocities=sensor_velocities, reference_frame=reference_frame
@@ -138,7 +141,7 @@ def direct_geocoding_with_pointing(
     elevation_antenna_angles: float | npt.NDArray[np.floating],
     altitude: float = 0.0,
 ) -> npt.NDArray[np.floating]:
-    """Compute ground points illuminated with the given antenna patterns angles
+    """Compute ground points illuminated with the given antenna patterns angles.
 
     Parameters
     ----------
@@ -157,6 +160,7 @@ def direct_geocoding_with_pointing(
     -------
     npt.NDArray[np.floating]
         ground points (3,) or (N, 3) numpy array
+
     """
     if antenna_reference_frames.ndim not in (2, 3) or antenna_reference_frames.shape[-2:] != (3, 3):
         raise ValueError(
@@ -215,6 +219,7 @@ def direct_geocoding_monostatic(
     -------
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
+
     """
     if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
         raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
@@ -295,6 +300,7 @@ def direct_geocoding_bistatic(
     -------
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
+
     """
     if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
         raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
@@ -344,8 +350,8 @@ def direct_geocoding_init(
     -------
     npt.NDArray[np.floating]
         guess ground points with shape (3,) or (N, 3)
-    """
 
+    """
     one_size_array_flag = sensor_velocities.ndim == sensor_positions.ndim == 1
 
     if sensor_positions.ndim < sensor_velocities.ndim:

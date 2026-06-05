@@ -55,6 +55,7 @@ def compute_incidence_angles(
     -------
     float | npt.NDArray[np.floating]
         incidence angles in radians/degrees corresponding to the input range times at the given azimuth time
+
     """
     sensor_position = trajectory.position(azimuth_time)
     sensor_velocity = trajectory.velocity(azimuth_time)
@@ -108,6 +109,7 @@ def compute_look_angles(
     -------
     float | npt.NDArray[np.floating]
         look angles in radians/degrees corresponding to the input range times at the given azimuth time
+
     """
     sensor_position = trajectory.position(azimuth_time)
     sensor_velocity = trajectory.velocity(azimuth_time)

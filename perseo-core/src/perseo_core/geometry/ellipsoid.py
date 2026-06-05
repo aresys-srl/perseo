@@ -13,7 +13,7 @@ WGS84 = Geod(ellps="WGS84")
 
 
 def create_inflated_WGS84_ellipsoid(height: float) -> Geod:
-    """Creating an inflated WGS84 ellipsoid.
+    """Create an inflated WGS84 ellipsoid.
 
     Parameters
     ----------
@@ -24,6 +24,7 @@ def create_inflated_WGS84_ellipsoid(height: float) -> Geod:
     -------
     Geod
         inflated WGS84-like ellipsoid
+
     """
     return Geod(a=WGS84.a + height, b=WGS84.b + height)
 
@@ -62,7 +63,6 @@ def compute_line_ellipsoid_intersections(
 
     Examples
     --------
-
     no intersection
 
     >>> first, second = compute_line_ellipsoid_intersections([0, 0, 100], [-5, 0, 2], Geod(a=2, b=1))

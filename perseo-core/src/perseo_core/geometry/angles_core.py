@@ -15,9 +15,10 @@ def get_geometric_squint_angle(
     sensor_positions: npt.NDArray[np.floating],
     sensor_velocities: npt.NDArray[np.floating],
     ground_points: npt.NDArray[np.floating],
+    *,
     radians: bool = True,
 ) -> float | npt.NDArray[np.floating]:
-    """Evaluating squint angle geometrically in radians/degrees.
+    """Evaluate squint angle geometrically in radians/degrees.
 
     Parameters
     ----------
@@ -34,8 +35,8 @@ def get_geometric_squint_angle(
     -------
     float | npt.NDArray[np.floating]
         squint angle in radians/degrees
-    """
 
+    """
     # evaluating squint angle
     line_of_sight = ground_points - sensor_positions
     line_of_sight = line_of_sight / np.linalg.norm(line_of_sight, axis=-1, keepdims=True)
@@ -77,7 +78,6 @@ def compute_look_angles_core(
 
     Examples
     --------
-
     1 position, nadir -- 1 point
 
     >>> look_angle = compute_look_angles_core(position, nadir_dir, point)
@@ -165,7 +165,6 @@ def compute_incidence_angles_core(
 
     Examples
     --------
-
     1 position -- 1 point
 
     >>> incidence_angle = compute_incidence_angles_core(position, point)
@@ -187,8 +186,8 @@ def compute_incidence_angles_core(
     >>> incidence_angle = compute_incidence_angles_core(position, point,
             surface_normals=surf_norm,
             assume_surface_normals_normalized=True)
-    """
 
+    """
     sensor_positions = np.asarray(sensor_positions)
     ground_points = np.asarray(ground_points)
 
@@ -232,6 +231,7 @@ def compute_nadir_from_sensor_positions(
     -------
     npt.NDArray[np.floating]
         nadir position, with shape (3,), (N, 3)
+
     """
     sensor_position_ground = xyz2llh(sensor_positions)
     if sensor_position_ground.ndim == 1:

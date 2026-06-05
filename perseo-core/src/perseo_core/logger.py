@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Logger module.
+
 This module provides a pre-configured logger for the Perseo framework with support for
 custom log levels (TRACE, FAIL, SUCCESS), Rich-formatted console output, and plain file logging.
 
@@ -100,6 +101,7 @@ class StdOutRichHandler(RichHandler):
     """Rich console handler for stdout (non-error messages)."""
 
     def __init__(self):
+        """Initialize the StdOutRichHandler with a custom Rich theme and filter for non-error levels."""
         super().__init__(
             console=Console(file=sys.stdout, theme=_RICH_THEME),
             show_time=True,
@@ -116,6 +118,7 @@ class StdErrRichHandler(RichHandler):
     """Rich console handler for stderr (error messages)."""
 
     def __init__(self):
+        """Initialize the StdErrRichHandler with a custom Rich theme and filter for error levels."""
         super().__init__(
             console=Console(file=sys.stderr, theme=_RICH_THEME),
             show_time=True,
@@ -132,6 +135,7 @@ class PlainFileFormatter(logging.Formatter):
     """Plain text formatter for file output (no Rich markup)."""
 
     def __init__(self):
+        """Initialize the PlainFileFormatter with a plain format string."""
         super().__init__(fmt=FILE_FORMAT)
 
 
@@ -139,6 +143,7 @@ class CustomFileHandler(logging.FileHandler):
     """File handler with plain text formatting and UTF-8 encoding."""
 
     def __init__(self, filename: str):
+        """Initialize the CustomFileHandler with a plain text formatter and UTF-8 encoding."""
         super().__init__(filename=filename, encoding="utf-8")
         self.setFormatter(PlainFileFormatter())
 
@@ -157,6 +162,7 @@ def initialize(log_file: str | None = None, log_level: int = logging.DEBUG):
         Parent directories are created automatically if they do not exist.
     log_level : int, optional
         Logging level to set for the logger (default is ``logging.DEBUG``).
+
     """
     for handler in _PERSEO_LOGGER.handlers[:]:
         _PERSEO_LOGGER.removeHandler(handler)
@@ -184,6 +190,7 @@ def set_level(level: int):
         One of ``TRACE`` (5), ``logging.DEBUG`` (10), ``logging.INFO`` (20),
         ``FAIL`` (21), ``SUCCESS`` (22), ``logging.WARNING`` (30),
         ``logging.ERROR`` (40), ``logging.CRITICAL`` (50).
+
     """
     _PERSEO_LOGGER.setLevel(level)
 
@@ -201,12 +208,15 @@ critical = _PERSEO_LOGGER.critical
 
 
 def fail(msg: str, *args: object, **kwargs: Any) -> None:
+    """Log a message with the custom FAIL level."""
     return _PERSEO_LOGGER.log(FAIL, msg, *args, **kwargs)
 
 
 def success(msg: str, *args: object, **kwargs: Any) -> None:
+    """Log a message with the custom SUCCESS level."""
     return _PERSEO_LOGGER.log(SUCCESS, msg, *args, **kwargs)
 
 
 def trace(msg: str, *args: object, **kwargs: Any) -> None:
+    """Log a message with the custom TRACE level."""
     return _PERSEO_LOGGER.log(TRACE, msg, *args, **kwargs)

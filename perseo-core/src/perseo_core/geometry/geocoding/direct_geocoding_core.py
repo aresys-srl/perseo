@@ -49,6 +49,7 @@ def direct_geocoding_monostatic_core(
     -------
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
+
     """
     try:
         doppler_frequencies = np.broadcast_to(doppler_frequencies, np.shape(range_times))
@@ -104,7 +105,7 @@ def direct_geocoding_monostatic_core_range_vectorized(
     altitude: float,
     initial_guesses: npt.NDArray[np.floating],
 ) -> npt.NDArray[np.floating]:
-    """Computation of direct geocoding for monostatic systems, vectorized computation along range times.
+    """Perform direct geocoding for monostatic systems, vectorized computation along range times.
 
     Parameters
     ----------
@@ -127,8 +128,8 @@ def direct_geocoding_monostatic_core_range_vectorized(
     -------
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
-    """
 
+    """
     range_times = np.atleast_1d(range_times)
 
     one_size_array_flag = sensor_positions.ndim == 2 and sensor_positions.size / 3 == 1
@@ -220,6 +221,7 @@ def direct_geocoding_bistatic_core(
     -------
     npt.NDArray[np.floating]
         ground points with shape (N, M, 3)
+
     """
     try:
         doppler_frequencies = np.broadcast_to(doppler_frequencies, np.shape(range_times))
@@ -294,8 +296,8 @@ def _direct_geocoding_monostatic_newton(
     -------
     npt.NDArray[np.floating]
         ground points with shape (3,) or (N, 3)
-    """
 
+    """
     tolerance_squared = increment_tolerance * increment_tolerance
 
     range_distance_square = (speed_of_light * range_times / 2.0) ** 2
@@ -392,15 +394,15 @@ def _direct_geocoding_bistatic_newton(
         altitude with respect to WGS84 ellipsoid
     max_iterations : int, optional
         maximum number of iterations for Newton method, by default 8
-    increment_tolerance : float, optional
+    tolerance : float, optional
         tolerance for Newton convergence in meters, by default 1e-5
 
     Returns
     -------
     npt.NDArray[np.floating]
         ground points with shape (3,) or (N, 3)
-    """
 
+    """
     tolerance_squared = tolerance * tolerance
 
     range_distance_square = (speed_of_light * range_times) ** 2
@@ -527,6 +529,7 @@ def _ellipse_equation(coords: npt.NDArray[np.floating], r_ee2: float, r_ep2: flo
     -------
     npt.NDArray[np.floating]
         residuals scalar or with shape (N, 3)
+
     """
     return (
         (coords[..., 0] * coords[..., 0] + coords[..., 1] * coords[..., 1]) / r_ee2
@@ -555,8 +558,8 @@ def _der_ellipse_equation_xi(
     -------
     npt.NDArray[np.floating]
         derivative along the selected direction scalar or with shape (N, 3)
-    """
 
+    """
     radius_square = r_ee2 if i_coord < 2 else r_ep2
 
     return 2 * coords[..., i_coord] / radius_square

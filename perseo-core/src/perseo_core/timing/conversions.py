@@ -17,6 +17,7 @@ _GPS_START_DATE = datetime(year=1980, month=1, day=6)
 
 def date_to_gps_week(date: PreciseDateTime | datetime) -> tuple[int, int]:
     """Convert input date to GPS week.
+
     GPS weeks are counted since 06-January-1980.
 
     Parameters
@@ -35,6 +36,7 @@ def date_to_gps_week(date: PreciseDateTime | datetime) -> tuple[int, int]:
     ------
     ValueError
         if input date is before 06-January-1980
+
     """
     if isinstance(date, PreciseDateTime):
         # converting to datetime
@@ -59,8 +61,7 @@ def date_to_gps_week(date: PreciseDateTime | datetime) -> tuple[int, int]:
 def precise_datetime_to_numpy(
     times: PreciseDateTime | np.ndarray,
 ) -> np.datetime64 | np.ndarray:
-    """Converting Perseo internal timing object PreciseDateTime (picoseconds precision) to numpy.datetime64 data type,
-    truncated to nanoseconds precision.
+    """Convert PreciseDateTime to numpy.datetime64 data type truncated to nanoseconds precision.
 
     Parameters
     ----------
@@ -71,6 +72,7 @@ def precise_datetime_to_numpy(
     -------
     np.datetime64 | np.ndarray
         numpy.datetime64[ns] at nanoseconds precision corresponding to the input times
+
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")

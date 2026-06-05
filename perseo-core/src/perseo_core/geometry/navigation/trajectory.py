@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
+"""Trajectory module.
+
 This module defines the `Trajectory` abstract base class, which establishes the interface
 for all trajectory implementations in the PERSEO framework. A trajectory represents the
 path of a sensor through space over time, providing position, velocity, and
@@ -38,12 +39,12 @@ T = TypeVar("T", bound=np.generic)
 
 
 class Trajectory(ABC, Generic[T]):
-    """Trajectory interface"""
+    """Trajectory interface."""
 
     @property
     @abstractmethod
     def domain(self) -> tuple[T, T]:
-        """Trajectory time domain as a tuple of [start, end]"""
+        """Trajectory time domain as a tuple of [start, end]."""
 
     def _is_time_valid(self, time: T | npt.NDArray[T]) -> bool:
         """Check if time is within the trajectory domain."""
@@ -64,6 +65,7 @@ class Trajectory(ABC, Generic[T]):
         -------
         npt.NDArray[np.floating]
             position with shape (3,) or (N, 3)
+
         """
 
     @abstractmethod
@@ -79,6 +81,7 @@ class Trajectory(ABC, Generic[T]):
         -------
         npt.NDArray[np.floating]
             velocity with shape (3,) or (N, 3)
+
         """
 
     @abstractmethod
@@ -94,6 +97,7 @@ class Trajectory(ABC, Generic[T]):
         -------
         npt.NDArray[np.floating]
             acceleration with shape (3,) or (N, 3)
+
         """
 
     def evaluate(
@@ -110,6 +114,7 @@ class Trajectory(ABC, Generic[T]):
         -------
         tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]
             position, velocity and acceleration with shape (3,) or (N, 3)
+
         """
         return self.position(time), self.velocity(time), self.acceleration(time)
 
