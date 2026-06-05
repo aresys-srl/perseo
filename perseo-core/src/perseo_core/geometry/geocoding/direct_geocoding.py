@@ -163,15 +163,13 @@ def direct_geocoding_with_pointing(
 
     """
     if antenna_reference_frames.ndim not in (2, 3) or antenna_reference_frames.shape[-2:] != (3, 3):
-        raise ValueError(
-            f"antenna_reference_frames must have shape (3, 3) or (N, 3, 3), got {antenna_reference_frames.shape}"
-        )
+        msg = f"antenna_reference_frames must have shape (3, 3) or (N, 3, 3), got {antenna_reference_frames.shape}"
+        raise ValueError(msg)
 
     arf_num = 1 if antenna_reference_frames.ndim == 2 else antenna_reference_frames.shape[0]
     if arf_num != np.size(sensor_positions) // 3:
-        raise ValueError(
-            f"input shape mismatch: antenna reference frames {arf_num} != sensor positions {sensor_positions.shape}"
-        )
+        msg = f"input shape mismatch: antenna reference frames {arf_num} != sensor positions {sensor_positions.shape}"
+        raise ValueError(msg)
 
     return direct_geocoding_with_looking_direction(
         sensor_positions=sensor_positions,
@@ -222,7 +220,8 @@ def direct_geocoding_monostatic(
 
     """
     if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
-        raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
+        msg = f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}"
+        raise ValueError(msg)
 
     if initial_guesses is None:
         average_input_range: float = np.median(range_times) * speed_of_light / 2
@@ -259,7 +258,7 @@ def direct_geocoding_monostatic(
     )
 
 
-def direct_geocoding_bistatic(
+def direct_geocoding_bistatic(  # noqa: PLR0913
     sensor_positions_rx: npt.NDArray[np.floating],
     sensor_velocities_rx: npt.NDArray[np.floating],
     sensor_positions_tx: npt.NDArray[np.floating],
@@ -303,7 +302,8 @@ def direct_geocoding_bistatic(
 
     """
     if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
-        raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
+        msg = f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}"
+        raise ValueError(msg)
 
     if initial_guesses is None:
         average_input_range = np.median(range_times) * speed_of_light / 2
@@ -358,7 +358,8 @@ def direct_geocoding_init(
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
 
     if look_direction not in _VALID_SENSOR_LOOK_DIRECTIONS:
-        raise ValueError(f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}")
+        msg = f"Invalid look direction: {look_direction}. Must be one of {_VALID_SENSOR_LOOK_DIRECTIONS}"
+        raise ValueError(msg)
     geocoding_side_factor = 1 if look_direction == "RIGHT" else -1
 
     sensor_position_norm = np.linalg.norm(sensor_positions, axis=-1, keepdims=True)
@@ -369,7 +370,8 @@ def direct_geocoding_init(
 
     # check earth radius vs range compatibility
     if any(range_distance < sensor_position_norm - earth_radius):
-        raise RuntimeError("Cannot find initial guess for direct geocoding")
+        msg = "Cannot find initial guess for direct geocoding"
+        raise RuntimeError(msg)
 
     u_x = sensor_positions / sensor_position_norm
     u_y = np.cross(sensor_positions, sensor_velocities)
@@ -400,10 +402,10 @@ def direct_geocoding_init(
 
 __all__ = [
     "SensorLookDirection",
-    "direct_geocoding_with_looking_direction",
-    "direct_geocoding_with_look_angles",
-    "direct_geocoding_with_pointing",
-    "direct_geocoding_monostatic",
     "direct_geocoding_bistatic",
     "direct_geocoding_init",
+    "direct_geocoding_monostatic",
+    "direct_geocoding_with_look_angles",
+    "direct_geocoding_with_looking_direction",
+    "direct_geocoding_with_pointing",
 ]

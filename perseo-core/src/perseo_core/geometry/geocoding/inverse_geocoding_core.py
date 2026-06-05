@@ -5,14 +5,18 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
 
 from perseo_core.geometry.doppler import doppler_equation_monostatic_residuals
-from perseo_core.geometry.navigation.trajectory import Trajectory
-from perseo_core.geometry.pointing.attitude import Attitude
 from perseo_core.timing.precise_datetime import PreciseDateTime
+
+if TYPE_CHECKING:
+    from perseo_core.geometry.navigation.trajectory import Trajectory
+    from perseo_core.geometry.pointing.attitude import Attitude
 
 
 def inverse_geocoding_monostatic_core(
@@ -86,20 +90,22 @@ def inverse_geocoding_monostatic_core(
     scene_velocity = np.zeros(3) if scene_velocity is None else scene_velocity
 
     if azimuth_times.size != ground_points.size // 3 and not (ground_points.size // 3 == 1 or azimuth_times.size == 1):
-        raise RuntimeError(
+        msg = (
             "Ambiguous matching between initial guess times "
-            + f"{azimuth_times.shape} and "
-            + f"ground points {np.shape(ground_points)}"
+            f"{azimuth_times.shape} and "
+            f"ground points {np.shape(ground_points)}"
         )
+        raise RuntimeError(msg)
 
     if np.size(doppler_frequencies) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(doppler_frequencies) == 1
     ):
-        raise RuntimeError(
+        msg = (
             "Ambiguous matching between doppler frequencies "
-            + f"{np.shape(doppler_frequencies)} and "
-            + f"ground points {np.shape(ground_points)}"
+            f"{np.shape(doppler_frequencies)} and "
+            f"ground points {np.shape(ground_points)}"
         )
+        raise RuntimeError(msg)
 
     # starting the newton method to solve the equation
     for _ in range(max_iter):
@@ -113,8 +119,6 @@ def inverse_geocoding_monostatic_core(
         slant_range = np.linalg.norm(line_of_sight, axis=-1)
 
         # function to be computed and solved with Newton method
-        # equation:
-        # f = [(earth_point - sensor_position) * (scene_velocity - sat_velocity)] + doppler_term
         doppler_term = wavelength * doppler_frequencies / 2.0 * slant_range
         func = np.sum((line_of_sight * (scene_velocity - sensor_velocity)), axis=-1) + doppler_term
 
@@ -151,7 +155,7 @@ def inverse_geocoding_monostatic_core(
     return azimuth_times, slant_range
 
 
-def inverse_geocoding_bistatic_core(
+def inverse_geocoding_bistatic_core(  # noqa: PLR0915, C901
     trajectory_rx: Trajectory,
     trajectory_tx: Trajectory,
     ground_points: npt.NDArray[np.floating],
@@ -232,20 +236,22 @@ def inverse_geocoding_bistatic_core(
     if azimuth_times_rx.size != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or azimuth_times_rx.size == 1
     ):
-        raise RuntimeError(
+        msg = (
             "Ambiguous matching between initial guess times "
-            + f"{azimuth_times_rx.shape} and "
-            + f"ground points {ground_points.shape}"
+            f"{azimuth_times_rx.shape} and "
+            f"ground points {ground_points.shape}"
         )
+        raise RuntimeError(msg)
 
     if np.size(doppler_frequencies) != ground_points.size // 3 and not (
         ground_points.size // 3 == 1 or np.size(doppler_frequencies) == 1
     ):
-        raise RuntimeError(
+        msg = (
             "Ambiguous matching between doppler frequencies "
-            + f"{np.shape(doppler_frequencies)} and "
-            + f"ground points {ground_points.shape}"
+            f"{np.shape(doppler_frequencies)} and "
+            f"ground points {ground_points.shape}"
         )
+        raise RuntimeError(msg)
 
     # computing tx guess from rx by adding a delay
     position_rx = trajectory_rx.position(azimuth_times_rx)
@@ -452,7 +458,7 @@ def inverse_geocoding_monostatic_init_core(
     return [time_axis[idx] for idx in zero_crossing_pts_idx]
 
 
-def inverse_geocoding_bistatic_init_core(
+def inverse_geocoding_bistatic_init_core(  # noqa: C901
     trajectory_rx: Trajectory,
     trajectory_tx: Trajectory,
     time_axis_rx: npt.NDArray,
@@ -512,11 +518,12 @@ def inverse_geocoding_bistatic_init_core(
     if np.size(doppler_frequencies) != points.size // 3 and not (
         points.size // 3 == 1 or np.size(doppler_frequencies) == 1
     ):
-        raise RuntimeError(
+        msg = (
             "Ambiguous matching between doppler frequencies "
-            + f"{doppler_frequencies.shape} and "
-            + f"ground points {points.shape}"
+            f"{doppler_frequencies.shape} and "
+            f"ground points {points.shape}"
         )
+        raise RuntimeError(msg)
 
     # if there are more frequencies than points, broadcast points up to frequencies
     if points.size // 3 == 1 and doppler_frequencies.size > 1:
@@ -530,7 +537,8 @@ def inverse_geocoding_bistatic_init_core(
     axis_length = axis_end_time - axis_start_time
 
     if axis_length < 0:
-        raise RuntimeError("Orbits are not overlapped")
+        msg = "Orbits are not overlapped"
+        raise RuntimeError(msg)
 
     common_time_axis = axis_start_time + np.arange(axis_length / d_t) * d_t
     relative_time_axis = (common_time_axis - axis_start_time).astype(float)
@@ -643,11 +651,12 @@ def inverse_geocoding_monostatic_attitude_core(
         initial_guess_shape = (
             () if isinstance(initial_guesses, (PreciseDateTime, np.datetime64)) else np.shape(initial_guesses)
         )
-        raise RuntimeError(
+        msg = (
             "Ambiguous matching between initial guess times "
-            + f"{initial_guess_shape} and "
-            + f"ground points {ground_points.shape}"
+            f"{initial_guess_shape} and "
+            f"ground points {ground_points.shape}"
         )
+        raise RuntimeError(msg)
 
     azimuth_times = np.array(initial_guesses).copy()
 
@@ -666,7 +675,6 @@ def inverse_geocoding_monostatic_attitude_core(
         slant_range = np.linalg.norm(line_of_sight, axis=-1)
 
         # function to be computed and solved with Newton method
-        # equation: f = [(earth_point - sensor_position) * arf1] / slant_range
         func = np.sum((line_of_sight * arf1_curr), axis=-1) / slant_range
 
         # derivative equation: df = [-sensor_velocity*arf1 + (earth_point - sensor_pos) * arf1_derivative] / slant_range

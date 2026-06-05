@@ -17,13 +17,17 @@ path representations while PreciseDateTime ensures precise time handling.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 
 import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
-from perseo_core.geometry.navigation.trajectory import Trajectory
-from perseo_core.geometry.pointing.attitude import Attitude
-from perseo_core.timing.precise_datetime import PreciseDateTime
+
+if TYPE_CHECKING:
+    from perseo_core.geometry.navigation.trajectory import Trajectory
+    from perseo_core.geometry.pointing.attitude import Attitude
+    from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
 def inverse_geocoding_monostatic(
@@ -75,9 +79,8 @@ def inverse_geocoding_monostatic(
         az_initial_time_guesses = np.asarray(az_initial_time_guesses)
     else:
         if init_guess_search_time_step is None:
-            raise RuntimeError(
-                "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
-            )
+            msg = "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
+            raise RuntimeError(msg)
         # computing an initial guess for the Newton method
         time_axis = (
             np.arange(0, trajectory.domain[1] - trajectory.domain[0], init_guess_search_time_step)
@@ -159,9 +162,8 @@ def inverse_geocoding_monostatic_with_attitude(
         az_initial_time_guesses = np.asarray(az_initial_time_guesses)
     else:
         if init_guess_search_time_step is None:
-            raise RuntimeError(
-                "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
-            )
+            msg = "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
+            raise RuntimeError(msg)
         # computing an initial guess for the Newton method
         time_axis = (
             np.arange(0, trajectory.domain[1] - trajectory.domain[0], init_guess_search_time_step)
@@ -297,9 +299,8 @@ def inverse_geocoding_bistatic(
         az_initial_time_guesses = np.asarray(az_initial_time_guesses)
     else:
         if init_guess_search_time_step is None:
-            raise RuntimeError(
-                "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
-            )
+            msg = "Invalid inputs: specify one between az_initial_time_guesses and init_guess_search_time_step"
+            raise RuntimeError(msg)
         # computing an initial guess for the Newton method
         time_axis_rx = (
             np.arange(0, trajectory_rx.domain[1] - trajectory_rx.domain[0], init_guess_search_time_step)
@@ -325,7 +326,8 @@ def inverse_geocoding_bistatic(
     axis_length = axis_end_time - axis_start_time
 
     if axis_length <= 0:
-        raise RuntimeError("Invalid input trajectories: the two orbits are not overlapped")
+        msg = "Invalid input trajectories: the two orbits are not overlapped"
+        raise RuntimeError(msg)
 
     # performing actual inverse geocoding bistatic
     azimuth_times, range_times = inverse_core.inverse_geocoding_bistatic_core(
@@ -341,8 +343,8 @@ def inverse_geocoding_bistatic(
 
 
 __all__ = [
-    "inverse_geocoding_monostatic",
-    "inverse_geocoding_monostatic_with_attitude",
     "inverse_geocoding_bistatic",
+    "inverse_geocoding_monostatic",
     "inverse_geocoding_monostatic_init",
+    "inverse_geocoding_monostatic_with_attitude",
 ]

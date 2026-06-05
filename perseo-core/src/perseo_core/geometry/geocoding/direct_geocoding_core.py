@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
@@ -13,6 +13,9 @@ from scipy.constants import speed_of_light
 
 from perseo_core.geometry.doppler import doppler_equation
 from perseo_core.geometry.ellipsoid import WGS84
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def direct_geocoding_monostatic_core(
@@ -54,29 +57,27 @@ def direct_geocoding_monostatic_core(
     try:
         doppler_frequencies = np.broadcast_to(doppler_frequencies, np.shape(range_times))
     except ValueError as exc:
-        raise RuntimeError(
-            f"doppler frequencies {np.shape(doppler_frequencies)} != range times {np.shape(range_times)}"
-        ) from exc
+        msg = f"doppler frequencies {np.shape(doppler_frequencies)} != range times {np.shape(range_times)}"
+        raise RuntimeError(msg) from exc
 
     try:
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
     except ValueError as exc:
-        raise RuntimeError(
-            f"sensor positions {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
-        ) from exc
+        msg = f"sensor positions {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
+        raise RuntimeError(msg) from exc
 
     try:
         initial_guesses = np.broadcast_to(initial_guesses, sensor_positions.shape)
     except ValueError as exc:
-        raise RuntimeError(
-            f"sensor position {sensor_positions.shape} != initial guesses {initial_guesses.shape}"
-        ) from exc
+        msg = f"sensor position {sensor_positions.shape} != initial guesses {initial_guesses.shape}"
+        raise RuntimeError(msg) from exc
 
     if not sensor_positions.shape == sensor_velocities.shape == initial_guesses.shape:
-        raise RuntimeError(
+        msg = (
             f"Mismatch between input shapes: pos {sensor_positions.shape},"
-            + f"vel {sensor_velocities.shape}, guess {initial_guesses.shape}"
+            f"vel {sensor_velocities.shape}, guess {initial_guesses.shape}"
         )
+        raise RuntimeError(msg)
 
     ground_points = np.zeros((sensor_positions.size // 3, np.size(range_times), 3))
     for range_index, (range_time, doppler_frequency) in enumerate(
@@ -137,36 +138,35 @@ def direct_geocoding_monostatic_core_range_vectorized(
     try:
         doppler_frequencies = np.broadcast_to(doppler_frequencies, range_times.shape)
     except ValueError as exc:
-        raise RuntimeError(
-            f"doppler frequencies {np.shape(doppler_frequencies)} != range times {range_times.shape}"
-        ) from exc
+        msg = f"doppler frequencies {np.shape(doppler_frequencies)} != range times {range_times.shape}"
+        raise RuntimeError(msg) from exc
 
     sensor_positions = np.atleast_2d(sensor_positions)
     sensor_velocities = np.atleast_2d(sensor_velocities)
     initial_guesses = np.atleast_2d(initial_guesses)
 
-    S, D = sensor_positions.shape
-    T = range_times.size
+    num_sensor_pos, coord_dim = sensor_positions.shape
+    num_ranges = range_times.size
 
     n = initial_guesses.shape[0]
 
-    if n == S:
-        initial_guesses = initial_guesses[:, None, :]  # (S, 1, D)
-    elif n == T:
-        initial_guesses = initial_guesses[None, :, :]  # (1, T, D)
+    if n == num_sensor_pos:
+        initial_guesses = initial_guesses[:, None, :]  # (num_sensor_pos, 1, coord_dim)
+    elif n == num_ranges:
+        initial_guesses = initial_guesses[None, :, :]  # (1, num_ranges, coord_dim)
     elif n == 1:
-        initial_guesses = initial_guesses[None, :, :]  # (1, 1, D)
+        initial_guesses = initial_guesses[None, None, :]  # (1, 1, coord_dim)
     else:
-        raise RuntimeError(f"initial guesses ({n}) must match sensors ({S}), times ({T}), or be 1")
+        msg = f"initial guesses ({n}) must match sensors ({num_sensor_pos}), times ({num_ranges}), or be 1"
+        raise RuntimeError(msg)
 
-    initial_guesses = np.broadcast_to(initial_guesses, (S, T, D))
+    initial_guesses = np.broadcast_to(initial_guesses, (num_sensor_pos, num_ranges, coord_dim))
 
     try:
         sensor_positions = np.broadcast_to(sensor_positions, sensor_velocities.shape)
     except ValueError as exc:
-        raise RuntimeError(
-            f"sensor positions {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
-        ) from exc
+        msg = f"sensor positions {sensor_positions.shape} != sensor velocities {sensor_velocities.shape}"
+        raise RuntimeError(msg) from exc
 
     ground_points = np.zeros((sensor_positions.size // 3, range_times.size, 3))
     for id_az, sensor_params in enumerate(zip(sensor_positions, sensor_velocities, strict=True)):
@@ -226,9 +226,8 @@ def direct_geocoding_bistatic_core(
     try:
         doppler_frequencies = np.broadcast_to(doppler_frequencies, np.shape(range_times))
     except ValueError as exc:
-        raise RuntimeError(
-            f"doppler frequencies {np.shape(doppler_frequencies)} != range times {np.shape(range_times)}"
-        ) from exc
+        msg = f"doppler frequencies {np.shape(doppler_frequencies)} != range times {np.shape(range_times)}"
+        raise RuntimeError(msg) from exc
 
     ground_points = np.zeros((sensor_positions_rx.size // 3, np.size(range_times), 3))
     for id_rng, items in enumerate(
@@ -347,17 +346,18 @@ def _direct_geocoding_monostatic_newton(
         if np.max(np.abs(increment_squared)) <= tolerance_squared:
             break
     else:
-        raise RuntimeError(
+        msg = (
             f"Newton did not converge: maximum number of iterations {max_iterations} reached."
             # pyrefly: ignore [unbound-name]
-            + f"Residual error {delta_err}"
+            f"Residual error {delta_err}"
         )
+        raise RuntimeError(msg)
 
     array_size_one_flag = ground_points_guess.ndim == sensor_positions.ndim == sensor_velocities.ndim == 1
     return ground_points_guess if not array_size_one_flag else ground_points_guess.squeeze()
 
 
-def _direct_geocoding_bistatic_newton(
+def _direct_geocoding_bistatic_newton(  # noqa: PLR0913
     sensor_positions_rx: npt.NDArray[np.floating],
     sensor_velocities_rx: npt.NDArray[np.floating],
     initial_guesses: npt.NDArray[np.floating],
@@ -473,11 +473,12 @@ def _direct_geocoding_bistatic_newton(
         if np.max(np.abs(increment_squared)) <= tolerance_squared:
             break
     else:
-        raise RuntimeError(
+        msg = (
             f"Newton did not converge: maximum number of iterations {max_iterations} reached."
             # pyrefly: ignore [unbound-name]
-            + f"Residual error {delta_err}"
+            f"Residual error {delta_err}"
         )
+        raise RuntimeError(msg)
 
     return ground_points_guess
 
