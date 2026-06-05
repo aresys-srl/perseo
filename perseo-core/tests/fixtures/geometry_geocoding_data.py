@@ -10,12 +10,12 @@ from perseo_core.timing import PreciseDateTime
 from tests.fixtures.trajectory_attitude_data import get_testing_attitude, get_testing_trajectory
 
 
-def get_direct_geocoding_with_looks_test_data() -> dict[str, object]:
+def get_direct_geocoding_with_looks_test_data() -> dict:
     """Return fixture data for direct_geocoding_with_looks functionalities.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Test data for direct_geocoding_with_looks functionalities.
     """
     sensor_positions = np.array(
@@ -69,12 +69,12 @@ def get_direct_geocoding_with_looks_test_data() -> dict[str, object]:
     }
 
 
-def get_direct_geocoding_test_data() -> dict[str, object]:
+def get_direct_geocoding_test_data() -> dict:
     """Return fixture data for direct_geocoding_monostatic and bistatic functionalities.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Test data for direct_geocoding_monostatic and bistatic functionalities.
     """
     sensor_position = np.array(
@@ -108,12 +108,12 @@ def get_direct_geocoding_test_data() -> dict[str, object]:
     }
 
 
-def get_inverse_geocoding_test_data() -> dict[str, object]:
+def get_inverse_geocoding_test_data() -> dict:
     """Return fixture data for inverse_geocoding_monostatic and bistatic functionalities.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Test data for inverse_geocoding_monostatic and bistatic functionalities.
     """
     trajectory = get_testing_trajectory()

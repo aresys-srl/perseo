@@ -6,10 +6,10 @@
 import sys
 from pathlib import Path
 
-import nox  # noqa: F401
+import nox
 
 sys.path.append("..")
-import nox_common  # type: ignore # noqa: F401
+import nox_common  # type: ignore
 
 
 def pytest_executor(session: nox.Session, project: str) -> None:
@@ -35,7 +35,7 @@ def pytest_executor(session: nox.Session, project: str) -> None:
 
 
 @nox.session(python=nox_common.PY_VERSIONS)
-def pytest(session: nox.Session):
+def pytest(session: nox.Session) -> None:
     """Module testing with pytest"""
     cwd = Path.cwd()
     pytest_executor(session, project=cwd.name)

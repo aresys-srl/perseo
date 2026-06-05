@@ -19,7 +19,7 @@ from perseo_core.geometry.doppler import (
 class TestDopplerEquation:
     """Test doppler_equation with scalar and vectorized inputs."""
 
-    def test_doppler_equation_scalar(self, doppler_test_data):
+    def test_doppler_equation_scalar(self, doppler_test_data: dict) -> None:
         """Test doppler_equation with 1D inputs (single point)."""
 
         doppler, gradient = doppler_equation(
@@ -42,7 +42,7 @@ class TestDopplerEquation:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_doppler_equation_vectorized(self, doppler_test_data):
+    def test_doppler_equation_vectorized(self, doppler_test_data: dict) -> None:
         """Test doppler_equation with 2D inputs (multiple points)."""
         doppler, gradient = doppler_equation(
             wavelength=doppler_test_data["wavelength"],
@@ -71,7 +71,7 @@ class TestDopplerEquation:
 class TestDopplerEquationMonostaticResiduals:
     """Test doppler_equation_monostatic_residuals with various input shapes."""
 
-    def test_monostatic_residuals_single_position(self, doppler_test_data):
+    def test_monostatic_residuals_single_position(self, doppler_test_data: dict) -> None:
         """Test with a single sensor position."""
         positions = doppler_test_data["trajectory"].position(doppler_test_data["azimuth_time"])
         velocities = doppler_test_data["trajectory"].velocity(doppler_test_data["azimuth_time"])
@@ -92,7 +92,7 @@ class TestDopplerEquationMonostaticResiduals:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_monostatic_residuals_single_position_vect(self, doppler_test_data):
+    def test_monostatic_residuals_single_position_vect(self, doppler_test_data: dict) -> None:
         """Test with multiple sensor positions (vectorized)."""
         positions = np.stack(
             [
@@ -123,9 +123,9 @@ class TestDopplerEquationMonostaticResiduals:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_monostatic_residuals_invalid_sensor_positions_shape(self, doppler_test_data):
+    def test_monostatic_residuals_invalid_sensor_positions_shape(self) -> None:
         """Test that invalid sensor_positions shapes raise ValueError."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_positions has invalid shape"):
             doppler_equation_monostatic_residuals(
                 np.arange(3),
                 np.arange(5),
@@ -134,7 +134,7 @@ class TestDopplerEquationMonostaticResiduals:
                 1,
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_positions has invalid shape"):
             doppler_equation_monostatic_residuals(
                 np.arange(3),
                 np.arange(12).reshape(2, 2, 3),
@@ -143,7 +143,7 @@ class TestDopplerEquationMonostaticResiduals:
                 1,
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"cannot reshape"):
             doppler_equation_monostatic_residuals(
                 np.arange(3),
                 np.arange(6).reshape(2, 2),
@@ -152,9 +152,9 @@ class TestDopplerEquationMonostaticResiduals:
                 1,
             )
 
-    def test_monostatic_residuals_invalid_sensor_velocities_shape(self, doppler_test_data):
+    def test_monostatic_residuals_invalid_sensor_velocities_shape(self) -> None:
         """Test that invalid sensor_velocities shapes raise ValueError."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_velocities has invalid shape"):
             doppler_equation_monostatic_residuals(
                 np.arange(3),
                 np.arange(6).reshape(2, 3),
@@ -163,7 +163,7 @@ class TestDopplerEquationMonostaticResiduals:
                 1,
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_velocities has invalid shape"):
             doppler_equation_monostatic_residuals(
                 np.arange(3),
                 np.arange(6).reshape(2, 3),
@@ -172,7 +172,7 @@ class TestDopplerEquationMonostaticResiduals:
                 1,
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"cannot reshape"):
             doppler_equation_monostatic_residuals(
                 np.arange(3),
                 np.arange(6).reshape(2, 3),
@@ -185,7 +185,7 @@ class TestDopplerEquationMonostaticResiduals:
 class TestDopplerEquationBistaticResiduals:
     """Test doppler_equation_bistatic_residuals."""
 
-    def test_bistatic_residuals_monostatic_degenerate(self, doppler_test_data):
+    def test_bistatic_residuals_monostatic_degenerate(self, doppler_test_data: dict) -> None:
         """Test with identical rx and tx (degenerate to monostatic), single position."""
         positions = doppler_test_data["trajectory"].position(doppler_test_data["azimuth_time"])
         velocities = doppler_test_data["trajectory"].velocity(doppler_test_data["azimuth_time"])
@@ -208,7 +208,7 @@ class TestDopplerEquationBistaticResiduals:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_bistatic_residuals_monostatic_degenerate_vect(self, doppler_test_data):
+    def test_bistatic_residuals_monostatic_degenerate_vect(self, doppler_test_data: dict) -> None:
         """Test with identical rx and tx (degenerate to monostatic), multiple position (vectorized)."""
         positions = np.stack(
             [
@@ -245,7 +245,7 @@ class TestDopplerEquationBistaticResiduals:
 class TestGeometricDopplerCentroid:
     """Test get_geometric_doppler_centroid."""
 
-    def test_geometric_doppler_centroid_single(self, doppler_test_data):
+    def test_geometric_doppler_centroid_single(self, doppler_test_data: dict) -> None:
         """Test with a single position-velocity-point set."""
         centroid = get_geometric_doppler_centroid(
             sensor_positions=doppler_test_data["trajectory"].position(doppler_test_data["azimuth_time"]),
@@ -262,7 +262,7 @@ class TestGeometricDopplerCentroid:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_geometric_doppler_centroid_vect(self, doppler_test_data):
+    def test_geometric_doppler_centroid_vect(self, doppler_test_data: dict) -> None:
         """Test with multiple position-velocity-point sets (vectorized)."""
         positions = np.tile(
             doppler_test_data["trajectory"].position(doppler_test_data["azimuth_time"]), (doppler_test_data["N"], 1)
@@ -292,7 +292,7 @@ class TestGeometricDopplerCentroid:
 class TestTheoreticalDopplerRate:
     """Test compute_theoretical_doppler_rate."""
 
-    def test_compute_theoretical_doppler_rate_scalar(self, doppler_test_data):
+    def test_compute_theoretical_doppler_rate_scalar(self, doppler_test_data: dict) -> None:
         """Test compute_theoretical_doppler_rate with single ground point."""
         doppler_rate = compute_theoretical_doppler_rate(
             trajectory=doppler_test_data["trajectory"],
@@ -309,7 +309,7 @@ class TestTheoreticalDopplerRate:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_compute_theoretical_doppler_rate_vect(self, doppler_test_data):
+    def test_compute_theoretical_doppler_rate_vect(self, doppler_test_data: dict) -> None:
         """Test compute_theoretical_doppler_rate with multiple ground points."""
         doppler_rate = compute_theoretical_doppler_rate(
             trajectory=doppler_test_data["trajectory"],
@@ -329,7 +329,7 @@ class TestTheoreticalDopplerRate:
 class TestSteeringDopplerFrequency:
     """Test compute_steering_doppler_frequency."""
 
-    def test_compute_steering_doppler_frequency_before_mid_burst(self, doppler_test_data):
+    def test_compute_steering_doppler_frequency_before_mid_burst(self, doppler_test_data: dict) -> None:
         """Test compute_steering_doppler_frequency, before mid burst."""
         steering_freq = compute_steering_doppler_frequency(
             trajectory=doppler_test_data["trajectory"],
@@ -347,7 +347,7 @@ class TestSteeringDopplerFrequency:
             rtol=doppler_test_data["tolerance"]["rtol"],
         )
 
-    def test_compute_steering_doppler_frequency_after_mid_burst(self, doppler_test_data):
+    def test_compute_steering_doppler_frequency_after_mid_burst(self, doppler_test_data: dict) -> None:
         """Test compute_steering_doppler_frequency, after mid burst."""
         steering_freq = compute_steering_doppler_frequency(
             trajectory=doppler_test_data["trajectory"],

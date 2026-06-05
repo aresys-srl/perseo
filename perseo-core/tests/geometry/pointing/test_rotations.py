@@ -21,7 +21,7 @@ class TestRotation:
     """Test euler_angles_to_rotation and rotation_to_euler_angles with various angle orders."""
 
     @pytest.fixture(autouse=True)
-    def setup_rotation_data(self, rotation_test_data):
+    def setup_rotation_data(self, rotation_test_data: dict) -> None:
         data = rotation_test_data
         self.yaw = data["yaw"]
         self.pitch = data["pitch"]
@@ -29,7 +29,7 @@ class TestRotation:
         self._euler_angles = data["euler_angles"]
         self._tolerance = data["tolerance"]
 
-    def test_euler_angles_to_rotation_roll(self):
+    def test_euler_angles_to_rotation_roll(self) -> None:
         """Test euler_angles_to_rotation with roll only."""
         cos_roll = np.cos(self.roll)
         sin_roll = np.sin(self.roll)
@@ -46,7 +46,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_pitch(self):
+    def test_euler_angles_to_rotation_pitch(self) -> None:
         """Test euler_angles_to_rotation with pitch only."""
         cos_pitch = np.cos(self.pitch)
         sin_pitch = np.sin(self.pitch)
@@ -63,7 +63,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_yaw(self):
+    def test_euler_angles_to_rotation_yaw(self) -> None:
         """Test euler_angles_to_rotation with yaw only."""
         cos_yaw = np.cos(self.yaw)
         sin_yaw = np.sin(self.yaw)
@@ -80,7 +80,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_ypr(self):
+    def test_euler_angles_to_rotation_ypr(self) -> None:
         """Test euler_angles_to_rotation with YPR order."""
         rotation_matrix = np.asarray(
             [
@@ -95,7 +95,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_yrp(self):
+    def test_euler_angles_to_rotation_yrp(self) -> None:
         """Test euler_angles_to_rotation with YRP order."""
         rotation_matrix = np.asarray(
             [
@@ -110,7 +110,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_rpy(self):
+    def test_euler_angles_to_rotation_rpy(self) -> None:
         """Test euler_angles_to_rotation with RPY order."""
         rotation_matrix = np.asarray(
             [
@@ -125,7 +125,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_ryp(self):
+    def test_euler_angles_to_rotation_ryp(self) -> None:
         """Test euler_angles_to_rotation with RYP order."""
         rotation_matrix = np.asarray(
             [
@@ -140,7 +140,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_pry(self):
+    def test_euler_angles_to_rotation_pry(self) -> None:
         """Test euler_angles_to_rotation with PRY order."""
         rotation_matrix = np.asarray(
             [
@@ -155,7 +155,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_pyr(self):
+    def test_euler_angles_to_rotation_pyr(self) -> None:
         """Testing compute rotation, scalar inputs"""
         rotation_matrix = np.asarray(
             [
@@ -170,7 +170,7 @@ class TestRotation:
         )
         np.testing.assert_allclose(rotation.as_matrix(), rotation_matrix, rtol=0, atol=self._tolerance)
 
-    def test_euler_angles_to_rotation_vectorized(self):
+    def test_euler_angles_to_rotation_vectorized(self) -> None:
         """Testing euler_angles_to_rotation, array inputs"""
         rotation_matrix = np.asarray(
             [
@@ -195,15 +195,15 @@ class TestRotation:
             rotation.as_matrix(), np.tile(rotation_matrix, (2, 1, 1)), rtol=0, atol=self._tolerance
         )
 
-    def test_euler_angles_to_rotation_invalid_orders(self):
+    def test_euler_angles_to_rotation_invalid_orders(self) -> None:
         """Testing euler_angles_to_rotation, invalid rotation orders"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid rotation order"):
             euler_angles_to_rotation(order="PPP", ypr_rad=self._euler_angles)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid rotation order"):
             euler_angles_to_rotation(order=None, ypr_rad=self._euler_angles)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid rotation order"):
             euler_angles_to_rotation(order="xyz", ypr_rad=self._euler_angles)
 
 
@@ -211,7 +211,7 @@ class TestEulerAngles:
     """Testing rotation_to_euler_angles function"""
 
     @pytest.fixture(autouse=True)
-    def setup_euler_angles_data(self):
+    def setup_euler_angles_data(self) -> None:
         self.yaw = [np.deg2rad(10), np.deg2rad(20), np.deg2rad(30)]
         self.pitch = [np.deg2rad(15), np.deg2rad(25), np.deg2rad(35)]
         self.roll = [np.deg2rad(0), np.deg2rad(30), np.deg2rad(60)]
@@ -219,7 +219,7 @@ class TestEulerAngles:
         self._tolerance = 1e-9
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_compute_euler_angles_roll(self, order):
+    def test_compute_euler_angles_roll(self, order: RotationOrder) -> None:
         """Testing compute_euler_angles for roll only"""
         rotation = euler_angles_to_rotation(order=order, ypr_rad=np.array([0, 0, self.roll[0]]))
         euler_angles = rotation_to_euler_angles(order=order, rotation=rotation)
@@ -227,7 +227,7 @@ class TestEulerAngles:
         np.testing.assert_allclose(euler_angles, np.array([0, 0, self.roll[0]]), atol=self._tolerance, rtol=0)
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_compute_euler_angles_pitch(self, order):
+    def test_compute_euler_angles_pitch(self, order: RotationOrder) -> None:
         """Testing compute_euler_angles for pitch only"""
         rotation = euler_angles_to_rotation(order=order, ypr_rad=np.array([0, self.pitch[0], 0]))
         euler_angles = rotation_to_euler_angles(order=order, rotation=rotation)
@@ -235,21 +235,21 @@ class TestEulerAngles:
         np.testing.assert_allclose(euler_angles, np.array([0, self.pitch[0], 0]), atol=self._tolerance, rtol=0)
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_compute_euler_angles_yaw(self, order):
+    def test_compute_euler_angles_yaw(self, order: RotationOrder) -> None:
         """Testing compute_euler_angles for yaw only"""
         rotation = euler_angles_to_rotation(order=order, ypr_rad=np.array([self.yaw[0], 0, 0]))
         euler_angles = rotation_to_euler_angles(order=order, rotation=rotation)
 
         np.testing.assert_allclose(euler_angles, np.array([self.yaw[0], 0, 0]), atol=self._tolerance, rtol=0)
 
-    def test_compute_euler_angles_scalar(self):
+    def test_compute_euler_angles_scalar(self) -> None:
         """Testing compute_euler_angles for single values of yaw, pitch and roll"""
         rotation = euler_angles_to_rotation(order="YPR", ypr_rad=self._euler_angles[0, :])
         euler_angles = rotation_to_euler_angles(order="YPR", rotation=rotation)
 
         np.testing.assert_allclose(euler_angles, self._euler_angles[0, :], atol=self._tolerance, rtol=0)
 
-    def test_compute_euler_angles_vectorized(self):
+    def test_compute_euler_angles_vectorized(self) -> None:
         """Testing compute_euler_angles for arrays of yaw, pitch and roll"""
         rotation = euler_angles_to_rotation(order="YPR", ypr_rad=self._euler_angles)
         euler_angles = rotation_to_euler_angles(order="YPR", rotation=rotation)
@@ -257,7 +257,7 @@ class TestEulerAngles:
         np.testing.assert_allclose(euler_angles, self._euler_angles, atol=self._tolerance, rtol=0)
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_compute_euler_angles_vectorized_all_rotations(self, order):
+    def test_compute_euler_angles_vectorized_all_rotations(self, order: RotationOrder) -> None:
         """Testing compute_euler_angles for arrays of yaw, pitch and roll, all rotation orders"""
         rotation = euler_angles_to_rotation(order=order, ypr_rad=self._euler_angles)
         euler_angles = rotation_to_euler_angles(order=order, rotation=rotation)
@@ -280,14 +280,14 @@ class TestEulerAngles:
             rtol=0,
         )
 
-    def test_compute_euler_angles_invalid_orders(self):
+    def test_compute_euler_angles_invalid_orders(self) -> None:
         """Testing compute_euler_angles with invalid rotation orders"""
         rotation = euler_angles_to_rotation(order="YPR", ypr_rad=self._euler_angles)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid rotation order"):
             rotation_to_euler_angles(order="PPP", rotation=rotation)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid rotation order"):
             rotation_to_euler_angles(order=None, rotation=rotation)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid rotation order"):
             rotation_to_euler_angles(order="xyz", rotation=rotation)

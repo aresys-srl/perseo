@@ -6,7 +6,9 @@
 import numpy as np
 
 
-def compute_antenna_angles_a_posteriori(antenna_reference_frame, vectors):
+def compute_antenna_angles_a_posteriori(
+    antenna_reference_frame: np.ndarray, vectors: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     """Compute antenna azimuth/elevation from frame and direction vectors.
 
     Parameters

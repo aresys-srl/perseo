@@ -10,13 +10,14 @@ from perseo_core.geometry.angles import (
     compute_incidence_angles,
     compute_look_angles,
 )
+from perseo_core.geometry.navigation import CubicSplineTrajectory
 
 
 class TestComputeLookIncidenceAnglesFromTrajectory:
     """Testing compute_incidence_angles_from_trajectory and compute_look_angles functions"""
 
     @pytest.fixture(autouse=True)
-    def setup_trajectory_angles_data(self, angles_from_trajectory_test_data):
+    def setup_trajectory_angles_data(self, angles_from_trajectory_test_data: dict) -> None:
         """Load trajectory angle test fixture data."""
         self.trajectory = angles_from_trajectory_test_data["trajectory"]
         self.range_times = angles_from_trajectory_test_data["range_times"]
@@ -29,7 +30,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_look_angles_from_trajectory_case0(self) -> None:
         """Testing compute_look_angles function, case 0"""
 
-        # case 0: single range value
+        # case 0 - single range value
         angles = compute_look_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -44,7 +45,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_look_angles_from_trajectory_case0_deg(self) -> None:
         """Testing compute_look_angles function, case 0, degrees"""
 
-        # case 0: single range value
+        # case 0 - single range value
         angles = compute_look_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -60,7 +61,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_look_angles_from_trajectory_case1(self) -> None:
         """Testing compute_look_angles function, case 1"""
 
-        # case 1: range array
+        # case 1 - range array
         angles = compute_look_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -77,7 +78,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_look_angles_from_trajectory_case1_deg(self) -> None:
         """Testing compute_look_angles function, case 1, degrees"""
 
-        # case 1: range array
+        # case 1 - range array
         angles = compute_look_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -95,7 +96,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_incidence_angles_from_trajectory_case0(self) -> None:
         """Testing compute_incidence_angles_from_trajectory function, case 0"""
 
-        # case 0: single range value
+        # case 0 - single range value
         angles = compute_incidence_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -110,7 +111,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_incidence_angles_from_trajectory_case0_deg(self) -> None:
         """Testing compute_incidence_angles_from_trajectory function, case 0, degrees"""
 
-        # case 0: single range value
+        # case 0 - single range value
         angles = compute_incidence_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -126,7 +127,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_incidence_angles_from_trajectory_case1(self) -> None:
         """Testing compute_incidence_angles_from_trajectory function, case 1"""
 
-        # case 1: range array
+        # case 1 - range array
         angles = compute_incidence_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -143,7 +144,7 @@ class TestComputeLookIncidenceAnglesFromTrajectory:
     def test_compute_incidence_angles_from_trajectory_case1_deg(self) -> None:
         """Testing compute_incidence_angles_from_trajectory function, case 1, degrees"""
 
-        # case 1: range array
+        # case 1 - range array
         angles = compute_incidence_angles(
             trajectory=self.trajectory,
             azimuth_time=self.az_time,
@@ -163,7 +164,7 @@ class TestAnglesComputationFromTrajectory:
     """Testing angles computation from CubicSplineTrajectory object"""
 
     @pytest.fixture(autouse=True)
-    def setup_trajectory_angles_data(self, testing_trajectory):
+    def setup_trajectory_angles_data(self, testing_trajectory: CubicSplineTrajectory) -> None:
         """Load test data from fixtures."""
         self._trajectory = testing_trajectory
         self._range_times = np.array([0.00362255, 0.003623, 0.0036239, 0.003635, 0.003639, 0.003642, 0.003645])

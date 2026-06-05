@@ -73,12 +73,10 @@ def _ellipse_equation_residual(ground_points: np.ndarray) -> np.ndarray:
     r_ep2 = WGS84.b**2
     r_ee2 = WGS84.a**2
 
-    ellipse_residual = _ellipse_equation(ground_points, r_ee2, r_ep2)
-
-    return ellipse_residual
+    return _ellipse_equation(ground_points, r_ee2, r_ep2)
 
 
-def _reshape_output(res, shape: tuple[int, ...]) -> npt.NDArray[np.floating]:
+def _reshape_output(res: float, shape: tuple[int, ...]) -> npt.NDArray[np.floating]:
     return np.full(shape, res)
 
 
@@ -86,7 +84,7 @@ class TestDirectGeocodingBistatic:
     """Testing direct_geocoding_bistatic with consolidated parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         self.position = direct_geocoding_test_data["sensor_position"]
         self.velocity = direct_geocoding_test_data["sensor_velocity"]
         self.initial_guess = direct_geocoding_test_data["initial_guess"]
@@ -291,7 +289,7 @@ class TestDirectGeocodingBistatic:
             ),
         ],
     )
-    def test_direct_geocoding_bistatic_1_point(self, case) -> None:
+    def test_direct_geocoding_bistatic_1_point(self, case: dict) -> None:
         """Testing direct_geocoding_bistatic with 1-point cases."""
         value_map = {
             "position": self.position,
@@ -396,7 +394,7 @@ class TestDirectGeocodingBistatic:
             ),
         ],
     )
-    def test_direct_geocoding_bistatic_N_points(self, case) -> None:
+    def test_direct_geocoding_bistatic_n_points(self, case: dict) -> None:
         """Testing direct_geocoding_bistatic with N-point cases."""
         N = self.N
         value_map = {
@@ -575,7 +573,7 @@ class TestDirectGeocodingBistatic:
             ),
         ],
     )
-    def test_direct_geocoding_bistatic_M_points(self, case) -> None:
+    def test_direct_geocoding_bistatic_m_points(self, case: dict) -> None:
         """Testing direct_geocoding_bistatic with M-point cases."""
         M = self.M
         value_map = {
@@ -699,7 +697,7 @@ class TestDirectGeocodingBistatic:
             ),
         ],
     )
-    def test_direct_geocoding_bistatic_3_points(self, case) -> None:
+    def test_direct_geocoding_bistatic_3_points(self, case: dict) -> None:
         """Testing direct_geocoding_bistatic with 3-point cases (N x M)."""
         N, M = self.N, self.M
         value_map = {
@@ -763,7 +761,7 @@ class TestDirectGeocodingBistaticCore:
     """Testing direct geocoding bistatic core with consolidated parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         self.position = direct_geocoding_test_data["sensor_position"]
         self.velocity = direct_geocoding_test_data["sensor_velocity"]
         self.initial_guess = direct_geocoding_test_data["initial_guess"]
@@ -965,7 +963,7 @@ class TestDirectGeocodingBistaticCore:
             ),
         ],
     )
-    def test_direct_geocoding_bistatic_core_cases(self, case) -> None:
+    def test_direct_geocoding_bistatic_core_cases(self, case: dict) -> None:
         """Testing direct_geocoding_bistatic_core success cases."""
         N, M = self.N, self.M
         value_map = {
@@ -1037,7 +1035,7 @@ class TestNewtonForDirectGeocodingBistatic:
     """Testing Newton for direct geocoding bistatic core with consolidated parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         self.position = direct_geocoding_test_data["sensor_position"]
         self.velocity = direct_geocoding_test_data["sensor_velocity"]
         self.initial_guess = direct_geocoding_test_data["initial_guess"]
@@ -1107,7 +1105,7 @@ class TestNewtonForDirectGeocodingBistatic:
             ),
         ],
     )
-    def test_newton_for_direct_geocoding_bistatic_cases(self, case) -> None:
+    def test_newton_for_direct_geocoding_bistatic_cases(self, case: dict) -> None:
         """Testing _direct_geocoding_bistatic_newton cases."""
         N = self.N
         value_map = {

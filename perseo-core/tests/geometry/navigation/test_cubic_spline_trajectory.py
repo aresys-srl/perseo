@@ -13,7 +13,7 @@ class TestTrajectory:
     """Test CubicSplineTrajectory creation, properties, interpolation, and boundary conditions."""
 
     @pytest.fixture(autouse=True)
-    def setup_trajectory_data(self, trajectory_test_data):
+    def setup_trajectory_data(self, trajectory_test_data: dict) -> None:
         """Load test data from fixtures."""
         self._state_vectors = trajectory_test_data["state_vectors"]
         self._trajectory = trajectory_test_data["trajectory"]

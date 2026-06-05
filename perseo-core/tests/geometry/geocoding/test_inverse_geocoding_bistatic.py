@@ -43,7 +43,7 @@ class TestInverseGeocodingBistatic:
     """Testing inverse geocoding bistatic functionality using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.wavelength = inverse_geocoding_test_data["wavelength"]
         self.doppler_freq = inverse_geocoding_test_data["doppler_frequency"]
@@ -277,7 +277,7 @@ class TestInverseGeocodingBistatic:
             ),
         ],
     )
-    def test_inverse_geocoding_bistatic_cases(self, case) -> None:
+    def test_inverse_geocoding_bistatic_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_bistatic success cases."""
         N, M = self.N, self.M
         time_step = self.trajectory.times[1] - self.trajectory.times[0]
@@ -413,7 +413,7 @@ class TestInverseGeocodingBistatic:
             ),
         ],
     )
-    def test_inverse_geocoding_bistatic_error_cases(self, case) -> None:
+    def test_inverse_geocoding_bistatic_error_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_bistatic error cases."""
         N, M = self.N, self.M
         value_map = {
@@ -430,8 +430,8 @@ class TestInverseGeocodingBistatic:
         init_guess = value_map.get(case["init_guess"], case["init_guess"])
         init_guess_time_step = case["init_guess_time_step"]
 
-        with pytest.raises(RuntimeError):
-            if init_guess is not None:
+        if init_guess is not None:
+            with pytest.raises(RuntimeError):
                 inverse_geocoding_bistatic(
                     trajectory_rx=self.trajectory,
                     trajectory_tx=self.trajectory,
@@ -440,7 +440,8 @@ class TestInverseGeocodingBistatic:
                     az_initial_time_guesses=init_guess,
                     wavelength=self.wavelength,
                 )
-            else:
+        else:
+            with pytest.raises(RuntimeError):
                 inverse_geocoding_bistatic(
                     trajectory_rx=self.trajectory,
                     trajectory_tx=self.trajectory,
@@ -455,7 +456,7 @@ class TestInverseGeocodingBistaticInit:
     """Testing inverse geocoding bistatic initialization using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.wavelength = inverse_geocoding_test_data["wavelength"]
         self.doppler_freq = inverse_geocoding_test_data["doppler_frequency"]
@@ -551,7 +552,7 @@ class TestInverseGeocodingBistaticInit:
             ),
         ],
     )
-    def test_inverse_geocoding_bistatic_init_core_cases(self, case) -> None:
+    def test_inverse_geocoding_bistatic_init_core_cases(self, case: dict) -> None:
         """Parameterized test with 8 cases (7 valid cases + 1 error case)."""
         N, M = self.N, self.M
         value_map = {

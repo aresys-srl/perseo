@@ -15,17 +15,17 @@ from perseo_core.geometry.ellipsoid import (
 
 
 class TestCreateInflatedWGS84Ellipsoid:
-    def test_inflate_positive(self):
+    def test_inflate_positive(self) -> None:
         inflated = create_inflated_wgs84_ellipsoid(5)
         assert inflated.a == pytest.approx(WGS84.a + 5)
         assert inflated.b == pytest.approx(WGS84.b + 5)
 
-    def test_inflate_zero(self):
+    def test_inflate_zero(self) -> None:
         inflated = create_inflated_wgs84_ellipsoid(0)
         assert inflated.a == pytest.approx(WGS84.a)
         assert inflated.b == pytest.approx(WGS84.b)
 
-    def test_inflate_negative(self):
+    def test_inflate_negative(self) -> None:
         inflated = create_inflated_wgs84_ellipsoid(-0.5)
         assert inflated.a == pytest.approx(WGS84.a - 0.5)
         assert inflated.b == pytest.approx(WGS84.b - 0.5)
@@ -35,7 +35,7 @@ class TestLineEllipsoidIntersections:
     # Ellipsoid with a=2 (equatorial, x/y) and b=1 (polar, z)
     ellipsoid = Geod(a=2, b=1)
 
-    def test_no_intersections(self):
+    def test_no_intersections(self) -> None:
         line_origin = np.array([-5, 0, 2], dtype=float)
         line_direction = np.array([0, 0, 100], dtype=float)
 
@@ -46,7 +46,7 @@ class TestLineEllipsoidIntersections:
         assert np.all(np.isnan(first))
         assert np.all(np.isnan(second))
 
-    def test_one_intersection(self):
+    def test_one_intersection(self) -> None:
         line_origin = np.array([-5, 0, 1], dtype=float)
         line_direction = np.array([100, 0, 0], dtype=float)
 
@@ -55,7 +55,7 @@ class TestLineEllipsoidIntersections:
         np.testing.assert_allclose(first, np.array([0, 0, 1]), rtol=1e-10, atol=1e-10)
         np.testing.assert_allclose(second, np.array([0, 0, 1]), rtol=1e-10, atol=1e-10)
 
-    def test_two_intersections_x_axis(self):
+    def test_two_intersections_x_axis(self) -> None:
         line_origin = np.array([-5, 0, 0], dtype=float)
         line_direction = np.array([100, 0, 0], dtype=float)
 
@@ -65,7 +65,7 @@ class TestLineEllipsoidIntersections:
         np.testing.assert_allclose(first, np.array([-2, 0, 0]), rtol=1e-10, atol=1e-10)
         np.testing.assert_allclose(second, np.array([2, 0, 0]), rtol=1e-10, atol=1e-10)
 
-    def test_two_intersections_y_axis(self):
+    def test_two_intersections_y_axis(self) -> None:
         line_origin = np.array([0, 2, 0], dtype=float)
         line_direction = np.array([0, 1, 0], dtype=float)
 
@@ -75,7 +75,7 @@ class TestLineEllipsoidIntersections:
         np.testing.assert_allclose(first, np.array([0, 2, 0]), rtol=1e-10, atol=1e-10)
         np.testing.assert_allclose(second, np.array([0, -2, 0]), rtol=1e-10, atol=1e-10)
 
-    def test_two_intersections_z_axis_vectorized_single(self):
+    def test_two_intersections_z_axis_vectorized_single(self) -> None:
         line_origin = np.array([[0, 0, 10]], dtype=float)
         line_direction = np.array([[0, 0, 5]], dtype=float)
 
@@ -87,7 +87,7 @@ class TestLineEllipsoidIntersections:
         np.testing.assert_allclose(first[0], np.array([0, 0, 1]), rtol=1e-10, atol=1e-10)
         np.testing.assert_allclose(second[0], np.array([0, 0, -1]), rtol=1e-10, atol=1e-10)
 
-    def test_vectorized(self):
+    def test_vectorized(self) -> None:
         line_origins = np.array([[-5, 0, 2], [-5, 0, 1], [-5, 0, 0]])
         line_directions = np.array([[0, 0, 100], [100, 0, 0], [100, 0, 0]])
 
@@ -109,24 +109,24 @@ class TestLineEllipsoidIntersections:
         np.testing.assert_allclose(first[2], np.array([-2, 0, 0]), rtol=1e-10, atol=1e-10)
         np.testing.assert_allclose(second[2], np.array([2, 0, 0]), rtol=1e-10, atol=1e-10)
 
-    def test_invalid_input_origin_wrong_shape(self):
+    def test_invalid_input_origin_wrong_shape(self) -> None:
         line_origin = np.array([-5, 0], dtype=float)
         line_direction = np.array([0, 0, 100], dtype=float)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Invalid line_origin shape"):
             compute_line_ellipsoid_intersections(line_direction, line_origin, self.ellipsoid)
 
-    def test_invalid_input_direction_wrong_shape(self):
+    def test_invalid_input_direction_wrong_shape(self) -> None:
         line_origin = np.array([-5, 0, 2], dtype=float)
         line_direction = np.array([0, 0, 100, 0], dtype=float)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"Invalid line_direction shape"):
             compute_line_ellipsoid_intersections(line_direction, line_origin, self.ellipsoid)
 
 
 class TestWGS84:
-    def test_semi_major_axis(self):
+    def test_semi_major_axis(self) -> None:
         assert WGS84.a == pytest.approx(6378137.0)
 
-    def test_semi_minor_axis(self):
+    def test_semi_minor_axis(self) -> None:
         assert WGS84.b == pytest.approx(6356752.314245)

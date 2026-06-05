@@ -19,7 +19,7 @@ class TestComputeLookAndIncidenceAngles:
     """Test compute_incidence_angles_core and compute_look_angles_core with various input dimensions."""
 
     @pytest.fixture(autouse=True)
-    def setup_angles_data(self, angles_test_data):
+    def setup_angles_data(self, angles_test_data: dict) -> None:
         """Load test data from fixtures."""
         self.sensor_positions = angles_test_data["sensor_positions"]
         self.points = angles_test_data["points"]
@@ -28,7 +28,7 @@ class TestComputeLookAndIncidenceAngles:
         self.atol = angles_test_data["tolerance"]["atol"]
         self.rtol = angles_test_data["tolerance"]["rtol"]
 
-    def test_compute_incidence_angles_core_1_pos_1_point(self):
+    def test_compute_incidence_angles_core_1_pos_1_point(self) -> None:
         """Test compute_incidence_angles_core with scalar position and point (scalar and 1D array forms)."""
         reference_value = np.array([0.289504602345834])
 
@@ -46,7 +46,7 @@ class TestComputeLookAndIncidenceAngles:
             incidence_angle = compute_incidence_angles_core(position, point)
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_incidence_angles_core_1_pos_1_point_1_surface_normal(self):
+    def test_compute_incidence_angles_core_1_pos_1_point_1_surface_normal(self) -> None:
         """Test compute_incidence_angles_core with scalar position, point, and surface normal.
 
         Validate support for different surface-normal shapes and normalization options.
@@ -73,7 +73,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_incidence_angles_core_1_pos_n_point(self):
+    def test_compute_incidence_angles_core_1_pos_n_point(self) -> None:
         """Test compute_incidence_angles_core with single sensor position and multiple points."""
         reference_value = np.array(
             [
@@ -96,7 +96,7 @@ class TestComputeLookAndIncidenceAngles:
             incidence_angle = compute_incidence_angles_core(position, self.points)
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_incidence_angles_core_1_pos_n_point_n_surface_normal(self):
+    def test_compute_incidence_angles_core_1_pos_n_point_n_surface_normal(self) -> None:
         """Test compute_incidence_angles_core with single position, multiple points and normals."""
         reference_value = np.array(
             [
@@ -130,7 +130,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_incidence_angles_core_n_pos_n_point(self):
+    def test_compute_incidence_angles_core_n_pos_n_point(self) -> None:
         """Test compute_incidence_angles_core with multiple positions and points (vectorized computation)."""
         reference_value = np.array(
             [
@@ -149,7 +149,7 @@ class TestComputeLookAndIncidenceAngles:
 
     def test_compute_incidence_angles_core_n_pos_n_point_n_surface_normal(
         self,
-    ):
+    ) -> None:
         """Test compute_incidence_angles_core with multiple positions, points, and surface normals."""
         reference_value = np.array(
             [
@@ -184,33 +184,33 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, incidence_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_incidence_angles_core_invalid_inputs(self):
+    def test_compute_incidence_angles_core_invalid_inputs(self) -> None:
         """Test that compute_incidence_angles_core raises ValueError for invalid input shapes."""
         # wrong sensor positions shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_positions has invalid shape"):
             compute_incidence_angles_core(np.arange(5), np.arange(3))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_positions has invalid shape"):
             compute_incidence_angles_core(np.arange(6).reshape(3, 2), np.arange(3))
 
         # wrong points shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"points has invalid shape"):
             compute_incidence_angles_core(np.arange(3), np.arange(5))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"points has invalid shape"):
             compute_incidence_angles_core(np.arange(3), np.arange(6).reshape(3, 2))
 
         # incompatible points sensor positions shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"could not be broadcast"):
             compute_incidence_angles_core(np.arange(12).reshape(4, 3), np.arange(6).reshape(2, 3))
 
         # incompatible points surface normals shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"surface_normals has invalid shape"):
             compute_incidence_angles_core(
                 np.arange(3),
                 np.arange(12).reshape(4, 3),
                 surface_normals=np.arange(12).reshape((6, 2)),
             )
 
-    def test_compute_look_angles_core_1_pos_1_nadir_1_point(self):
+    def test_compute_look_angles_core_1_pos_1_nadir_1_point(self) -> None:
         """Test compute_look_angles_core with scalar position, nadir direction, and point."""
         reference_value = np.array([0.261807718170898])
 
@@ -238,7 +238,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_1_pos_1_nadir_n_point(self):
+    def test_compute_look_angles_core_1_pos_1_nadir_n_point(self) -> None:
         """Test compute_look_angles_core with single position and nadir direction, multiple points."""
         reference_value = np.array(
             [
@@ -271,7 +271,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_n_pos_1_nadir_n_point(self):
+    def test_compute_look_angles_core_n_pos_1_nadir_n_point(self) -> None:
         """Testing compute look angles with mixed inputs"""
         reference_value = np.array(
             [
@@ -300,7 +300,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_1_pos_n_nadir_n_point(self):
+    def test_compute_look_angles_core_1_pos_n_nadir_n_point(self) -> None:
         """Testing compute look angles with mixed inputs"""
         reference_value = np.array(
             [
@@ -334,7 +334,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_n_pos_n_nadir_n_point(self):
+    def test_compute_look_angles_core_n_pos_n_nadir_n_point(self) -> None:
         """Testing compute look angles with array inputs"""
         reference_value = np.array(
             [
@@ -364,7 +364,7 @@ class TestComputeLookAndIncidenceAngles:
 
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_1_pos_1_point_no_nadir(self):
+    def test_compute_look_angles_core_1_pos_1_point_no_nadir(self) -> None:
         """Testing compute look angles with mixed inputs, no nadir"""
         reference_value = 0.261807718170891
 
@@ -374,7 +374,7 @@ class TestComputeLookAndIncidenceAngles:
             look_angle = compute_look_angles_core(sensor_positions=s_pos, ground_points=g_pos)
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_1_pos_n_points_no_nadir(self):
+    def test_compute_look_angles_core_1_pos_n_points_no_nadir(self) -> None:
         """Testing compute look angles with mixed inputs, no nadir"""
         reference_value = np.array(
             [0.26180771817, 0.349072929252, 0.436338618964, 0.5236045556, 0.61087063065, 0.6981367918, 0.78540301]
@@ -386,7 +386,7 @@ class TestComputeLookAndIncidenceAngles:
             look_angle = compute_look_angles_core(sensor_positions=s_pos, ground_points=self.points)
             np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_n_pos_n_point_no_nadir(self):
+    def test_compute_look_angles_core_n_pos_n_point_no_nadir(self) -> None:
         """Testing compute look angles with mixed inputs, no nadir"""
         reference_value = np.array(
             [
@@ -403,10 +403,10 @@ class TestComputeLookAndIncidenceAngles:
         look_angle = compute_look_angles_core(sensor_positions=self.sensor_positions, ground_points=self.points)
         np.testing.assert_allclose(reference_value, look_angle, atol=self.atol, rtol=self.rtol)
 
-    def test_compute_look_angles_core_invalid_inputs(self):
+    def test_compute_look_angles_core_invalid_inputs(self) -> None:
         """Testing compute look angles with invalid inputs"""
         # wrong point shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"nadir_directions has invalid shape"):
             compute_look_angles_core(
                 np.arange(12).reshape(4, 3),
                 np.arange(12).reshape(4, 3),
@@ -414,27 +414,27 @@ class TestComputeLookAndIncidenceAngles:
             )
 
         # wrong position shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_positions has invalid shape"):
             compute_look_angles_core(np.arange(5), np.arange(3), np.arange(3))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"sensor_positions has invalid shape"):
             compute_look_angles_core(np.arange(6).reshape(3, 2), np.arange(3), np.arange(3))
 
         # wrong nadir direction shape
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"points has invalid shape"):
             compute_look_angles_core(np.arange(3), np.arange(5), np.arange(3))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"points has invalid shape"):
             compute_look_angles_core(np.arange(3), np.arange(6).reshape(3, 2), np.arange(3))
 
         # incompatible shapes
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"could not be broadcast"):
             compute_look_angles_core(
                 np.arange(12).reshape(4, 3),
                 np.arange(12).reshape(4, 3),
                 np.arange(6).reshape(2, 3),
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"points has invalid shape"):
             compute_look_angles_core(np.arange(12).reshape(4, 3), np.arange(6), np.arange(12).reshape(4, 3))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"could not be broadcast"):
             compute_look_angles_core(
                 np.arange(1, 4),
                 np.arange(15).reshape((5, 3)),
@@ -446,7 +446,7 @@ class TestGeometricSquint:
     """Testing get_geometric_squint function"""
 
     @pytest.fixture(autouse=True)
-    def setup_squint_data(self):
+    def setup_squint_data(self) -> None:
         """Setup squint test data."""
         self.pos_0 = np.array([-2449675.14554249, -5216814.136353868, 3907089.2898868835])
         self.pos_20 = np.array([4397940.093636902, 763963.1640477455, 4542599.8509511445])

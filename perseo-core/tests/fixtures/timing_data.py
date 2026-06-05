@@ -10,12 +10,12 @@ import numpy as np
 from perseo_core.timing import PreciseDateTime
 
 
-def get_gps_week_conversion_test_data():
+def get_gps_week_conversion_test_data() -> dict:
     """Return fixture data for ``date_to_gps_week`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Valid/invalid input dates and expected tuple result.
     """
     return {
@@ -25,12 +25,12 @@ def get_gps_week_conversion_test_data():
     }
 
 
-def get_precise_datetime_to_numpy_test_data():
+def get_precise_datetime_to_numpy_test_data() -> dict:
     """Return fixture data for ``precise_datetime_to_numpy`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Base time, time deltas, and expected ``datetime64`` values.
     """
     input_date = PreciseDateTime.from_numeric_datetime(2012, 6, 15, 17, 30)

@@ -6,6 +6,7 @@
 import numpy as np
 import pytest
 
+from perseo_core.geometry.navigation import CubicSplineTrajectory
 from perseo_core.geometry.velocities import compute_ground_velocity
 
 
@@ -13,7 +14,9 @@ class TestGroundVelocityFromTrajectory:
     """Test compute_ground_velocity with scalar and vectorized look angles."""
 
     @pytest.fixture(autouse=True)
-    def setup_ground_velocity_data(self, testing_trajectory, ground_velocity_test_data):
+    def setup_ground_velocity_data(
+        self, testing_trajectory: CubicSplineTrajectory, ground_velocity_test_data: dict
+    ) -> None:
         """Load test data from fixtures."""
         self._trajectory = testing_trajectory
 

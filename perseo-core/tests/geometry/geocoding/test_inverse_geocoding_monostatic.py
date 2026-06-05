@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import numpy.typing as npt
 import pytest
@@ -18,8 +20,10 @@ from perseo_core.geometry.geocoding.inverse_geocoding_core import (
     inverse_geocoding_monostatic_attitude_core,
     inverse_geocoding_monostatic_core,
 )
-from perseo_core.geometry.navigation import Trajectory
 from perseo_core.timing import PreciseDateTime
+
+if TYPE_CHECKING:
+    from perseo_core.geometry.navigation import Trajectory
 
 
 def _doppler_equation_residual(
@@ -132,7 +136,7 @@ class TestInverseGeocodingMonostaticCore:
     """Testing inverse geocoding monostatic core using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.wavelength = inverse_geocoding_test_data["wavelength"]
         self.doppler_freq = inverse_geocoding_test_data["doppler_frequency"]
@@ -249,7 +253,7 @@ class TestInverseGeocodingMonostaticCore:
             ),
         ],
     )
-    def test_inverse_geocoding_monostatic_core_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_core_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic_core with parametrize."""
         N = self.N
         value_map = {
@@ -322,7 +326,7 @@ class TestInverseGeocodingMonostaticCore:
             ),
         ],
     )
-    def test_inverse_geocoding_monostatic_core_error_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_core_error_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic_core error cases with parametrize."""
         N, M = self.N, self.M
         value_map = {
@@ -351,7 +355,7 @@ class TestInverseGeocodingMonostatic:
     """Testing inverse geocoding monostatic using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.time_step = self.trajectory.times[1] - self.trajectory.times[0]
         self.wavelength = inverse_geocoding_test_data["wavelength"]
@@ -514,7 +518,7 @@ class TestInverseGeocodingMonostatic:
             ),
         ],
     )
-    def test_inverse_geocoding_monostatic_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic with parametrize."""
         N, M = self.N, self.M
         value_map = {
@@ -575,7 +579,7 @@ class TestInverseGeocodingMonostaticInit:
     """Testing inverse geocoding monostatic init using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.wavelength = inverse_geocoding_test_data["wavelength"]
         self.doppler_freq = inverse_geocoding_test_data["doppler_frequency"]
@@ -657,7 +661,7 @@ class TestInverseGeocodingMonostaticInit:
             ),
         ],
     )
-    def test_inverse_geocoding_monostatic_init_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_init_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic_init with parametrize."""
         N, M = self.N, self.M
         value_map = {
@@ -695,7 +699,7 @@ class TestInverseGeocodingMonostaticAttitudeCore:
     """Testing inverse geocoding monostatic with attitude core using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.attitude = inverse_geocoding_test_data["attitude"]
         self.init_guess = inverse_geocoding_test_data["init_guess"]
@@ -765,7 +769,7 @@ class TestInverseGeocodingMonostaticAttitudeCore:
             ),
         ],
     )
-    def test_inverse_geocoding_monostatic_core_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_core_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic_core with parametrize."""
         N = self.N
         value_map = {
@@ -810,7 +814,7 @@ class TestInverseGeocodingMonostaticAttitudeCore:
             )
         ],
     )
-    def test_inverse_geocoding_monostatic_core_error_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_core_error_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic_core error cases with parametrize."""
         N, M = self.N, self.M
         value_map = {
@@ -835,7 +839,7 @@ class TestInverseGeocodingMonostaticAttitude:
     """Testing inverse geocoding monostatic with attitude using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, inverse_geocoding_test_data):
+    def setup(self, inverse_geocoding_test_data: dict) -> None:
         self.trajectory = inverse_geocoding_test_data["trajectory"]
         self.time_step = self.trajectory.times[1] - self.trajectory.times[0]
         self.attitude = inverse_geocoding_test_data["attitude"]
@@ -988,7 +992,7 @@ class TestInverseGeocodingMonostaticAttitude:
             ),
         ],
     )
-    def test_inverse_geocoding_monostatic_cases(self, case) -> None:
+    def test_inverse_geocoding_monostatic_cases(self, case: dict) -> None:
         """Testing inverse_geocoding_monostatic with parametrize."""
         N, M = self.N, self.M
         value_map = {

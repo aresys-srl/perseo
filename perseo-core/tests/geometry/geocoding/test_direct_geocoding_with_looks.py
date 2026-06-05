@@ -22,7 +22,7 @@ class TestDirectGeocodingWithLooks:
     """Testing direct_geocoding_with_look_angles and direct_geocoding_with_looking_direction functionalities"""
 
     @pytest.fixture(autouse=True)
-    def setup_direct_geocoding_data(self, direct_geocoding_with_looks_test_data):
+    def setup_direct_geocoding_data(self, direct_geocoding_with_looks_test_data: dict) -> None:
         data = direct_geocoding_with_looks_test_data
         self.sensor_position = data["sensor_positions"][0, :]
         self.sensor_velocity = data["sensor_velocity"]
@@ -100,13 +100,13 @@ class TestDirectGeocodingWithLooks:
 
     def test_direct_geocoding_with_looking_direction_invalid_inputs(self) -> None:
         """Testing direct_geocoding_with_looking_direction, invalid inputs"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid"):
             direct_geocoding_with_looking_direction(np.arange(5), np.arange(3))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid"):
             direct_geocoding_with_looking_direction(np.arange(6).reshape(3, 2), np.arange(3))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid"):
             direct_geocoding_with_looking_direction(np.arange(3), np.arange(5))
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Invalid"):
             direct_geocoding_with_looking_direction(np.arange(3), np.arange(6).reshape(3, 2))
 
     def test_direct_geocoding_with_look_angles_case0a(self) -> None:
@@ -187,14 +187,14 @@ class TestDirectGeocodingWithLooks:
 
     def test_direct_geocoding_with_look_angles_invalid_inputs(self) -> None:
         """Testing direct_geocoding_with_look_angles with invalid inputs"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="have different shapes"):
             direct_geocoding_with_look_angles(
                 np.arange(5, dtype=float),
                 np.arange(3, dtype=float),
                 "ZERODOPPLER",
                 np.arange(5, dtype=float),
             )
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="have different shapes"):
             direct_geocoding_with_look_angles(
                 np.arange(3, dtype=float),
                 np.arange(4, dtype=float),
@@ -214,14 +214,14 @@ class TestDirectGeocodingWithPointing:
     """Testing direct_geocoding_with_pointing functionalities"""
 
     @pytest.fixture(autouse=True)
-    def setup_pointing_data(self, direct_geocoding_with_looks_test_data):
+    def setup_pointing_data(self, direct_geocoding_with_looks_test_data: dict) -> None:
         data = direct_geocoding_with_looks_test_data
         self.sensor_positions = data["sensor_positions"]
         self.arf = data["arf"]
         self.tolerance = data["tolerance"]
         self.expected_results = data["expected_ground_points_with_pointing"]
 
-    def test_direct_geocoding_with_pointing(self):
+    def test_direct_geocoding_with_pointing(self) -> None:
         """Testing direct_geocoding_with_pointing, single position"""
         points = direct_geocoding_with_pointing(
             sensor_positions=self.sensor_positions[3, :],
@@ -234,7 +234,7 @@ class TestDirectGeocodingWithPointing:
             points, self.expected_results[0], atol=self.tolerance["atol"], rtol=self.tolerance["rtol"]
         )
 
-    def test_direct_geocoding_with_pointing_vectorized(self):
+    def test_direct_geocoding_with_pointing_vectorized(self) -> None:
         """Testing direct_geocoding_with_pointing, vectorization"""
         sensor_pos_inputs = [self.sensor_positions[3, :], np.tile(self.sensor_positions[3, :], (10, 1))]
         az_angles_in = np.deg2rad(np.linspace(-5, 5, 10))
@@ -247,10 +247,7 @@ class TestDirectGeocodingWithPointing:
         for sensor_pos, az, el, height in itertools.product(
             sensor_pos_inputs, azimuth_angles_inputs, elevation_angles_inputs, altitude_inputs
         ):
-            if sensor_pos.ndim == 1:
-                arf = self.arf
-            else:
-                arf = np.tile(self.arf, (sensor_pos.shape[0], 1, 1))
+            arf = self.arf if sensor_pos.ndim == 1 else np.tile(self.arf, (sensor_pos.shape[0], 1, 1))
             points = direct_geocoding_with_pointing(
                 sensor_positions=sensor_pos,
                 antenna_reference_frames=arf,
@@ -262,7 +259,8 @@ class TestDirectGeocodingWithPointing:
             if not (sensor_pos.size == 3 and np.ndim(az) == 0 and np.ndim(el) == 0):
                 expected_shape = (
                     max(sensor_pos.shape[0], np.size(az), np.size(el)),  # type: ignore
-                ) + expected_shape
+                    *expected_shape,
+                )
             assert points.shape == expected_shape
 
             los = points - sensor_pos
@@ -271,9 +269,9 @@ class TestDirectGeocodingWithPointing:
             assert np.max(np.abs(azimuth_out - az)) < self.tolerance["atol"]
             assert np.max(np.abs(elevation_out - el)) < self.tolerance["atol"]
 
-    def test_direct_geocoding_with_pointing_invalid_inputs_0(self):
+    def test_direct_geocoding_with_pointing_invalid_inputs_0(self) -> None:
         """Testing direct_geocoding_with_pointing, invalid inputs, case 0"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="shape mismatch"):
             direct_geocoding_with_pointing(
                 sensor_positions=self.sensor_positions[3, :],
                 antenna_reference_frames=np.array([self.arf, self.arf]),
@@ -281,9 +279,9 @@ class TestDirectGeocodingWithPointing:
                 elevation_antenna_angles=-0.05235987755982989,
             )
 
-    def test_direct_geocoding_with_pointing_invalid_inputs_1(self):
+    def test_direct_geocoding_with_pointing_invalid_inputs_1(self) -> None:
         """Testing direct_geocoding_with_pointing, invalid inputs, case 1"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="shape mismatch"):
             direct_geocoding_with_pointing(
                 sensor_positions=self.sensor_positions,
                 antenna_reference_frames=self.arf,
@@ -291,9 +289,9 @@ class TestDirectGeocodingWithPointing:
                 elevation_antenna_angles=-0.05235987755982989,
             )
 
-    def test_direct_geocoding_with_pointing_invalid_inputs_2(self):
+    def test_direct_geocoding_with_pointing_invalid_inputs_2(self) -> None:
         """Testing direct_geocoding_with_pointing, invalid inputs, case 2"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="shape mismatch"):
             direct_geocoding_with_pointing(
                 sensor_positions=self.sensor_positions,
                 antenna_reference_frames=np.array([self.arf, self.arf]),
@@ -301,9 +299,9 @@ class TestDirectGeocodingWithPointing:
                 elevation_antenna_angles=-0.05235987755982989,
             )
 
-    def test_direct_geocoding_with_pointing_invalid_inputs_3(self):
+    def test_direct_geocoding_with_pointing_invalid_inputs_3(self) -> None:
         """Testing direct_geocoding_with_pointing, invalid inputs, case 3"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="shape mismatch"):
             direct_geocoding_with_pointing(
                 sensor_positions=self.sensor_positions[3, :],
                 antenna_reference_frames=self.arf,
@@ -311,9 +309,9 @@ class TestDirectGeocodingWithPointing:
                 elevation_antenna_angles=[-0.05235987755982989, -0.05235987755982989, -0.05235987755982989],
             )
 
-    def test_direct_geocoding_with_pointing_invalid_inputs_4(self):
+    def test_direct_geocoding_with_pointing_invalid_inputs_4(self) -> None:
         """Testing direct_geocoding_with_pointing, invalid inputs, case 4"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="shape mismatch"):
             direct_geocoding_with_pointing(
                 sensor_positions=self.sensor_positions[3:5, :],
                 antenna_reference_frames=np.array([self.arf, self.arf]),

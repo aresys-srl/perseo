@@ -26,15 +26,15 @@ class TestingStateVectors:
     time_axis_relative: np.ndarray
     time_axis_origin: PreciseDateTime
     time_axis: np.ndarray
-    dT: float
+    time_step: float
 
 
-def get_attitude_test_data():
+def get_attitude_test_data() -> dict:
     """Return fixture data for ``Attitude`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Knot times, Euler angles, and reference rotations.
     """
     times = np.array([0.0, 4.0, 8.0])
@@ -98,8 +98,8 @@ def _get_testing_state_vectors() -> TestingStateVectors:
             [474, 4586, 6138],
         ]
     )
-    dT = 0.5
-    time_axis_relative = np.asarray([dT * k for k in range(positions.size // 3)])
+    time_step = 0.5
+    time_axis_relative = np.asarray([time_step * k for k in range(positions.size // 3)])
     time_axis_origin = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:56.000000")
     return TestingStateVectors(
         sensor_positions=positions,
@@ -107,7 +107,7 @@ def _get_testing_state_vectors() -> TestingStateVectors:
         time_axis_relative=time_axis_relative,
         time_axis_origin=time_axis_origin,
         time_axis=time_axis_relative + time_axis_origin,
-        dT=dT,
+        time_step=time_step,
     )
 
 
@@ -140,12 +140,12 @@ def get_testing_attitude() -> Attitude:
     )
 
 
-def get_trajectory_test_data():
+def get_trajectory_test_data() -> dict:
     """Return fixture data for ``CubicSplineTrajectory`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         State vectors, trajectory object, expected samples, and tolerance.
     """
     state_vectors = _get_testing_state_vectors()

@@ -10,12 +10,12 @@ from perseo_core.timing import PreciseDateTime
 from tests.fixtures.trajectory_attitude_data import get_testing_trajectory
 
 
-def get_angles_test_data() -> dict[str, object]:
+def get_angles_test_data() -> dict:
     """Return fixture data for look/incidence-angle tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Sensor/ground-point arrays plus comparison tolerances.
     """
     return {
@@ -68,12 +68,12 @@ def get_angles_test_data() -> dict[str, object]:
     }
 
 
-def get_xyz2llh_coords_conversions_test_data():
+def get_xyz2llh_coords_conversions_test_data() -> dict:
     """Return fixture data for ``xyz2llh`` and ``llh2xyz`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Scalar/vector coordinate samples and tolerances.
     """
     xyz = [2.354828227500000e4, 9.457755947560000e05, 6.286558297154000e06]
@@ -110,7 +110,7 @@ def get_xyz2llh_coords_conversions_test_data():
     }
 
 
-def get_doppler_test_data() -> dict[str, object]:
+def get_doppler_test_data() -> dict:
     """Return fixture data for doppler functions tests."""
     trajectory = get_testing_trajectory()
     return {
@@ -139,12 +139,12 @@ def get_doppler_test_data() -> dict[str, object]:
     }
 
 
-def get_ecef_eci_coords_conversions_test_data():
+def get_ecef_eci_coords_conversions_test_data() -> dict:
     """Return fixture data for ``ecef2eci`` and ``eci2ecef`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Scalar/vector coordinate samples and tolerances.
     """
     ref_times = [
@@ -231,12 +231,12 @@ def get_ecef_eci_coords_conversions_test_data():
     }
 
 
-def get_utm2llh_coords_conversions_test_data():
+def get_utm2llh_coords_conversions_test_data() -> dict:
     """Return fixture data for ``utm2llh`` and ``llh2utm`` tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Scalar/vector coordinate samples and tolerances.
     """
     return {

@@ -6,12 +6,12 @@
 import numpy as np
 
 
-def get_reference_frames_test_data():
+def get_reference_frames_test_data() -> dict:
     """Return fixture data for reference-frame tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Sensor state, reference frames, and tolerance.
     """
     return {
@@ -46,12 +46,12 @@ def get_reference_frames_test_data():
     }
 
 
-def get_rotation_test_data():
+def get_rotation_test_data() -> dict:
     """Return fixture data for Euler-angle rotation tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Yaw/pitch/roll values and reference tolerance.
     """
     yaw = np.deg2rad(10)
@@ -76,12 +76,12 @@ def get_rotation_test_data():
     }
 
 
-def get_ground_velocity_test_data():
+def get_ground_velocity_test_data() -> dict:
     """Return fixture data for ground-velocity tests.
 
     Returns
     -------
-    dict[str, object]
+    dict
         Look-angle samples, expected velocities, and tolerance.
     """
     look_angles_deg = np.arange(15.0, 50.0, 5.0)

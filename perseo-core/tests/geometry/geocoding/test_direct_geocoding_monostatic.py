@@ -106,16 +106,14 @@ def _ellipse_equation_residual(ground_points: np.ndarray) -> np.ndarray:
     r_ep2 = WGS84.b**2
     r_ee2 = WGS84.a**2
 
-    ellipse_residual = _ellipse_equation(ground_points, r_ee2, r_ep2)
-
-    return ellipse_residual
+    return _ellipse_equation(ground_points, r_ee2, r_ep2)
 
 
 class TestDirectGeocodingMonostatic:
     """Test direct_geocoding_monostatic with various input dimension combinations using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         """Load test data from fixtures."""
         self.sensor_position = direct_geocoding_test_data["sensor_position"]
         self.sensor_velocity = direct_geocoding_test_data["sensor_velocity"]
@@ -501,7 +499,7 @@ class TestDirectGeocodingMonostatic:
             ),
         ],
     )
-    def test_direct_geocoding_monostatic_cases(self, case) -> None:
+    def test_direct_geocoding_monostatic_cases(self, case: dict) -> None:
         """Test direct_geocoding_monostatic with all input dimension combinations."""
         # Resolve dynamic values
         N, M, Q = self.N, self.M, self.Q
@@ -619,7 +617,7 @@ class TestDirectGeocodingMonostatic:
             ),
         ],
     )
-    def test_direct_geocoding_monostatic_error_cases(self, case) -> None:
+    def test_direct_geocoding_monostatic_error_cases(self, case: dict) -> None:
         """Test direct_geocoding_monostatic error handling for mismatched dimensions."""
         N, M = self.N, self.M
 
@@ -660,7 +658,7 @@ class TestDirectGeocodingMonostaticCore:
     """Testing direct geocoding monostatic core with various input combinations using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         """Setting up variables for testing"""
         self.sensor_position = direct_geocoding_test_data["sensor_position"]
         self.sensor_velocity = direct_geocoding_test_data["sensor_velocity"]
@@ -796,7 +794,7 @@ class TestDirectGeocodingMonostaticCore:
             ),
         ],
     )
-    def test_monostatic_core_cases(self, case) -> None:
+    def test_monostatic_core_cases(self, case: dict) -> None:
         """Test direct_geocoding_monostatic_core with various input combinations."""
         N, M = self.N, self.M
 
@@ -872,7 +870,7 @@ class TestDirectGeocodingRangeVectorizedMonostaticCore:
     """Testing direct geocoding monostatic range vectorized core with various input combinations using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         """Setting up variables for testing"""
         self.sensor_position = direct_geocoding_test_data["sensor_position"]
         self.sensor_velocity = direct_geocoding_test_data["sensor_velocity"]
@@ -1060,7 +1058,7 @@ class TestDirectGeocodingRangeVectorizedMonostaticCore:
             ),
         ],
     )
-    def test_monostatic_core_cases(self, case) -> None:
+    def test_monostatic_core_cases(self, case: dict) -> None:
         """Test direct_geocoding_monostatic_core_range_vectorized with various input combinations."""
         N, M = self.N, self.M
 
@@ -1149,7 +1147,7 @@ class TestNewtonForDirectGeocodingMonostatic:
     """Testing Newton method for direct geocoding monostatic using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         self.sensor_position = direct_geocoding_test_data["sensor_position"]
         self.sensor_velocity = direct_geocoding_test_data["sensor_velocity"]
         self.initial_guess = direct_geocoding_test_data["initial_guess"]
@@ -1198,7 +1196,7 @@ class TestNewtonForDirectGeocodingMonostatic:
             ),
         ],
     )
-    def test_newton_for_geocoding_array_cases(self, case) -> None:
+    def test_newton_for_geocoding_array_cases(self, case: dict) -> None:
         """Testing Newton for geocoding with array inputs."""
         value_map = {
             "sensor_position": self.sensor_position,
@@ -1246,7 +1244,7 @@ class TestDirectGeocodingMonostaticInit:
     """Testing direct_geocoding_monostatic_init with various input combinations using parametrize."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, direct_geocoding_test_data):
+    def setup(self, direct_geocoding_test_data: dict) -> None:
         self.sensor_position = direct_geocoding_test_data["sensor_position"]
         self.sensor_velocity = direct_geocoding_test_data["sensor_velocity"]
         self.initial_guess = direct_geocoding_test_data["initial_guess"]
@@ -1363,7 +1361,7 @@ class TestDirectGeocodingMonostaticInit:
             ),
         ],
     )
-    def test_direct_geocoding_monostatic_init_cases(self, case) -> None:
+    def test_direct_geocoding_monostatic_init_cases(self, case: dict) -> None:
         """Testing direct_geocoding_monostatic_init with various dimension combinations."""
         N = self.N
 

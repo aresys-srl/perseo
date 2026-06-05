@@ -20,7 +20,7 @@ class TestSensorAxis:
     """Test reference frame computation functions (zerodoppler, geocentric, geodetic, etc.)."""
 
     @pytest.fixture(autouse=True)
-    def setup_sensor_axis_data(self, reference_frames_test_data):
+    def setup_sensor_axis_data(self, reference_frames_test_data: dict) -> None:
         data = reference_frames_test_data
         self._sensor_position = data["sensor_position"]
         self._sensor_velocity = data["sensor_velocity"]
@@ -30,12 +30,12 @@ class TestSensorAxis:
         self._geodetic_point_reference = data["geodetic_point_reference"]
         self._tolerance = data["tolerance"]
 
-    def test_compute_zerodoppler_reference_frame(self):
+    def test_compute_zerodoppler_reference_frame(self) -> None:
         """Test compute_zerodoppler_reference_frame with scalar inputs."""
         frame = compute_zerodoppler_reference_frame(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(frame, self._zerodoppler_frame_reference, rtol=1e-10, atol=1e-10)
 
-    def test_compute_zerodoppler_reference_frame_vectorized(self):
+    def test_compute_zerodoppler_reference_frame_vectorized(self) -> None:
         """Test compute_zerodoppler_reference_frame with vectorized inputs."""
         frame = compute_zerodoppler_reference_frame(
             self._sensor_position.reshape((1, 3)),
@@ -58,17 +58,17 @@ class TestSensorAxis:
             atol=1e-10,
         )
 
-    def test_compute_zerodoppler_reference_frame_invalid_input(self):
+    def test_compute_zerodoppler_reference_frame_invalid_input(self) -> None:
         """Test compute_zerodoppler_reference_frame raises error for invalid shape inputs."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="has invalid shape"):
             compute_zerodoppler_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
-    def test_compute_geocentric_reference_frame(self):
+    def test_compute_geocentric_reference_frame(self) -> None:
         """Test compute_geocentric_reference_frame with scalar inputs."""
         frame = compute_geocentric_reference_frame(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(frame, self._geocentric_frame_reference, rtol=1e-10, atol=1e-10)
 
-    def test_compute_geocentric_reference_frame_vectorized(self):
+    def test_compute_geocentric_reference_frame_vectorized(self) -> None:
         """Test compute_geocentric_reference_frame with vectorized inputs."""
         frame = compute_geocentric_reference_frame(
             self._sensor_position.reshape((1, 3)),
@@ -91,20 +91,20 @@ class TestSensorAxis:
             atol=1e-10,
         )
 
-    def test_compute_geocentric_reference_frame_invalid_input(self):
+    def test_compute_geocentric_reference_frame_invalid_input(self) -> None:
         """Test compute_geocentric_reference_frame raises error for invalid shape combinations."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="have different shapes"):
             compute_geocentric_reference_frame(np.ones((10, 3)), np.ones((7, 3)))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="has invalid shape"):
             compute_geocentric_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
-    def test_compute_geodetic_reference_frame(self):
+    def test_compute_geodetic_reference_frame(self) -> None:
         """Test compute_geodetic_reference_frame with scalar inputs."""
         frame = compute_geodetic_reference_frame(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(frame, self._geodetic_frame_reference, rtol=1e-10, atol=1e-10)
 
-    def test_compute_geodetic_reference_frame_vectorized(self):
+    def test_compute_geodetic_reference_frame_vectorized(self) -> None:
         """Test compute_geodetic_reference_frame with vectorized inputs."""
         frame = compute_geodetic_reference_frame(
             self._sensor_position.reshape((1, 3)), self._sensor_velocity.reshape((1, 3))
@@ -126,51 +126,51 @@ class TestSensorAxis:
             atol=1e-10,
         )
 
-    def test_compute_geodetic_reference_frame_invalid_input(self):
+    def test_compute_geodetic_reference_frame_invalid_input(self) -> None:
         """Testing compute geodetic reference frame, with errors"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="have different shapes"):
             compute_geodetic_reference_frame(np.ones((10, 3)), np.ones((7, 3)))
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="has invalid shape"):
             compute_geodetic_reference_frame(np.ones((3, 10)), np.ones((3, 10)))
 
-    def test_compute_sensor_local_axis_zero_doppler(self):
+    def test_compute_sensor_local_axis_zero_doppler(self) -> None:
         """Testing compute sensor local axis, zero doppler"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "ZERODOPPLER")
         np.testing.assert_allclose(frame, self._zerodoppler_frame_reference, rtol=0, atol=self._tolerance)
 
-    def test_compute_sensor_local_axis_geocentric(self):
+    def test_compute_sensor_local_axis_geocentric(self) -> None:
         """Testing compute sensor local axis, geocentric"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "GEOCENTRIC")
         np.testing.assert_allclose(frame, self._geocentric_frame_reference, rtol=0, atol=self._tolerance)
 
-    def test_compute_sensor_local_axis_geodetic(self):
+    def test_compute_sensor_local_axis_geodetic(self) -> None:
         """Testing compute sensor local axis, geodetic"""
         frame = compute_sensor_local_axis(self._sensor_position, self._sensor_velocity, "GEODETIC")
         np.testing.assert_allclose(frame, self._geodetic_frame_reference, rtol=0, atol=self._tolerance)
 
-    def test_compute_sensor_local_axis_invalid_reference_frame(self):
+    def test_compute_sensor_local_axis_invalid_reference_frame(self) -> None:
         """Testing compute sensor local axis, with errors"""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Unexpected reference_frame value"):
             compute_sensor_local_axis(
                 sensor_positions=self._sensor_position, sensor_velocities=self._sensor_velocity, reference_frame=None
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Unexpected reference_frame value"):
             compute_sensor_local_axis(
                 sensor_positions=self._sensor_position,
                 sensor_velocities=self._sensor_velocity,
                 reference_frame="unknown name",
             )
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Unexpected reference_frame value"):
             compute_sensor_local_axis(
                 sensor_positions=self._sensor_position,
                 sensor_velocities=self._sensor_velocity,
                 reference_frame="geocentric",
             )
 
-    def test_compute_geodetic_point(self):
+    def test_compute_geodetic_point(self) -> None:
         """Testing compute geodetic point"""
         geodetic_point = compute_geodetic_point(self._sensor_position)
         np.testing.assert_allclose(geodetic_point, self._geodetic_point_reference, rtol=0, atol=self._tolerance)
@@ -180,7 +180,7 @@ class TestInertialFrames:
     """Testing compute inertial velocity function"""
 
     @pytest.fixture(autouse=True)
-    def setup_inertial_frames_data(self):
+    def setup_inertial_frames_data(self) -> None:
         self._sensor_position = np.asarray([26512.279931507, 1064819.379506800, 7083173.555337110])
         self._sensor_velocity = np.asarray([7529.609430015988, -342.978175622686, -23.376907795264])
         self._inertial_velocity_reference = np.asarray(
@@ -188,7 +188,7 @@ class TestInertialFrames:
         )
         self._tolerance = 1e-9
 
-    def test_compute_inertial_velocity(self):
+    def test_compute_inertial_velocity(self) -> None:
         inertial_velocity = compute_inertial_velocity(self._sensor_position, self._sensor_velocity)
         np.testing.assert_allclose(
             inertial_velocity,
@@ -197,7 +197,7 @@ class TestInertialFrames:
             atol=self._tolerance,
         )
 
-    def test_compute_inertial_velocity_Vectorized(self):
+    def test_compute_inertial_velocity_vectorized(self) -> None:
         inertial_velocity = compute_inertial_velocity(
             self._sensor_position.reshape((1, 3)), self._sensor_velocity.reshape((1, 3))
         )

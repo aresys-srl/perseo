@@ -22,16 +22,15 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
     """Test compute_antenna_reference_frame_from_euler_angles with various input dimensions and rotation orders."""
 
     @pytest.fixture(autouse=True)
-    def setup_data(self, rotation_test_data):
-        data = rotation_test_data
-        self.yaw = data["yaw"]
-        self.pitch = data["pitch"]
-        self.roll = data["roll"]
-        self.euler_angles = data["euler_angles"]
-        self.arf_from_eye = data["arf_from_eye"]
-        self.tolerance = data["tolerance"]
+    def setup_data(self, rotation_test_data: dict) -> None:
+        self.yaw = rotation_test_data["yaw"]
+        self.pitch = rotation_test_data["pitch"]
+        self.roll = rotation_test_data["roll"]
+        self.euler_angles = rotation_test_data["euler_angles"]
+        self.arf_from_eye = rotation_test_data["arf_from_eye"]
+        self.tolerance = rotation_test_data["tolerance"]
 
-    def test_basic_computation_single_angles_identity_frame(self):
+    def test_basic_computation_single_angles_identity_frame(self) -> None:
         """Test basic ARF computation with single angles and identity initial frame."""
         initial_ref_frame = np.eye(3)
         euler_angles = np.array([self.yaw, self.pitch, self.roll])
@@ -44,7 +43,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
 
         np.testing.assert_allclose(arf, self.arf_from_eye, atol=self.tolerance)
 
-    def test_input_shape_single_angles_as_1d_array(self):
+    def test_input_shape_single_angles_as_1d_array(self) -> None:
         """Test (1, 3) array input produces proper output shape."""
         initial_ref_frame = np.eye(3)
         euler_angles = np.array([[self.yaw, self.pitch, self.roll]])
@@ -57,7 +56,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
 
         assert arf.shape == (1, 3, 3)
 
-    def test_input_shape_multiple_rotations(self):
+    def test_input_shape_multiple_rotations(self) -> None:
         """Test (N, 3) input angles produce (N, 3, 3) output."""
         initial_ref_frame = np.eye(3)
         num_rotations = 5
@@ -72,7 +71,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
         assert arf.shape == (num_rotations, 3, 3)
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_rotation_order_all_supported_orders(self, order):
+    def test_rotation_order_all_supported_orders(self, order: RotationOrder) -> None:
         """Test all supported rotation orders (YPR, YRP, PRY, PYR, RYP, RPY)."""
         initial_ref_frame = np.eye(3)
         euler_angles = np.array([self.yaw, self.pitch, self.roll])
@@ -84,7 +83,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
         )
         assert arf.shape == (3, 3)
 
-    def test_edge_case_zero_angles(self):
+    def test_edge_case_zero_angles(self) -> None:
         """Test zero angles with identity frame produce identity rotation."""
         initial_ref_frame = np.eye(3)
         euler_angles = np.array([0, 0, 0])
@@ -97,7 +96,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
 
         np.testing.assert_allclose(arf, initial_ref_frame, atol=self.tolerance)
 
-    def test_compose_with_non_identity_initial_frame(self):
+    def test_compose_with_non_identity_initial_frame(self) -> None:
         """Test composition with non-identity initial frame."""
         initial_ref_frame = self.arf_from_eye
         euler_angles = np.array([-self.yaw, -self.pitch, -self.roll])
@@ -110,7 +109,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
 
         np.testing.assert_allclose(arf, np.eye(3), atol=1e-7)
 
-    def test_broadcasting_single_angles_multiple_initial_frames(self):
+    def test_broadcasting_single_angles_multiple_initial_frames(self) -> None:
         """Test broadcasting scalar angles with multiple initial frames."""
         num_frames = 5
         initial_ref_frame = np.tile(np.eye(3), (num_frames, 1, 1))
@@ -123,7 +122,7 @@ class TestComputeAntennaReferenceFrameFromEulerAngles:
 
         assert arf.shape == (num_frames, 3, 3)
 
-    def test_broadcasting_multiple_angles_multiple_initial_frames(self):
+    def test_broadcasting_multiple_angles_multiple_initial_frames(self) -> None:
         """Test broadcasting with matching multiple angles and frames."""
         num_frames = 3
         initial_ref_frames = np.tile(np.eye(3), (num_frames, 1, 1))
@@ -143,16 +142,15 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
     """Test compute_euler_angles_from_antenna_reference_frame with various input dimensions."""
 
     @pytest.fixture(autouse=True)
-    def setup_data(self, rotation_test_data):
-        data = rotation_test_data
-        self.yaw = data["yaw"]
-        self.pitch = data["pitch"]
-        self.roll = data["roll"]
-        self.euler_angles = data["euler_angles"]
-        self.tolerance = data["tolerance"]
-        self.arf_from_eye = data["arf_from_eye"]
+    def setup_data(self, rotation_test_data: dict) -> None:
+        self.yaw = rotation_test_data["yaw"]
+        self.pitch = rotation_test_data["pitch"]
+        self.roll = rotation_test_data["roll"]
+        self.euler_angles = rotation_test_data["euler_angles"]
+        self.tolerance = rotation_test_data["tolerance"]
+        self.arf_from_eye = rotation_test_data["arf_from_eye"]
 
-    def test_single_rotation_recovery(self):
+    def test_single_rotation_recovery(self) -> None:
         """Test recovery of single euler angles from antenna reference frame."""
         euler_angles_out = compute_euler_angles_from_antenna_reference_frame(
             antenna_reference_frame=self.arf_from_eye,
@@ -162,7 +160,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
 
         np.testing.assert_allclose(euler_angles_out, np.array([self.yaw, self.pitch, self.roll]), atol=self.tolerance)
 
-    def test_multiple_rotations_recovery(self):
+    def test_multiple_rotations_recovery(self) -> None:
         """Test recovery of multiple euler angles from antenna reference frames."""
         num_rotations = 5
         euler_angles_out = compute_euler_angles_from_antenna_reference_frame(
@@ -173,7 +171,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
 
         np.testing.assert_allclose(euler_angles_out, np.tile(self.euler_angles, (num_rotations, 1)), atol=1e-7)
 
-    def test_non_identity_initial_frame_recovery(self):
+    def test_non_identity_initial_frame_recovery(self) -> None:
         """Test recovery with non-identity initial reference frame."""
         euler_angles_out = compute_euler_angles_from_antenna_reference_frame(
             antenna_reference_frame=np.eye(3),
@@ -185,7 +183,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
         )
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_all_rotation_orders_recovery(self, order):
+    def test_all_rotation_orders_recovery(self, order: RotationOrder) -> None:
         """Test round trip."""
         initial_ref_frame = np.eye(3)
         euler_angles_in = np.array([self.yaw, self.pitch, self.roll])
@@ -205,7 +203,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
         np.testing.assert_allclose(euler_angles_out, euler_angles_in, atol=self.tolerance)
 
     @pytest.mark.parametrize("order", get_args(RotationOrder))
-    def test_round_trip_multiple_angles(self, order):
+    def test_round_trip_multiple_angles(self, order: RotationOrder) -> None:
         """Test round-trip conversion for multiple different euler angles."""
         initial_ref_frame = np.eye(3)
 
@@ -229,16 +227,16 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
 
         np.testing.assert_allclose(euler_angles_out, euler_angles_in, atol=1e-7)
 
-    def test_shape_mismatch_error_multiple_initial_frames_multiple_arfs(self):
+    def test_shape_mismatch_error_multiple_initial_frames_multiple_arfs(self) -> None:
         """Test error when initial frames and arfs have mismatched multiple shapes."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="broadcast"):
             compute_euler_angles_from_antenna_reference_frame(
                 antenna_reference_frame=np.tile(self.arf_from_eye, (3, 1, 1)),
                 initial_reference_frame=np.tile(np.eye(3), (2, 1, 1)),
                 rotation_order="YPR",
             )
 
-    def test_broadcasting_single_initial_frame_multiple_arfs(self):
+    def test_broadcasting_single_initial_frame_multiple_arfs(self) -> None:
         """Test broadcasting with single initial frame and multiple arfs."""
         num_rotations = 4
 
@@ -250,7 +248,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
 
         np.testing.assert_allclose(euler_angles_out, np.tile(self.euler_angles, (num_rotations, 1)), atol=1e-7)
 
-    def test_broadcasting_multiple_initial_frames_single_arf(self):
+    def test_broadcasting_multiple_initial_frames_single_arf(self) -> None:
         """Test broadcasting with multiple initial frames and single arf."""
         num_frames = 3
 
@@ -263,7 +261,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
         # Output should have shape (num_frames, 3)
         assert euler_angles_out.shape == (num_frames, 3)
 
-    def test_output_shape_single_input(self):
+    def test_output_shape_single_input(self) -> None:
         """Test output shape for single input."""
         initial_ref_frame = np.eye(3)
 
@@ -275,7 +273,7 @@ class TestComputeEulerAnglesFromAntennaReferenceFrame:
 
         assert euler_angles_out.shape == (3,)
 
-    def test_output_shape_multiple_inputs(self):
+    def test_output_shape_multiple_inputs(self) -> None:
         """Test output shape for multiple inputs."""
         initial_ref_frame = np.eye(3)
         num_rotations = 5
@@ -293,7 +291,7 @@ class TestPointingDirections:
     """Testing compute pointing directions function"""
 
     @pytest.fixture(autouse=True)
-    def setup_pointing_data(self):
+    def setup_pointing_data(self) -> None:
         self._arf_in = np.array(
             [
                 [-0.604580222175426, -0.564852727629684, -0.561626344684451],
@@ -303,7 +301,7 @@ class TestPointingDirections:
         )
         self._tolerance = 1e-8
 
-    def test_compute_pointing_directions(self):
+    def test_compute_pointing_directions(self) -> None:
         boresight_dir = compute_pointing_directions(
             antenna_reference_frame=self._arf_in,
             azimuth_antenna_angles=0,
@@ -311,7 +309,7 @@ class TestPointingDirections:
         )
         np.testing.assert_allclose(boresight_dir, self._arf_in[:, 2], rtol=0, atol=self._tolerance)
 
-    def test_compute_pointing_directions_vectorized(self):
+    def test_compute_pointing_directions_vectorized(self) -> None:
         """Testing compute pointing directions, vectorized"""
 
         num_elements = 10
@@ -330,7 +328,7 @@ class TestPointingDirections:
 
             expected_shape = (3,)
             if arf.ndim == 3 or np.size(azimuth_angles) > 1 or np.size(elevation_angles) > 1:
-                expected_shape = (num_elements,) + expected_shape
+                expected_shape = (num_elements, *expected_shape)
 
             assert directions.shape == expected_shape
 
@@ -346,7 +344,7 @@ class TestPointingDirections:
             assert np.max(np.abs(azimuth_out - azimuth_angles)) < self._tolerance
             assert np.max(np.abs(elevation_out - elevation_angles)) < self._tolerance
 
-    def test_compute_pointing_directions_invalid_inputs(self):
+    def test_compute_pointing_directions_invalid_inputs(self) -> None:
         arf_inputs = [
             np.ones((10, 3, 3)),
             np.ones((10, 3, 3)),
@@ -381,5 +379,5 @@ class TestPointingDirections:
             elevation_angles_inputs,
             strict=True,
         ):
-            with pytest.raises(ValueError):
+            with pytest.raises(ValueError, match="broadcast"):
                 compute_pointing_directions(arf, azimuth_angles, elevation_angles)

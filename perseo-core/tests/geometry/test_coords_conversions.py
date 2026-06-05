@@ -9,11 +9,11 @@ import pytest
 from perseo_core.geometry.coords_conversions import ecef2eci, eci2ecef, llh2utm, llh2xyz, utm2llh, xyz2llh
 
 
-class TestXYZ_LLHCoordsConversions:
+class TestXYZLLHCoordsConversions:
     """Test coordinate conversion functions xyz2llh and llh2xyz with various input types and options."""
 
     @pytest.fixture(autouse=True)
-    def setup_coords_conversions_data(self, xyz2llh_coords_conversions_test_data):
+    def setup_coords_conversions_data(self, xyz2llh_coords_conversions_test_data: dict) -> None:
         """Load test data from fixtures."""
         self.xyz = xyz2llh_coords_conversions_test_data["xyz"]
         self.llh = xyz2llh_coords_conversions_test_data["llh"]
@@ -150,10 +150,10 @@ class TestXYZ_LLHCoordsConversions:
         np.testing.assert_allclose(llh, self.llh_vec, atol=self.atol, rtol=self.rtol)
 
 
-class TestECEF_ECICoordsConversions:
+class TestECEFECICoordsConversions:
     """Test coordinate conversion functions ecef2eci and eci2ecef with various input types and options"""
 
-    def test_ecef2eci_single(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_ecef2eci_single(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing ecef2eci, single coordinate"""
         positions_eci, velocities_eci = ecef2eci(
             positions=ecef_eci_coords_conversions_test_data["ecef_positions"][0],
@@ -176,7 +176,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_ecef2eci_single_1_3(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_ecef2eci_single_1_3(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing ecef2eci, single coordinate with (1, 3) shape"""
         positions_eci, velocities_eci = ecef2eci(
             positions=ecef_eci_coords_conversions_test_data["ecef_positions"][:1],
@@ -199,7 +199,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_ecef2eci_vectorized(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_ecef2eci_vectorized(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing ecef2eci, vectorized coordinates"""
         positions_eci, velocities_eci = ecef2eci(
             positions=ecef_eci_coords_conversions_test_data["ecef_positions"],
@@ -222,7 +222,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_eci2ecef_single(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_eci2ecef_single(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing eci2ecef, single coordinate"""
         positions_ecef, velocities_ecef = eci2ecef(
             positions=ecef_eci_coords_conversions_test_data["eci_positions"][0],
@@ -245,7 +245,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_eci2ecef_single_1_3(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_eci2ecef_single_1_3(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing eci2ecef, single coordinate with (1, 3) shape"""
         positions_ecef, velocities_ecef = eci2ecef(
             positions=ecef_eci_coords_conversions_test_data["eci_positions"][:1],
@@ -268,7 +268,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_eci2ecef_vectorized(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_eci2ecef_vectorized(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing eci2ecef, vectorized coordinates"""
         positions_ecef, velocities_ecef = eci2ecef(
             positions=ecef_eci_coords_conversions_test_data["eci_positions"],
@@ -291,7 +291,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_ecef2eci_and_back(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_ecef2eci_and_back(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing ecef2eci and back to ecef with eci2ecef, vectorized coordinates"""
         positions_eci, velocities_eci = ecef2eci(
             positions=ecef_eci_coords_conversions_test_data["ecef_positions"],
@@ -317,7 +317,7 @@ class TestECEF_ECICoordsConversions:
             rtol=ecef_eci_coords_conversions_test_data["tolerance"]["rtol"],
         )
 
-    def test_eci2ecef_and_back(self, ecef_eci_coords_conversions_test_data) -> None:
+    def test_eci2ecef_and_back(self, ecef_eci_coords_conversions_test_data: dict) -> None:
         """Testing eci2ecef and back to ecef with ecef2eci, vectorized coordinates"""
         positions_ecef, velocities_ecef = eci2ecef(
             positions=ecef_eci_coords_conversions_test_data["eci_positions"],
@@ -344,18 +344,18 @@ class TestECEF_ECICoordsConversions:
         )
 
 
-class TestUTM_LLHCoordsConversions:
+class TestUTMLLHCoordsConversions:
     """Test coordinate conversion functions utm2llh and llh2utm with various input types and options."""
 
-    CASE_NAMES = ["case_1", "case_2", "case_3", "case_4"]
+    CASE_NAMES = ("case_1", "case_2", "case_3", "case_4")
 
     @pytest.fixture(autouse=True)
-    def setup_tolerances(self, utm2llh_coords_conversions_test_data):
+    def setup_tolerances(self, utm2llh_coords_conversions_test_data: dict) -> None:
         self.tol_llh = utm2llh_coords_conversions_test_data["tolerance_llh"]
         self.tol_utm = utm2llh_coords_conversions_test_data["tolerance_utm"]
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_utm2llh_scalar_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_utm2llh_scalar_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh, scalar, output in degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh_deg = utm2llh(coordinates=case["utm"][0, :], zone=case["zone"], radians=False)
@@ -363,7 +363,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(llh_deg, case["llh_deg"][0, :], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_utm2llh_scalar_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_utm2llh_scalar_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh, scalar, output in radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh = utm2llh(coordinates=case["utm"][0, :], zone=case["zone"], radians=True)
@@ -372,7 +372,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(llh, case["llh_deg"][0, :], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_utm2llh_vect_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_utm2llh_vect_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh, vectorized, output in degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh_deg = utm2llh(coordinates=case["utm"], zone=case["zone"], radians=False)
@@ -380,7 +380,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(llh_deg, case["llh_deg"], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_utm2llh_vect_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_utm2llh_vect_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh, vectorized, output in radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh = utm2llh(coordinates=case["utm"], zone=case["zone"], radians=True)
@@ -389,7 +389,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(llh, case["llh_deg"], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_llh2utm_scalar_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_llh2utm_scalar_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test llh2utm, scalar, output in degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         utm = llh2utm(coordinates=case["llh_deg"][0, :], zone=case["zone"], radians=False)
@@ -397,7 +397,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"][0, :], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_llh2utm_scalar_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_llh2utm_scalar_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test llh2utm, scalar, output in radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         coords = case["llh_deg"][0, :].copy()
@@ -407,7 +407,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"][0, :], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_llh2utm_vect_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_llh2utm_vect_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test llh2utm, vectorized, output in degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         utm = llh2utm(coordinates=case["llh_deg"], zone=case["zone"], radians=False)
@@ -415,7 +415,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_llh2utm_vect_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_llh2utm_vect_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test llh2utm, vectorized, output in radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         coords = case["llh_deg"].copy()
@@ -425,7 +425,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_utm2llh_vect_1_3_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_utm2llh_vect_1_3_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh, (1, 3) vectorized, output in degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh_deg = utm2llh(coordinates=case["utm"][:1], zone=case["zone"], radians=False)
@@ -433,7 +433,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(llh_deg, case["llh_deg"][:1], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_utm2llh_vect_1_3_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_utm2llh_vect_1_3_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh, (1, 3) vectorized, output in radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh = utm2llh(coordinates=case["utm"][:1], zone=case["zone"], radians=True)
@@ -442,7 +442,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(llh, case["llh_deg"][:1], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_llh2utm_vect_1_3_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_llh2utm_vect_1_3_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test llh2utm, (1, 3) vectorized, output in degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         utm = llh2utm(coordinates=case["llh_deg"][:1], zone=case["zone"], radians=False)
@@ -450,7 +450,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"][:1], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_llh2utm_vect_1_3_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_llh2utm_vect_1_3_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test llh2utm, (1, 3) vectorized, output in radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         coords = case["llh_deg"][:1].copy()
@@ -460,7 +460,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"][:1], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_round_trip_vectorized_deg(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_round_trip_vectorized_deg(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh and llh2utm round trip for vectorized input, degrees."""
         case = utm2llh_coords_conversions_test_data[case_name]
         llh_deg = utm2llh(coordinates=case["utm"], zone=case["zone"], radians=False)
@@ -468,7 +468,7 @@ class TestUTM_LLHCoordsConversions:
         np.testing.assert_allclose(utm, case["utm"], atol=self.tol_utm["atol"], rtol=self.tol_utm["rtol"])
 
     @pytest.mark.parametrize("case_name", CASE_NAMES)
-    def test_round_trip_vectorized_rad(self, case_name, utm2llh_coords_conversions_test_data) -> None:
+    def test_round_trip_vectorized_rad(self, case_name: str, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test utm2llh and llh2utm round trip for vectorized input, radians."""
         case = utm2llh_coords_conversions_test_data[case_name]
         coords = case["llh_deg"].copy()
@@ -477,7 +477,7 @@ class TestUTM_LLHCoordsConversions:
         llh_deg = utm2llh(coordinates=utm, zone=case["zone"], radians=False)
         np.testing.assert_allclose(llh_deg, case["llh_deg"], atol=self.tol_llh["atol"], rtol=self.tol_llh["rtol"])
 
-    def test_invalid_zone_format(self, utm2llh_coords_conversions_test_data) -> None:
+    def test_invalid_zone_format(self, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test that invalid zone format raises ValueError."""
         case1 = utm2llh_coords_conversions_test_data["case_1"]
         with pytest.raises(TypeError):
@@ -485,7 +485,7 @@ class TestUTM_LLHCoordsConversions:
         with pytest.raises(TypeError):
             llh2utm(case1["llh_deg"], zone=33, radians=False)
 
-    def test_invalid_zone_format_2(self, utm2llh_coords_conversions_test_data) -> None:
+    def test_invalid_zone_format_2(self, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test that invalid zone format raises ValueError."""
         case1 = utm2llh_coords_conversions_test_data["case_1"]
         with pytest.raises(ValueError, match="Zone must be string format"):
@@ -493,7 +493,7 @@ class TestUTM_LLHCoordsConversions:
         with pytest.raises(ValueError, match="Zone must be string format"):
             llh2utm(case1["llh_deg"], zone="33 N", radians=False)
 
-    def test_invalid_zone_number(self, utm2llh_coords_conversions_test_data) -> None:
+    def test_invalid_zone_number(self, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test that invalid zone number raises ValueError."""
         case1 = utm2llh_coords_conversions_test_data["case_1"]
         with pytest.raises(ValueError, match="zone number must be between 1 and 60"):
@@ -501,7 +501,7 @@ class TestUTM_LLHCoordsConversions:
         with pytest.raises(ValueError, match="zone number must be between 1 and 60"):
             llh2utm(case1["llh_deg"], zone="61N", radians=False)
 
-    def test_invalid_hemisphere(self, utm2llh_coords_conversions_test_data) -> None:
+    def test_invalid_hemisphere(self, utm2llh_coords_conversions_test_data: dict) -> None:
         """Test that invalid hemisphere raises ValueError."""
         case1 = utm2llh_coords_conversions_test_data["case_1"]
         with pytest.raises(ValueError, match="Hemisphere must be 'N' or 'S'"):

@@ -9,7 +9,7 @@ from perseo_core.geometry.navigation import CubicSplineTrajectory
 from perseo_core.timing import PreciseDateTime
 
 
-def get_angles_from_trajectory_test_data() -> dict[str, object]:
+def get_angles_from_trajectory_test_data() -> dict:
     """Load trajectory angle test fixture data.
 
     Returns:
@@ -508,7 +508,7 @@ def get_angles_from_trajectory_test_data() -> dict[str, object]:
     ).reshape(-1, 3)
     d_t = 5
     sensor_velocities = np.diff(sensor_positions, axis=0) / d_t
-    sensor_velocities = np.array(sensor_velocities.tolist() + [sensor_velocities[-1, :].tolist()])
+    sensor_velocities = np.array([*sensor_velocities.tolist(), sensor_velocities[-1, :].tolist()])
     time_axis_relative = np.asarray([d_t * k for k in range(sensor_positions.size // 3)])
     time_axis_origin = PreciseDateTime.from_utc_string("17-FEB-2020 16:00:34.908999712209")
 
