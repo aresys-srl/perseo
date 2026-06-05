@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Shared pytest fixtures for models module tests."""
+"""Shared pytest fixtures for perseo_core tests."""
 
 import pytest
 
@@ -22,9 +22,13 @@ from tests.fixtures.geometry_utilities_data import (
     get_reference_frames_test_data,
     get_rotation_test_data,
 )
-from tests.fixtures.models_data import get_attitude_test_data, get_testing_trajectory, get_trajectory_test_data
 from tests.fixtures.timing_data import get_gps_week_conversion_test_data, get_precise_datetime_to_numpy_test_data
 from tests.fixtures.trajectory_angles_data import get_angles_from_trajectory_test_data
+from tests.fixtures.trajectory_attitude_data import (
+    get_attitude_test_data,
+    get_testing_trajectory,
+    get_trajectory_test_data,
+)
 
 
 @pytest.fixture

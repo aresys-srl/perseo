@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Tests for timing.conversion module"""
+"""Tests for timing.conversions module"""
 
 import numpy as np
 import pytest

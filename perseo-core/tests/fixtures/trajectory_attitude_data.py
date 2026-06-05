@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Test data fixtures for models module tests."""
+"""Test data fixtures for navigation and pointing module tests."""
 
 from dataclasses import dataclass
 

@@ -7,7 +7,7 @@ import numpy as np
 
 from perseo_core.geometry import WGS84
 from perseo_core.timing import PreciseDateTime
-from tests.fixtures.models_data import get_testing_trajectory
+from tests.fixtures.trajectory_attitude_data import get_testing_trajectory
 
 
 def get_angles_test_data() -> dict[str, object]:

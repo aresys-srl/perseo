@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Tests for models/trajectory.py CubicSplineTrajectory object"""
+"""Tests for geometry/navigation/cubic_spline_trajectory.py CubicSplineTrajectory object"""
 
 import numpy as np
 import pytest

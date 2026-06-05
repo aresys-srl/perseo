@@ -7,7 +7,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 
 from perseo_core.timing import PreciseDateTime
-from tests.fixtures.models_data import get_testing_attitude, get_testing_trajectory
+from tests.fixtures.trajectory_attitude_data import get_testing_attitude, get_testing_trajectory
 
 
 def get_direct_geocoding_with_looks_test_data() -> dict[str, object]:
