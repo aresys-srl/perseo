@@ -14,7 +14,6 @@ from perseo_core.geometry.navigation.trajectory import Trajectory
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
-# TODO: this is defined also in direct_geocoding_core as _doppler_equation, duplicated to avoid circular import
 def doppler_equation(
     wavelength: float,
     pv_scalar: float | npt.NDArray[np.floating],

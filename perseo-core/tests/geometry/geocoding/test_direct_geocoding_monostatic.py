@@ -9,11 +9,11 @@ import numpy as np
 import pytest
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.doppler import doppler_equation
 from perseo_core.geometry.ellipsoid import WGS84
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_init, direct_geocoding_monostatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     _direct_geocoding_monostatic_newton,
-    _doppler_equation,
     _ellipse_equation,
     direct_geocoding_monostatic_core,
     direct_geocoding_monostatic_core_range_vectorized,
@@ -52,13 +52,13 @@ def _doppler_equation_residual(
     los_vel_prod = np.sum(sensor_vel * los, axis=-1)
     distance = np.sqrt(np.sum(los * los, axis=-1))
 
-    doppler_residual, _ = _doppler_equation(
+    doppler_residual, _ = doppler_equation(
         pv_scalar=los_vel_prod.ravel(),
         los=los.reshape(-1, 3),
         sensor_velocity=sensor_vel,
         distance=distance.reshape(-1),
         wavelength=wavelength,
-        doppler_frequencies=doppler_freq,
+        doppler_frequency=doppler_freq,
     )
     return np.array(doppler_residual)
 

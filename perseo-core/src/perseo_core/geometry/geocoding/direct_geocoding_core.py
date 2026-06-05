@@ -11,6 +11,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.doppler import doppler_equation
 from perseo_core.geometry.ellipsoid import WGS84
 
 
@@ -314,25 +315,25 @@ def _direct_geocoding_monostatic_newton(
         range_equation = distance_square - range_distance_square
         grad_range_equation = -2 * line_of_sight
 
-        doppler_equation, grad_doppler_equation = _doppler_equation(
+        doppler_eq, grad_doppler_eq = doppler_equation(
             pv_scalar=los_vel_product,
             los=line_of_sight,
             sensor_velocity=sensor_velocities,
             distance=distance,
             wavelength=wavelength,
-            doppler_frequencies=doppler_frequencies,
+            doppler_frequency=doppler_frequencies,
         )
 
         residuals = [
             range_equation,
             _ellipse_equation(ground_points_guess, r_ee2, r_ep2),
-            doppler_equation,
+            doppler_eq,
         ]
         jacobians = [
             [
                 grad_range_equation[..., k],
                 _der_ellipse_equation_xi(ground_points_guess, k, r_ee2, r_ep2),
-                grad_doppler_equation[..., k],
+                grad_doppler_eq[..., k],
             ]
             for k in range(3)
         ]
@@ -429,36 +430,36 @@ def _direct_geocoding_bistatic_newton(
             * (line_of_sight_rx / distance_rx[..., np.newaxis] + line_of_sight_tx / distance_tx[..., np.newaxis])
         )
 
-        doppler_equation_rx, grad_doppler_equation_rx = _doppler_equation(
+        doppler_eq_rx, grad_doppler_eq_rx = doppler_equation(
             wavelength=wavelength,
             pv_scalar=los_vel_product_rx,
             distance=distance_rx,
-            doppler_frequencies=doppler_frequencies,
+            doppler_frequency=doppler_frequencies,
             sensor_velocity=sensor_velocities_rx,
             los=line_of_sight_rx,
         )
-        doppler_equation_tx, grad_doppler_equation_tx = _doppler_equation(
+        doppler_eq_tx, grad_doppler_eq_tx = doppler_equation(
             wavelength=wavelength,
             pv_scalar=los_vel_product_tx,
             distance=distance_tx,
-            doppler_frequencies=doppler_frequencies,
+            doppler_frequency=doppler_frequencies,
             sensor_velocity=sensor_velocity_tx,
             los=line_of_sight_tx,
         )
 
-        doppler_equation = (doppler_equation_rx + doppler_equation_tx) / 2
-        grad_doppler_equation = (grad_doppler_equation_rx + grad_doppler_equation_tx) / 2
+        doppler_eq = (doppler_eq_rx + doppler_eq_tx) / 2
+        grad_doppler_eq = (grad_doppler_eq_rx + grad_doppler_eq_tx) / 2
 
         residuals = [
             range_equation,
             _ellipse_equation(ground_points_guess, r_ee2, r_ep2),
-            doppler_equation,
+            doppler_eq,
         ]
         jacobians = [
             [
                 grad_range_equation[..., k],
                 _der_ellipse_equation_xi(ground_points_guess, k, r_ee2, r_ep2),
-                grad_doppler_equation[..., k],
+                grad_doppler_eq[..., k],
             ]
             for k in range(3)
         ]
@@ -559,43 +560,3 @@ def _der_ellipse_equation_xi(
     radius_square = r_ee2 if i_coord < 2 else r_ep2
 
     return 2 * coords[..., i_coord] / radius_square
-
-
-def _doppler_equation(
-    wavelength: float,
-    pv_scalar: float | npt.NDArray[np.floating],
-    distance: float | npt.NDArray[np.floating],
-    doppler_frequencies: float | npt.NDArray[np.floating],
-    sensor_velocity: npt.NDArray[np.floating],
-    los: npt.NDArray[np.floating],
-) -> tuple[float | npt.NDArray[np.floating], npt.NDArray[np.floating]]:
-    """Doppler equation solver.
-
-    Parameters
-    ----------
-    wavelength : float
-        carrier signal wavelength
-    pv_scalar : float | npt.NDArray[np.floating],
-        scalar product between sensor velocity and line of sight scalar or shape (N,)
-    distance : float | npt.NDArray[np.floating]
-        ground point - sensor position distance scalar or shape (N,)
-    doppler_frequencies : float | npt.NDArray[np.floating]
-        doppler frequencies scalar or shape (N,)
-    sensor_velocity : npt.NDArray[np.floating]
-        sensor velocity (3,) or shape (N, 3)
-    los : npt.NDArray[np.floating]
-        ground point - sensor position (3,) or shape (N, 3)
-
-    Returns
-    -------
-    float | npt.NDArray[np.floating]
-        doppler equation solution scalar or shape (N,)
-    npt.NDArray[np.floating]
-        doppler equation gradient (3,) or shape (N, 3)
-    """
-
-    c_factor = 2.0 / wavelength / distance
-    doppler_equation = c_factor * pv_scalar + doppler_frequencies
-    norm_pv = pv_scalar / distance**2
-    grad_doppler_equation = (c_factor * (-sensor_velocity + (norm_pv * los.T).T).T).T
-    return doppler_equation, grad_doppler_equation
