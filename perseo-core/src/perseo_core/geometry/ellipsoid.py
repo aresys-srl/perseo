@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Ellipsoids"""
+"""Ellipsoid models and utilities for geodetic computations."""
 
 from __future__ import annotations
 

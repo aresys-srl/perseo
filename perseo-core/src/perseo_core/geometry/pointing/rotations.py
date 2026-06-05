@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Base Rotation transformations utilities"""
+"""Rotation transformation utilities."""
 
 from __future__ import annotations
 

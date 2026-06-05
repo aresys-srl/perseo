@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Computation of incidence, look, squint and other angles"""
+"""Core low-level computation of incidence, look, squint, and other geometry angles."""
 
 from __future__ import annotations
 

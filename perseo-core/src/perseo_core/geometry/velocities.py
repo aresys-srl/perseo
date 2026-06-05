@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Computation of different sensor velocities"""
+"""Computation of sensor velocity quantities."""
 
 from __future__ import annotations
 

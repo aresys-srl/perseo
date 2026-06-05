@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Direct geocoding core utilities"""
+"""Direct geocoding core utilities."""
 
 from __future__ import annotations
 

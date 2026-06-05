@@ -1,9 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Definition of Precise Date-Time Object for picoseconds timing accuracy
-"""
+"""Precise date-time object with picosecond timing accuracy."""
 
 from __future__ import annotations
 

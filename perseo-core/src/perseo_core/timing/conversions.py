@@ -1,9 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Timing conversions utilities
-"""
+"""Timing conversion utilities."""
 
 from __future__ import annotations
 
