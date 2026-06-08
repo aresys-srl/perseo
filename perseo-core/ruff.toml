@@ -22,11 +22,20 @@ pylint.max-args = 9      # default is 5, it should be reduced after refactoring
 pylint.max-returns = 7   # default is 6, it should be reduced after refactoring
 pylint.max-branches = 13 # default is 12, it should be reduced after refactoring
 
+flake8-import-conventions.banned-from = [
+    "perseo_core.timing",
+    "perseo_core.geometry",
+    "perseo_core.geometry.pointing",
+    "perseo_core.geometry.geocoding",
+    "perseo_core.geometry.navigation",
+]
+
 [lint.per-file-ignores]
 "**/tests/**" = [
     "D",      # pydocstyle
     "SLF001", # private-member-access
     "N806",   # non-lowercase-variable-in-function
+    "ICN003", # banned-import-from
 ]
 "**/noxfile.py" = [
     "D", # pydocstyle
