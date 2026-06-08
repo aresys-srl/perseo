@@ -76,8 +76,11 @@ def precise_datetime_to_numpy(
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        times_ = np.atleast_1d(times)
-        times_ = np.array([np.datetime64(t.isoformat(), "ns") for t in times_])
+
         if isinstance(times, PreciseDateTime):
-            return times_[0]
-        return times_
+            return np.datetime64(times.isoformat(), "ns")
+
+        if np.ndim(times) == 0:
+            return np.array(np.datetime64(times.item().isoformat(), "ns"))
+
+        return np.array([np.datetime64(t.isoformat(), "ns") for t in times])

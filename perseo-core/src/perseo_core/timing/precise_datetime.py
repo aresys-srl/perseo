@@ -10,7 +10,6 @@ from __future__ import annotations
 import datetime
 import functools
 import math
-import numbers
 import re
 from typing import overload
 
@@ -262,8 +261,8 @@ class PreciseDateTime:
             tot_picoseconds = round(tot_picoseconds, ndigits=2)
 
         seconds_adj = math.floor(tot_picoseconds * self._PRECISION)
-        normalized_seconds = int(seconds) + int(seconds_adj)
-        normalized_picoseconds = float(tot_picoseconds) % (1 / self._PRECISION)
+        normalized_seconds = int(seconds) + seconds_adj
+        normalized_picoseconds = tot_picoseconds % (1 / self._PRECISION)
 
         if normalized_seconds < 0:
             raise ValueError("The specified time is before the reference date")
@@ -275,7 +274,7 @@ class PreciseDateTime:
 
         assert isinstance(self._seconds, int)
 
-    def __iadd__(self, seconds) -> PreciseDateTime:
+    def __iadd__(self, seconds) -> PreciseDateTime:  # type: ignore[misc]
         """Add the input seconds to the current time point
 
         Parameters
@@ -288,7 +287,7 @@ class PreciseDateTime:
         PreciseDateTime
             self
         """
-        if not isinstance(seconds, numbers.Real):
+        if not isinstance(seconds, (int, float)):
             return NotImplemented
 
         seconds_fraction = seconds - int(seconds)
@@ -298,7 +297,7 @@ class PreciseDateTime:
         )
         return self
 
-    def __isub__(self, seconds) -> PreciseDateTime:
+    def __isub__(self, seconds) -> PreciseDateTime:  # type: ignore[misc]
         """Subtract the input seconds from the current time point
 
         Parameters
@@ -311,7 +310,7 @@ class PreciseDateTime:
         PreciseDateTime
             self
         """
-        if not isinstance(seconds, numbers.Real):
+        if not isinstance(seconds, (int, float)):
             return NotImplemented
 
         seconds_fraction = seconds - int(seconds)
@@ -334,7 +333,7 @@ class PreciseDateTime:
         PreciseDateTime
             a new PreciseDateTime object initialized to the resulting time point
         """
-        if not isinstance(seconds, numbers.Real):
+        if not isinstance(seconds, (int, float)):
             return NotImplemented
 
         seconds_fraction = seconds - int(seconds)
@@ -370,7 +369,7 @@ class PreciseDateTime:
             seconds_fraction = (self._picoseconds - other._picoseconds) * self._PRECISION
             return self._seconds - other._seconds + seconds_fraction
 
-        if isinstance(other, numbers.Real):
+        if isinstance(other, (int, float)):
             seconds_fraction = other - int(other)
             return PreciseDateTime(
                 self._seconds - int(other),
@@ -492,7 +491,7 @@ class PreciseDateTime:
         absolute_datetime_first_day_of_year = datetime.datetime(self.year, 1, 1)
         absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
         time_diff_from_first_day_of_year = absolute_datetime - absolute_datetime_first_day_of_year
-        return int(time_diff_from_first_day_of_year.days + 1)
+        return time_diff_from_first_day_of_year.days + 1
 
     @property
     def sec85(self) -> float:
