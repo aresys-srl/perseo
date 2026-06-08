@@ -257,7 +257,7 @@ class PreciseDateTime:
 
         # if 'tot_picoseconds' is too small the "normalized_picoseconds" may round up
         # to 1e12 that is not allowed as an internal state.
-        if 1.0e-2 > tot_picoseconds > -1.0e-2:
+        if -1.0e-2 < tot_picoseconds < 1.0e-2:
             tot_picoseconds = round(tot_picoseconds, ndigits=2)
 
         seconds_adj = math.floor(tot_picoseconds * self._PRECISION)
@@ -274,7 +274,7 @@ class PreciseDateTime:
 
         assert isinstance(self._seconds, int)
 
-    def __iadd__(self, seconds) -> PreciseDateTime:  # type: ignore[misc]
+    def __iadd__(self, seconds: float) -> PreciseDateTime:  # type: ignore[misc]
         """Add the input seconds to the current time point
 
         Parameters
@@ -297,7 +297,7 @@ class PreciseDateTime:
         )
         return self
 
-    def __isub__(self, seconds) -> PreciseDateTime:  # type: ignore[misc]
+    def __isub__(self, seconds: float) -> PreciseDateTime:  # type: ignore[misc]
         """Subtract the input seconds from the current time point
 
         Parameters
@@ -540,7 +540,7 @@ class PreciseDateTime:
             seconds_fraction = float("0." + utc_str.split(".")[1].strip())
             absolute_datetime = parser.parse(utc_str).replace(microsecond=0)
         except Exception as exc:
-            raise InvalidUtcString(utc_str) from exc
+            raise ValueError(f"Invalid utc string: {utc_str}") from exc
 
         time_diff_from_reference_date = absolute_datetime - cls._REFERENCE_DATETIME
 
@@ -676,7 +676,3 @@ class PreciseDateTime:
             timespec=timespec,
         )
         return f"{date}{sep:s}{time}Z"
-
-
-class InvalidUtcString(ValueError):
-    """Invalid UTC string exception"""
