@@ -1,22 +1,27 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Support functions and parameters for Unit Testing"""
+"""Shared fixtures and utilities for unit tests."""
 
 from __future__ import annotations
 
 import numpy as np
 import numpy.typing as npt
+import pytest
 import xarray as xr
 from arepytools.timing.precisedatetime import PreciseDateTime
 from scipy.fft import fft2, ifft2
 
-from perseo_quality.core.generic_dataclasses import SARPolarization
+from perseo_quality.core.generic_dataclasses import SARPolarization, SARSideLooking
 from perseo_quality.core.signal_processing import locate_max_2d_interp
 from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.point_targets_analysis.custom_dataclasses import IRFDataOutput
 
-ref_data_irf_results = IRFDataOutput(
+# ---------------------------------------------------------------------------
+# Constant reference data (wrapped as session-scoped fixtures below)
+# ---------------------------------------------------------------------------
+
+_REF_DATA_IRF_RESULTS = IRFDataOutput(
     range_resolution=0.9831505486028405,
     azimuth_resolution=0.9831505486028405,
     pslr_2d=-13.272021869964892,
@@ -33,9 +38,9 @@ ref_data_irf_results = IRFDataOutput(
     slant_range_localization_error=-1.1392089049877541e-07,
 )
 
-ref_data_rcs_results = {"clutter": -91.7106822164182, "rcs": 77.228675375588, "scr": 91.712713592383}
+_REF_DATA_RCS_RESULTS: dict = {"clutter": -91.7106822164182, "rcs": 77.228675375588, "scr": 91.712713592383}
 
-default_input_data_generation = {
+_DEFAULT_INPUT_DATA_GENERATION: dict = {
     "lines": 128,
     "samples": 128,
     "lines_step": 0.00016420361247947455,
@@ -43,6 +48,107 @@ default_input_data_generation = {
     "samples_start": 0.00400438831877932,
     "fc_hz": 9.6e9,
 }
+
+_REF_TIME = PreciseDateTime.from_utc_string("15-JAN-2019 16:37:12.051461300098")
+_REF_GROUND_POINT = np.array([-4989394.044, 2746844.389, -2862070.09])
+_REF_POINTS = [
+    PointTarget(
+        name="0",
+        xyz_coordinates=np.array([4921229.04081908, -4051559.15884936, 216078.76707954]),
+        rcs_hh=(100000 + 0j),
+        rcs_vv=0j,
+        rcs_vh=(100000 + 0j),
+        rcs_hv=0j,
+        delay=None,
+    ),
+    PointTarget(
+        name="1",
+        xyz_coordinates=np.array([4832296.19624738, -4155847.75546086, 241004.24360898]),
+        rcs_hh=(100000 + 0j),
+        rcs_vv=0j,
+        rcs_vh=(100000 + 0j),
+        rcs_hv=0j,
+        delay=None,
+    ),
+    PointTarget(
+        name="2",
+        xyz_coordinates=np.array([4891219.45186627, -4087200.87719583, 225939.83847657]),
+        rcs_hh=(100000 + 0j),
+        rcs_vv=0j,
+        rcs_vh=(100000 + 0j),
+        rcs_hv=0j,
+        delay=None,
+    ),
+]
+
+# ---------------------------------------------------------------------------
+# Mock classes
+# ---------------------------------------------------------------------------
+
+
+class MockTrajectory:
+    """Mocking trajectory class"""
+
+    def evaluate(self, time) -> npt.NDArray[np.floating]:
+        out = [-381087.525550857, 932485.770149446, -7007146.93083064]
+        if np.size(time) == 1:
+            return np.array(out)
+        return np.stack([out] * np.size(time))
+
+    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
+        out = [7057.60934660782, 2768.35602191122, -0.259400938909807]
+        if np.size(time) == 1:
+            return np.array(out)
+        return np.stack([out] * np.size(time))
+
+
+class MockChannelData:
+    """Mocking ChannelData class"""
+
+    def __init__(self, channel_id: int = 1) -> None:
+        self.channel_id = channel_id
+        self._trajectory = MockTrajectory()
+
+    @property
+    def swath_name(self) -> str:
+        return f"S{self.channel_id}"
+
+    @property
+    def polarization(self) -> str:
+        return SARPolarization.HH
+
+    @property
+    def trajectory(self) -> MockTrajectory:
+        return self._trajectory
+
+    @property
+    def looking_side(self) -> SARSideLooking:
+        return SARSideLooking.RIGHT_LOOKING
+
+    @property
+    def carrier_frequency(self) -> float:
+        return 5405000000
+
+    def ground_points_to_burst_association(self, coordinates: npt.NDArray[np.floating]) -> list:
+        if self.channel_id == 1:
+            return [[0], None, [1]]
+        return [None, [0], None]
+
+
+class MockProduct:
+    """Mocking Product class"""
+
+    @property
+    def channels_list(self) -> list[int]:
+        return [1, 2]
+
+    def get_channel_data(self, channel_id: int) -> MockChannelData:
+        return MockChannelData(channel_id=channel_id)
+
+
+# ---------------------------------------------------------------------------
+# Helper functions (used internally by fixtures)
+# ---------------------------------------------------------------------------
 
 
 def generate_target_data(
@@ -53,41 +159,13 @@ def generate_target_data(
     fc_hz: float,
     window: npt.NDArray[np.floating] | None = None,
 ) -> npt.NDArray[np.floating]:
-    """Generating theoretical target response data matrix from input swath axes and raster parameters. It also applies a
-    weighting window if provided.
-
-    Parameters
-    ----------
-    bandwidths : tuple[float, float]
-        range [0] and azimuth [1] signal bandwidths
-    axes : tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]
-        range [0] and azimuth [1] axes
-    target_relative_pos : tuple[float, float]
-        range [0] and azimuth [1] relative times in the swath (start times not included), both floats
-    swath_range_start : float
-        range start time of the swath
-    fc_hz : int
-        carrier frequency in Hz
-    window : npt.NDArray[np.floating] | None, optional
-        weighting window for generated data, by default None
-
-    Returns
-    -------
-    npt.NDArray[np.floating]
-        data 2D array containing the target response
-    """
-
-    # creating theoretical response data given input parameters
     array = np.outer(
         np.sinc(bandwidths[0] * (axes[0] - target_relative_pos[0])),
         np.sinc(bandwidths[1] * (axes[1] - target_relative_pos[1])),
     )
     array = array * np.exp(2j * np.pi * fc_hz * (target_relative_pos[0] + swath_range_start))
-
-    # performing fft of data and then inverse fft on windowed data
     if window is not None:
         return ifft2(fft2(array) * window)
-
     return array
 
 
@@ -101,48 +179,12 @@ def generate_data_for_test(
     perc: float = 0.9,
     window: npt.NDArray[np.floating] | None = None,
 ) -> tuple[npt.NDArray[np.floating], tuple[float, float], tuple[float, float]]:
-    """Generating testing data from generic setup info.
-
-    Parameters
-    ----------
-    lines : int
-        number of azimuth lines
-    samples : int
-        number of range samples
-    lines_step : float
-        azimuth step
-    samples_step : float
-        range step
-    samples_start : float
-        initial sample range time
-    fc_hz : float
-        carrier frequency
-    perc : float, optional
-        optional percentage value, by default 0.9
-    window : npt.NDArray[np.floating] | None, optional
-        2D weighting window
-
-    Returns
-    -------
-    tuple[npt.NDArray[np.floating], tuple[float, float], tuple[float, float]]
-        2D generated data array
-        peak position in the generated array, row[0] and col[0] subpixel precision
-        target position in the generated array, row[0] and col[0]
-    """
-
-    # computing bandwidths
     azimuth_bandwidth = perc / lines_step
     range_bandwidth = perc / samples_step
-
-    # computing axes
     az_axis = np.arange(0, lines) * lines_step
     rng_axis = np.arange(0, samples) * samples_step
-
-    # computing target position (set at center of the image)
     target_az_rel = (np.ceil(lines / 2) + 0.5) * lines_step
     target_rng_rel = (np.ceil(samples / 2) + 0.5) * samples_step
-
-    # generating theoretical data
     data = generate_target_data(
         bandwidths=(range_bandwidth, azimuth_bandwidth),
         axes=(rng_axis, az_axis),
@@ -151,16 +193,12 @@ def generate_data_for_test(
         fc_hz=fc_hz,
         window=window,
     )
-
-    # find main lobe peak with subpixel precision
     _, *peak_pos = locate_max_2d_interp(data)
     target_pos = np.array([data.shape[0] / 2 + 0.5, data.shape[1] / 2 + 0.5])
-
     return data, peak_pos, target_pos
 
 
 def generate_antenna_pattern() -> xr.Dataset:
-    """Generating a mock antenna pattern dataset."""
     ds = xr.Dataset(
         {
             "gain": (
@@ -509,99 +547,93 @@ def generate_antenna_pattern() -> xr.Dataset:
     return ds
 
 
-class MockTrajectory:
-    """Mocking trajectory class"""
-
-    def evaluate(self, time) -> npt.NDArray[np.floating]:
-        """Mocking position interpolation"""
-        out = [-381087.525550857, 932485.770149446, -7007146.93083064]
-        if np.size(time) == 1:
-            return np.array(out)
-        return np.stack([out] * np.size(time))
-
-    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
-        """Mocking velocity interpolation"""
-        out = [7057.60934660782, 2768.35602191122, -0.259400938909807]
-        if np.size(time) == 1:
-            return np.array(out)
-        return np.stack([out] * np.size(time))
+# ---------------------------------------------------------------------------
+# Fixtures — mock objects
+# ---------------------------------------------------------------------------
 
 
-class MockChannelData:
-    """Mocking ChannelData class"""
-
-    def __init__(self, channel_id: int = 1) -> None:
-        self.channel_id = channel_id
-        self._trajectory = MockTrajectory()
-
-    @property
-    def swath_name(self) -> str:
-        """Mocking swath name"""
-        return f"S{self.channel_id}"
-
-    @property
-    def polarization(self) -> str:
-        """Mocking polarization"""
-        return SARPolarization.HH
-
-    @property
-    def trajectory(self) -> MockTrajectory:
-        """Exposing mock trajectory"""
-        return self._trajectory
-
-    @property
-    def carrier_frequency(self) -> float:
-        """Exposing mock carrier_frequency"""
-        return 5405000000
-
-    def ground_points_to_burst_association(self, coordinates: npt.NDArray[np.floating]) -> list:
-        """Mocking ground_points_to_burst_association function"""
-        if self.channel_id == 1:
-            return [[0], None, [1]]
-        return [None, [0], None]
+@pytest.fixture
+def mock_trajectory() -> MockTrajectory:
+    return MockTrajectory()
 
 
-class MockProduct:
-    """Mocking Product class"""
-
-    @property
-    def channels_list(self) -> list[int]:
-        """Mocking channels list"""
-        return [1, 2]
-
-    def get_channel_data(self, channel_id: int) -> MockChannelData:
-        """Mocking get channel data"""
-        return MockChannelData(channel_id=channel_id)
+@pytest.fixture
+def mock_channel_data() -> MockChannelData:
+    return MockChannelData()
 
 
-REF_TIME = PreciseDateTime.from_utc_string("15-JAN-2019 16:37:12.051461300098")
-REF_GROUND_POINT = np.array([-4989394.044, 2746844.389, -2862070.09])
-REF_POINTS = [
-    PointTarget(
-        name="0",
-        xyz_coordinates=np.array([4921229.04081908, -4051559.15884936, 216078.76707954]),
-        rcs_hh=(100000 + 0j),
-        rcs_vv=0j,
-        rcs_vh=(100000 + 0j),
-        rcs_hv=0j,
-        delay=None,
-    ),
-    PointTarget(
-        name="1",
-        xyz_coordinates=np.array([4832296.19624738, -4155847.75546086, 241004.24360898]),
-        rcs_hh=(100000 + 0j),
-        rcs_vv=0j,
-        rcs_vh=(100000 + 0j),
-        rcs_hv=0j,
-        delay=None,
-    ),
-    PointTarget(
-        name="2",
-        xyz_coordinates=np.array([4891219.45186627, -4087200.87719583, 225939.83847657]),
-        rcs_hh=(100000 + 0j),
-        rcs_vv=0j,
-        rcs_vh=(100000 + 0j),
-        rcs_hv=0j,
-        delay=None,
-    ),
-]
+@pytest.fixture
+def mock_product() -> MockProduct:
+    return MockProduct()
+
+
+@pytest.fixture
+def antenna_pattern() -> xr.Dataset:
+    return generate_antenna_pattern()
+
+
+# ---------------------------------------------------------------------------
+# Fixtures — pre-generated test data for point target / masking tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def test_data_128(default_input_data_gen):
+    data, peak_pos, target_pos = generate_data_for_test(
+        lines=default_input_data_gen["lines"],
+        samples=default_input_data_gen["samples"],
+        samples_start=default_input_data_gen["samples_start"],
+        lines_step=default_input_data_gen["lines_step"],
+        samples_step=default_input_data_gen["samples_step"],
+        fc_hz=default_input_data_gen["fc_hz"],
+    )
+    return data, peak_pos, target_pos
+
+
+@pytest.fixture
+def test_data_256(default_input_data_gen):
+    data, peak_pos, _ = generate_data_for_test(
+        lines=256,
+        samples=256,
+        samples_start=default_input_data_gen["samples_start"],
+        lines_step=default_input_data_gen["lines_step"],
+        samples_step=default_input_data_gen["samples_step"],
+        fc_hz=default_input_data_gen["fc_hz"],
+        perc=0.9,
+    )
+    return data, peak_pos
+
+
+# ---------------------------------------------------------------------------
+# Fixtures — immutable reference data (session-scoped)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def ref_data_irf_results():
+    return _REF_DATA_IRF_RESULTS
+
+
+@pytest.fixture(scope="session")
+def ref_data_rcs_results():
+    return _REF_DATA_RCS_RESULTS
+
+
+@pytest.fixture(scope="session")
+def default_input_data_gen():
+    return _DEFAULT_INPUT_DATA_GENERATION
+
+
+@pytest.fixture(scope="session")
+def ref_time():
+    return _REF_TIME
+
+
+@pytest.fixture(scope="session")
+def ref_ground_point():
+    return _REF_GROUND_POINT
+
+
+@pytest.fixture(scope="session")
+def ref_points():
+    return _REF_POINTS

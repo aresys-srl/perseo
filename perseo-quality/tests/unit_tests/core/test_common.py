@@ -12,7 +12,6 @@ import pytest
 from arepytools.timing.precisedatetime import PreciseDateTime
 
 from perseo_quality.core.common import angles_computation_setup, blocks_partitioning, check_targets_visibility
-from tests.unit_tests.test_utils import REF_POINTS, MockProduct
 
 
 class MockTrajectory:
@@ -42,9 +41,9 @@ class TestCheckTargetsVisibility:
         }
         self.reference_df = pd.DataFrame(data=data_dict)
 
-    def test_check_targets_visibility(self):
+    def test_check_targets_visibility(self, mock_product, ref_points):
         """Testing check_targets_visibility"""
-        targets_visibility = check_targets_visibility(product=MockProduct(), point_targets=REF_POINTS)
+        targets_visibility = check_targets_visibility(product=mock_product, point_targets=ref_points)
         targets_visibility["id"] = targets_visibility["id"].astype("int64")
         pd.testing.assert_frame_equal(targets_visibility, self.reference_df)
 

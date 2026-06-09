@@ -10,16 +10,14 @@ import pytest
 
 import perseo_quality.core.masking_operations as masking
 from perseo_quality.core.generic_dataclasses import MaskingMethod
-from tests.unit_tests import test_utils
 
 
 class TestMaskingOperations:
     """Testing masking_operations.py functions"""
 
     @pytest.fixture(autouse=True)
-    def _setup(self) -> None:
+    def _setup(self, test_data_256) -> None:
         # creating test data
-        # benchmarking values
         self.reference_values = {
             "lines": 256,
             "samples": 256,
@@ -55,15 +53,7 @@ class TestMaskingOperations:
             "sslr_cut_rng_max_lobes": 0.0004309653387735526,
             "sslr_cut_az_max_lobes": 0.00038432402929485405,
         }
-        self.data, self.peak_pos, _ = test_utils.generate_data_for_test(
-            lines=self.reference_values["lines"],
-            samples=self.reference_values["samples"],
-            samples_start=test_utils.default_input_data_generation["samples_start"],
-            lines_step=test_utils.default_input_data_generation["lines_step"],
-            samples_step=test_utils.default_input_data_generation["samples_step"],
-            fc_hz=test_utils.default_input_data_generation["fc_hz"],
-            perc=0.9,
-        )
+        self.data, self.peak_pos = test_data_256
         self.x_axis = np.arange(-20, 20, 0.25)
         self.y_axis = np.arange(-30, 30, 0.75)
         self.mask_res = (2, 2.2)

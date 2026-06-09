@@ -13,16 +13,17 @@ from perseo_quality.elevation_notch_analysis.analysis import (
     antenna_pattern_pointing_mismatch,
     compute_parabolic_profile_fit,
     profile_normalization,
+    residuals,
 )
-from tests.unit_tests.test_utils import generate_antenna_pattern
 
 
 class TestElevationNotchAnalysisFunctions:
     """Testing Elevation Notch Analysis main functionalities"""
 
     @pytest.fixture(autouse=True)
-    def _setup(self) -> None:
+    def _setup(self, antenna_pattern) -> None:
         """Testing setup"""
+        self._antenna_pattern = antenna_pattern
         self._antenna_profile = np.array(
             [
                 3.64372952e-11,
@@ -94,7 +95,6 @@ class TestElevationNotchAnalysisFunctions:
                 3.75148455e-11,
             ]
         )
-        self._antenna_pattern = generate_antenna_pattern()
         self._antenna_angles_rad = np.array(
             [
                 -0.02556725,
@@ -551,3 +551,41 @@ class TestElevationNotchAnalysisFunctions:
         np.testing.assert_allclose(mispointing_error_rad, self._expected_mispointing_error_rad, atol=1e-8, rtol=0)
         np.testing.assert_allclose(calibration_constant, self._expected_calibration_constant, atol=1e-8, rtol=0)
         np.testing.assert_allclose(noise_floor, self._expected_noise_floor, atol=1e-8, rtol=0)
+
+    def test_residuals(self) -> None:
+        """Testing residuals function"""
+        normalized_pattern, _ = antenna_pattern_normalization(
+            antenna_pattern=self._antenna_pattern,
+            antenna_angles_rad=self._antenna_angles_rad,
+        )
+        noise_profile = np.ones_like(self._antenna_angles_rad)
+        params = [0.0, 1.0, 0.0]
+        result = residuals(
+            params=params,
+            data_profile=self._expected_normalized_profile,
+            antenna_pattern=normalized_pattern,
+            noise_profile=noise_profile,
+            antenna_angles_from_data_rad=self._antenna_angles_rad,
+        )
+        print(result)
+        assert isinstance(result, np.ndarray)
+        assert result.shape == self._antenna_angles_rad.shape
+
+    def test_residuals_with_nonzero_params(self) -> None:
+        """Testing residuals with non-zero mispointing and noise"""
+        normalized_pattern, _ = antenna_pattern_normalization(
+            antenna_pattern=self._antenna_pattern,
+            antenna_angles_rad=self._antenna_angles_rad,
+        )
+        noise_profile = np.ones_like(self._antenna_angles_rad) * 0.1
+        params = [0.001, 0.5, 0.3]
+        result = residuals(
+            params=params,
+            data_profile=self._expected_normalized_profile,
+            antenna_pattern=normalized_pattern,
+            noise_profile=noise_profile,
+            antenna_angles_from_data_rad=self._antenna_angles_rad,
+        )
+        print(result)
+        assert isinstance(result, np.ndarray)
+        assert result.shape == self._antenna_angles_rad.shape

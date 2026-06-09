@@ -1332,3 +1332,288 @@ class TestSpectralAnalysisFunctions:
             np.testing.assert_allclose(
                 profs[1], self._expected_azimuth_profiles_phase[prof_id], atol=self.tolerance, rtol=0
             )
+
+
+class TestComputeDerampingAzimuthAxis:
+    """Testing compute_deramping_azimuth_axis"""
+
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        self.lines_per_burst = 200
+        self.lines_step = 1.2e-3
+        self.dop_centroid_axis = np.linspace(-100, 100, 50)
+        self.dop_rate_axis = np.full(50, -2000.0)
+
+    def test_output_shape(self):
+        """Testing output shape is (lines_per_burst, samples)"""
+        axis = sup.compute_deramping_azimuth_axis(
+            lines_per_burst=self.lines_per_burst,
+            lines_step=self.lines_step,
+            doppler_centroid_axis=self.dop_centroid_axis,
+            doppler_rate_axis=self.dop_rate_axis,
+        )
+        assert axis.shape == (self.lines_per_burst, 50)
+
+    def test_output_type(self):
+        """Testing output is real-valued"""
+        axis = sup.compute_deramping_azimuth_axis(
+            lines_per_burst=self.lines_per_burst,
+            lines_step=self.lines_step,
+            doppler_centroid_axis=self.dop_centroid_axis,
+            doppler_rate_axis=self.dop_rate_axis,
+        )
+        assert np.isrealobj(axis)
+
+
+class TestComputeSteeringRateFactor:
+    """Testing compute_steering_rate_factor"""
+
+    def test_steering_rate_factor_value(self):
+        """Testing steering rate factor computation"""
+        factor = sup.compute_steering_rate_factor(
+            sensor_velocity_norm_mid_burst=7500.0,
+            wavelength=0.055,
+            azimuth_steering_rate_axis=np.array([0.5, 1.0, 1.5]),
+        )
+        expected = 2 * 7500.0 / 0.055 * np.array([0.5, 1.0, 1.5])
+        np.testing.assert_allclose(factor, expected)
+
+
+class TestComputeDerampingPhaseExponential:
+    """Testing compute_deramping_phase_exponential"""
+
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        self.lines_per_burst = 100
+        self.lines_step = 1.0e-3
+        self.dop_centroid_axis = np.linspace(-50, 50, 30)
+        self.dop_rate_axis = np.full(30, -1500.0)
+
+    def test_scansar_mode(self):
+        """Testing SCANSAR mode (steering_rate_factor=None)"""
+        result = sup.compute_deramping_phase_exponential(
+            lines_per_burst=self.lines_per_burst,
+            lines_step=self.lines_step,
+            doppler_centroid_axis=self.dop_centroid_axis,
+            doppler_rate_axis=self.dop_rate_axis,
+            steering_rate_factor=None,
+        )
+        assert result.shape == (self.lines_per_burst, 30)
+        assert np.iscomplexobj(result)
+        assert not np.any(np.isnan(result))
+
+    def test_topsar_mode(self):
+        """Testing TOPSAR mode (steering_rate_factor provided)"""
+        steering_factor = np.full(30, 0.8)
+        result = sup.compute_deramping_phase_exponential(
+            lines_per_burst=self.lines_per_burst,
+            lines_step=self.lines_step,
+            doppler_centroid_axis=self.dop_centroid_axis,
+            doppler_rate_axis=self.dop_rate_axis,
+            steering_rate_factor=steering_factor,
+        )
+        assert result.shape == (self.lines_per_burst, 30)
+        assert np.iscomplexobj(result)
+        assert not np.any(np.isnan(result))
+
+
+class TestComputeDemodulationPhaseExponential:
+    """Testing compute_demodulation_phase_exponential"""
+
+    def test_demodulation_output(self):
+        """Testing demodulation phase exponential output"""
+        result = sup.compute_demodulation_phase_exponential(
+            lines_per_burst=100,
+            lines_step=1.0e-3,
+            doppler_centroid_axis=np.linspace(-50, 50, 20),
+            doppler_rate_axis=np.full(20, -1500.0),
+        )
+        assert result.shape == (100, 20)
+        assert np.iscomplexobj(result)
+        assert not np.any(np.isnan(result))
+
+
+class TestComputeBurstDerampingFunction:
+    """Testing compute_burst_deramping_function"""
+
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        self.mid_burst_az_time = None
+        self.lines_per_burst = 100
+        self.lines_step = 1.0e-3
+        self.slant_range_axis = np.linspace(0.005, 0.008, 20)
+
+        class MockPoly:
+            def evaluate(self, azimuth_time, range_time):
+                return -100.0 + range_time * 10000
+
+        self.dop_centroid_poly = MockPoly()
+        self.dop_rate_poly = MockPoly()
+
+    def test_scansar_mode(self):
+        """Testing SCANSAR mode (no steering rate)"""
+        result = sup.compute_burst_deramping_function(
+            mid_burst_az_time=self.mid_burst_az_time,
+            lines_per_burst=self.lines_per_burst,
+            lines_step=self.lines_step,
+            slant_range_axis=self.slant_range_axis,
+            doppler_centroid_poly=self.dop_centroid_poly,
+            doppler_rate_poly=self.dop_rate_poly,
+        )
+        assert result.shape == (self.lines_per_burst, 20)
+        assert np.iscomplexobj(result)
+
+    def test_topsar_mode(self):
+        """Testing TOPSAR mode (with steering rate)"""
+        result = sup.compute_burst_deramping_function(
+            mid_burst_az_time=self.mid_burst_az_time,
+            lines_per_burst=self.lines_per_burst,
+            lines_step=self.lines_step,
+            slant_range_axis=self.slant_range_axis,
+            doppler_centroid_poly=self.dop_centroid_poly,
+            doppler_rate_poly=self.dop_rate_poly,
+            azimuth_steering_rate_axis=np.full(20, 0.5),
+            sensor_velocity_norm_mid_burst=7500.0,
+            wavelength=0.055,
+        )
+        assert result.shape == (self.lines_per_burst, 20)
+        assert np.iscomplexobj(result)
+
+    def test_topsar_missing_params_raises(self):
+        """Testing TOPSAR mode with missing params raises RuntimeError"""
+        with pytest.raises(RuntimeError, match="steering rate"):
+            sup.compute_burst_deramping_function(
+                mid_burst_az_time=self.mid_burst_az_time,
+                lines_per_burst=self.lines_per_burst,
+                lines_step=self.lines_step,
+                slant_range_axis=self.slant_range_axis,
+                doppler_centroid_poly=self.dop_centroid_poly,
+                doppler_rate_poly=self.dop_rate_poly,
+                azimuth_steering_rate_axis=np.full(20, 0.5),
+            )
+
+
+class TestComputeSpectrumBoundaries:
+    """Testing compute_spectrum_boundaries"""
+
+    def test_spectrum_boundaries_normal(self):
+        """Testing with a clear spectrum profile"""
+        x = np.linspace(-5, 5, 200)
+        profile = np.exp(-(x**2) / 2)
+        start, stop = sup.compute_spectrum_boundaries(profile)
+        assert 0 <= start < stop <= 200
+
+    def test_spectrum_boundaries_flat_returns_full(self):
+        """Testing flat profile returns full range"""
+        profile = np.ones(100)
+        start, stop = sup.compute_spectrum_boundaries(profile)
+        assert start == 0
+        assert stop == 100
+
+    def test_spectrum_boundaries_noisy(self):
+        """Testing with noisy profile still returns valid boundaries"""
+        rng = np.random.default_rng(42)
+        profile = np.sin(np.linspace(0, 4 * np.pi, 200)) + rng.normal(0, 0.1, 200)
+        start, stop = sup.compute_spectrum_boundaries(profile)
+        assert 0 <= start < stop <= 200
+
+
+class TestSpectralAnalysisProfilesToNetCDF:
+    """Testing spectral_analysis_profiles_to_netcdf"""
+
+    @pytest.fixture(autouse=True)
+    def _setup(self):
+        from datetime import datetime
+
+        from perseo_quality.spectral_analysis.custom_dataclasses import (
+            SpectralAnalysisProductGeneralInfo,
+        )
+
+        self.general_info = SpectralAnalysisProductGeneralInfo(
+            product="test_product",
+            channel="1",
+            swath="S1",
+            polarization="HH",
+            sensor="TestSensor",
+            product_type="SLC",
+            acquisition_mode="STRIPMAP",
+            orbit_direction="DESCENDING",
+            acquisition_start_time=datetime(2020, 1, 1),
+        )
+        self.az_freq = np.linspace(-0.5, 0.5, 20)
+        self.rng_freq = np.linspace(-0.5, 0.5, 30)
+
+    def test_pt_spectral_profiles_to_netcdf(self):
+        """Testing spectral_analysis_profiles_to_netcdf with PointTarget data"""
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        from numpy.polynomial import Polynomial
+
+        from perseo_quality.spectral_analysis.custom_dataclasses import (
+            PointTargetSpectraDataOutput,
+            SpectralAnalysisTargetInfo,
+        )
+
+        target_info = SpectralAnalysisTargetInfo(
+            target_name="CR12",
+            burst=0,
+            roi_size_azimuth=20,
+            roi_size_range=30,
+            target_azimuth_pixel=10.0,
+            target_range_pixel=15.0,
+            azimuth_frequency_axis=self.az_freq,
+            range_frequency_axis=self.rng_freq,
+            spectrum_db=np.ones((30, 20)),
+            spectrum_deg=np.ones((30, 20)),
+            spectrogram_db=np.ones((10, 15)),
+            spectrogram_frequencies=np.linspace(-0.5, 0.5, 10),
+            spectrogram_times=np.linspace(0, 1, 15),
+            range_profiles_db=[np.ones(30), np.ones(30), np.ones(30)],
+            azimuth_profiles_db=[np.ones(20), np.ones(20), np.ones(20)],
+            range_profiles_deg=[np.zeros(30), np.zeros(30), np.zeros(30)],
+            azimuth_profiles_deg=[np.zeros(20), np.zeros(20), np.zeros(20)],
+            range_profiles_norm_deg=[np.zeros(30), np.zeros(30), np.zeros(30)],
+            azimuth_profiles_norm_deg=[np.zeros(20), np.zeros(20), np.zeros(20)],
+            target_phase_value_deg=np.float64(45.0),
+            target_doppler_centroid_Hz=np.float64(100.0),
+            range_polynomial_fit=Polynomial([0.0, 0.0, 0.0]),
+            azimuth_polynomial_fit=Polynomial([0.0, 0.0, 0.0]),
+            rng_spectrum_boundaries=(5, 25),
+            az_spectrum_boundaries=(3, 17),
+        )
+        data = PointTargetSpectraDataOutput(general_info=self.general_info, targets_info=[target_info])
+
+        with TemporaryDirectory() as temp_dir:
+            out_file = sup.spectral_analysis_profiles_to_netcdf(data=[data], out_path=temp_dir)
+            assert Path(out_file).exists()
+            assert Path(out_file).suffix == ".nc"
+
+    def test_distributed_spectral_profiles_to_netcdf(self, mocker):
+        """Testing spectral_analysis_profiles_to_netcdf with Distributed data (skips PT-only fields)"""
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+
+        from perseo_quality.spectral_analysis.custom_dataclasses import (
+            DistributedSpectraDataOutput,
+            SpectralAnalysisBlockInfo,
+        )
+
+        block_info = SpectralAnalysisBlockInfo(
+            block_num=0,
+            first_az_line_block=0,
+            lines_block=200,
+            samples_block=30,
+            doppler_centroid_mid_block=np.float64(100.0),
+            azimuth_frequency_axis=self.az_freq,
+            range_frequency_axis=self.rng_freq,
+            range_profiles_db=[np.ones(30), np.ones(30), np.ones(30)],
+            azimuth_profiles_db=[np.ones(20), np.ones(20), np.ones(20)],
+        )
+        data = DistributedSpectraDataOutput(general_info=self.general_info, blocks_info=[block_info])
+
+        with TemporaryDirectory() as temp_dir:
+            mocker.patch.object(data, "targets_info", [], create=True)
+            out_file = sup.spectral_analysis_profiles_to_netcdf(data=[data], out_path=temp_dir)
+            assert Path(out_file).exists()
+            assert Path(out_file).suffix == ".nc"

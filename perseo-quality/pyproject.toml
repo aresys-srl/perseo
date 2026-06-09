@@ -40,7 +40,7 @@ classifiers = [
 [project.optional-dependencies]
 graphs = ["matplotlib>=3.5"]
 dev = ["ruff", "pylint", "nox"]
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "pytest-cov", "pytest-mock>=3.15.1", "perseo-quality[graphs]"]
 local_testing = [
     "sct[graphs]>=2.1.2",
     "sct_aresys_reader",

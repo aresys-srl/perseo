@@ -9,6 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 import scipy.signal
+from scipy.linalg import circulant
 
 import perseo_quality.core.generic_dataclasses as gdt
 import perseo_quality.core.signal_processing as sp
@@ -741,6 +742,81 @@ class TestSignalProcessing:
             left_ambiguity_roi=raster_left * 1e-8,
         )
         np.testing.assert_allclose(dtar, self.expected_dtar, atol=1e-5, rtol=0)
+
+    def test_linear_best_fit_by_fft_constant_input(self) -> None:
+        """Testing linear_best_fit_by_fft with constant input"""
+        constant = np.ones(20) * 5.0
+        weights = np.ones(20)
+        result = sp.linear_best_fit_by_fft(
+            input_array=constant, weights=weights, substitute_value=5.0, nyquist_position=10
+        )
+        np.testing.assert_array_equal(result, np.full((1, 20), 5.0))
+
+    def test_estimate_modulation_frequency_1d_axis_0(self) -> None:
+        """Testing estimate_modulation_frequency with 1D array, axis=0"""
+        data = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        freq, freq_array = sp.estimate_modulation_frequency(data=data, axis=0)
+        assert isinstance(freq, float)
+        assert isinstance(freq_array, np.ndarray)
+        assert np.sum(freq_array) == 0.0
+
+    def test_get_frequency_axis_array_input(self) -> None:
+        """Testing get_frequency_axis with array input"""
+        freqs = np.array([100.0, 200.0])
+        result = sp.get_frequency_axis(central_freqs=freqs, sampling_freq=1000.0, n_samples=10)
+        assert result.shape == (2, 10)
+        a0 = np.concatenate([np.arange(0, 600, 100), np.arange(-400, 0, 100)])
+
+        a1 = np.concatenate([np.arange(0, 700, 100), np.arange(-300, 0, 100)])
+
+        arr = np.stack([a0, a1])
+        np.testing.assert_array_equal(result, arr)
+
+    def test_padded_hamming_windowing(self) -> None:
+        """Testing padded_hamming_windowing function"""
+        result = sp.padded_hamming_windowing(num_points=16, alpha=0.5, zero_pad_side_len=3, top_plateau_len=2)
+        expected_len = 3 + 8 + 2 + 8 + 3
+        assert len(result) == expected_len
+        assert np.all(result[:3] == 0)
+        assert np.all(result[3 + 8 : 3 + 8 + 2] == 1)
+
+    def test_shift_array_fractional(self) -> None:
+        """Testing shift_array with fractional shift"""
+        data = np.eye(5)
+        shifted = sp.shift_array(data=data, row_shift=1.5, col_shift=0.0)
+        assert shifted.shape == data.shape
+        np.testing.assert_allclose(
+            abs(shifted), circulant([0.2472136, 0.2, 0.2472136, 0.6472136, 0.6472136]), atol=1e-6, rtol=0
+        )
+
+    def test_radiometric_correction_invalid_type(self) -> None:
+        """Testing radiometric_correction with invalid quantity type"""
+        data = np.ones((5, 5))
+        angles = np.linspace(0.5, 1.0, 5)
+        with pytest.raises(ValueError, match="SARRadiometricQuantity"):
+            sp.radiometric_correction(
+                data=data,
+                incidence_angle=angles,
+                input_quantity="invalid",  # type: ignore[arg-type]
+                output_quantity=gdt.SARRadiometricQuantity.GAMMA_NOUGHT,
+            )
+
+    def test_radiometric_correction_shape_mismatch(self) -> None:
+        """Testing radiometric_correction with shape mismatch"""
+        data = np.ones((5, 5))
+        angles = np.ones((3, 3))
+        with pytest.raises(ValueError, match="Incidence angle"):
+            sp.radiometric_correction(
+                data=data,
+                incidence_angle=angles,
+                input_quantity=gdt.SARRadiometricQuantity.BETA_NOUGHT,
+                output_quantity=gdt.SARRadiometricQuantity.GAMMA_NOUGHT,
+            )
+
+    def test_evaluate_irf_resolution_nan(self) -> None:
+        """Testing evaluate_irf_resolution returns nan for invalid profile"""
+        result = sp.evaluate_irf_resolution(np.ones(10))
+        assert np.isnan(result)
 
     def test_compute_equivalent_number_of_looks(self) -> None:
         """Testing compute_equivalent_number_of_looks function."""
