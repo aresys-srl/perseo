@@ -1,14 +1,14 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Testing geometry/angles_core.py functionalities"""
+"""Testing geometry/core/angles.py functionalities"""
 
 import itertools
 
 import numpy as np
 import pytest
 
-from perseo_core.geometry.angles_core import (
+from perseo_core.geometry.core.angles import (
     compute_incidence_angles_core,
     compute_look_angles_core,
     get_geometric_squint_angle,

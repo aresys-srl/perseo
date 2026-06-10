@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import numpy.typing as npt
 
-from perseo_core.geometry.angles_core import (
+from perseo_core.geometry.core.angles import (
     compute_incidence_angles_core,
     compute_look_angles_core,
 )

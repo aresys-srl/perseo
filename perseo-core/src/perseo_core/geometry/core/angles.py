@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import numpy.typing as npt
 
-from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
+from perseo_core.geometry.coordinates.conversions import llh2xyz, xyz2llh
 
 
 def get_geometric_squint_angle(
