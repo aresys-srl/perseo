@@ -9,8 +9,8 @@ import numpy as np
 import pytest
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.coordinates.ellipsoid import WGS84
 from perseo_core.geometry.doppler import doppler_equation
-from perseo_core.geometry.ellipsoid import WGS84
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_init, direct_geocoding_monostatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     _direct_geocoding_monostatic_newton,

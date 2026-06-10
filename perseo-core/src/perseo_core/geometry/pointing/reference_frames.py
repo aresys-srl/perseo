@@ -22,8 +22,8 @@ from typing import Literal
 import numpy as np
 import numpy.typing as npt
 
-from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-from perseo_core.geometry.ellipsoid import WGS84
+from perseo_core.geometry.coordinates.conversions import llh2xyz, xyz2llh
+from perseo_core.geometry.coordinates.ellipsoid import WGS84
 from perseo_core.geometry.pointing.rotations import (
     euler_angles_to_rotation,
 )

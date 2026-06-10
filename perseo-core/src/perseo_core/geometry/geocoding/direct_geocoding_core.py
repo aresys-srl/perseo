@@ -11,8 +11,8 @@ import numpy as np
 import numpy.typing as npt
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.coordinates.ellipsoid import WGS84
 from perseo_core.geometry.doppler import doppler_equation
-from perseo_core.geometry.ellipsoid import WGS84
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

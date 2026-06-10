@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Testing geometry/ellipsoid.py functionalities"""
+"""Testing geometry/coordinates/ellipsoid.py functionalities"""
 
 import numpy as np
 import pytest
 from pyproj import Geod
 
-from perseo_core.geometry.ellipsoid import (
+from perseo_core.geometry.coordinates.ellipsoid import (
     WGS84,
     compute_line_ellipsoid_intersections,
     create_inflated_wgs84_ellipsoid,

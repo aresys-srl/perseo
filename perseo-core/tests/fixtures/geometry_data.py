@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from perseo_core.geometry import WGS84
+from perseo_core.geometry.coordinates.ellipsoid import WGS84
 from perseo_core.timing import PreciseDateTime
 from tests.fixtures.trajectory_attitude_data import get_testing_trajectory
 

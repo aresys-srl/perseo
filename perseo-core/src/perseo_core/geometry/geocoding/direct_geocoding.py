@@ -26,8 +26,8 @@ import numpy as np
 from numpy import typing as npt
 from scipy.constants import speed_of_light
 
-from perseo_core.geometry.coords_conversions import llh2xyz, xyz2llh
-from perseo_core.geometry.ellipsoid import (
+from perseo_core.geometry.coordinates.conversions import llh2xyz, xyz2llh
+from perseo_core.geometry.coordinates.ellipsoid import (
     compute_line_ellipsoid_intersections,
     create_inflated_wgs84_ellipsoid,
 )

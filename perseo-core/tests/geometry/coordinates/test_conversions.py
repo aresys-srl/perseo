@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""Testing geometry/coords_conversions.py functionalities"""
+"""Testing geometry/coordinates/conversions.py functionalities"""
 
 import numpy as np
 import pytest
 
-from perseo_core.geometry.coords_conversions import ecef2eci, eci2ecef, llh2utm, llh2xyz, utm2llh, xyz2llh
+from perseo_core.geometry.coordinates.conversions import ecef2eci, eci2ecef, llh2utm, llh2xyz, utm2llh, xyz2llh
 
 
 class TestXYZLLHCoordsConversions:

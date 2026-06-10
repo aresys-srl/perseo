@@ -10,8 +10,8 @@ import pytest
 from numpy import typing as npt
 from scipy.constants import speed_of_light
 
+from perseo_core.geometry.coordinates.ellipsoid import WGS84
 from perseo_core.geometry.doppler import doppler_equation_bistatic_residuals
-from perseo_core.geometry.ellipsoid import WGS84
 from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_bistatic
 from perseo_core.geometry.geocoding.direct_geocoding_core import (
     _direct_geocoding_bistatic_newton,
