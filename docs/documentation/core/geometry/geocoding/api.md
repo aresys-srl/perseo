@@ -9,12 +9,14 @@ tags:
 
 ## Direct Geocoding
 
-::: perseo_core.geometry.geocoding.direct_geocoding
-
-::: perseo_core.geometry.geocoding.direct_geocoding_core
+::: perseo_core.geometry.geocoding.direct
 
 ## Inverse Geocoding
 
-::: perseo_core.geometry.geocoding.inverse_geocoding
+::: perseo_core.geometry.geocoding.inverse
 
-::: perseo_core.geometry.geocoding.inverse_geocoding_core
+## Core implementation
+
+::: perseo_core.geometry.geocoding.core.direct
+
+::: perseo_core.geometry.geocoding.core.inverse

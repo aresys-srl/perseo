@@ -10,14 +10,14 @@ tags:
 
 # Coordinates usage
 
-The main functions available in ``perseo_core.geometry.coords_conversions`` are:
+The main functions available in ``perseo_core.geometry.coordinates`` are:
 
-- [`xyz2llh`][perseo_core.geometry.coords_conversions.xyz2llh]: Convert XYZ ECEF cartesian coordinates to geodetic LLH (latitude, longitude, height)
-- [`llh2xyz`][perseo_core.geometry.coords_conversions.llh2xyz]: Convert geodetic LLH coordinates to XYZ ECEF cartesian coordinates
-- [`utm2llh`][perseo_core.geometry.coords_conversions.utm2llh]: Convert UTM (Easting, Northing, Height) coordinates to geodetic LLH (latitude, longitude, height)
-- [`llh2utm`][perseo_core.geometry.coords_conversions.llh2utm]: Convert geodetic LLH (latitude, longitude, height) coordinates to UTM (Easting, Northing, Height)
-- [`ecef2eci`][perseo_core.geometry.coords_conversions.ecef2eci]: Transform positions and velocities from ECEF (ITRS) to ECI (GCRS) frame
-- [`eci2ecef`][perseo_core.geometry.coords_conversions.eci2ecef]: Transform positions and velocities from ECI (GCRS) to ECEF (ITRS) frame
+- [`xyz2llh`][perseo_core.geometry.coordinates.conversions.xyz2llh]: Convert XYZ ECEF cartesian coordinates to geodetic LLH (latitude, longitude, height)
+- [`llh2xyz`][perseo_core.geometry.coordinates.conversions.llh2xyz]: Convert geodetic LLH coordinates to XYZ ECEF cartesian coordinates
+- [`utm2llh`][perseo_core.geometry.coordinates.conversions.utm2llh]: Convert UTM (Easting, Northing, Height) coordinates to geodetic LLH (latitude, longitude, height)
+- [`llh2utm`][perseo_core.geometry.coordinates.conversions.llh2utm]: Convert geodetic LLH (latitude, longitude, height) coordinates to UTM (Easting, Northing, Height)
+- [`ecef2eci`][perseo_core.geometry.coordinates.conversions.ecef2eci]: Transform positions and velocities from ECEF (ITRS) to ECI (GCRS) frame
+- [`eci2ecef`][perseo_core.geometry.coordinates.conversions.eci2ecef]: Transform positions and velocities from ECI (GCRS) to ECEF (ITRS) frame
 
 All functions support both scalar inputs and batch operations on arrays of coordinates.
 
@@ -28,7 +28,7 @@ Convert Earth-Centered Earth-Fixed (ECEF) cartesian coordinates to geodetic Lati
 ```python title="Batch coordinate conversion"
 import numpy as np
 
-from perseo_core.geometry.coords_conversions import xyz2llh, llh2xyz
+from perseo_core.geometry.coordinates import xyz2llh, llh2xyz
 
 # multiple points (N, 3) array, lat [deg]/lon[deg]/height[m]
 llh_coords_deg = np.array(
@@ -67,7 +67,7 @@ Convert Universal Transverse Mercator (UTM) coordinates to geodetic Latitude, Lo
 ```python title="Batch coordinate conversion"
 import numpy as np
 
-from perseo_core.geometry.coords_conversions import utm2llh, llh2utm
+from perseo_core.geometry.coordinates import utm2llh, llh2utm
 
 # multiple points (N, 3) array, lat [deg]/lon[deg]/height[m]
 llh_coords_deg = np.array(
@@ -105,7 +105,7 @@ This transformation accounts for Earth rotation at specific UTC times.
 ```python title="Batch ECEF to ECI"
 import numpy as np
 
-from perseo_core.geometry.coords_conversions import ecef2eci, eci2ecef
+from perseo_core.geometry.coordinates import ecef2eci, eci2ecef
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 # Multiple positions at different times

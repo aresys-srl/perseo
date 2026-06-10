@@ -9,4 +9,8 @@ tags:
 
 ## Coordinates Conversion
 
-::: perseo_core.geometry.coords_conversions
+::: perseo_core.geometry.coordinates.conversions
+
+## Ellipsoid
+
+::: perseo_core.geometry.coordinates.ellipsoid

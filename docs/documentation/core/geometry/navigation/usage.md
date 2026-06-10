@@ -112,7 +112,7 @@ The trajectory object evaluated as shown in the previous section can be used to 
 Here are some examples:
 
 ```python title="Indirect trajectory usage"
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
+from perseo_core.geometry.geocoding.direct import direct_geocoding_monostatic
 
 query_times = np.array([0.5, 1.2, 2.8]) + time_axis_origin
 
@@ -128,7 +128,7 @@ ground_points = direct_geocoding_monostatic(
 ```
 
 ```python title="Direct trajectory usage"
-from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_monostatic
+from perseo_core.geometry.geocoding.inverse import inverse_geocoding_monostatic
 
 ground_points = np.array(
     [

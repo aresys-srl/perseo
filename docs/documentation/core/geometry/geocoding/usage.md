@@ -17,11 +17,11 @@ geometry computations.
 
 The main implemented functions are:
 
-- [`direct_geocoding_monostatic`][perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_monostatic]
-- [`direct_geocoding_bistatic`][perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_bistatic]
-- [`direct_geocoding_with_look_angles`][perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_with_look_angles]
-- [`direct_geocoding_with_looking_direction`][perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_with_looking_direction]
-- [`direct_geocoding_with_pointing`][perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_with_pointing]
+- [`direct_geocoding_monostatic`][perseo_core.geometry.geocoding.direct.direct_geocoding_monostatic]
+- [`direct_geocoding_bistatic`][perseo_core.geometry.geocoding.direct.direct_geocoding_bistatic]
+- [`direct_geocoding_with_look_angles`][perseo_core.geometry.geocoding.direct.direct_geocoding_with_look_angles]
+- [`direct_geocoding_with_looking_direction`][perseo_core.geometry.geocoding.direct.direct_geocoding_with_looking_direction]
+- [`direct_geocoding_with_pointing`][perseo_core.geometry.geocoding.direct.direct_geocoding_with_pointing]
 
 All functions support vectorized operations on `(N, 3)` coordinate arrays.
 
@@ -32,7 +32,7 @@ Here are some examples on how to use the direct geocoding functions:
 ```python title=""
 import numpy as np
 
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_monostatic
+from perseo_core.geometry.geocoding.direct import direct_geocoding_monostatic
 
 sensor_position = np.array(
     [4387348.749948771, 762123.3489877012, 4553067.931912004],
@@ -57,7 +57,7 @@ ground_points = direct_geocoding_monostatic(
 ```python title=""
 import numpy as np
 
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_bistatic
+from perseo_core.geometry.geocoding.direct import direct_geocoding_bistatic
 
 sensor_position = np.array(
     [4387348.749948771, 762123.3489877012, 4553067.931912004],
@@ -84,7 +84,7 @@ ground_points = direct_geocoding_bistatic(
 ```python title=""
 import numpy as np
 
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_looking_direction
+from perseo_core.geometry.geocoding.direct import direct_geocoding_with_looking_direction
 
 sensor_positions = np.array(
     [
@@ -106,9 +106,9 @@ ground_points = direct_geocoding_with_looking_direction(
 
 The main implemented functions are:
 
-- [`inverse_geocoding_monostatic`][perseo_core.geometry.geocoding.inverse_geocoding.inverse_geocoding_monostatic]
-- [`inverse_geocoding_bistatic`][perseo_core.geometry.geocoding.inverse_geocoding.inverse_geocoding_bistatic]
-- [`inverse_geocoding_monostatic_with_attitude`][perseo_core.geometry.geocoding.inverse_geocoding.inverse_geocoding_monostatic_with_attitude]
+- [`inverse_geocoding_monostatic`][perseo_core.geometry.geocoding.inverse.inverse_geocoding_monostatic]
+- [`inverse_geocoding_bistatic`][perseo_core.geometry.geocoding.inverse.inverse_geocoding_bistatic]
+- [`inverse_geocoding_monostatic_with_attitude`][perseo_core.geometry.geocoding.inverse.inverse_geocoding_monostatic_with_attitude]
 
 All functions support vectorized operations on `(N, 3)` coordinate arrays.
 
@@ -119,7 +119,7 @@ Here are some examples on how to use the inverse geocoding functions:
 ```python title=""
 import numpy as np
 
-from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_monostatic
+from perseo_core.geometry.geocoding.inverse import inverse_geocoding_monostatic
 
 trajectory = ... # (1)!
 
@@ -143,7 +143,7 @@ azimuth_times, range_times = inverse_geocoding_monostatic(
 ```python title=""
 import numpy as np
 
-from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_bistatic
+from perseo_core.geometry.geocoding.inverse import inverse_geocoding_bistatic
 
 trajectory_rx = ... # (1)!
 trajectory_tx = ...
