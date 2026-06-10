@@ -11,14 +11,14 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from perseo_core.geometry.geocoding.inverse_geocoding import (
+from perseo_core.geometry.geocoding.core.inverse import (
+    inverse_geocoding_monostatic_attitude_core,
+    inverse_geocoding_monostatic_core,
+)
+from perseo_core.geometry.geocoding.inverse import (
     inverse_geocoding_monostatic,
     inverse_geocoding_monostatic_init,
     inverse_geocoding_monostatic_with_attitude,
-)
-from perseo_core.geometry.geocoding.inverse_geocoding_core import (
-    inverse_geocoding_monostatic_attitude_core,
-    inverse_geocoding_monostatic_core,
 )
 from perseo_core.timing import PreciseDateTime
 

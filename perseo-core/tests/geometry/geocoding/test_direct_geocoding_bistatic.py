@@ -12,12 +12,12 @@ from scipy.constants import speed_of_light
 
 from perseo_core.geometry.coordinates.ellipsoid import WGS84
 from perseo_core.geometry.doppler import doppler_equation_bistatic_residuals
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_bistatic
-from perseo_core.geometry.geocoding.direct_geocoding_core import (
+from perseo_core.geometry.geocoding.core.direct import (
     _direct_geocoding_bistatic_newton,
     _ellipse_equation,
     direct_geocoding_bistatic_core,
 )
+from perseo_core.geometry.geocoding.direct import direct_geocoding_bistatic
 
 
 def _range_equation_residual_bistatic(

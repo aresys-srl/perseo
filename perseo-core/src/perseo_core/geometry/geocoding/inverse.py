@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import numpy.typing as npt
 
-import perseo_core.geometry.geocoding.inverse_geocoding_core as inverse_core
+import perseo_core.geometry.geocoding.core.inverse as inverse_core
 
 if TYPE_CHECKING:
     from perseo_core.geometry.navigation.trajectory import Trajectory

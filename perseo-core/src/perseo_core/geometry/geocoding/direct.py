@@ -31,7 +31,7 @@ from perseo_core.geometry.coordinates.ellipsoid import (
     compute_line_ellipsoid_intersections,
     create_inflated_wgs84_ellipsoid,
 )
-from perseo_core.geometry.geocoding.direct_geocoding_core import (
+from perseo_core.geometry.geocoding.core.direct import (
     direct_geocoding_bistatic_core,
     direct_geocoding_monostatic_core,
     direct_geocoding_monostatic_core_range_vectorized,
@@ -58,7 +58,10 @@ def direct_geocoding_with_looking_direction(
 
     The looking direction defines a line: its norm and sign do not matter.
 
-    Based on :meth:`perseo_core.geometry.ellipsoid.compute_line_ellipsoid_intersections`
+    Based on
+    [`compute_line_ellipsoid_intersections`][
+    perseo_core.geometry.coordinates.ellipsoid.compute_line_ellipsoid_intersections
+    ].
 
     Parameters
     ----------
@@ -95,7 +98,10 @@ def direct_geocoding_with_look_angles(
 ) -> npt.NDArray[np.floating]:
     """Compute the points at a given altitude over WGS84 ellipsoid seen with the given look angles.
 
-    Based on :meth:`perseo_core.geometry.geocoding.direct_geocoding.direct_geocoding_with_looking_direction`
+    Based on
+    [`direct_geocoding_with_looking_direction`][
+    perseo_core.geometry.geocoding.direct.direct_geocoding_with_looking_direction
+    ].
 
     Parameters
     ----------

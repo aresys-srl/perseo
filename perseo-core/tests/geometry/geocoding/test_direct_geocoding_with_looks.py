@@ -10,7 +10,7 @@ import itertools
 import numpy as np
 import pytest
 
-from perseo_core.geometry.geocoding.direct_geocoding import (
+from perseo_core.geometry.geocoding.direct import (
     direct_geocoding_with_look_angles,
     direct_geocoding_with_looking_direction,
     direct_geocoding_with_pointing,

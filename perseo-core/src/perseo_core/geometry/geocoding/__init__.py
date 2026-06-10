@@ -3,5 +3,5 @@
 
 """Direct and inverse geocoding utilities."""
 
-from perseo_core.geometry.geocoding.direct_geocoding import *
-from perseo_core.geometry.geocoding.inverse_geocoding import *
+from perseo_core.geometry.geocoding.direct import *
+from perseo_core.geometry.geocoding.inverse import *

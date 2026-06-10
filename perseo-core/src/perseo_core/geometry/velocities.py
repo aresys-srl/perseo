@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import numpy.typing as npt
 
-from perseo_core.geometry.geocoding.direct_geocoding import direct_geocoding_with_look_angles
+from perseo_core.geometry.geocoding.direct import direct_geocoding_with_look_angles
 
 if TYPE_CHECKING:
     from perseo_core.geometry.navigation.trajectory import Trajectory

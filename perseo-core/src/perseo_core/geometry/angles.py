@@ -14,7 +14,7 @@ from perseo_core.geometry.core.angles import (
     compute_incidence_angles_core,
     compute_look_angles_core,
 )
-from perseo_core.geometry.geocoding.direct_geocoding import (
+from perseo_core.geometry.geocoding.direct import (
     SensorLookDirection,
     direct_geocoding_monostatic,
 )

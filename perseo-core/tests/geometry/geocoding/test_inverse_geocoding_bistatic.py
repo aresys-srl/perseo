@@ -8,10 +8,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from perseo_core.geometry.geocoding.inverse_geocoding import inverse_geocoding_bistatic
-from perseo_core.geometry.geocoding.inverse_geocoding_core import (
+from perseo_core.geometry.geocoding.core.inverse import (
     inverse_geocoding_bistatic_init_core,
 )
+from perseo_core.geometry.geocoding.inverse import inverse_geocoding_bistatic
 from perseo_core.timing import PreciseDateTime
 
 
