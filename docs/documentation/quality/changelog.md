@@ -8,6 +8,18 @@ tags:
 
 # Changelog
 
+## v1.0.16
+
+**Bug Fixes**
+
+- Fixing bug in distributed and point target ambiguity ratio analysis (and graphs) on wrong loop iteration over targets/rois
+
+**Other Changes**
+
+- Changed name of Target Ambiguity Ratio Analysis output dataclasses
+- Reduced duplicated code in Spectral Analysis dataclasses
+- Increased test coverage
+
 ## v1.0.15
 
 **Bug Fixes**
