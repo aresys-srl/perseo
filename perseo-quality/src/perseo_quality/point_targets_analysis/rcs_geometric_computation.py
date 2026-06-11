@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Point Target Analysis: Radar Cross Section (RCS) Geometric Estimation for Corner Reflectors
--------------------------------------------------------------------------------------------
-"""
+"""Radar Cross Section (RCS) Geometric Estimation for Corner Reflectors."""
 
 import numpy as np
 import numpy.typing as npt

@@ -17,10 +17,6 @@ from perseo_quality.core.signal_processing import locate_max_2d_interp
 from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.point_targets_analysis.custom_dataclasses import IRFDataOutput
 
-# ---------------------------------------------------------------------------
-# Constant reference data (wrapped as session-scoped fixtures below)
-# ---------------------------------------------------------------------------
-
 _REF_DATA_IRF_RESULTS = IRFDataOutput(
     range_resolution=0.9831505486028405,
     azimuth_resolution=0.9831505486028405,
@@ -81,10 +77,6 @@ _REF_POINTS = [
     ),
 ]
 
-# ---------------------------------------------------------------------------
-# Mock classes
-# ---------------------------------------------------------------------------
-
 
 class MockTrajectory:
     """Mocking trajectory class"""
@@ -144,11 +136,6 @@ class MockProduct:
 
     def get_channel_data(self, channel_id: int) -> MockChannelData:
         return MockChannelData(channel_id=channel_id)
-
-
-# ---------------------------------------------------------------------------
-# Helper functions (used internally by fixtures)
-# ---------------------------------------------------------------------------
 
 
 def generate_target_data(
@@ -547,11 +534,6 @@ def generate_antenna_pattern() -> xr.Dataset:
     return ds
 
 
-# ---------------------------------------------------------------------------
-# Fixtures — mock objects
-# ---------------------------------------------------------------------------
-
-
 @pytest.fixture
 def mock_trajectory() -> MockTrajectory:
     return MockTrajectory()
@@ -570,11 +552,6 @@ def mock_product() -> MockProduct:
 @pytest.fixture
 def antenna_pattern() -> xr.Dataset:
     return generate_antenna_pattern()
-
-
-# ---------------------------------------------------------------------------
-# Fixtures — pre-generated test data for point target / masking tests
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -602,11 +579,6 @@ def test_data_256(default_input_data_gen):
         perc=0.9,
     )
     return data, peak_pos
-
-
-# ---------------------------------------------------------------------------
-# Fixtures — immutable reference data (session-scoped)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="session")
