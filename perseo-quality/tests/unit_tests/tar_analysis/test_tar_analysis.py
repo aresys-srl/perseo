@@ -10,14 +10,17 @@ import pandas as pd
 import pytest
 from arepytools.timing.precisedatetime import PreciseDateTime
 
-from perseo_quality.core.generic_dataclasses import SARPolarization, SARRadiometricQuantity
+from perseo_quality.core.generic_dataclasses import SARRadiometricQuantity
 from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.tar_analysis.analysis import (
     distributed_target_ambiguity_ratio_analysis,
     point_target_ambiguity_ratio_analysis,
 )
 from perseo_quality.tar_analysis.config import AmbiguityRatioConfig
-from perseo_quality.tar_analysis.custom_dataclasses import AmbiguityRatioOutput
+from perseo_quality.tar_analysis.custom_dataclasses import (
+    DistributedTargetAmbiguityRatioDataOutput,
+    PointTargetAmbiguityRatioDataOutput,
+)
 
 
 class TestPointTargetAmbiguityRatioAnalysis:
@@ -33,10 +36,11 @@ class TestPointTargetAmbiguityRatioAnalysis:
             PointTarget(name="T2", xyz_coordinates=np.array([-4979009.54, 2766786.057, -2860862.575])),
         ]
 
-    def _make_mock_channel_data(self, mocker, swath_name: str = "S1"):
+    def _make_mock_channel_data(self, mocker, swath_name: str = "S1", polarization: str = "HH"):
         channel_data = mocker.MagicMock()
         channel_data.swath_name = swath_name
-        channel_data.polarization = SARPolarization.HH
+        channel_data.polarization = mocker.MagicMock()
+        channel_data.polarization.name = polarization
         channel_data.prf = 1.71713e03
         channel_data.mid_azimuth_time = mocker.MagicMock()
         channel_data.trajectory = mocker.MagicMock()
@@ -51,6 +55,13 @@ class TestPointTargetAmbiguityRatioAnalysis:
         channel_data.pixel_to_times_conversion.return_value = (mocker.MagicMock(), 0.001)
         channel_data.looking_side = mocker.MagicMock()
         channel_data.looking_side.value = "RIGHT"
+        channel_data.acquisition_mode = mocker.MagicMock()
+        channel_data.acquisition_mode.name = "TEST_MODE"
+        channel_data.orbit_direction = mocker.MagicMock()
+        channel_data.orbit_direction.name = "ASCENDING"
+        channel_data.image_type = mocker.MagicMock()
+        channel_data.image_type.name = "SLC"
+        channel_data.sensor_name = "TestSensor"
         return channel_data
 
     def _make_mock_product(self, mocker, n_channels: int = 1):
@@ -121,19 +132,20 @@ class TestPointTargetAmbiguityRatioAnalysis:
 
         assert len(result) == 1
         output = result[0]
-        assert isinstance(output, AmbiguityRatioOutput)
-        assert output.product_name == "TestProduct"
-        assert output.target_name == "T1"
-        assert output.channel == 1
-        assert output.swath == "S1"
-        assert output.polarization == SARPolarization.HH
-        assert output.burst == 0
-        assert output.roi_size_azimuth == 128
-        assert output.roi_size_range == 128
-        assert output.ambiguity_ratio_db == -25.0
-        assert output.target_azimuth_pixel == 100.5
-        assert output.target_range_pixel == 200.5
-        assert np.array_equal(output.target_nominal_coordinates, self._point_targets[0].xyz_coordinates)
+        assert isinstance(output, PointTargetAmbiguityRatioDataOutput)
+        assert output.general_info.product == "TestProduct"
+        assert output.general_info.channel == "1"
+        assert output.general_info.swath == "S1"
+        assert output.general_info.polarization == "HH"
+        t = output.targets_info[0]
+        assert t.target_name == "T1"
+        assert t.burst == 0
+        assert t.roi_size_azimuth == 128
+        assert t.roi_size_range == 128
+        assert t.ambiguity_ratio_db == -25.0
+        assert t.target_azimuth_pixel == 100.5
+        assert t.target_range_pixel == 200.5
+        assert np.array_equal(t.target_nominal_coordinates, self._point_targets[0].xyz_coordinates)
 
     def test_ptar_single_target_single_burst(self, mocker) -> None:
         """Testing happy path with explicit config and custom cropping size"""
@@ -148,10 +160,10 @@ class TestPointTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.roi_size_azimuth == 64
-        assert output.roi_size_range == 64
-        assert output.ambiguity_ratio_db == -25.0
+        t = result[0].targets_info[0]
+        assert t.roi_size_azimuth == 64
+        assert t.roi_size_range == 64
+        assert t.ambiguity_ratio_db == -25.0
 
     def test_ptar_multiple_targets(self, mocker) -> None:
         """Testing with multiple point targets"""
@@ -161,9 +173,9 @@ class TestPointTargetAmbiguityRatioAnalysis:
 
         result = point_target_ambiguity_ratio_analysis(product=product, point_targets=self._point_targets, config=None)
 
-        assert len(result) == 2
-        assert result[0].target_name == "T1"
-        assert result[1].target_name == "T2"
+        assert len(result) == 1
+        assert result[0].targets_info[0].target_name == "T1"
+        assert result[0].targets_info[1].target_name == "T2"
 
     def test_ptar_target_not_visible(self, mocker) -> None:
         """Testing when target is not visible in the scene"""
@@ -197,13 +209,8 @@ class TestPointTargetAmbiguityRatioAnalysis:
             product=product, point_targets=self._point_targets[:1], config=None
         )
 
-        # FIXME: this behaviour must be fixed, it's wrong.
-        assert len(result) == 2
-        for output in result:
-            assert output.target_name == "T1"
-            assert output.target_azimuth_pixel is None
-            assert output.target_range_pixel is None
-            assert output.ambiguity_ratio_db is None
+        assert len(result) == 1
+        assert result[0].targets_info[0] is None
 
     def test_ptar_doppler_rate_none(self, mocker) -> None:
         """Testing when channel_data.doppler_rate is None"""
@@ -228,13 +235,8 @@ class TestPointTargetAmbiguityRatioAnalysis:
             product=product, point_targets=self._point_targets[:1], config=None
         )
 
-        # FIXME: this behaviour must be fixed, it's wrong.
-        assert len(result) == 2
-        for output in result:
-            assert output.target_name == "T1"
-            assert output.target_azimuth_pixel == 100.5
-            assert output.target_range_pixel == 200.5
-            assert output.ambiguity_ratio_db is None
+        assert len(result) == 1
+        assert result[0].targets_info[0] is None
 
     def test_ptar_prf_none(self, mocker) -> None:
         """Testing when channel_data.prf is None"""
@@ -259,10 +261,8 @@ class TestPointTargetAmbiguityRatioAnalysis:
             product=product, point_targets=self._point_targets[:1], config=None
         )
 
-        # FIXME: this behaviour must be fixed, it's wrong.
-        assert len(result) == 2
-        for output in result:
-            assert output.ambiguity_ratio_db is None
+        assert len(result) == 1
+        assert result[0].targets_info[0] is None
 
     def test_ptar_ambiguities_out_of_scene(self, mocker) -> None:
         """Testing when ambiguities are outside the scene boundaries"""
@@ -274,13 +274,7 @@ class TestPointTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.target_azimuth_pixel == 100.5
-        assert output.target_range_pixel == 200.5
-        assert output.azimuth_time_delta is None
-        assert output.range_time_delta is None
-        assert output.left_ambiguity_azimuth_pixel is None
-        assert output.ambiguity_ratio_db is None
+        assert result[0].targets_info[0] is None
 
     def test_ptar_computation_fails(self, mocker) -> None:
         """Testing when ambiguity_ratio_computation_core raises an exception"""
@@ -311,13 +305,8 @@ class TestPointTargetAmbiguityRatioAnalysis:
             product=product, point_targets=self._point_targets[:1], config=None
         )
 
-        assert len(result) == 2
-        for output in result:
-            assert output.target_name == "T1"
-            assert output.ambiguity_ratio_db is None
-            assert output.azimuth_time_delta == 0.5
-            assert output.range_time_delta == 0.001
-            assert output.left_ambiguity_azimuth_pixel == 50
+        assert len(result) == 1
+        assert result[0].targets_info[0] is None
 
     def test_ptar_with_delay(self, mocker) -> None:
         """Testing with a point target that has a delay set"""
@@ -331,9 +320,9 @@ class TestPointTargetAmbiguityRatioAnalysis:
         result = point_target_ambiguity_ratio_analysis(product=product, point_targets=[pt_with_delay], config=None)
 
         assert len(result) == 1
-        output = result[0]
-        assert output.target_name == "T1"
-        assert output.ambiguity_ratio_db == -25.0
+        t = result[0].targets_info[0]
+        assert t.target_name == "T1"
+        assert t.ambiguity_ratio_db == -25.0
 
 
 class TestDistributedTargetAmbiguityRatioAnalysis:
@@ -346,10 +335,11 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         self._roi_centers = [(20, 20), (50, 50)]
         self._rng = np.random.default_rng(42)
 
-    def _make_mock_channel_data(self, mocker, swath_name: str = "S1"):
+    def _make_mock_channel_data(self, mocker, swath_name: str = "S1", polarization: str = "HH"):
         channel_data = mocker.MagicMock()
         channel_data.swath_name = swath_name
-        channel_data.polarization = SARPolarization.HH
+        channel_data.polarization = mocker.MagicMock()
+        channel_data.polarization.name = polarization
         channel_data.prf = 1.71713e03
         channel_data.trajectory = mocker.MagicMock()
         channel_data.doppler_rate = mocker.MagicMock()
@@ -362,13 +352,22 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         channel_data.pixel_to_times_conversion.return_value = (mocker.MagicMock(), 0.001)
         channel_data.looking_side = mocker.MagicMock()
         channel_data.looking_side.value = "RIGHT"
+        channel_data.acquisition_mode = mocker.MagicMock()
+        channel_data.acquisition_mode.name = "TEST_MODE"
+        channel_data.orbit_direction = mocker.MagicMock()
+        channel_data.orbit_direction.name = "ASCENDING"
+        channel_data.image_type = mocker.MagicMock()
+        channel_data.image_type.name = "SLC"
+        channel_data.sensor_name = "TestSensor"
         return channel_data
 
     def _make_mock_product(self, mocker, n_channels: int = 1):
         product = mocker.MagicMock()
         product.name = "TestProduct"
         product.channels_list = list(range(1, n_channels + 1))
-        product.get_channel_data.side_effect = lambda channel_id: self._make_mock_channel_data(mocker, f"S{channel_id}")
+        product.get_channel_data.side_effect = lambda channel_id: self._make_mock_channel_data(
+            mocker, f"S{channel_id}", "HH" if channel_id == 1 else "VV"
+        )
         return product
 
     def _setup_dtar_mocks(self, mocker, amb_inside_scene=True, amb_ratio_db=-25.0):
@@ -410,18 +409,22 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
 
         assert len(result) == 1
         output = result[0]
-        assert isinstance(output, AmbiguityRatioOutput)
-        assert output.product_name == "TestProduct"
-        assert output.channel == 1
-        assert output.swath == "S1"
-        assert output.polarization == SARPolarization.HH
-        assert output.burst == 0
-        assert output.roi_size_azimuth == 128
-        assert output.roi_size_range == 128
-        assert output.ambiguity_ratio_db == -25.0
-        assert output.target_azimuth_pixel == 20
-        assert output.target_range_pixel == 20
-        assert np.array_equal(output.target_nominal_coordinates, np.array([-4989397.154, 2746837.255, -2862071.786]))
+        assert isinstance(output, DistributedTargetAmbiguityRatioDataOutput)
+        assert output.general_info.product == "TestProduct"
+        assert output.general_info.channel == "1"
+        assert output.general_info.swath == "S1"
+        assert output.general_info.polarization == "HH"
+        r = output.roi_info[0]
+        assert r.roi_name == 0
+        assert r.burst == 0
+        assert r.roi_size_azimuth == 128
+        assert r.roi_size_range == 128
+        assert r.ambiguity_ratio_db == -25.0
+        assert r.roi_center_azimuth_pixel == 20
+        assert r.roi_center_range_pixel == 20
+        assert np.array_equal(
+            r.roi_center_ground_point_coordinates, np.array([-4989397.154, 2746837.255, -2862071.786])
+        )
 
     def test_dtar_single_channel_single_roi(self, mocker) -> None:
         """Testing happy path with explicit config"""
@@ -436,10 +439,10 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.roi_size_azimuth == 64
-        assert output.roi_size_range == 64
-        assert output.ambiguity_ratio_db == -25.0
+        r = result[0].roi_info[0]
+        assert r.roi_size_azimuth == 64
+        assert r.roi_size_range == 64
+        assert r.ambiguity_ratio_db == -25.0
 
     def test_dtar_multiple_channels(self, mocker) -> None:
         """Testing with multiple channels"""
@@ -451,10 +454,10 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 2
-        assert result[0].channel == 1
-        assert result[0].swath == "S1"
-        assert result[1].channel == 2
-        assert result[1].swath == "S2"
+        assert result[0].general_info.channel == "1"
+        assert result[0].general_info.swath == "S1"
+        assert result[1].general_info.channel == "2"
+        assert result[1].general_info.swath == "S2"
 
     def test_dtar_multiple_roi(self, mocker) -> None:
         """Testing with multiple ROIs"""
@@ -465,10 +468,10 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
             product=product, roi_centers=self._roi_centers, config=None
         )
 
-        assert len(result) == 2
-        for roi_center, output in zip(self._roi_centers, result, strict=True):
-            assert output.target_azimuth_pixel == roi_center[1]
-            assert output.target_range_pixel == roi_center[0]
+        assert len(result) == 1
+        for roi_center, r in zip(self._roi_centers, result[0].roi_info, strict=True):
+            assert r.roi_center_azimuth_pixel == roi_center[1]
+            assert r.roi_center_range_pixel == roi_center[0]
 
     def test_dtar_direct_geocoding_fails(self, mocker) -> None:
         """Testing when direct geocoding raises an exception"""
@@ -487,12 +490,7 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.target_name == 0
-        assert output.target_azimuth_pixel == 20
-        assert output.target_range_pixel == 20
-        assert output.target_nominal_coordinates is None
-        assert output.ambiguity_ratio_db is None
+        assert result[0].roi_info[0] is None
 
     def test_dtar_doppler_rate_none(self, mocker) -> None:
         """Testing when channel_data.doppler_rate is None"""
@@ -517,10 +515,7 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.target_azimuth_pixel == 20
-        assert output.target_range_pixel == 20
-        assert output.ambiguity_ratio_db is None
+        assert result[0].roi_info[0] is None
 
     def test_dtar_prf_none(self, mocker) -> None:
         """Testing when channel_data.prf is None"""
@@ -545,8 +540,7 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.ambiguity_ratio_db is None
+        assert result[0].roi_info[0] is None
 
     def test_dtar_ambiguities_out_of_scene(self, mocker) -> None:
         """Testing when ambiguities are outside the scene boundaries"""
@@ -557,7 +551,8 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
             product=product, roi_centers=self._roi_centers[:1], config=None
         )
 
-        assert result == []
+        assert len(result) == 1
+        assert result[0].roi_info[0] is None
 
     def test_dtar_computation_fails(self, mocker) -> None:
         """Testing when ambiguity_ratio_computation_core raises an exception"""
@@ -588,5 +583,8 @@ class TestDistributedTargetAmbiguityRatioAnalysis:
         )
 
         assert len(result) == 1
-        output = result[0]
-        assert output.ambiguity_ratio_db is None
+        assert result[0].roi_info[0] is None
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

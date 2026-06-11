@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import numpy as np
 from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
 from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
@@ -15,7 +17,13 @@ from perseo_quality.io.point_targets import PointTarget
 from perseo_quality.io.quality_input_protocol import QualityInputProduct
 from perseo_quality.logger import quality_logger as log
 from perseo_quality.tar_analysis.config import AmbiguityRatioConfig
-from perseo_quality.tar_analysis.custom_dataclasses import AmbiguityRatioOutput
+from perseo_quality.tar_analysis.custom_dataclasses import (
+    AmbiguityRatioProductGeneralInfo,
+    AmbiguityRatioROIInfo,
+    AmbiguityRatioTargetInfo,
+    DistributedTargetAmbiguityRatioDataOutput,
+    PointTargetAmbiguityRatioDataOutput,
+)
 from perseo_quality.tar_analysis.support import (
     ambiguity_ratio_computation_core,
     are_ambiguities_inside_scene,
@@ -29,7 +37,7 @@ def point_target_ambiguity_ratio_analysis(
     product: QualityInputProduct,
     point_targets: list[PointTarget],
     config: AmbiguityRatioConfig | None = None,
-) -> list[AmbiguityRatioOutput]:
+) -> list[PointTargetAmbiguityRatioDataOutput]:
     """Function to compute the Point Target Ambiguity Ratio (PTAR) analysis on selected Point Target locations.
 
     Parameters
@@ -43,7 +51,7 @@ def point_target_ambiguity_ratio_analysis(
 
     Returns
     -------
-    list[AmbiguityRatioOutput]
+    list[PointTargetAmbiguityRatioDataOutput]
         ambiguity ratio results for each target location
     """
 
@@ -74,6 +82,28 @@ def point_target_ambiguity_ratio_analysis(
         # recovering only targets visible by this channel
         targets_visible_by_channel = visible_targets[visible_targets["channel"] == channel]["id"]
 
+        output_results = PointTargetAmbiguityRatioDataOutput(
+            general_info=AmbiguityRatioProductGeneralInfo(
+                product=product.name,
+                channel=str(channel),
+                swath=channel_data.swath_name,
+                acquisition_mode=channel_data.acquisition_mode.name,
+                orbit_direction=channel_data.orbit_direction.name,
+                polarization=channel_data.polarization.name,
+                product_type=channel_data.image_type.name,
+                sensor=channel_data.sensor_name,
+                acquisition_start_time=datetime(
+                    year=channel_data.azimuth_axis[0].year,
+                    month=channel_data.azimuth_axis[0].month,
+                    day=channel_data.azimuth_axis[0].day_of_the_month,
+                    hour=channel_data.azimuth_axis[0].hour_of_day,
+                    minute=channel_data.azimuth_axis[0].minute_of_hour,
+                    second=channel_data.azimuth_axis[0].second_of_minute,
+                ),
+            )
+        )
+
+        targets_info = []
         for trgt_idx, trgt in enumerate(targets_visible_by_channel):
             bursts_selection = visible_targets.query("channel == @channel & id == @trgt")
             bursts_selection = bursts_selection.loc[:, "burst"].to_list()[0]
@@ -84,18 +114,6 @@ def point_target_ambiguity_ratio_analysis(
                 log.info(
                     f"Processing Target Point {trgt} ({trgt_idx + 1}/{len(targets_visible_by_channel)}), Burst #{burst}"
                 )
-                output_results = AmbiguityRatioOutput(
-                    target_name=trgt,
-                    product_name=product.name,
-                    channel=channel,
-                    swath=swath,
-                    polarization=channel_data.polarization,
-                    burst=burst,
-                    target_nominal_coordinates=current_point_target.xyz_coordinates,
-                    roi_size_azimuth=config.cropping_size[1],
-                    roi_size_range=config.cropping_size[0],
-                )
-
                 # extracting azimuth and range coordinates
                 try:
                     trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic_core(
@@ -127,11 +145,8 @@ def point_target_ambiguity_ratio_analysis(
                     az_rng_coords.azimuth_index_subpx,
                     az_rng_coords.range_index_subpx,
                 ):
-                    res.append(output_results)
+                    targets_info.append(None)
                     continue
-
-                output_results.target_azimuth_pixel = az_rng_coords.azimuth_index_subpx
-                output_results.target_range_pixel = az_rng_coords.range_index_subpx
 
                 point_target_location_px = (
                     np.round(az_rng_coords.azimuth_index_subpx).astype("int64"),
@@ -149,7 +164,7 @@ def point_target_ambiguity_ratio_analysis(
                         "Doppler Rate function not available in protocol instance, "
                         + "could not compute ambiguities location"
                     )
-                    res.append(output_results)
+                    targets_info.append(None)
                     continue
 
                 try:
@@ -170,13 +185,8 @@ def point_target_ambiguity_ratio_analysis(
                         samples=channel_data.range_axis.size,
                     ):
                         log.warning("Ambiguities out of scene boundaries")
+                        targets_info.append(None)
                         continue
-                    output_results.azimuth_time_delta = az_delta
-                    output_results.range_time_delta = rng_delta
-                    output_results.left_ambiguity_azimuth_pixel = l_ambiguity_loc_px[0]
-                    output_results.left_ambiguity_range_pixel = l_ambiguity_loc_px[1]
-                    output_results.right_ambiguity_azimuth_pixel = r_ambiguity_loc_px[0]
-                    output_results.right_ambiguity_range_pixel = r_ambiguity_loc_px[1]
 
                     target_roi, r_ambiguity_roi, l_ambiguity_roi, ambiguity_ratio = ambiguity_ratio_computation_core(
                         channel_data=channel_data,
@@ -187,17 +197,36 @@ def point_target_ambiguity_ratio_analysis(
                         config=config,
                     )
                     log.info(f"Ambiguity Ratio [dB] = {ambiguity_ratio}")
-                    output_results.ambiguity_ratio_db = ambiguity_ratio
-                    output_results.target_image = target_roi
-                    output_results.left_ambiguity_image = l_ambiguity_roi
-                    output_results.right_ambiguity_image = r_ambiguity_roi
                 except Exception as err:
                     log.warning(f"Could not evaluate PTAR for target {trgt}")
                     log.error(f"Error {err}")
-                    res.append(output_results)
+                    targets_info.append(None)
                     continue
 
-            res.append(output_results)
+                targets_info.append(
+                    AmbiguityRatioTargetInfo(
+                        target_name=trgt,
+                        burst=burst,
+                        roi_size_azimuth=config.cropping_size[1],
+                        roi_size_range=config.cropping_size[0],
+                        target_nominal_coordinates=current_point_target.xyz_coordinates,
+                        target_azimuth_pixel=az_rng_coords.azimuth_index_subpx,
+                        target_range_pixel=az_rng_coords.range_index_subpx,
+                        azimuth_time_delta=az_delta,
+                        range_time_delta=rng_delta,
+                        left_ambiguity_azimuth_pixel=l_ambiguity_loc_px[0],
+                        left_ambiguity_range_pixel=l_ambiguity_loc_px[1],
+                        right_ambiguity_azimuth_pixel=r_ambiguity_loc_px[0],
+                        right_ambiguity_range_pixel=r_ambiguity_loc_px[1],
+                        ambiguity_ratio_db=ambiguity_ratio,
+                        target_image=target_roi,
+                        right_ambiguity_image=r_ambiguity_roi,
+                        left_ambiguity_image=l_ambiguity_roi,
+                    )
+                )
+
+        output_results.targets_info = targets_info
+        res.append(output_results)
 
     return res
 
@@ -206,7 +235,7 @@ def distributed_target_ambiguity_ratio_analysis(
     product: QualityInputProduct,
     roi_centers: list[tuple[int, int]],
     config: AmbiguityRatioConfig | None = None,
-) -> list[AmbiguityRatioOutput]:
+) -> list[DistributedTargetAmbiguityRatioDataOutput]:
     """Function to compute the Distributed Target Ambiguity Ratio (DTAR) analysis on selected locations.
 
     Parameters
@@ -220,7 +249,7 @@ def distributed_target_ambiguity_ratio_analysis(
 
     Returns
     -------
-    list[AmbiguityRatioOutput]
+    list[DistributedTargetAmbiguityRatioDataOutput]
         ambiguity ratio results for each target location
     """
 
@@ -239,21 +268,32 @@ def distributed_target_ambiguity_ratio_analysis(
             f"Analyzing Channel {channel}, Swath {channel_data.swath_name},"
             + f" Polarization {channel_data.polarization.name}..."
         )
+
+        output_results = DistributedTargetAmbiguityRatioDataOutput(
+            general_info=AmbiguityRatioProductGeneralInfo(
+                product=product.name,
+                channel=str(channel),
+                swath=channel_data.swath_name,
+                acquisition_mode=channel_data.acquisition_mode.name,
+                orbit_direction=channel_data.orbit_direction.name,
+                polarization=channel_data.polarization.name,
+                product_type=channel_data.image_type.name,
+                sensor=channel_data.sensor_name,
+                acquisition_start_time=datetime(
+                    year=channel_data.azimuth_axis[0].year,
+                    month=channel_data.azimuth_axis[0].month,
+                    day=channel_data.azimuth_axis[0].day_of_the_month,
+                    hour=channel_data.azimuth_axis[0].hour_of_day,
+                    minute=channel_data.azimuth_axis[0].minute_of_hour,
+                    second=channel_data.azimuth_axis[0].second_of_minute,
+                ),
+            )
+        )
+
+        roi_info = []
         for roi_id, roi in enumerate(roi_centers):
             log.info(f"Processing Target Point {roi_id + 1}/{len(roi_centers)}")
             burst = detect_burst_from_pixel(lines_per_burst=channel_data.lines_per_burst, azimuth_px=roi[1])
-            output_results = AmbiguityRatioOutput(
-                target_name=roi_id,
-                product_name=product.name,
-                channel=channel,
-                swath=channel_data.swath_name,
-                burst=burst,
-                polarization=channel_data.polarization,
-                roi_size_azimuth=config.cropping_size[1],
-                roi_size_range=config.cropping_size[0],
-                target_azimuth_pixel=roi[1],
-                target_range_pixel=roi[0],
-            )
             azimuth_time, range_time = channel_data.pixel_to_times_conversion(
                 azimuth_index=roi[1], range_index=roi[0], burst=burst
             )
@@ -267,10 +307,9 @@ def distributed_target_ambiguity_ratio_analysis(
                     wavelength=1,
                     geodetic_altitude=0,
                 )
-                output_results.target_nominal_coordinates = target_ground_point
             except Exception:
                 log.warning("Invalid Direct Geocoding for the current Swath")
-                res.append(output_results)
+                roi_info.append(None)
                 continue
 
             doppler_rate = (
@@ -283,7 +322,7 @@ def distributed_target_ambiguity_ratio_analysis(
                     "Doppler Rate function not available in protocol instance, "
                     + "could not compute ambiguities location"
                 )
-                res.append(output_results)
+                roi_info.append(None)
                 continue
 
             try:
@@ -304,13 +343,8 @@ def distributed_target_ambiguity_ratio_analysis(
                     samples=channel_data.range_axis.size,
                 ):
                     log.warning("Ambiguities out of scene boundaries")
+                    roi_info.append(None)
                     continue
-                output_results.azimuth_time_delta = az_delta
-                output_results.range_time_delta = rng_delta
-                output_results.left_ambiguity_azimuth_pixel = l_ambiguity_loc_px[0]
-                output_results.left_ambiguity_range_pixel = l_ambiguity_loc_px[1]
-                output_results.right_ambiguity_azimuth_pixel = r_ambiguity_loc_px[0]
-                output_results.right_ambiguity_range_pixel = r_ambiguity_loc_px[1]
 
                 target_roi, r_ambiguity_roi, l_ambiguity_roi, ambiguity_ratio = ambiguity_ratio_computation_core(
                     channel_data=channel_data,
@@ -321,16 +355,35 @@ def distributed_target_ambiguity_ratio_analysis(
                     config=config,
                 )
                 log.info(f"Ambiguity Ratio [dB] = {ambiguity_ratio}")
-                output_results.ambiguity_ratio_db = ambiguity_ratio
-                output_results.target_image = target_roi
-                output_results.left_ambiguity_image = l_ambiguity_roi
-                output_results.right_ambiguity_image = r_ambiguity_roi
             except Exception as err:
                 log.warning(f"Could not evaluate DTAR for target {roi_id}")
                 log.error(f"Error {err}")
-                res.append(output_results)
+                roi_info.append(None)
                 continue
 
-            res.append(output_results)
+            roi_info.append(
+                AmbiguityRatioROIInfo(
+                    roi_name=roi_id,
+                    burst=burst,
+                    roi_size_azimuth=config.cropping_size[1],
+                    roi_size_range=config.cropping_size[0],
+                    roi_center_azimuth_pixel=roi[1],
+                    roi_center_range_pixel=roi[0],
+                    roi_center_ground_point_coordinates=target_ground_point,
+                    azimuth_time_delta=az_delta,
+                    range_time_delta=rng_delta,
+                    left_ambiguity_azimuth_pixel=l_ambiguity_loc_px[0],
+                    left_ambiguity_range_pixel=l_ambiguity_loc_px[1],
+                    right_ambiguity_azimuth_pixel=r_ambiguity_loc_px[0],
+                    right_ambiguity_range_pixel=r_ambiguity_loc_px[1],
+                    ambiguity_ratio_db=ambiguity_ratio,
+                    target_image=target_roi,
+                    right_ambiguity_image=r_ambiguity_roi,
+                    left_ambiguity_image=l_ambiguity_roi,
+                )
+            )
+
+        output_results.roi_info = roi_info
+        res.append(output_results)
 
     return res
