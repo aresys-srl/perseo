@@ -3,4 +3,4 @@
 
 """Python Ecosystem for Remote Sensing & Earth Observation - PERSEO: QUALITY."""
 
-__version__ = "1.0.16"
+__version__ = "1.1.0"
