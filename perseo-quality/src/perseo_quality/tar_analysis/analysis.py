@@ -8,8 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import numpy as np
-from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
-from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
+from perseo_core.geometry.geocoding import direct_geocoding_monostatic, inverse_geocoding_monostatic
 
 from perseo_quality.core.common import check_targets_visibility, detect_burst_from_pixel
 from perseo_quality.core.generic_dataclasses import SARCoordinates
@@ -116,12 +115,12 @@ def point_target_ambiguity_ratio_analysis(
                 )
                 # extracting azimuth and range coordinates
                 try:
-                    trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic_core(
+                    trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic(
                         trajectory=channel_data.trajectory,
                         ground_points=current_point_target.xyz_coordinates,
-                        initial_guesses=channel_data.mid_azimuth_time,
-                        frequencies_doppler_centroid=0,
+                        doppler_frequencies=0,
                         wavelength=1,
+                        az_initial_time_guesses=channel_data.mid_azimuth_time,
                     )
                     if current_point_target.delay is not None:
                         trgt_rng_time += current_point_target.delay
@@ -299,13 +298,13 @@ def distributed_target_ambiguity_ratio_analysis(
             )
             try:
                 target_ground_point = direct_geocoding_monostatic(
-                    sensor_positions=channel_data.trajectory.evaluate(azimuth_time),
-                    sensor_velocities=channel_data.trajectory.evaluate_first_derivatives(azimuth_time),
+                    sensor_positions=channel_data.trajectory.position(azimuth_time),
+                    sensor_velocities=channel_data.trajectory.velocity(azimuth_time),
                     range_times=range_time,
-                    geocoding_side=channel_data.looking_side.value,
-                    frequencies_doppler_centroid=0,
+                    doppler_frequencies=0,
                     wavelength=1,
-                    geodetic_altitude=0,
+                    look_direction=channel_data.looking_side.value,
+                    altitude=0,
                 )
             except Exception:
                 log.warning("Invalid Direct Geocoding for the current Swath")

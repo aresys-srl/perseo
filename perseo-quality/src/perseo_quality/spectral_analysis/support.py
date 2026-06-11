@@ -10,9 +10,9 @@ from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.timing.precisedatetime import PreciseDateTime
 from netCDF4 import Dataset
 from numpy.polynomial import Polynomial
+from perseo_core.timing import PreciseDateTime
 from scipy.constants import speed_of_light
 from scipy.fft import fft2, fftshift, ifft2, ifftshift
 from scipy.ndimage import gaussian_filter1d
@@ -74,9 +74,7 @@ def data_deramping(
                 for _ in channel_data.slant_range_axis
             ]
         )
-        sensor_velocity_norm_mid_burst = np.linalg.norm(
-            channel_data.trajectory.evaluate_first_derivatives(mid_burst_az_time)
-        )
+        sensor_velocity_norm_mid_burst = np.linalg.norm(channel_data.trajectory.velocity(mid_burst_az_time))
 
     burst_deramping_function = compute_burst_deramping_function(
         mid_burst_az_time=mid_burst_az_time,

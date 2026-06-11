@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.geometry.direct_geocoding import direct_geocoding_monostatic
-from arepytools.geometry.geometric_functions import get_geometric_squint
-from arepytools.geometry.inverse_geocoding_core import (
-    inverse_geocoding_attitude_core,
-    inverse_geocoding_monostatic_core,
+from perseo_core.geometry import get_geometric_squint_angle
+from perseo_core.geometry.geocoding import (
+    direct_geocoding_monostatic,
+    inverse_geocoding_monostatic,
+    inverse_geocoding_monostatic_with_attitude,
 )
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 from scipy.constants import speed_of_light
 
 from perseo_quality.core.generic_dataclasses import SideLobesDirections
@@ -39,10 +39,10 @@ def get_squint_angle(
     float
         squint angle (rad)
     """
-    sensor_position = channel_data.trajectory.evaluate(azimuth_time).squeeze()
-    sensor_velocity = channel_data.trajectory.evaluate_first_derivatives(azimuth_time).squeeze()
+    sensor_position = channel_data.trajectory.position(azimuth_time).squeeze()
+    sensor_velocity = channel_data.trajectory.velocity(azimuth_time).squeeze()
 
-    return get_geometric_squint(
+    return get_geometric_squint_angle(
         sensor_positions=sensor_position, sensor_velocities=sensor_velocity, ground_points=ground_point
     )
 
@@ -68,7 +68,7 @@ def get_doppler_centroid(
     """
 
     squint_angle = get_squint_angle(channel_data=channel_data, azimuth_time=azimuth_time, ground_point=ground_point)
-    sensor_velocity = channel_data.trajectory.evaluate_first_derivatives(azimuth_time).squeeze()
+    sensor_velocity = channel_data.trajectory.velocity(azimuth_time).squeeze()
     sensor_velocity_norm = np.linalg.norm(sensor_velocity, axis=-1)
     carrier_freq = channel_data.carrier_frequency / speed_of_light
 
@@ -102,31 +102,33 @@ def compute_side_lobes_directions(
         doppler centroid (Hz)
     """
 
-    sensor_pos = channel_data.trajectory.evaluate(peak_azimuth_time)
-    sensor_vel = channel_data.trajectory.evaluate_first_derivatives(peak_azimuth_time)
+    sensor_pos = channel_data.trajectory.position(peak_azimuth_time)
+    sensor_vel = channel_data.trajectory.velocity(peak_azimuth_time)
 
     earth_point_zero_doppler = direct_geocoding_monostatic(
         sensor_positions=sensor_pos,
         sensor_velocities=sensor_vel,
         range_times=peak_range_time,
-        geocoding_side=channel_data.looking_side.value,
-        geodetic_altitude=0,
-        frequencies_doppler_centroid=0,
+        doppler_frequencies=0,
         wavelength=1,
+        look_direction=channel_data.looking_side.value,
+        altitude=0,
     )
 
-    if channel_data.boresight_normal_curve is None and channel_data.doppler_centroid is None:
+    if channel_data.attitude is None and channel_data.doppler_centroid is None:
         # no attitude or doppler centroid provided, returning zero doppler condition
         return (np.inf, 0.0), 0, 0
 
-    if channel_data.boresight_normal_curve is not None:
+    if channel_data.attitude is not None:
         # computing side lobes with attitude
-        sensor_time_with_doppler = inverse_geocoding_attitude_core(
+        sensor_time_with_doppler, _ = inverse_geocoding_monostatic_with_attitude(
             trajectory=channel_data.trajectory,
-            boresight_normal=channel_data.boresight_normal_curve,
+            attitude=channel_data.attitude,
             ground_points=earth_point_zero_doppler,
+            doppler_frequencies=0,
+            wavelength=1,
             initial_guesses=peak_azimuth_time,
-        )[0]
+        )
 
         # computing squint angle and doppler centroid
         squint_angle = get_squint_angle(
@@ -141,18 +143,18 @@ def compute_side_lobes_directions(
         doppler_centroid = channel_data.doppler_centroid.evaluate(
             azimuth_time=peak_azimuth_time, range_time=peak_range_time
         )
-        sensor_time_with_doppler = inverse_geocoding_monostatic_core(
+        sensor_time_with_doppler, _ = inverse_geocoding_monostatic(
             trajectory=channel_data.trajectory,
             ground_points=earth_point_zero_doppler,
-            frequencies_doppler_centroid=doppler_centroid,
+            doppler_frequencies=doppler_centroid,
             wavelength=speed_of_light / channel_data.carrier_frequency,
-            initial_guesses=peak_azimuth_time,
-        )[0]
-        sat_velocity = np.linalg.norm(channel_data.trajectory.evaluate_first_derivatives(peak_azimuth_time))
+            az_initial_time_guesses=peak_azimuth_time,
+        )
+        sat_velocity = np.linalg.norm(channel_data.trajectory.velocity(peak_azimuth_time))
         squint_angle = doppler_centroid / (2 * sat_velocity / (speed_of_light / channel_data.carrier_frequency))
 
-    sensor_position_zero_doppler = channel_data.trajectory.evaluate(peak_azimuth_time).T
-    sensor_position_with_doppler = channel_data.trajectory.evaluate(sensor_time_with_doppler).T
+    sensor_position_zero_doppler = channel_data.trajectory.position(peak_azimuth_time).T
+    sensor_position_with_doppler = channel_data.trajectory.position(sensor_time_with_doppler).T
 
     los_zd = np.squeeze(sensor_position_zero_doppler - earth_point_zero_doppler)
     los_hd = np.squeeze(sensor_position_with_doppler - earth_point_zero_doppler)

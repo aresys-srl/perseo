@@ -7,11 +7,6 @@ import logging
 import sys
 from pathlib import Path
 
-from arepytools.io import (
-    PointSetProduct,
-    convert_array_to_point_target_structure,
-    read_point_targets_file,
-)
 from sct_aresys_reader.protocol_implementation import ProductFolderManagerExtended
 
 from perseo_quality.logger import quality_logger
@@ -44,12 +39,7 @@ if __name__ == "__main__":
     # output path
     out = Path(r"C:\Users\giorgio.parma\Desktop\temporary_outputs")
 
-    # point target loading
-    if Path(pt_path).is_dir():
-        coords, rcs = PointSetProduct(pt_path).read_data()
-        point_targets = convert_array_to_point_target_structure(coords=coords, rcs=rcs)
-    else:
-        point_targets = read_point_targets_file(pt_path)
+    point_targets = ...
 
     # analysis
     product = ProductFolderManagerExtended(path=prd_path)

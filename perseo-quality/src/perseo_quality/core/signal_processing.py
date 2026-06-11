@@ -15,9 +15,9 @@ from scipy.constants import speed_of_light
 from perseo_quality.core.generic_dataclasses import DecibelConversion, GetFrequencyMethod, SARRadiometricQuantity
 
 if TYPE_CHECKING:
-    from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
-    from arepytools.timing.precisedatetime import PreciseDateTime
     from numpy.typing import ArrayLike
+    from perseo_core.geometry.navigation import Trajectory
+    from perseo_core.timing import PreciseDateTime
 
 
 def convert_to_db(data: ArrayLike, mode: DecibelConversion = DecibelConversion.POWER) -> ArrayLike:
@@ -1066,7 +1066,7 @@ def radiometric_correction(
 
 
 def compute_doppler_rate_theoretical(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     azimuth_time: PreciseDateTime,
     coords: np.ndarray,
     fc_hz: float,
@@ -1075,7 +1075,7 @@ def compute_doppler_rate_theoretical(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
+    trajectory : Trajectory
         sensor trajectory
     azimuth_time : PreciseDateTime
         azimuth time when to evaluate the doppler rate
@@ -1090,9 +1090,9 @@ def compute_doppler_rate_theoretical(
         theoretical doppler rate
 
     """
-    sat_pos = trajectory.evaluate(azimuth_time)
-    sat_vel = trajectory.evaluate_first_derivatives(azimuth_time)
-    sat_acc = trajectory.evaluate_second_derivatives(azimuth_time)
+    sat_pos = trajectory.position(azimuth_time)
+    sat_vel = trajectory.velocity(azimuth_time)
+    sat_acc = trajectory.acceleration(azimuth_time)
 
     los = (sat_pos - coords).transpose()
     los_norm = np.linalg.norm(los)
@@ -1106,7 +1106,7 @@ def compute_doppler_rate_theoretical(
 
 
 def compute_steering_doppler_frequency(
-    trajectory: TwiceDifferentiable3DCurve,
+    trajectory: Trajectory,
     azimuth_time: PreciseDateTime,
     az_mid_burst_time: PreciseDateTime,
     doppler_rate: float,
@@ -1117,7 +1117,7 @@ def compute_steering_doppler_frequency(
 
     Parameters
     ----------
-    trajectory : TwiceDifferentiable3DCurve
+    trajectory : Trajectory
         sensor trajectory
     azimuth_time : PreciseDateTime
         azimuth time at which compute the steering frequency
@@ -1136,7 +1136,7 @@ def compute_steering_doppler_frequency(
         steering doppler frequency
 
     """
-    sat_vel_norm = np.linalg.norm(trajectory.evaluate_first_derivatives(azimuth_time))
+    sat_vel_norm = np.linalg.norm(trajectory.velocity(azimuth_time))
     # azimuth steering rate conversion from rad/s to Hz/s
     az_steering_rate_hz_s = 2 * sat_vel_norm / (speed_of_light / fc_hz) * az_steering_rate_rad_s
     # antenna modulation rate

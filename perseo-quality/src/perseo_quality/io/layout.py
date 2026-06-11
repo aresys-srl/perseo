@@ -10,7 +10,7 @@ from itertools import compress
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.core.custom_errors import (
     AzimuthExceedsBoundariesError,

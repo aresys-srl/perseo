@@ -9,10 +9,10 @@ from typing import Protocol, runtime_checkable
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.geometry.curve import Generic3DCurve
-from arepytools.geometry.curve_protocols import TwiceDifferentiable3DCurve
-from arepytools.timing.precisedatetime import PreciseDateTime
 from numpy.typing import ArrayLike
+from perseo_core.geometry.navigation import Trajectory
+from perseo_core.geometry.pointing import Attitude
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import (
     LocationData,
@@ -146,12 +146,12 @@ class ChannelData(Protocol):
         """Range time at half swath"""
 
     @property
-    def trajectory(self) -> TwiceDifferentiable3DCurve:
+    def trajectory(self) -> Trajectory:
         """Channel trajectory/orbit"""
 
     @property
-    def boresight_normal_curve(self) -> Generic3DCurve | None:
-        """Channel attitude boresight normal 3D curve"""
+    def attitude(self) -> Attitude | None:
+        """Channel attitude defined in ECEF Reference Frame"""
 
     @property
     def doppler_centroid(self) -> SARCoordinatesFunction | None:

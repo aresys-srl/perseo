@@ -10,7 +10,7 @@ from datetime import datetime
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import SAROrbitDirection, SARPolarization
 from perseo_quality.point_targets_analysis.support import SideLobesDirections

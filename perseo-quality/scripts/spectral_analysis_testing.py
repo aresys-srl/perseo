@@ -18,8 +18,6 @@ from perseo_quality.spectral_analysis.analysis import (
 )
 from perseo_quality.spectral_analysis.graphical_output import spectral_graphs
 
-from arepytools.io.point_target_binary import PointSetProduct
-
 from perseo_quality.spectral_analysis.support import spectral_analysis_profiles_to_netcdf
 
 if __name__ == "__main__":

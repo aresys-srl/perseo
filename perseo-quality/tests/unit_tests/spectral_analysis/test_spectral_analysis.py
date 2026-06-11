@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import (
     SARAcquisitionMode,
@@ -99,7 +99,7 @@ class TestPointTargetSpectralAnalysis:
             return_value=self._make_visible_targets_df(),
         )
         mocker.patch(
-            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic_core",
+            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic",
             return_value=(mocker.MagicMock(), 0.001),
         )
         mocker.patch(
@@ -231,7 +231,7 @@ class TestPointTargetSpectralAnalysis:
             return_value=df,
         )
         mocker.patch(
-            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic_core",
+            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic",
             side_effect=Exception("Geocoding failed"),
         )
         product = self._make_mock_product(mocker)
@@ -251,7 +251,7 @@ class TestPointTargetSpectralAnalysis:
             return_value=df,
         )
         mocker.patch(
-            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic_core",
+            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic",
             return_value=(mocker.MagicMock(), 0.001),
         )
         channel_data = self._make_mock_channel_data(mocker)
@@ -274,7 +274,7 @@ class TestPointTargetSpectralAnalysis:
             return_value=df,
         )
         mocker.patch(
-            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic_core",
+            "perseo_quality.spectral_analysis.analysis.inverse_geocoding_monostatic",
             return_value=(mocker.MagicMock(), 0.001),
         )
         mock_deramping = mocker.patch(

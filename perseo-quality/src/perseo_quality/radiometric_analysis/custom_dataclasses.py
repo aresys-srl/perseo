@@ -11,7 +11,7 @@ from enum import Enum, auto
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.core.generic_dataclasses import SARPolarization, SARProjection, SARRadiometricQuantity
 

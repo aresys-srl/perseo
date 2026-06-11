@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Any, Type
 
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 # TODO: move to PERSEO core
 

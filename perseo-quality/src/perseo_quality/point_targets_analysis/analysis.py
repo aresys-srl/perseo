@@ -12,8 +12,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.geometry.geocoding import inverse_geocoding_monostatic
+from perseo_core.timing import PreciseDateTime
 
 import perseo_quality.core.custom_errors as c_err
 import perseo_quality.core.generic_dataclasses as gdt
@@ -278,7 +278,7 @@ def point_target_analysis_single(
             location_data=location_data,
             target_pos_nominal=nominal_coords,
             target_pos_real=peak_coords,
-            sensor_position_at_target=channel_data.trajectory.evaluate(az_rng_coords.azimuth),
+            sensor_position_at_target=channel_data.trajectory.position(az_rng_coords.azimuth),
             side_lobes_directions=side_lobes_directions,
             target_info=point_target,
             original_range_step_m=original_rng_step,
@@ -357,12 +357,12 @@ def compute_sar_coordinates(target: PointTarget, channel_data: ChannelData, burs
     gdt.SARCoordinates
         SAR coordinates of the current point target as seen by the SAR product
     """
-    az_time, rg_time = inverse_geocoding_monostatic_core(
+    az_time, rg_time = inverse_geocoding_monostatic(
         trajectory=channel_data.trajectory,
         ground_points=target.xyz_coordinates,
-        initial_guesses=channel_data.mid_azimuth_time,
-        frequencies_doppler_centroid=0,
+        doppler_frequencies=0,
         wavelength=1,
+        az_initial_time_guesses=channel_data.mid_azimuth_time,
     )
     assert isinstance(az_time, PreciseDateTime)
     assert isinstance(rg_time, float)

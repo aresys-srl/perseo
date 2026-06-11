@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import pytest
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.core.common import angles_computation_setup, blocks_partitioning, check_targets_visibility
 
@@ -17,11 +17,11 @@ from perseo_quality.core.common import angles_computation_setup, blocks_partitio
 class MockTrajectory:
     """Mocking trajectory class"""
 
-    def evaluate(self, time) -> npt.NDArray[np.floating]:
+    def position(self, time) -> npt.NDArray[np.floating]:
         """Mocking position interpolation"""
         return np.array([3319265.6853109375, -6203680.762160135, -768545.9597902696])
 
-    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
+    def velocity(self, time) -> npt.NDArray[np.floating]:
         """Mocking velocity interpolation"""
         return np.array([-1775.9112802854143, -44.50034452228635, -7385.436916417019])
 
@@ -202,7 +202,7 @@ class TestAnglesComputationSetup:
                 [2607385.41460342, -5789671.61094659, -599860.92907415],
             ]
         )
-        self._ref_nadir = np.array([-328173.0560301547, 613352.7916620681, 76446.66955969587])
+        self._ref_nadir = np.array([-328173.0560318334, 613352.7916652048, 76446.6695273011])
 
     def test_angles_computation_setup_with_altitude(self):
         """Testing angles_computation_setup"""
@@ -213,7 +213,7 @@ class TestAnglesComputationSetup:
             range_values=self._rng_values,
             altitude=self._altitude_m,
         )
-        np.testing.assert_allclose(sensor_pos, self._trajectory.evaluate(self._az_time), atol=self.tolerance, rtol=0)
+        np.testing.assert_allclose(sensor_pos, self._trajectory.position(self._az_time), atol=self.tolerance, rtol=0)
         np.testing.assert_allclose(ground_points, self._ref_ground_points, atol=self.tolerance, rtol=0)
         np.testing.assert_allclose(nadir, self._ref_nadir, atol=self.tolerance, rtol=0)
 
@@ -256,3 +256,7 @@ class TestBlocksDefinition:
             range_axis=self._rng_axis,
         )
         assert list(blocks_data) == self.expected_res_1
+
+
+if __name__ == "__main__":
+    pytest.main([__file__])

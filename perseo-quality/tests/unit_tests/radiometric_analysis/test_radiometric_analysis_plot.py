@@ -10,7 +10,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_quality.radiometric_analysis.block_wise.graphical_output import (
     radiometric_2D_hist_plot,

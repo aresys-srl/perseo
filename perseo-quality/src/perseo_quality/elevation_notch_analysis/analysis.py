@@ -8,11 +8,8 @@ from __future__ import annotations
 import numpy as np
 import numpy.typing as npt
 import xarray as xr
-from arepytools.geometry.geometric_functions import (
-    compute_incidence_angles,
-    compute_look_angles,
-)
 from numpy.polynomial import Polynomial
+from perseo_core.geometry import compute_incidence_angles_core, compute_look_angles_core
 from scipy.constants import speed_of_light
 from scipy.optimize import least_squares
 
@@ -134,11 +131,13 @@ def elevation_notch_analysis(
                 look_direction=channel_data.looking_side.value,
                 altitude=altitude_m,
             )
-            look_angles_mid_block_rad = compute_look_angles(
-                sensor_positions=sensor_pos, nadir_directions=nadir, points=ground_points
+            look_angles_mid_block_rad = compute_look_angles_core(
+                sensor_positions=sensor_pos, nadir_directions=nadir, ground_points=ground_points
             )
             antenna_angles_rad = look_angles_mid_block_rad - roll_rad
-            incidence_angles_mid_block_rad = compute_incidence_angles(sensor_positions=sensor_pos, points=ground_points)
+            incidence_angles_mid_block_rad = compute_incidence_angles_core(
+                sensor_positions=sensor_pos, ground_points=ground_points
+            )
 
             cropping_size = (
                 channel_data.slant_range_axis.size,

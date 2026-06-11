@@ -8,11 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import numpy as np
-from arepytools.geometry.geometric_functions import (
-    compute_incidence_angles,
-    compute_look_angles,
-    compute_look_angles_from_trajectory,
-)
+from perseo_core.geometry import compute_incidence_angles_core, compute_look_angles, compute_look_angles_core
 
 from perseo_quality.core.common import (
     angles_computation_setup,
@@ -95,7 +91,7 @@ def radiometric_profiles(
 
         if direction == RadiometricAnalysisDirection.RANGE:
             # creating axis for range direction
-            look_angles_mid_swath = compute_look_angles_from_trajectory(
+            look_angles_mid_swath = compute_look_angles(
                 trajectory=channel_data.trajectory,
                 azimuth_time=channel_data.mid_azimuth_time,
                 range_times=channel_data.slant_range_axis[config.range_pixel_margin : -config.range_pixel_margin],
@@ -144,7 +140,9 @@ def radiometric_profiles(
             )
 
             look_angles_mid_block_deg = np.rad2deg(
-                compute_look_angles(sensor_positions=sensor_pos, nadir_directions=nadir, points=ground_points)
+                compute_look_angles_core(
+                    sensor_positions=sensor_pos, nadir_directions=nadir, ground_points=ground_points
+                )
             )
             if direction == RadiometricAnalysisDirection.RANGE:
                 look_angles_array.append(look_angles_mid_block_deg)
@@ -172,7 +170,9 @@ def radiometric_profiles(
                 log.debug("'get_noise_vector' method not defined for the current plugin")
 
             # NOTE: use incidence angles from product when available
-            incidence_angles_mid_block_rad = compute_incidence_angles(sensor_positions=sensor_pos, points=ground_points)
+            incidence_angles_mid_block_rad = compute_incidence_angles_core(
+                sensor_positions=sensor_pos, ground_points=ground_points
+            )
             incidence_angles_array.append(np.rad2deg(incidence_angles_mid_block_rad))
             # performing radiometric correction, if needed
             if channel_data.radiometric_quantity != output_quantity:

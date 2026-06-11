@@ -9,7 +9,7 @@ from typing import Callable
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 from scipy.constants import speed_of_light
 
 from perseo_quality.core.signal_processing import (
@@ -65,8 +65,8 @@ def compute_ambiguities_locations(
     """
 
     t_azimuth_delta = np.abs(prf / doppler_rate)
-    sensor_position_at_pt = channel_data.trajectory.evaluate(point_target_azimuth_time)
-    sensor_position_at_delta = channel_data.trajectory.evaluate(point_target_azimuth_time + t_azimuth_delta)
+    sensor_position_at_pt = channel_data.trajectory.position(point_target_azimuth_time)
+    sensor_position_at_delta = channel_data.trajectory.position(point_target_azimuth_time + t_azimuth_delta)
     pt_los = np.linalg.norm(sensor_position_at_pt - point_target_xyz_coords)
     pt_delta_los = np.linalg.norm(sensor_position_at_delta - point_target_xyz_coords)
 

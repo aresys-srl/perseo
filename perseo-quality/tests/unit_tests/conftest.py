@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 import xarray as xr
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 from scipy.fft import fft2, ifft2
 
 from perseo_quality.core.generic_dataclasses import SARPolarization, SARSideLooking
@@ -81,13 +81,13 @@ _REF_POINTS = [
 class MockTrajectory:
     """Mocking trajectory class"""
 
-    def evaluate(self, time) -> npt.NDArray[np.floating]:
+    def position(self, time) -> npt.NDArray[np.floating]:
         out = [-381087.525550857, 932485.770149446, -7007146.93083064]
         if np.size(time) == 1:
             return np.array(out)
         return np.stack([out] * np.size(time))
 
-    def evaluate_first_derivatives(self, time) -> npt.NDArray[np.floating]:
+    def velocity(self, time) -> npt.NDArray[np.floating]:
         out = [7057.60934660782, 2768.35602191122, -0.259400938909807]
         if np.size(time) == 1:
             return np.array(out)

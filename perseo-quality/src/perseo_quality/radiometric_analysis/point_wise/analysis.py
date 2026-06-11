@@ -7,11 +7,8 @@ from __future__ import annotations
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.geometry.geometric_functions import (
-    compute_incidence_angles_from_trajectory,
-    compute_look_angles_from_trajectory,
-)
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.geometry import compute_incidence_angles, compute_look_angles
+from perseo_core.timing import PreciseDateTime
 from scipy.signal import savgol_filter
 
 import perseo_quality.radiometric_analysis.custom_errors as ra_err
@@ -197,7 +194,7 @@ def point_wise_radiometric_analysis(
 
             incidence_angles, look_angles = None, None
             if incidence_cond:
-                incidence_angles = compute_incidence_angles_from_trajectory(
+                incidence_angles = compute_incidence_angles(
                     trajectory=channel_data.trajectory,
                     azimuth_time=channel_data.mid_azimuth_time,
                     range_times=channel_data.slant_range_axis,
@@ -206,7 +203,7 @@ def point_wise_radiometric_analysis(
 
             if look_cond:
                 # extracting a look angle value for each range pixel
-                look_angles = compute_look_angles_from_trajectory(
+                look_angles = compute_look_angles(
                     trajectory=channel_data.trajectory,
                     azimuth_time=channel_data.mid_azimuth_time,
                     range_times=channel_data.slant_range_axis,
@@ -281,7 +278,7 @@ def point_wise_radiometric_analysis(
 
                 incidence_angles = None
                 if incidence_cond:
-                    incidence_angles = compute_incidence_angles_from_trajectory(
+                    incidence_angles = compute_incidence_angles(
                         trajectory=channel_data.trajectory,
                         azimuth_time=channel_data.mid_azimuth_time,
                         range_times=rng_time,

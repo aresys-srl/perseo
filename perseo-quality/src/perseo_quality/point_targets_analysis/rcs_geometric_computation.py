@@ -5,7 +5,7 @@
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.geometry.conversions import xyz2llh
+from perseo_core.geometry.coordinates import xyz2llh
 
 
 def compute_rcs_trihedral_corner_reflector(

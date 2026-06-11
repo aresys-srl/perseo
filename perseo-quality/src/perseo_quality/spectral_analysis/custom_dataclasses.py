@@ -10,8 +10,8 @@ from datetime import datetime
 
 import numpy as np
 import numpy.typing as npt
-from arepytools.timing.precisedatetime import PreciseDateTime
 from numpy.polynomial import Polynomial
+from perseo_core.timing import PreciseDateTime
 
 
 @dataclass

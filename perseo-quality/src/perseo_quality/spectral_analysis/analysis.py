@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import numpy as np
-from arepytools.geometry.inverse_geocoding_core import inverse_geocoding_monostatic_core
+from perseo_core.geometry.geocoding import inverse_geocoding_monostatic
 from scipy.fft import fft2, fftshift
 
 from perseo_quality.core.common import blocks_partitioning, check_targets_visibility, detect_burst_from_pixel
@@ -116,12 +116,12 @@ def point_target_spectral_analysis(
                 )
                 # extracting azimuth and range coordinates
                 try:
-                    trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic_core(
+                    trgt_az_time, trgt_rng_time = inverse_geocoding_monostatic(
                         trajectory=channel_data.trajectory,
                         ground_points=current_point_target.xyz_coordinates,
-                        initial_guesses=channel_data.mid_azimuth_time,
-                        frequencies_doppler_centroid=0,
+                        doppler_frequencies=0,
                         wavelength=1,
+                        az_initial_time_guesses=channel_data.mid_azimuth_time,
                     )
                     if current_point_target.delay is not None:
                         trgt_rng_time += current_point_target.delay
