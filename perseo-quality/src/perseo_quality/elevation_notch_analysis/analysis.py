@@ -118,7 +118,7 @@ def elevation_notch_analysis(
 
             # TODO: these two protocol methods are specific for this analysis, they should be generalized better
             altitude_m = channel_data.get_altitude_m(channel_data.azimuth_axis[center[0]])
-            roll_rad = np.deg2rad(channel_data.get_roll_angle_deg(channel_data.azimuth_axis[center[0]]))[0]
+            roll_rad = np.deg2rad(channel_data.get_roll_angle_deg(channel_data.azimuth_axis[center[0]]))
             if roll_rad is None:
                 log.critical("Roll angle is not available.")
                 raise RuntimeError("Roll angle is not available.")
