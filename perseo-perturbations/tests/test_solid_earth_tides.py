@@ -6,7 +6,7 @@
 import datetime
 
 import numpy as np
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_perturbations.geodynamics.solid_tides import compute_displacement, compute_solid_earth_tides
 

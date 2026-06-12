@@ -13,8 +13,8 @@ from __future__ import annotations
 import datetime
 
 import numpy as np
-from arepytools.geometry.conversions import xyz2llh
-from arepytools.io.metadata import PreciseDateTime
+from perseo_core.geometry.coordinates import xyz2llh
+from perseo_core.timing import PreciseDateTime
 
 from perseo_perturbations.geodynamics.solid import solid_core
 
@@ -177,8 +177,7 @@ def compute_displacement(target_xyz_coords: np.ndarray, acquisition_time: Precis
     )
 
     # coordinates conversion: geodetic to geocentric
-    # TODO: change this
-    llh_coordinates = xyz2llh(target_xyz_coords.T).T
+    llh_coordinates = xyz2llh(target_xyz_coords)
     lat_geocentric = np.arctan((1 - 1 / 298.25642) ** 2 * np.tan(llh_coordinates[:, 0]))
 
     # compute displacement unit vectors along north, east and up

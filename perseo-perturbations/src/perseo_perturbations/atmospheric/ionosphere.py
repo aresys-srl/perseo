@@ -17,15 +17,14 @@ from enum import Enum, auto
 from pathlib import Path
 
 import numpy as np
-from arepytools.geometry.conversions import xyz2llh
-from arepytools.geometry.ellipsoid import (
-    Ellipsoid,
-    compute_line_ellipsoid_intersections,
-)
-from arepytools.geometry.geometric_functions import compute_incidence_angles
-from arepytools.io.metadata import PreciseDateTime
-from arepytools.timing.conversions import date_to_gps_week
 from more_itertools import pairwise
+from perseo_core.geometry import compute_incidence_angles_core
+from perseo_core.geometry.coordinates import (
+    compute_line_ellipsoid_intersections,
+    create_inflated_wgs84_ellipsoid,
+    xyz2llh,
+)
+from perseo_core.timing import PreciseDateTime, date_to_gps_week
 from scipy.interpolate import RegularGridInterpolator
 
 from perseo_perturbations import DEFAULT_EARTH_RADIUS_M, DEFAULT_IONOSPHERE_HEIGHT_M
@@ -385,30 +384,21 @@ class IonosphericDelayEstimator:
             list of ionospheric pierce points xyz coordinates
         """
 
-        # defining ionosphere ellipsoid
-        ionosphere_radius = earth_radius + ionosphere_height
-        ionosphere = Ellipsoid(first_semi_axis=ionosphere_radius, second_semi_axis=ionosphere_radius)
+        # defining ionosphere inflated ellipsoid
+        iono_inflated_ellipsoid = create_inflated_wgs84_ellipsoid(height=ionosphere_height)
 
         line_of_sight = pt_coords - sat_coords
 
-        #  finding intersection between line of sight and the ellipsoid
-        intersections = compute_line_ellipsoid_intersections(
-            ellipsoid=ionosphere, line_origins=sat_coords, line_directions=line_of_sight
+        #  finding intersection between line of sight and the inflated ellipsoid
+        first_intersections, _ = compute_line_ellipsoid_intersections(
+            ellipsoid=iono_inflated_ellipsoid, line_origins=sat_coords, line_directions=line_of_sight
         )
 
-        # TODO: change with this
-        # ipp_xyz = np.vstack([p[0] for p in intersections])
-        # ipp_llh = xyz2llh(ipp_xyz)
-
-        # return np.rad2deg(ipp_llh[:, 0]), np.rad2deg(ipp_llh[:, 1]), ipp_xyz
-
         # taking just the first intersection solutions for each point and converting to lat/lon [deg]
-        ipp_xyz = [p[0] for p in intersections]
-        ipp_llh = [xyz2llh(p) for p in ipp_xyz]
-        ipp_lat_deg = np.concatenate([np.rad2deg(c[0]) for c in ipp_llh])
-        ipp_long_deg = np.concatenate([np.rad2deg(c[1]) for c in ipp_llh])
+        ipp_llh = xyz2llh(first_intersections)
+        ipp_llh[:, :2] = np.rad2deg(ipp_llh[:, :2])
 
-        return ipp_lat_deg, ipp_long_deg, np.vstack(ipp_xyz)
+        return ipp_llh[:, 0], ipp_llh[:, 1], np.vstack(first_intersections)
 
     @staticmethod
     def _generate_mapping_function(
@@ -452,10 +442,10 @@ class IonosphericDelayEstimator:
             ]
             mapping_function = 1 / np.cos(zenith_angles)
         elif method == TECIncidenceAngleMethod.GROUND:
-            incidence_angle = compute_incidence_angles(sat_coords, pt_coords)
+            incidence_angle = compute_incidence_angles_core(sensor_positions=sat_coords, ground_points=pt_coords)
             mapping_function = 1 / np.cos(incidence_angle)
         elif method == TECIncidenceAngleMethod.GROUND_CONVERTED:
-            incidence_angle = compute_incidence_angles(sat_coords, pt_coords)
+            incidence_angle = compute_incidence_angles_core(sensor_positions=sat_coords, ground_points=pt_coords)
             mapping_function = 1 / np.sqrt(
                 1
                 - (DEFAULT_EARTH_RADIUS_M / (DEFAULT_EARTH_RADIUS_M + ionosphere_height) * np.sin(incidence_angle)) ** 2

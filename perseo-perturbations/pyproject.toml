@@ -7,13 +7,13 @@ readme = "README.md"
 license = { file = "LICENSE.txt" }
 dependencies = [
     "numpy>2",
-    "pandas>=1.4.0",
     "scipy>1.13",
+    "pandas>=1.4.0",
+    "xarray>=2026.4.0",
     "more-itertools",
     "netCDF4",
-    "arepytools>=1.7.6",
     "pymap3d>=3.2",
-    "xarray>=2026.4.0",
+    "perseo-core>=1.0.0",
 ]
 dynamic = ["version"]
 classifiers = [

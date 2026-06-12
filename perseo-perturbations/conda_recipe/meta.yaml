@@ -28,7 +28,7 @@ requirements:
     - more-itertools
     - netCDF4
     - pymap3d >=3.2
-    - arepytools >=1.7.6
+    - perseo-core >=1.0.0
     - python-build >=1.2.1
 
 test:

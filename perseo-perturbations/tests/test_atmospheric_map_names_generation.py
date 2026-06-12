@@ -3,7 +3,7 @@
 
 """Tests for atmospheric/ionosphere map name builder"""
 
-from arepytools.timing.precisedatetime import PreciseDateTime
+from perseo_core.timing import PreciseDateTime
 
 from perseo_perturbations.atmospheric.ionosphere import (
     IonosphericAnalysisCenters,

@@ -23,9 +23,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from arepytools.geometry.conversions import xyz2llh
-from arepytools.geometry.geometric_functions import compute_incidence_angles
-from arepytools.io.metadata import PreciseDateTime
+from perseo_core.geometry import compute_incidence_angles_core
+from perseo_core.geometry.coordinates import xyz2llh
+from perseo_core.timing import PreciseDateTime
 from scipy.interpolate import griddata, interp1d
 
 from perseo_perturbations import grid_stations_coarse, grid_stations_fine, tropospheric_legendre_coeff
@@ -710,9 +710,7 @@ class TroposphericDelayEstimator:
         else:
             raise RuntimeError("Files different from VMF3 are not supported")
 
-        # point target coordinates conversion
-        # TODO: remove this T
-        llh_coordinates = xyz2llh(point_targets_coords.T).T
+        llh_coordinates = xyz2llh(point_targets_coords)
         lat = np.rad2deg(llh_coordinates[:, 0])
         lon = np.rad2deg(llh_coordinates[:, 1])
         height = llh_coordinates[:, 2]  # targets height above ellipsoid
@@ -768,7 +766,9 @@ class TroposphericDelayEstimator:
         ah_interp, aw_interp, zhd_interp, zwd_interp = interp_troposphere_values
 
         # building mapping factors from coefficients and spherical harmonics
-        incidence_angles = compute_incidence_angles(sat_xyz_coords, point_targets_coords)
+        incidence_angles = compute_incidence_angles_core(
+            sensor_positions=sat_xyz_coords, ground_points=point_targets_coords
+        )
         mapping_factors = self._generate_mapping_function(
             lat=np.radians(lat),
             lon=np.radians(lon),
