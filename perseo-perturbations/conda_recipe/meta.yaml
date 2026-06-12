@@ -1,5 +1,5 @@
 {% set name = "perseo-perturbations" %}
-{% set version = "1.0.1" %}
+{% set version = "1.1.0" %}
 
 package:
   name: {{ name|lower }}
@@ -22,9 +22,12 @@ requirements:
   run:
     - python {{ python }}
     - numpy >2
-    - pandas >=1.4.0
-    - more-itertools
     - scipy >1.13
+    - pandas >=1.4.0
+    - xarray >=2026.4.0
+    - more-itertools
+    - netCDF4
+    - pymap3d >=3.2
     - arepytools >=1.7.6
     - python-build >=1.2.1
 
