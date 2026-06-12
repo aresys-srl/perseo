@@ -51,10 +51,12 @@ def compute_line_ellipsoid_intersections(
 
     Returns
     -------
-    tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]
-        A pair (first_intersections, second_intersections) each with shape (3,) for a single
-        line or (N, 3) for multiple lines. first_intersections is the intersection closest
-        to line_origin; np.nan is used as a placeholder where no intersection exists.
+    npt.NDArray[np.floating]
+        closest intersections to line_origins, with shape (3,) for a single line or (N, 3) for multiple lines, np.nan
+        is used as a placeholder where no intersection exists
+    npt.NDArray[np.floating]
+        farthest intersections to line_origins, with shape (3,) for a single line or (N, 3) for multiple lines, np.nan
+        is used as a placeholder where no intersection exists
 
     Raises
     ------
@@ -86,10 +88,12 @@ def compute_line_ellipsoid_intersections(
     >>> line_origins = np.array([[-5, 0, 2], [-5, 0, 1], [-5, 0, 0]])
     >>> line_directions = np.array([[0, 0, 100], [100, 0, 0], [100, 0, 0]])
     >>> first, second = compute_line_ellipsoid_intersections(line_directions, line_origins, Geod(a=2, b=1))
-    >>> print(first, second)
+    >>> print(first)
     [[nan nan nan]
      [ 0.  0.  1.]
-     [-2.  0.  0.]] [[nan nan nan]
+     [-2.  0.  0.]]
+    >>> print(second)
+    [[nan nan nan]
      [ 0.  0.  1.]
      [ 2.  0.  0.]]
 
