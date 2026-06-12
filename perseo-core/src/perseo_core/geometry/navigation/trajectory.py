@@ -112,8 +112,12 @@ class Trajectory(ABC, Generic[T]):
 
         Returns
         -------
-        tuple[npt.NDArray[np.floating], npt.NDArray[np.floating], npt.NDArray[np.floating]]
-            position, velocity and acceleration with shape (3,) or (N, 3)
+        npt.NDArray[np.floating]
+            position at given input times with shape (3,) or (N, 3)
+        npt.NDArray[np.floating]
+            velocity at given input times with shape (3,) or (N, 3)
+        npt.NDArray[np.floating]
+            acceleration at given input times with shape (3,) or (N, 3)
 
         """
         return self.position(time), self.velocity(time), self.acceleration(time)
