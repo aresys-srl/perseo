@@ -666,8 +666,8 @@ def inverse_geocoding_monostatic_attitude_core(
         sensor_pos_curr = trajectory.position(azimuth_times)
         sensor_vel_curr = trajectory.velocity(azimuth_times)
 
-        arf1_curr = attitude.evaluate(azimuth_times)[..., 0, :]
-        arf1_curr_dt = attitude.evaluate(azimuth_times + dt)[..., 0, :]
+        arf1_curr = attitude.evaluate(azimuth_times)[..., :, 0]
+        arf1_curr_dt = attitude.evaluate(azimuth_times + dt)[..., :, 0]
         arf1_derivative_curr = (arf1_curr_dt - arf1_curr) / dt
 
         # slant range correspondent to the actual position of satellite

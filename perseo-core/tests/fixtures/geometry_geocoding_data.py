@@ -131,10 +131,10 @@ def get_inverse_geocoding_test_data() -> dict:
     # expected results
     azimuth_res = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.482637823016")
     azimuth_res_mono = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.480826322795")
-    azimuth_res_attitude = PreciseDateTime.from_utc_string("13-FEB-2023 09:34:00.629921460211")
+    azimuth_res_attitude = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.480827079704")
     range_res = 0.0036229998783991087
     range_res_mono = 0.0036229998773038815
-    range_res_attitude = 0.0036245410151209715
+    range_res_attitude = 0.0036229998773038836
     init_guess_res = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.500000000000")
     init_guess_res_mono = PreciseDateTime.from_utc_string("13-FEB-2023 09:33:58.000000000000")
     return {
