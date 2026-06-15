@@ -127,7 +127,7 @@ def compute_side_lobes_directions(
             ground_points=earth_point_zero_doppler,
             doppler_frequencies=0,
             wavelength=1,
-            initial_guesses=peak_azimuth_time,
+            az_initial_time_guesses=peak_azimuth_time,
         )
 
         # computing squint angle and doppler centroid
