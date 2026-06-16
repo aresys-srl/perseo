@@ -43,8 +43,8 @@ dev = ["ruff", "pylint", "nox"]
 test = ["pytest", "pytest-cov", "pytest-mock>=3.15.1", "perseo-quality[graphs]"]
 local_testing = [
     "sct[graphs]>=2.2.0",
-    "sct_aresys_reader",
-    "sct_sentinel1_reader",
+    "sct_aresys_reader>=1.2.0",
+    "sct_sentinel1_reader>=1.2.0",
 ]
 docs = ["zensical", "mkdocstrings-python"]
 
