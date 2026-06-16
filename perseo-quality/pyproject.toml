@@ -12,7 +12,7 @@ dependencies = [
     "xarray",
     "pydantic",
     "numba>=0.61",
-    "netCDF4==1.7.2",
+    "netCDF4>=1.7.2",
     "perseo-core>=1.0.0",
 ]
 dynamic = ["version"]
