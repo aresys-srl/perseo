@@ -32,4 +32,4 @@ grid_stations_coarse = res.files(resources).joinpath("troposphere_support", "gri
 # International Geomagnetic Reference Field (IGRF) Model 14
 igrf_14_coeff_path = res.files(resources).joinpath("igrf", "IGRF14.shc")
 
-__version__ = "1.1.0"
+__version__ = "1.0.0"
