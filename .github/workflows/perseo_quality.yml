@@ -1,0 +1,126 @@
+name: perseo-quality
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  analysis:
+    runs-on: self-hosted
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - check_format
+          - pylint
+
+    defaults:
+      run:
+        working-directory: perseo-quality
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install nox
+      - run: python -m nox -s ${{ matrix.task }}
+
+  # unittest_linux:
+  #   runs-on: self-hosted
+  #   container:
+  #     image: quay.io/pypa/manylinux_2_28_x86_64
+
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       python:
+  #         - "3.11"
+  #         - "3.12"
+  #         - "3.13"
+  #         - "3.14"
+
+  #   defaults:
+  #     run:
+  #       working-directory: perseo-quality
+
+  #   steps:
+  #     - uses: actions/checkout@v5
+  #       with:
+  #         fetch-depth: 1
+
+  #     - name: Select Python ${{ matrix.python }}
+  #       run: |
+  #         case "${{ matrix.python }}" in
+  #           3.11) echo "/opt/python/cp311-cp311/bin" >> $GITHUB_PATH ;;
+  #           3.12) echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH ;;
+  #           3.13) echo "/opt/python/cp313-cp313/bin" >> $GITHUB_PATH ;;
+  #           3.14) echo "/opt/python/cp314-cp314/bin" >> $GITHUB_PATH ;;
+  #         esac
+
+  #     - run: python --version
+  #     - run: python -m pip install nox
+  #     - run: python -m nox -s pytest -p ${{ matrix.python }}
+  #     - name: Upload junit and coverage
+  #       uses: actions/upload-artifact@v5
+  #       with:
+  #         name: linux-test-${{ matrix.python }}
+  #         path: |
+  #           perseo-quality/_build/pytest-report-*.xml
+  #           perseo-quality/_build/pytest-coverage-*.xml
+  #         retention-days: 14
+
+  sdist:
+    runs-on: self-hosted
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+
+    defaults:
+      run:
+        working-directory: perseo-quality
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install nox
+      - run: python -m nox -s build_sdist
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sdist
+          path: perseo-quality/dist/*.tar.gz
+          retention-days: 14
+
+  wheel:
+    runs-on: self-hosted
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+
+    defaults:
+      run:
+        working-directory: perseo-quality
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install nox
+      - run: python -m nox -s build_wheel
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: wheel
+          path: perseo-quality/dist/*.whl
+          retention-days: 14
