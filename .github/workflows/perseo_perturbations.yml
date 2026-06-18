@@ -1,0 +1,299 @@
+name: perseo-perturbations
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  analysis:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - check_format
+          - pylint
+
+    defaults:
+      run:
+        working-directory: perseo-perturbations
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install nox
+      - run: python -m nox -s ${{ matrix.task }}
+
+  version-check:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: perseo-perturbations
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install nox
+        run: |
+          python -m pip install nox
+
+      - name: Run version consistency check
+        run: |
+          python -m nox -s version_consistency_check
+
+  sdist-perturbations:
+    needs: version-check
+
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          cd perseo-perturbations
+          git rev-parse --show-toplevel
+
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install build
+      - run: python -m build --sdist
+        working-directory: perseo-perturbations
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: sdist
+          path: perseo-perturbations/dist/*.tar.gz
+          retention-days: 14
+
+  build-wheels:
+    needs: version-check
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran
+
+      - name: Install Windows Fortran compiler
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          choco install mingw -y
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse ./perseo-perturbations
+        env:
+          CIBW_BUILD: |
+            cp311-*
+            cp312-*
+            cp313-*
+            cp314-*
+
+          CIBW_ARCHS_LINUX: x86_64
+          CIBW_ARCHS_WINDOWS: AMD64
+
+          CIBW_SKIP: "*-musllinux*"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v6
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+  test-wheel-linux:
+    needs: build-wheels
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-ubuntu-latest-*
+          merge-multiple: true
+          path: dist
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install wheel
+        run: |
+          MATCH="cp${{ matrix.python }}"
+          MATCH="${MATCH//./}"
+
+          echo "Looking for $MATCH wheel"
+
+          WHEEL=$(find dist -name "*${MATCH}*.whl" | head -n 1)
+
+          if [ -z "$WHEEL" ]; then
+            echo "No wheel found"
+            find dist -type f
+            exit 1
+          fi
+
+          echo "Installing $WHEEL"
+
+          python -m venv ci_test
+          source ci_test/bin/activate
+
+          python -m pip install "$WHEEL"
+
+      - name: Run tests
+        run: |
+          source ci_test/bin/activate
+          python -m pip install pytest pytest-cov
+
+          python -m pytest perseo-perturbations/tests \
+            --junitxml=_build/pytest-report-linux-py${{ matrix.python }}.xml \
+            --cov-report=xml:_build/pytest-coverage-linux-py${{ matrix.python }}.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-results-linux-${{ matrix.python }}
+          path: _build/
+
+  test-wheel-windows:
+    needs: build-wheels
+
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-windows-latest-*
+          merge-multiple: true
+          path: dist
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install wheel
+        shell: pwsh
+        run: |
+          $match = "cp${{ matrix.python }}".Replace(".", "")
+
+          Write-Host "Looking for $match wheel"
+
+          Get-ChildItem -Recurse dist
+
+          $wheel = Get-ChildItem `
+            -Path dist `
+            -Filter "*$match*.whl" `
+            -Recurse |
+            Select-Object -First 1
+
+          if (-not $wheel) {
+            throw "No wheel found for $match"
+          }
+
+          Write-Host "Installing $($wheel.FullName)"
+
+          python -m venv ci_test
+          .\ci_test\Scripts\Activate.ps1
+
+          python -m pip install $wheel.FullName
+
+      - name: Run tests
+        run: |
+          .\ci_test\Scripts\Activate.ps1
+          python -m pip install pytest pytest-cov
+
+          python -m pytest perseo-perturbations/tests `
+            --junitxml=_build/pytest-report-win-py${{ matrix.python }}.xml `
+            --cov-report=xml:_build/pytest-coverage-win-py${{ matrix.python }}.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-results-windows-${{ matrix.python }}
+          path: _build/
+
+  publish-perseo-perturbations:
+    needs:
+      - test-wheel-linux
+      - test-wheel-windows
+      - sdist-perturbations
+
+    if: startsWith(github.ref_name, 'perseo-perturbations-v')
+
+    runs-on: ubuntu-latest
+
+    environment: pypi-perseo-perturbations
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download wheels and sdist
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Show artifacts
+        run: |
+          find dist -type f -maxdepth 2
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist

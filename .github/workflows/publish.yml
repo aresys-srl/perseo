@@ -5,7 +5,6 @@ on:
     tags:
       - "perseo-core-v*"
       - "perseo-quality-v*"
-      - "perseo-perturbations-v*"
       - "docs-v*"
 
 permissions:
