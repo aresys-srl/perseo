@@ -35,6 +35,11 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.urls]
+Homepage = "https://github.com/aresys-srl/perseo"
+Repository = "https://github.com/aresys-srl/perseo"
+Documentation = "https://aresys-srl.github.io/perseo"
+
 [project.optional-dependencies]
 dev = ["ruff", "pylint", "nox"]
 type = ["mypy", "types-python-dateutil", "scipy-stubs"]
