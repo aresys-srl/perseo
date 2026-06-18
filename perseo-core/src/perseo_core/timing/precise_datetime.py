@@ -11,7 +11,7 @@ import math
 import re
 from typing import Self, overload
 
-from dateutil import parser, tz
+from dateutil import parser, tz  # pyrefly: ignore
 
 _ISO_DATE_SEPARATOR = "-"
 _ISO_TIME_SEPARATOR = ":"
