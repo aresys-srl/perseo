@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-IGRF - Geomagnetic Reference Field Computation v14
---------------------------------------------------
+IGRF - Geomagnetic Reference Field Computation v14.
 
 The code is based on the ``IAGA-VMOD/ppigrf: 2.0.0`` https://github.com/IAGA-VMOD/ppigrf/tree/main project by
 Karl M. Laundal, Santiago Soler, Ashley Smith, Andreas S. Skeidsvoll and Daniel Billett

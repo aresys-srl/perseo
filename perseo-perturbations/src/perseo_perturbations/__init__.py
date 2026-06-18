@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Python Ecosystem for Remote Sensing & Earth Observation - PERSEO: Geodynamics and Atmospheric Perturbations
------------------------------------------------------------------------------------------------------------
-"""
+"""Python Ecosystem for Remote Sensing & Earth Observation - PERSEO: PERTURBATIONS."""
 
 from importlib import resources as res
 

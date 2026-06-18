@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Atmospheric Delay Corrections: Ionospheric submodule
-----------------------------------------------------
+Atmospheric Delay Corrections: Ionospheric submodule.
 
 Through the ionosphere, propagation delays are caused by dispersive effects.
 """

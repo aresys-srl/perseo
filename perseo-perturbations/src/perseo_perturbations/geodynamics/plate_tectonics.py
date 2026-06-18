@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Geodynamics Earth Crustal Displacement: Plate Tectonics submodule
------------------------------------------------------------------
+Geodynamics Earth Crustal Displacement: Plate Tectonics submodule.
 
 Accounting for Plate Tectonics movement using drift velocities or ITRF2014 model.
 """

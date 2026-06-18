@@ -1,10 +1,7 @@
 # SPDX-FileCopyrightText: Aresys S.r.l. <info@aresys.it>
 # SPDX-License-Identifier: MIT
 
-"""
-Geomagnetic Model: International Geomagnetic Reference Field (IGRF) v14
------------------------------------------------------------------------
-"""
+"""Geomagnetic Model: International Geomagnetic Reference Field (IGRF) v14."""
 
 from __future__ import annotations
 

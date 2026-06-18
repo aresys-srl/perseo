@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Geodynamics Earth Crustal Displacement: Solid Tides submodule
--------------------------------------------------------------
+Geodynamics Earth Crustal Displacement: Solid Tides submodule.
 
 Accounting for solid tides displacement using the IERS Conventions model.
 """

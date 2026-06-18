@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-Atmospheric Delay Corrections: Tropospheric submodule
------------------------------------------------------
+Atmospheric Delay Corrections: Tropospheric submodule.
 
 Through neutral troposphere, propagation delays are caused by air refractivity gradients.
 
