@@ -6,7 +6,7 @@ on:
 
 jobs:
   analysis:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
 
@@ -32,7 +32,7 @@ jobs:
       - run: python -m nox -s ${{ matrix.task }}
 
   mypy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
 
@@ -51,7 +51,7 @@ jobs:
       - run: python -m mypy ./src/perseo_core
 
   pyrefly:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
 
@@ -72,7 +72,7 @@ jobs:
             --python-interpreter-path $(python -c "import sys; print(sys.executable)")
 
   unittest_linux:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
 
@@ -116,7 +116,7 @@ jobs:
           retention-days: 14
 
   sdist:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
 
@@ -141,7 +141,7 @@ jobs:
           retention-days: 14
 
   wheel:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
 
