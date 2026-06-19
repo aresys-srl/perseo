@@ -4,6 +4,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://python.org)
 [![Core CI](https://github.com/aresys-srl/perseo/actions/workflows/perseo_core.yml/badge.svg)](https://github.com/aresys-srl/perseo/actions/workflows/perseo_core.yml)
 [![Quality CI](https://github.com/aresys-srl/perseo/actions/workflows/perseo_quality.yml/badge.svg)](https://github.com/aresys-srl/perseo/actions/workflows/perseo_quality.yml)
+[![Perturbations CI](https://github.com/aresys-srl/perseo/actions/workflows/perseo_perturbations.yml/badge.svg)](https://github.com/aresys-srl/perseo/actions/workflows/perseo_perturbations.yml)
 
 **P**ython **E**cosystem for **R**emote **S**ensing & **E**arth **O**bservation is the new Aresys Python project
 dedicated to SAR products analysis and core functionalities for performing fundamental operations on data.
