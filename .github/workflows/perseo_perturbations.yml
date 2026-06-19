@@ -295,6 +295,10 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Clean dist
+        run: |
+          find dist -type f ! -name "*.whl" ! -name "*.tar.gz" -delete
+
       - name: Show artifacts
         run: |
           find dist -type f -maxdepth 2
