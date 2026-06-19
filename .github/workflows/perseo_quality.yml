@@ -1,8 +1,14 @@
 name: perseo-quality
 
 on:
-  push:
   workflow_dispatch:
+
+  push:
+    tags:
+      - "perseo-quality-v*"
+    paths:
+      - ".github/workflows/perseo-quality.yml"
+      - "perseo-quality/**"
 
 jobs:
   analysis:

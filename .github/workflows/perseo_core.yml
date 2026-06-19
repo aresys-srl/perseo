@@ -1,8 +1,14 @@
 name: perseo-core
 
 on:
-  push:
   workflow_dispatch:
+
+  push:
+    tags:
+      - "perseo-core-v*"
+    paths:
+      - ".github/workflows/perseo-core.yml"
+      - "perseo-core/**"
 
 jobs:
   analysis:

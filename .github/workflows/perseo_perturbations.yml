@@ -1,8 +1,14 @@
 name: perseo-perturbations
 
 on:
-  push:
   workflow_dispatch:
+
+  push:
+    tags:
+      - "perseo-perturbations-v*"
+    paths:
+      - ".github/workflows/perseo-perturbations.yml"
+      - "perseo-perturbations/**"
 
 jobs:
   analysis:
