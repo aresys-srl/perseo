@@ -179,7 +179,7 @@ def plot_igrf_map_core(
 
 if __name__ == "__main__":
     relative = False
-    output_dir = Path(r"C:\ARESYS_PROJ\perseo\perseo-perturbations\scripts\figures")
+    output_dir = Path(r"/path/to/output/dir")
     # create lon/lat grid
     lon_lat_grid, n_lon, n_lat = create_lat_lon_grid(lon_step_deg=0.5, lat_step_deg=0.5, height_km=0.0)
 
