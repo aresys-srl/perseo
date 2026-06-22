@@ -141,3 +141,35 @@ jobs:
           name: wheel
           path: perseo-quality/dist/*.whl
           retention-days: 14
+
+  publish:
+    needs: [analysis, unittest_linux, sdist, wheel]
+    if: startsWith(github.ref_name, 'perseo-quality-v')
+
+    runs-on: ubuntu-latest
+
+    environment: pypi-perseo-quality
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Download wheels and sdist
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Clean dist
+        run: |
+          find dist -type f ! -name "*.whl" ! -name "*.tar.gz" -delete
+
+      - name: Show artifacts
+        run: |
+          find dist -type f -maxdepth 2
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
