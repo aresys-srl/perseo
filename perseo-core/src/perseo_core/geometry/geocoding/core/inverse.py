@@ -150,7 +150,7 @@ def inverse_geocoding_monostatic_core(
     slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 
     if np.ndim(slant_range) == 0:
-        slant_range = float(slant_range)
+        slant_range = float(slant_range)  # type: ignore[assignment]
 
     return azimuth_times, slant_range
 
@@ -704,7 +704,7 @@ def inverse_geocoding_monostatic_attitude_core(
     slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 
     if np.ndim(slant_range) == 0:
-        slant_range = float(slant_range)
+        slant_range = float(slant_range)  # type: ignore[assignment]
 
     return azimuth_times, slant_range
 
