@@ -4,11 +4,22 @@ on:
   workflow_dispatch:
 
   push:
+    branches:
+      - main
     tags:
       - "perseo-perturbations-v*"
     paths:
-      - ".github/workflows/perseo-perturbations.yml"
+      - ".github/workflows/perseo_perturbations.yml"
       - "perseo-perturbations/**"
+      - "noxfile.py"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/perseo_perturbations.yml"
+      - "perseo-perturbations/**"
+      - "noxfile.py"
 
 jobs:
   analysis:

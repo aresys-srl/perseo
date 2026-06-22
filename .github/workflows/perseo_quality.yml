@@ -4,11 +4,22 @@ on:
   workflow_dispatch:
 
   push:
+    branches:
+      - main
     tags:
       - "perseo-quality-v*"
     paths:
-      - ".github/workflows/perseo-quality.yml"
+      - ".github/workflows/perseo_quality.yml"
       - "perseo-quality/**"
+      - "noxfile.py"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/perseo_quality.yml"
+      - "perseo-quality/**"
+      - "noxfile.py"
 
 jobs:
   analysis:
