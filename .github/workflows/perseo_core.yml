@@ -132,6 +132,44 @@ jobs:
             perseo-core/_build/pytest-coverage-*.xml
           retention-days: 14
 
+  unittest_windows:
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    defaults:
+      run:
+        working-directory: perseo-core
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - run: python --version
+      - run: python -m pip install nox
+      - run: python -m nox -s pytest -p ${{ matrix.python }}
+      - name: Upload junit and coverage
+        uses: actions/upload-artifact@v5
+        with:
+          name: windows-test-${{ matrix.python }}
+          path: |
+            perseo-core/_build/pytest-report-*.xml
+            perseo-core/_build/pytest-coverage-*.xml
+          retention-days: 14
+
   sdist:
     runs-on: ubuntu-latest
     container:
@@ -183,7 +221,8 @@ jobs:
           retention-days: 14
 
   publish:
-    needs: [analysis, mypy, pyrefly, unittest_linux, sdist, wheel]
+    needs:
+      [analysis, mypy, pyrefly, unittest_linux, unittest_windows, sdist, wheel]
     if: startsWith(github.ref_name, 'perseo-core-v')
 
     runs-on: ubuntu-latest
