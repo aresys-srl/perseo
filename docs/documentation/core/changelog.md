@@ -10,4 +10,4 @@ tags:
 
 ## v1.0.0
 
-First released version.
+First official release.
