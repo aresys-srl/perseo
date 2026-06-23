@@ -12,6 +12,7 @@ site_description = "Documentation for the Python Ecosystem for Remote Sensing & 
 site_author = "Aresys s.r.l."
 repo_url = "https://github.com/aresys-srl/perseo"
 repo_name = "aresys/perseo"
+site_url = "https://aresys-srl.github.io/perseo/"
 copyright = """
 Copyright &copy; 2026-present Aresys s.r.l.
 """
