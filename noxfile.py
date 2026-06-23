@@ -48,7 +48,7 @@ def build_doc(session: nox.Session):
     if site_dir.exists():
         shutil.rmtree(site_dir)
 
-    tag = os.getenv("CI_COMMIT_TAG", "dev")
+    tag = os.getenv("CI_COMMIT_TAG") or os.getenv("GITHUB_REF_NAME", "dev")
     sha = _get_sha(session)
     date = datetime.now().strftime("%Y-%m-%d")
     session.log(f"Building documentation for tag {tag} and sha {sha} on {date}")
