@@ -64,7 +64,7 @@ through a spherical harmonic model up to 13th degree.
 The implemented model is the 14th IGRF iteration, released in October 2024[^4]. It let the user compute the magnetic field
 components at given points in space and time, both in geocentric and geodetic coordinates.
 
-[^1]: Dennis Milbert, [https://geodesyworld.github.io/SOFTS/solid.htm](https://geodesyworld.github.io/SOFTS/solid.htm)
+[^1]: Dennis Milbert, Ph.D., Chief Geodesist, National Geodetic Survey, NOAA, (retired) [https://geodesyworld.github.io/SOFTS/solid.htm](https://geodesyworld.github.io/SOFTS/solid.htm)
 [^2]: [IERS Technical Note No. 32, IERS Conventions (2003)](https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn32.html).
 [^3]: Zuheir Altamimi et al., "ITRF2014 plate motion model", Geophysical Journal International, 2017, [https://doi.org/10.1093/gji/ggx136](https://doi.org/10.1093/gji/ggx136)
 [^4]: International Association of Geomagnetism and Aeronomy (2024) “IGRF-14”. Zenodo. [https://doi:10.5281/zenodo.14218973](https://doi:10.5281/zenodo.14218973).

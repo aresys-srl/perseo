@@ -35,7 +35,7 @@ Key characteristics:
     - Semi-diurnal (~12 hours)
     - Diurnal (~24 hours)
 
-This package computes these effects using a Python wrapper of the original *solid.for* code by Dennis Milbert, itself
+This package computes these effects using a Python wrapper of the original *solid.for* code by Dennis Milbert[^1], itself
 based on an implementation derived from the IERS Conventions (2003). These conventions provide internationally standardized
 models for Earth orientation and deformation, ensuring consistency with geodetic and geophysical reference frames.
 
@@ -59,3 +59,5 @@ d(t) = v \cdot (t - t_0)
 $$
 
 where $v$ is the plate velocity vector from the ITRF2014 model and $t_0$ is the location survey time.
+
+[^1]: Dennis Milbert, Ph.D., Chief Geodesist, National Geodetic Survey, NOAA, (retired) [https://geodesyworld.github.io/SOFTS/solid.htm](https://geodesyworld.github.io/SOFTS/solid.htm)

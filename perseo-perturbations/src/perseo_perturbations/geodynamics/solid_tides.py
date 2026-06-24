@@ -93,7 +93,8 @@ def compute_solid_earth_tides(
 
     Solid does not contain ocean loading, atmospheric loading, or deformation due to polar motion.
 
-    Ref: [http://geodesyworld.github.io/SOFTS/solid.htm](http://geodesyworld.github.io/SOFTS/solid.htm)
+    Ref: Dennis Milbert, Ph.D., Chief Geodesist, National Geodetic Survey, NOAA, (retired)
+    [http://geodesyworld.github.io/SOFTS/solid.htm](http://geodesyworld.github.io/SOFTS/solid.htm)
 
     Parameters
     ----------

@@ -25,7 +25,7 @@ Correction of SAR signal propagation delays through the Earth's atmosphere.
 Accounting for solid Earth deformations affecting SAR geolocation and phase interpretation.
 
 - **Earth Solid Tides**: periodic crustal deformations from Moon and Sun gravitational attraction
-  - Python wrapper of the IERS Conventions (2003) [`solid.for` code by Dennis Milbert](https://geodesyworld.github.io/SOFTS/solid.htm)
+  - Python wrapper of the IERS Conventions (2003) `solid.for` code by Dennis Milbert[^1]
   - Vertical displacements up to ~40 cm, horizontal up to ~10 cm
 - **Plate Tectonics (Secular Motion)**: ITRF2014 plate motion model
   - Linear displacement over time, mm/year to cm/year velocities
@@ -52,3 +52,5 @@ pip install perseo-perturbations
 This project is licensed under the MIT License. See the [LICENSE.txt](LICENSE.txt) file for details.
 
 Copyright &copy; 2026-present Aresys S.r.L. <info@aresys.it>
+
+[^1]: Dennis Milbert, Ph.D., Chief Geodesist, National Geodetic Survey, NOAA, (retired) [https://geodesyworld.github.io/SOFTS/solid.htm](https://geodesyworld.github.io/SOFTS/solid.htm)
