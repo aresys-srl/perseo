@@ -25,86 +25,6 @@ WIN32 = sys.platform == "win32"
 PLATFORM = "win" if WIN32 else "linux"
 
 
-def _get_only_file_matching_in_dir(directory: Path, pattern: str) -> Path:
-    """Retrieving only a single file matching the input pattern in the selected folder.
-
-    Parameters
-    ----------
-    directory : Path
-        directory where to search for files
-    pattern : str
-        pattern to search for
-
-    Returns
-    -------
-    Path
-        Path to the searched file
-    """
-    matching_dir_content = list(directory.glob(pattern))
-    assert len(matching_dir_content) == 1, (
-        f"multiple files found: {matching_dir_content}"
-    )
-    return matching_dir_content[0]
-
-
-def conda_recipe_builder(session: nox.Session, project_name: str) -> None:
-    """Build a conda recipe using grayskull for the selected project.
-
-    Parameters
-    ----------
-    session : nox.Session
-        nox session
-    project_name : str
-        name of the project
-    """
-    dist_folder = Path("dist")
-    if dist_folder.exists() and len(list(Path("dist").iterdir())) > 0:
-        raise RuntimeError("dist folder is not empty, please remove it before building")
-
-    sdist_builder(session)
-
-    sdist_file = _get_only_file_matching_in_dir(dist_folder, "*.tar.gz").absolute()
-
-    session.conda_install(
-        "conda-build",
-        "conda-verify",
-        "grayskull",
-        channel="conda-forge",
-    )
-
-    recipe_maintainer = "Aresys srl"
-    session.run("grayskull", "pypi", str(sdist_file), "-m", recipe_maintainer)
-    yaml_file = Path(project_name, "meta.yaml")
-    assert yaml_file.exists()
-
-    import_name = project_name.replace("-", ".")
-
-    yaml_content = yaml_file.read_text(encoding="utf-8")
-    yaml_content = yaml_content.replace(
-        " " + project_name.replace("-", "_"), " " + import_name
-    )
-    yaml_file.write_text(yaml_content, encoding="utf-8")
-
-
-def conda_package_builder(session: nox.Session, project: str) -> None:
-    """Creating a conda package from a conda recipe.
-
-    Parameters
-    ----------
-    session : nox.Session
-        nox session
-    project : str
-        project name, with "-" as separator for namespace sub-packages
-    """
-    conda_build_dir = Path("conda_build_dir")
-    session.run("conda", "build", project, "--output-folder", str(conda_build_dir))
-
-    package = _get_only_file_matching_in_dir(
-        conda_build_dir.joinpath("noarch"), "*.conda"
-    ).absolute()
-    shutil.copy(str(package), "dist")
-
-
 def sdist_builder(session: nox.Session) -> None:
     """Function to build sdist"""
     session.install("build")
@@ -194,14 +114,3 @@ def build_sdist(session: nox.Session):
 def build_wheel(session: nox.Session):
     """Building wheel for distribution"""
     wheel_builder(session)
-
-
-@nox.session(venv_backend="conda", python="3.11")
-def build_conda_pkg(session: nox.Session):
-    """Build a conda package from conda recipe"""
-    cwd = Path.cwd()
-    conda_recipe_builder(
-        session=session,
-        project_name=cwd.name,
-    )
-    conda_package_builder(session, project=cwd.name)
