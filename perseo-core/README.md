@@ -1,6 +1,7 @@
 # perseo-core
 
 [![PyPI version](https://img.shields.io/pypi/v/perseo-core)](https://pypi.org/project/perseo-core/)
+[![Conda](https://img.shields.io/conda/vn/conda-forge/perseo-core)](https://anaconda.org/conda-forge/perseo-core)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.txt)
 
@@ -41,6 +42,14 @@ Centralized logging built on the standard `logging` module and the Rich library.
 ```bash
 pip install perseo-core
 ```
+
+You can also install via conda (conda-forge channel):
+
+```bash
+conda install -c conda-forge perseo-core
+```
+
+See the [perseo-core conda-forge page](https://anaconda.org/conda-forge/perseo-core) for details. The feedstock is hosted at [github.com/conda-forge/perseo-core-feedstock](https://github.com/conda-forge/perseo-core-feedstock).
 
 Optional dependencies for development:
 
