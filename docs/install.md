@@ -28,6 +28,12 @@ Each python package of the PERSEO framework can be installed using ``pip``:
 pip install perseo-core
 ```
 
+PERSEO-core package is also available on conda-forge:
+
+```bash title="install with conda"
+conda install -c conda-forge perseo-core
+```
+
 ## Quality
 
 ```bash title="install with pip"
