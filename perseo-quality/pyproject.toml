@@ -40,7 +40,7 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/aresys-srl/perseo"
 Repository = "https://github.com/aresys-srl/perseo"
-Documentation = "https://aresys-srl.github.io/perseo"
+Documentation = "https://opensource.aresys.it/perseo"
 
 [project.optional-dependencies]
 graphs = ["matplotlib>=3.5"]

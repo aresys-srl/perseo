@@ -40,7 +40,7 @@ See the [perseo-core conda-forge page](https://anaconda.org/conda-forge/perseo-c
 
 ## Documentation
 
-Full documentation is available at [https://aresys-srl.github.io/perseo](https://aresys-srl.github.io/perseo).
+Full documentation is available at [https://opensource.aresys.it/perseo](https://opensource.aresys.it/perseo).
 
 ## Contributing
 
