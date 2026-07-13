@@ -9,7 +9,7 @@ from dataclasses import fields
 
 import pytest
 
-from perseo_quality.core.generic_dataclasses import MaskingMethod
+from perseo_quality.core.generic_dataclasses import MaskingMethod, RCSComputationMethod
 from perseo_quality.point_targets_analysis.config import (
     IRFParameters,
     PointTargetAnalysisConfig,
@@ -42,6 +42,7 @@ class TestPointTargetDataclasses:
             "masking_method": MaskingMethod.PEAK,
         }
         self.rcs_params = {
+            "method": RCSComputationMethod.BOXES,
             "interpolation_factor": 8,
             "roi_dimension": 128,
             "calibration_factor": 1,

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
 
-from perseo_quality.core.generic_dataclasses import MaskingMethod, convert_to_enum_field
+from perseo_quality.core.generic_dataclasses import MaskingMethod, RCSComputationMethod, convert_to_enum_field
 
 
 @dataclass
@@ -47,6 +47,7 @@ class IRFParameters:
 class RCSParameters:
     """RCS analysis detailed setup parameters"""
 
+    method: RCSComputationMethod = RCSComputationMethod.BOXES
     interpolation_factor: int = 8
     roi_dimension: int = 128
     calibration_factor: float = 1.0
@@ -65,7 +66,9 @@ class RCSParameters:
         rcs_obj = cls()
         for fld in fields(cls):
             if fld.name in arg.keys():
-                if isinstance(arg[fld.name], list):
+                if fld.name == "method":
+                    setattr(rcs_obj, fld.name, convert_to_enum_field(arg[fld.name], enum_type=RCSComputationMethod))
+                elif isinstance(arg[fld.name], list):
                     setattr(rcs_obj, fld.name, tuple(arg[fld.name]))
                 else:
                     setattr(rcs_obj, fld.name, arg[fld.name])
