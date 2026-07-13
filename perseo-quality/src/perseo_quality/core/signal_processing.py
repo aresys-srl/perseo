@@ -9,6 +9,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
+import numpy.typing as npt
 from scipy import signal
 from scipy.constants import speed_of_light
 
@@ -682,11 +683,12 @@ def compute_intensity_background(
 
 def compute_integrated_peak_intensity(
     data: np.ndarray,
-    peak_position: np.ndarray,
+    target_pos_real: npt.NDArray[np.floating],
+    max_position: tuple[float, float],
     resolutions_px: tuple[float, float],
     interp_factor: int = 8,
     margin: int = 20,
-) -> tuple[float, list]:
+) -> tuple[float, tuple[int, int], list]:
     """Computing the integrated peak intensity of the input array as sum of
     values inside a calculated roi.
 
@@ -694,7 +696,7 @@ def compute_integrated_peak_intensity(
     ----------
     data : np.ndarray
         input array
-    peak_position : np.ndarray
+    target_pos_real : npt.NDArray[np.floating]
         peak position inside array [row, col]
     resolutions_px : tuple[float, float]
         resolution [range, azimuth] in pixels
@@ -707,34 +709,32 @@ def compute_integrated_peak_intensity(
     -------
     float
         integrated peak intensity over roi
+    tuple[int, int]
+        peak position inside interpolated input array
     list
         list of peak roi corners
-
     """
-    # integrate the interpolated corrected data intensity
-    margin_rng_int = np.ceil(margin * resolutions_px[0] * interp_factor)
-    margin_az_int = np.ceil(margin * resolutions_px[1] * interp_factor)
+    # finding peak position in interpolated intensity corrected target area
+    interp_peak_position = _peak_extraction(
+        data=data,
+        target_position=target_pos_real,
+        interp_factor=interp_factor,
+        max_indexes=max_position,
+    )
 
-    # evaluating roi range start index
-    index = int(peak_position[0] - np.ceil(margin_rng_int / 2)) - 1
-    rng_start = max(1, index)
-
-    # evaluating roi range end index
-    index = int(peak_position[0] + (margin_rng_int - np.ceil(margin_rng_int / 2) - 1))
-    rng_end = min(data.shape[0], index)
-
-    # evaluating roi azimuth start index
-    index = int(peak_position[1] - np.ceil(margin_az_int / 2)) - 1
-    az_start = max(1, index)
-
-    # evaluating roi azimuth end index
-    index = int(peak_position[1] + (margin_az_int - np.ceil(margin_az_int / 2) - 1))
-    az_end = min(data.shape[1], index)
+    # define central rectangular roi
+    rng_start, rng_end, az_start, az_end = compute_rectangular_roi_from_resolution(
+        shape=data.shape,
+        peak_position=interp_peak_position,
+        resolutions_px=resolutions_px,
+        interp_factor=interp_factor,
+        margin=margin,
+    )
 
     # integrating over values inside of the roi
     integrated_peak_intensity = np.sum(data[rng_start:rng_end, az_start:az_end])
 
-    return integrated_peak_intensity, [rng_start, rng_end, az_start, az_end]
+    return integrated_peak_intensity, interp_peak_position, [rng_start, rng_end, az_start, az_end]
 
 
 def padded_hamming_windowing(
@@ -776,6 +776,61 @@ def padded_hamming_windowing(
     return np.hstack(
         [side_zero_padding, first_half_window, top_plateau_padding, second_half_window, side_zero_padding],
     )
+
+
+def compute_rectangular_roi_from_resolution(
+    shape: tuple[int, int],
+    peak_position: tuple[float, float],
+    resolutions_px: tuple[float, float],
+    interp_factor: int = 8,
+    margin: int = 20,
+) -> tuple[int, int, int, int]:
+    """Computing rectangular roi, centered around the peak position, from the resolutions.
+
+    Parameters
+    ----------
+    shape : tuple[int, int]
+        shape of the original array from which to extract the roi
+    peak_position : tuple[float, float]
+        position of the peak inside of the original array
+    resolutions_px : tuple[float, float]
+        irf resolutions in pixels
+    interp_factor : int, optional
+        interpolation factor of the original array, by default 8
+    margin : int, optional
+        roi margin from the array borders, by default 20
+
+    Returns
+    -------
+    int
+        range start index
+    int
+        range stop index
+    int
+        azimuth start index
+    int
+        azimuth stop index
+    """
+    margin_rng_int = np.ceil(margin * resolutions_px[0] * interp_factor)
+    margin_az_int = np.ceil(margin * resolutions_px[1] * interp_factor)
+
+    # evaluating roi range start index
+    index = int(peak_position[0] - np.ceil(margin_rng_int / 2)) - 1
+    rng_start = max(1, index)
+
+    # evaluating roi range end index
+    index = int(peak_position[0] + (margin_rng_int - np.ceil(margin_rng_int / 2) - 1))
+    rng_end = min(shape[0], index)
+
+    # evaluating roi azimuth start index
+    index = int(peak_position[1] - np.ceil(margin_az_int / 2)) - 1
+    az_start = max(1, index)
+
+    # evaluating roi azimuth end index
+    index = int(peak_position[1] + (margin_az_int - np.ceil(margin_az_int / 2) - 1))
+    az_end = min(shape[1], index)
+
+    return rng_start, rng_end, az_start, az_end
 
 
 def locate_max_2d(data: np.ndarray) -> tuple[int, int]:
@@ -1246,3 +1301,50 @@ def compute_equivalent_number_of_looks(intensity_data: np.ndarray) -> float:
     intensity_std = np.nanstd(intensity_data)
 
     return float((intensity_mean**2) / (intensity_std**2))
+
+
+def _peak_extraction(
+    data: np.ndarray,
+    target_position: np.ndarray | None = None,
+    max_indexes: tuple[float, float] | None = None,
+    interp_factor: int = 8,
+) -> tuple[int, int]:
+    """Extraction of the peak indexes from input array.
+
+    Parameters
+    ----------
+    data : np.ndarray
+        2D input array
+    target_position : Optional[np.ndarray], optional
+        position of the target peak, by default None
+    max_indexes : Optional[tuple[float, float]], optional
+        row and column indexes of the max. If None, it is calculated from the input array, by default None
+    interp_factor : int, optional
+        interpolation factor, by default 8
+
+    Returns
+    -------
+    int
+        peak row index
+    int
+        peak column index
+    """
+
+    # checking if target position is provided
+    if target_position is None:
+        # computing peak position
+        max_row, max_col = locate_max_2d(data)
+    else:
+        cut_row_start = max_indexes[0] * interp_factor - 1
+        cut_col_start = max_indexes[0] * interp_factor - 1
+
+        interp_int_corrected_cut = data[
+            cut_row_start : cut_row_start + 2 * interp_factor + 1,
+            cut_col_start : cut_col_start + 2 * interp_factor + 1,
+        ]
+
+        max_row, max_col = locate_max_2d(interp_int_corrected_cut)
+        max_row += int(np.floor(target_position[0]) * interp_factor) - 1
+        max_col += int(np.floor(target_position[1]) * interp_factor) - 1
+
+    return max_row, max_col

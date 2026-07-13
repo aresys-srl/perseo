@@ -118,6 +118,13 @@ class GetFrequencyMethod(Enum):
     POWER_BALANCE = auto()
 
 
+class RCSComputationMethod(Enum):
+    """Enum class for RCS computation method"""
+
+    BOXES = auto()
+    CROSS = auto()
+
+
 class SARSideLooking(Enum):
     """Enum class for sensor side looking direction"""
 

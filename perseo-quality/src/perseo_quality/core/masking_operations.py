@@ -956,3 +956,88 @@ def masking_outliers(
     array[np.where(mask)] = np.nan
 
     return array
+
+
+def generate_cross_mask(
+    shape: tuple[int, int],
+    v_width: int,
+    h_width: int,
+    center: tuple[int, int] | None = None,
+    arm_length: int | None = None,
+) -> np.ndarray:
+    """Create a 2D cross mask with separate arm widths and configurable arm length.
+
+    Parameters
+    ----------
+    shape : tuple[int, int]
+        Shape of the array to be masked
+    v_width : int
+        vertical cross arm width
+    h_width : int
+        horizontal cross arm width
+    center : tuple[int, int] | None, optional
+        center of the cross, if None, the cross will be centered at the center of the array, by default None
+    arm_length : int | None, optional
+        arms length, if None, the cross will extend to the whole array, by default None
+
+    Returns
+    -------
+    np.ndarray
+        cross mask
+    """
+    M, N = shape
+    mask = np.zeros((M, N), dtype=np.uint8)
+    if arm_length is None:
+        arm_length = max(M, N)
+
+    if center is None:
+        cx, cy = M // 2, N // 2
+    else:
+        cx, cy = center
+    v_hw = v_width // 2
+    h_hw = h_width // 2
+
+    # Vertical arm (thick in x-direction, long in y-direction)
+    mask[max(0, cx - arm_length) : min(M, cx + arm_length + 1), max(0, cy - v_hw) : min(N, cy + v_hw + 1)] = 1
+
+    # Horizontal arm (thick in y-direction, long in x-direction)
+    mask[max(0, cx - h_hw) : min(M, cx + h_hw + 1), max(0, cy - arm_length) : min(N, cy + arm_length + 1)] = 1
+
+    return mask
+
+
+def generate_box_mask(
+    shape: tuple[int, int], rows_length: int, cols_width: int, center: tuple[int, int] | None = None
+) -> np.ndarray:
+    """Create a 2D rectangular mask, centered on the input center or array center.
+
+    Parameters
+    ----------
+    shape : tuple (M, N)
+        Shape of the output array
+    rows_length : int
+        Rectangle length (along rows)
+    cols_width : int
+        Rectangle width (along columns)
+    center : tuple (cx, cy), optional
+        Center of the rectangle. Defaults to array center.
+
+    Returns
+    -------
+    mask : ndarray of shape (M, N)
+        Binary rectangular mask (0s and 1s)
+    """
+    M, N = shape
+    mask = np.zeros((M, N), dtype=np.uint8)
+
+    if center is None:
+        cx, cy = M // 2, N // 2
+    else:
+        cx, cy = center
+
+    hl = rows_length // 2
+    hw = cols_width // 2
+
+    mask[max(0, cx - hl) : min(M, cx + hl + 1), max(0, cy - hw) : min(N, cy + hw + 1)] = 1
+
+    return mask

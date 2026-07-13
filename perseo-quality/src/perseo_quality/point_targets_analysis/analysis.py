@@ -82,6 +82,7 @@ def point_target_analysis(
         config = PointTargetAnalysisConfig()
 
     log.info(f"Starting Point Target Analysis on {product.name}")
+    log.info(f"Selected RCS Computation method: {config.rcs_parameters.method.name}")
     log.info(f"Selected Product has {len(product.channels_list)} channels")
 
     # check which target are inside the scene
@@ -621,6 +622,7 @@ def point_target_analysis_core_computation(
             range_resolution_px=range_resolution_px,
             azimuth_resolution_px=azimuth_resolution_px,
             step_distances=step_distances,
+            method=config.rcs_parameters.method,
         )
     else:
         log.warning("RCS analysis has been disabled in configuration file.")
@@ -713,6 +715,7 @@ def rcs_analysis(
     range_resolution_px: float,
     azimuth_resolution_px: float,
     step_distances: list[float],
+    method: gdt.RCSComputationMethod = gdt.RCSComputationMethod.BOXES,
 ) -> tuple[ptdt.RCSDataOutput, ptdt.RCSGraphDataOutput]:
     """Perform the RCS analysis.
 
@@ -738,6 +741,8 @@ def rcs_analysis(
         azimuth resolution in pixels
     step_distances : list[float]
         step distances
+    method : gdt.RCSComputationMethod, optional
+        RCS computation method, by default gdt.RCSComputationMethod.BOXES
 
     Returns
     -------
@@ -753,7 +758,7 @@ def rcs_analysis(
         oversampling_factor=rcs_parameters.roi_dimension / 2,
     ).astype("int")
 
-    rcs_output_parameters, roi_target, roi_background_corners, peak_corners = compute_point_target_rcs(
+    rcs_output_parameters, roi_target, peak_corners, roi_background_corners = compute_point_target_rcs(
         target_area=target_area,
         target_pos_real=target_pos_real,
         range_resolution_px=range_resolution_px,
@@ -762,6 +767,7 @@ def rcs_analysis(
         rcs_roi=rcs_roi,
         k_lin=rcs_parameters.calibration_factor,
         s_f=rcs_parameters.resampling_factor,
+        method=method,
     )
 
     # rescaling rcs values, computing peak phase error

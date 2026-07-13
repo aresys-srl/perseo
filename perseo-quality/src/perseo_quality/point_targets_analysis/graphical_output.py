@@ -365,20 +365,26 @@ def rcs_graphs(
     ax_1.add_patch(rect_peak)
 
     # plotting background corner rectangles
-    rect_corners = []
-    for rect in data_graph.roi_background:
-        rect = np.asarray(rect).astype(float)
-        rect[:2] = (rect[:2] - data_graph.roi_size[0] / 2) * data_graph.rng_step_distance
-        rect[2:] = (rect[2:] - data_graph.roi_size[1] / 2) * data_graph.az_step_distance
+    if data_graph.roi_background is not None:
+        rect_corners = []
+        for rect in data_graph.roi_background:
+            rect = np.asarray(rect).astype(float)
+            rect[:2] = (rect[:2] - data_graph.roi_size[0] / 2) * data_graph.rng_step_distance
+            rect[2:] = (rect[2:] - data_graph.roi_size[1] / 2) * data_graph.az_step_distance
 
-        rect_corners.append(
-            patches.Rectangle(
-                (rect[2], rect[0]), rect[3] - rect[2], rect[1] - rect[0], linewidth=2, edgecolor="m", facecolor="none"
+            rect_corners.append(
+                patches.Rectangle(
+                    (rect[2], rect[0]),
+                    rect[3] - rect[2],
+                    rect[1] - rect[0],
+                    linewidth=2,
+                    edgecolor="m",
+                    facecolor="none",
+                )
             )
-        )
 
-    for rect in rect_corners:
-        ax_1.add_patch(rect)
+        for rect in rect_corners:
+            ax_1.add_patch(rect)
 
     # customizing labels
     ax_1.set_xlabel("Azimuth [m]", fontsize=13)

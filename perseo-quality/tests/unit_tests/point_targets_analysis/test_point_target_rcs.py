@@ -8,9 +8,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from perseo_quality.core.generic_dataclasses import SARPolarization
+from perseo_quality.core.generic_dataclasses import RCSComputationMethod, SARPolarization
 from perseo_quality.point_targets_analysis.core.rcs import (
-    _peak_extraction,
     _roi_extraction,
     compute_additional_rcs_values,
     compute_point_target_rcs,
@@ -39,21 +38,55 @@ class TestPointTargetRCS:
         self.scr = 91.36581122269361
         self.peak_value_complex = -0.24175901855507392 + 0.9705773683519141j
 
-    def test_compute_rcs(self):
-        """Testing RCS computation"""
-        rcs, _, roi_background_corners, peak_corners = compute_point_target_rcs(
+        # benchmarking values CROSS method
+        self.clutter_cross = -67.57759173398335
+        self.rcs_cross = 77.47034894931969
+        self.scr_cross = 67.57962310994814
+
+    def test_compute_rcs_boxes(self):
+        """Testing RCS computation with standard BOXES method"""
+        (
+            rcs,
+            _,
+            peak_corners,
+            roi_background_corners,
+        ) = compute_point_target_rcs(
             target_area=self.data,
             rcs_roi=np.array([128, 128]),
             range_resolution_px=self.rng_res,
             azimuth_resolution_px=self.az_res,
             target_pos_real=self.peak_pos,
             rcs_interp_factor=8,
+            method=RCSComputationMethod.BOXES,
         )
         np.testing.assert_array_equal(self.peak_corners, peak_corners)
         np.testing.assert_array_equal(self.background_corners, roi_background_corners)
         np.testing.assert_allclose(rcs.peak_value_complex, self.peak_value_complex, atol=1e-9, rtol=0)
         np.testing.assert_allclose(rcs.clutter, self.clutter, atol=1e-9, rtol=0)
         np.testing.assert_allclose(rcs.scr, self.scr, atol=1e-9, rtol=0)
+
+    def test_compute_rcs_cross(self):
+        """Testing RCS computation with standard BOXES method"""
+        (
+            rcs,
+            _,
+            peak_corners,
+            roi_background_corners,
+        ) = compute_point_target_rcs(
+            target_area=self.data,
+            rcs_roi=np.array([128, 128]),
+            range_resolution_px=self.rng_res,
+            azimuth_resolution_px=self.az_res,
+            target_pos_real=self.peak_pos,
+            rcs_interp_factor=8,
+            method=RCSComputationMethod.CROSS,
+        )
+        np.testing.assert_array_equal(self.peak_corners, peak_corners)
+        assert roi_background_corners is None
+        np.testing.assert_allclose(rcs.peak_value_complex, self.peak_value_complex, atol=1e-9, rtol=0)
+        np.testing.assert_allclose(rcs.clutter, self.clutter_cross, atol=1e-9, rtol=0)
+        np.testing.assert_allclose(rcs.scr, self.scr_cross, atol=1e-9, rtol=0)
+        np.testing.assert_allclose(rcs.rcs, self.rcs_cross, atol=1e-9, rtol=0)
 
     def test_roi_extraction_with_target_pos(self) -> None:
         """Testing _roi_extraction with target position provided"""
@@ -77,15 +110,6 @@ class TestPointTargetRCS:
 
         with pytest.raises(PointTargetComputationError):
             _roi_extraction(data, roi=np.array([20, 20]), target_pos=np.array([2.0, 2.0]))
-
-    def test_peak_extraction_with_target_position(self) -> None:
-        """Testing _peak_extraction with target position"""
-        data = np.random.default_rng(42).random((30, 30))
-        row, col = _peak_extraction(
-            data=data, target_position=np.array([15.0, 15.0]), max_indexes=(2, 2), interp_factor=8
-        )
-        assert isinstance(row, (int, np.integer))
-        assert isinstance(col, (int, np.integer))
 
     def test_compute_additional_rcs_values_hh(self) -> None:
         """Testing compute_additional_rcs_values with HH polarization"""
