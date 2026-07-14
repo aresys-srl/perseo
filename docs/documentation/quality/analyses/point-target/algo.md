@@ -87,11 +87,6 @@ to the range and azimuth spectra.
 
 The side lobe levels are evaluated from specific portions of the SAR image, as shown in the picture below.
 
-<figure markdown="span">
-    ![Masking](../../../../assets/images/q/masking.png){ width="850" }
-    <figcaption>Masking of the ROI around the peak.</figcaption>
-</figure>
-
 <div class="grid cards" markdown>
 
 -   :lucide-radio:{ .lg .middle } **Peak-to-Side-Lobe-Ratio (PSLR)**
@@ -169,12 +164,20 @@ within the main lobe of the focused point target and the removal of the backgrou
 
 The input data shall be provided in *beta-nought* with no incidence angle compensation applied.
 
-The RCS estimation algorithm is composed by the following steps:
+Two algorithms are available for estimating the point target RCS: 
+
+- **boxes** (default)
+- **cross masking**
+
+The two algorithms share the same RCS computation procedure and differ only in the estimation of the background intensity (clutter).
+
+### Common RCS estimation procedure
+
+Both algorithms perform the following steps:
 
 1. Image conversion to intensity by taking the square of the absolute value of each pixel.
 
-2. Background intensity (Clutter) estimation by averaging the pixel intensities over four square areas of M x M pixels located close to each
-   corner around the target in such a way that they include only clutter intensity.
+2. Estimate the background intensity (clutter) using one of the available methods (see below).
 
 3. Background intensity removal from image by subtraction.
 
@@ -187,6 +190,27 @@ Computing the difference between the measured RCS of a well-characterized known 
 the absolute radiometric calibration.
 
 The channel distortion can also be measured as the difference in a corner reflector RCS between two polarization.
+
+### Background estimation: boxes algorithm
+
+<figure markdown="span">
+    ![Masking](../../../../assets/images/q/masking.png){ width="850" }
+    <figcaption>Masking of the ROI around the peak.</figcaption>
+</figure>
+
+The **boxes** algorithm estimates the background intensity by averaging the pixel intensities over four square regions of size M × M pixels. These regions are positioned near the four corners of the region of interest (ROI), sufficiently far from the target main lobe so that they contain only clutter samples.
+
+### Background estimation: cross masking algorithm
+
+<figure markdown="span">
+    ![Quality](../../../../assets/images/q/cross_masking_rcs.png){ width="850" }
+    <figcaption>Cross masking</figcaption>
+</figure>
+
+The **cross masking** algorithm estimates the background intensity from a small rectangular ROI centered on the IRF main lobe, rather than from the larger ROI used by the boxes algorithm. Within this ROI, a cross-shaped mask and a central rectangular mask remove the target response, and the background intensity is computed as the mean of the remaining (unmasked) pixels.
+
+!!! Tip
+    This alternative algorithm can be beneficial when the clutter around the point target is not homogeneous and the regions selected by the **boxes** algorithm may include nearby scatterers. The use of a smaller ROI around the target, together with IRF masking, enables a more representative local estimation of the background intensity.
 
 ## Point Target Localization
 
