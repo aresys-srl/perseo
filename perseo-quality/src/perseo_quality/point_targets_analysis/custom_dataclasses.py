@@ -210,7 +210,7 @@ class RCSGraphDataOutput:
 
     image: np.ndarray | None = None
     data_type: str | None = None
-    roi_background: list | None = None
+    roi_background: list | np.ndarray | None = None
     roi_peak: list | None = None
     rng_step_distance: float | None = None
     az_step_distance: float | None = None
