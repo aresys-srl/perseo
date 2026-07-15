@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import matplotlib
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -350,22 +351,22 @@ def rcs_graphs(
     # plotting image
     ax_1.imshow(im_db, vmin=im_db.max() - 40, cmap="jet", aspect=axes_ratio, extent=extent)
 
-    # plotting peak roi rectangle
-    roi_peak = np.asarray(data_graph.roi_peak)
-    roi_rng = (roi_peak[:2] / data_graph.interp_factor - data_graph.roi_size[0] / 2) * data_graph.rng_step_distance
-    roi_az = (roi_peak[2:] / data_graph.interp_factor - data_graph.roi_size[1] / 2) * data_graph.az_step_distance
-    rect_peak = patches.Rectangle(
-        (roi_az[0], roi_rng[0]),
-        roi_az[1] - roi_az[0],
-        roi_rng[1] - roi_rng[0],
-        linewidth=3,
-        edgecolor="r",
-        facecolor="none",
-    )
-    ax_1.add_patch(rect_peak)
+    if isinstance(data_graph.roi_background, list):
+        # plotting peak roi rectangle
+        roi_peak = np.asarray(data_graph.roi_peak)
+        roi_rng = (roi_peak[:2] / data_graph.interp_factor - data_graph.roi_size[0] / 2) * data_graph.rng_step_distance
+        roi_az = (roi_peak[2:] / data_graph.interp_factor - data_graph.roi_size[1] / 2) * data_graph.az_step_distance
+        rect_peak = patches.Rectangle(
+            (roi_az[0], roi_rng[0]),
+            roi_az[1] - roi_az[0],
+            roi_rng[1] - roi_rng[0],
+            linewidth=3,
+            edgecolor="r",
+            facecolor="none",
+        )
+        ax_1.add_patch(rect_peak)
 
-    # plotting background corner rectangles
-    if data_graph.roi_background is not None:
+        # plotting background corner rectangles
         rect_corners = []
         for rect in data_graph.roi_background:
             rect = np.asarray(rect).astype(float)
@@ -385,6 +386,24 @@ def rcs_graphs(
 
         for rect in rect_corners:
             ax_1.add_patch(rect)
+    else:
+        cross_cmap = matplotlib.colors.ListedColormap(["navajowhite", "green"])
+        bbox_cmap = matplotlib.colors.ListedColormap(["red", "green"])
+        rows, cols = np.where(data_graph.roi_background)
+        rmin, rmax = rows.min() - 1, rows.max() + 1
+        cmin, cmax = cols.min() - 1, cols.max() + 1
+        bbox = np.zeros_like(data_graph.roi_background)
+        bbox[rmin, cmin : cmax + 1] = 1
+        bbox[rmax, cmin : cmax + 1] = 1
+        bbox[rmin : rmax + 1, cmin] = 1
+        bbox[rmin : rmax + 1, cmax] = 1
+        ax_1.imshow(
+            np.ma.masked_where(data_graph.roi_background == 0, data_graph.roi_background),
+            cmap=cross_cmap,
+            aspect=axes_ratio,
+            extent=extent,
+        )
+        ax_1.imshow(np.ma.masked_where(bbox == 0, bbox), cmap=bbox_cmap, aspect=axes_ratio, extent=extent)
 
     # customizing labels
     ax_1.set_xlabel("Azimuth [m]", fontsize=13)

@@ -13,6 +13,8 @@ from perseo_quality.point_targets_analysis.core.rcs import (
     _roi_extraction,
     compute_additional_rcs_values,
     compute_point_target_rcs,
+    compute_rcs_with_boxes_method,
+    compute_rcs_with_cross_method,
 )
 from perseo_quality.point_targets_analysis.custom_dataclasses import RCSDataOutput
 
@@ -42,6 +44,36 @@ class TestPointTargetRCS:
         self.clutter_cross = -67.57759173398335
         self.rcs_cross = 77.47034894931969
         self.scr_cross = 67.57962310994814
+        self.roi_background_mask_sum = 172
+
+    def test_rcs_background_corners_boxes_method(self):
+        _, _, background_corners = compute_rcs_with_boxes_method(
+            data=np.abs(self.data) ** 2,
+            data_interp=np.abs(self.data) ** 2,
+            target_pos_real=self.peak_pos,
+            max_position=self.target_pos.astype(int),
+            resolutions_px=[self.rng_res, self.az_res],
+            rcs_roi=[self.peak_corners[1] - self.peak_corners[0], self.peak_corners[3] - self.peak_corners[2]],
+            interp_factor=1,
+            k_lin=1,
+            s_f=1,
+        )
+        np.testing.assert_equal(len(background_corners), 4)
+        np.testing.assert_equal(len(background_corners[0]), 4)
+
+    def test_rcs_mask_cross_method(self):
+        _, _, masking_boundary = compute_rcs_with_cross_method(
+            data=np.abs(self.data) ** 2,
+            data_interp=np.abs(self.data) ** 2,
+            target_pos_real=self.peak_pos,
+            max_position=self.target_pos.astype(int),
+            resolutions_px=[self.rng_res, self.az_res],
+            interp_factor=1,
+            k_lin=1,
+            s_f=1,
+        )
+        np.testing.assert_equal(masking_boundary.shape, tuple([128, 128]))
+        np.testing.assert_equal(np.sum(masking_boundary), self.roi_background_mask_sum)
 
     def test_compute_rcs_boxes(self):
         """Testing RCS computation with standard BOXES method"""
@@ -66,7 +98,7 @@ class TestPointTargetRCS:
         np.testing.assert_allclose(rcs.scr, self.scr, atol=1e-9, rtol=0)
 
     def test_compute_rcs_cross(self):
-        """Testing RCS computation with standard BOXES method"""
+        """Testing RCS computation with CROSS MASKING method"""
         (
             rcs,
             _,
@@ -82,7 +114,7 @@ class TestPointTargetRCS:
             method=RCSComputationMethod.CROSS,
         )
         np.testing.assert_array_equal(self.peak_corners, peak_corners)
-        assert roi_background_corners is None
+        np.testing.assert_equal(np.sum(roi_background_corners), self.roi_background_mask_sum)
         np.testing.assert_allclose(rcs.peak_value_complex, self.peak_value_complex, atol=1e-9, rtol=0)
         np.testing.assert_allclose(rcs.clutter, self.clutter_cross, atol=1e-9, rtol=0)
         np.testing.assert_allclose(rcs.scr, self.scr_cross, atol=1e-9, rtol=0)
