@@ -181,7 +181,7 @@ jobs:
           retention-days: 14
 
   publish:
-    needs: [analysis, unittest_linux, sdist, wheel]
+    needs: [analysis, unittest_linux, unittest_windows, sdist, wheel]
     if: startsWith(github.ref_name, 'perseo-quality-v')
 
     runs-on: ubuntu-latest
