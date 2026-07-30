@@ -102,12 +102,13 @@ jobs:
   build-wheels:
     needs: version-check
     name: Build wheels on ${{ matrix.os }}
+
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-15]
 
     steps:
       - uses: actions/checkout@v6
@@ -131,6 +132,24 @@ jobs:
         run: |
           choco install mingw -y
 
+      - name: Check Fortran runtime
+        if: runner.os == 'macOS'
+        run: |
+          FC=gfortran-15
+
+          $FC --version
+
+          LIBGFORTRAN="$($FC -print-file-name=libgfortran.5.dylib)"
+          LIBQUADMATH="$($FC -print-file-name=libquadmath.0.dylib)"
+
+          echo "libgfortran: $LIBGFORTRAN"
+          echo "libquadmath: $LIBQUADMATH"
+
+          otool -l "$LIBGFORTRAN" | grep -A3 LC_BUILD_VERSION
+          otool -l "$LIBQUADMATH" | grep -A3 LC_BUILD_VERSION
+
+          echo "FC=$FC" >> $GITHUB_ENV
+
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse ./perseo-perturbations
         env:
@@ -139,11 +158,15 @@ jobs:
             cp312-*
             cp313-*
             cp314-*
+          CIBW_SKIP: "*-musllinux*"
 
           CIBW_ARCHS_LINUX: x86_64
           CIBW_ARCHS_WINDOWS: AMD64
+          CIBW_ARCHS_MACOS: native
 
-          CIBW_SKIP: "*-musllinux*"
+          CIBW_ENVIRONMENT_MACOS: >-
+            MACOSX_DEPLOYMENT_TARGET=15.0
+            DELOCATE_ALLOW_VERSION_MISMATCH=1
 
       - name: Upload wheels
         uses: actions/upload-artifact@v6
@@ -281,9 +304,73 @@ jobs:
           name: test-results-windows-${{ matrix.python }}
           path: _build/
 
+  test-wheel-macos:
+    needs: build-wheels
+
+    runs-on: macos-15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python:
+          - "3.11"
+          - "3.12"
+          - "3.13"
+          - "3.14"
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-wheels-macos-15-*
+          merge-multiple: true
+          path: dist
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install wheel
+        run: |
+          MATCH="cp${{ matrix.python }}"
+          MATCH="${MATCH//./}"
+
+          echo "Looking for $MATCH wheel"
+
+          WHEEL=$(find dist -name "*${MATCH}*.whl" | head -n 1)
+
+          if [ -z "$WHEEL" ]; then
+            echo "No wheel found"
+            find dist -type f
+            exit 1
+          fi
+
+          echo "Installing $WHEEL"
+
+          python -m venv ci_test
+          source ci_test/bin/activate
+
+          python -m pip install "$WHEEL"
+
+      - name: Run tests
+        run: |
+          source ci_test/bin/activate
+          python -m pip install pytest pytest-cov
+
+          python -m pytest perseo-perturbations/tests \
+            --junitxml=_build/pytest-report-macos-py${{ matrix.python }}.xml \
+            --cov-report=xml:_build/pytest-coverage-macos-py${{ matrix.python }}.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-results-macos-${{ matrix.python }}
+          path: _build/
+
   publish-perseo-perturbations:
     needs:
       - test-wheel-linux
+      - test-wheel-macos
       - test-wheel-windows
       - sdist-perturbations
 
