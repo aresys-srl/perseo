@@ -120,7 +120,7 @@ def threshold_mask(
     backscatter_thresh: float,
     cv_lower_thresh: float,
     cv_upper_thresh: float,
-) -> npt.NDArray[np.floating]:
+) -> npt.NDArray[np.bool]:
     """Classify pixels as river where both conditions hold:
 
     1) local mean < backscatter threshold
@@ -141,26 +141,26 @@ def threshold_mask(
 
     Returns
     -------
-    npt.NDArray[np.floating]
+    npt.NDArray[np.bool]
         Boolean mask: True if river pixel is identified
     """
     return (local_mean < backscatter_thresh) & ((local_cv > cv_upper_thresh) | (local_cv < cv_lower_thresh))
 
 
-def _disk_structuring_element(radius: int) -> npt.NDArray[np.floating]:
+def _disk_structuring_element(radius: int) -> npt.NDArray[np.bool]:
     """Create a circular (disk) binary structuring element."""
     y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
     return x**2 + y**2 <= radius**2
 
 
 def morphological_cleaning(
-    binary_mask: npt.NDArray[np.floating], opening_radius: int, min_area_px_percentile: int
-) -> npt.NDArray[np.floating]:
+    binary_mask: npt.NDArray[np.bool], opening_radius: int, min_area_px_percentile: int
+) -> npt.NDArray[np.bool]:
     """Remove isolated speckles from a binary mask
 
     Parameters
     ----------
-    binary_mask : npt.NDArray[np.floating]
+    binary_mask : npt.NDArray[np.bool]
         Binary mask
     opening_radius : int
         radius of disk structuring element for opening
@@ -169,7 +169,7 @@ def morphological_cleaning(
 
     Returns
     -------
-    npt.NDArray[np.floating]
+    npt.NDArray[np.bool]
         Cleaned binary mask
     """
     opening_structure = _disk_structuring_element(opening_radius)
@@ -185,22 +185,22 @@ def morphological_cleaning(
 
 
 def region_growing(
-    seed_mask: npt.NDArray[np.floating], candidate_mask: npt.NDArray[np.floating], n_iterations: int
-) -> npt.NDArray[np.floating]:
+    seed_mask: npt.NDArray[np.bool], candidate_mask: npt.NDArray[np.bool], n_iterations: int
+) -> npt.NDArray[np.bool]:
     """Expand a binary mask if neighboring pixels pass the relaxed intensity threshold
 
     Parameters
     ----------
-    seed_mask : npt.NDArray[np.floating]
+    seed_mask : npt.NDArray[np.bool]
         Binary mask to be expanded
-    candidate_mask : npt.NDArray[np.floating]
+    candidate_mask : npt.NDArray[np.bool]
         Pixels eligible to be added to seed mask
     n_iterations : int
         number of dilation steps
 
     Returns
     -------
-    npt.NDArray[np.floating]
+    npt.NDArray[np.bool]
         Expanded binary mask
     """
     # Connectivity structure: 8-connected
