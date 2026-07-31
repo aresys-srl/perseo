@@ -203,14 +203,17 @@ def region_growing(
     npt.NDArray[np.bool]
         Expanded binary mask
     """
-    # Connectivity structure: 8-connected
     struct = generate_binary_structure(2, 2)
     grown = seed_mask.copy()
 
     for _ in range(n_iterations):
         expanded = binary_dilation(grown, structure=struct)
-        # Only absorb pixels that are eligible AND newly reached
-        grown = grown | (expanded & candidate_mask)
+        new_pixels = expanded & candidate_mask & ~grown
+
+        if not np.any(new_pixels):
+            break
+
+        grown = grown | new_pixels
 
     return grown
 
@@ -248,7 +251,6 @@ def full_river_masking(
         )
         | nan_mask
     )
-    # TODO: introduce a stopping criteria instead
     grown_mask = region_growing(
         seed_mask=thrs_mask,
         candidate_mask=data <= relaxed_backscatter_threshold,
