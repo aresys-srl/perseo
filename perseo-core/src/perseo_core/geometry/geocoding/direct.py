@@ -264,7 +264,7 @@ def direct_geocoding_monostatic(
     )
 
 
-def direct_geocoding_bistatic(  # noqa: PLR0913
+def direct_geocoding_bistatic(  # noqa: PLR0913, PLR0917
     sensor_positions_rx: npt.NDArray[np.floating],
     sensor_velocities_rx: npt.NDArray[np.floating],
     sensor_positions_tx: npt.NDArray[np.floating],
