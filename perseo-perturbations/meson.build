@@ -3,7 +3,7 @@ project(
   'c',
   'cpp',
   version: '1.0.1',
-  license: 'BSD-3',
+  license: 'MIT',
   meson_version: '>= 1.1.0',
   default_options: [
     'warning_level=2',
@@ -100,6 +100,12 @@ py3.install_sources(
       './tests/igrf/__init__.py',
     ],
     subdir: 'perseo_perturbations/tests/igrf'
+)
+
+license_file = files(['LICENSE.txt'])
+py3.install_sources(
+    [license_file],
+    subdir: 'perseo_perturbations'
 )
 
 add_languages('fortran', native: false)
