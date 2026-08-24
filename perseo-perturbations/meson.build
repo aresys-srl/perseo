@@ -12,13 +12,20 @@ project(
   ],
 )
 
+# Generate _version.py from template
+version_file = configure_file(
+  input : 'src/perseo_perturbations/_version.py.in',
+  output : '_version.py',
+  configuration : {'VERSION': meson.project_version()}
+)
+
 py3_mod = import('python')
 py3 = py3_mod.find_installation(pure: false)
 py3_dep = py3.dependency()
 
 
 py3.install_sources(
-    ['./src/perseo_perturbations/__init__.py'],
+    ['./src/perseo_perturbations/__init__.py', version_file],
     subdir: 'perseo_perturbations'
 )
 py3.install_sources(
