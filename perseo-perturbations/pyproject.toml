@@ -74,17 +74,6 @@ skip_covered = true
 show_missing = true
 fail_under = 70
 
-[tool.ruff]
-line-length = 120
-output-format = "grouped"
-extend-exclude = [".venv", "scripts"]
-
-[tool.ruff.format]
-docstring-code-format = true
-
-[tool.ruff.lint]
-select = ["E", "W", "F", "A", "B", "I"]
-
 [tool.pylint.master]
 fail-under = 8
 fail-on = ["unused-import"]
