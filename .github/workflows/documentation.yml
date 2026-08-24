@@ -12,7 +12,6 @@ on:
       - ".github/workflows/documentation.yml"
       - "docs/**"
       - "zensical.toml"
-      - "noxfile.py"
       - "overrides/**"
 
   pull_request:
@@ -22,13 +21,13 @@ on:
       - ".github/workflows/documentation.yml"
       - "docs/**"
       - "zensical.toml"
-      - "noxfile.py"
       - "overrides/**"
 
 permissions:
   contents: read
 
 jobs:
+
   docs_build:
     runs-on: ubuntu-latest
 
@@ -43,11 +42,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install nox
+          python -m pip install zensical mkdocstrings-python
 
       - name: Build docs
         run: |
-          python -m nox -s build_doc
+          python tools/build_doc.py
           ls -la site/
 
       - name: Upload docs site
@@ -55,6 +54,12 @@ jobs:
         with:
           name: docs-site
           path: site/
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: docs-archive
+          path: documentation*.zip
           retention-days: 14
 
   docs_publish:
