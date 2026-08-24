@@ -357,7 +357,7 @@ def _direct_geocoding_monostatic_newton(
     return ground_points_guess if not array_size_one_flag else ground_points_guess.squeeze()
 
 
-def _direct_geocoding_bistatic_newton(  # noqa: PLR0913
+def _direct_geocoding_bistatic_newton(  # noqa: PLR0913, PLR0917
     sensor_positions_rx: npt.NDArray[np.floating],
     sensor_velocities_rx: npt.NDArray[np.floating],
     initial_guesses: npt.NDArray[np.floating],
