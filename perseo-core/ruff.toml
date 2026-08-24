@@ -42,9 +42,6 @@ flake8-import-conventions.banned-from = [
     "N806",   # non-lowercase-variable-in-function
     "ICN003", # banned-import-from
 ]
-"**/noxfile.py" = [
-    "D", # pydocstyle
-]
 "__init__.py" = [
     "F403", # undefined-local-with-import-star
 ]

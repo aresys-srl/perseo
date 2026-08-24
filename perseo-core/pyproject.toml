@@ -41,7 +41,7 @@ Repository = "https://github.com/aresys-srl/perseo"
 Documentation = "https://opensource.aresys.it/perseo"
 
 [project.optional-dependencies]
-dev = ["ruff", "pylint", "nox"]
+dev = ["ruff", "pylint"]
 type = ["mypy", "types-python-dateutil", "scipy-stubs"]
 test = ["pytest>8.0.0", "pytest-cov>7.0.0"]
 docs = ["zensical", "mkdocstrings-python"]
