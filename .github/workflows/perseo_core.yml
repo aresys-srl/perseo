@@ -11,7 +11,6 @@ on:
     paths:
       - ".github/workflows/perseo_core.yml"
       - "perseo-core/**"
-      - "noxfile.py"
 
   pull_request:
     branches:
@@ -19,20 +18,12 @@ on:
     paths:
       - ".github/workflows/perseo_core.yml"
       - "perseo-core/**"
-      - "noxfile.py"
 
 jobs:
-  analysis:
+  ruff:
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
-
-    strategy:
-      fail-fast: false
-      matrix:
-        task:
-          - check_format
-          - pylint
 
     defaults:
       run:
@@ -45,8 +36,30 @@ jobs:
 
       - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
       - run: python --version
-      - run: python -m pip install nox
-      - run: python -m nox -s ${{ matrix.task }}
+      - run: python -m pip install ruff
+      - run: python -m ruff --version
+      - run: python -m ruff format --check .
+      - run: python -m ruff check .
+
+  pylint:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
+
+    defaults:
+      run:
+        working-directory: perseo-core
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install pylint
+      - run: python -m pylint --version
+      - run: python -m pylint ./src/perseo_core
 
   mypy:
     runs-on: ubuntu-latest
@@ -121,8 +134,16 @@ jobs:
           esac
 
       - run: python --version
-      - run: python -m pip install nox
-      - run: python -m nox -s pytest -p ${{ matrix.python }}
+      - name: Install package
+        run: python -m pip install -e ".[test]"
+
+      - name: Run unit tests with coverage
+        run: |
+          mkdir -p _build
+          python -m pytest ./tests/ \
+            --junitxml=_build/pytest-report-linux-py${{ matrix.python }}.xml \
+            --cov-report=xml:_build/pytest-coverage-linux-py${{ matrix.python }}.xml
+
       - name: Upload junit and coverage
         uses: actions/upload-artifact@v5
         with:
@@ -159,8 +180,14 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - run: python --version
-      - run: python -m pip install nox
-      - run: python -m nox -s pytest -p ${{ matrix.python }}
+      - name: Install package
+        run: python -m pip install -e ".[test]"
+
+      - name: Run unit tests with coverage
+        run: |
+          if (-not (Test-Path _build)) { New-Item -ItemType Directory -Path _build | Out-Null }
+          python -m pytest ./tests/ --junitxml=_build/pytest-report-win-py${{ matrix.python }}.xml --cov-report=xml:_build/pytest-coverage-win-py${{ matrix.python }}.xml
+
       - name: Upload junit and coverage
         uses: actions/upload-artifact@v5
         with:
@@ -170,7 +197,7 @@ jobs:
             perseo-core/_build/pytest-coverage-*.xml
           retention-days: 14
 
-  sdist:
+  build:
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
@@ -185,44 +212,16 @@ jobs:
           fetch-depth: 1
 
       - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
-      - run: python --version
-      - run: python -m pip install nox
-      - run: python -m nox -s build_sdist
-
+      - run: uv build --sdist --wheel .
       - uses: actions/upload-artifact@v5
         with:
-          name: sdist
-          path: perseo-core/dist/*.tar.gz
-          retention-days: 14
-
-  wheel:
-    runs-on: ubuntu-latest
-    container:
-      image: quay.io/pypa/manylinux_2_28_x86_64
-
-    defaults:
-      run:
-        working-directory: perseo-core
-
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 1
-
-      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
-      - run: python --version
-      - run: python -m pip install nox
-      - run: python -m nox -s build_wheel
-
-      - uses: actions/upload-artifact@v5
-        with:
-          name: wheel
-          path: perseo-core/dist/*.whl
+          name: dist
+          path: perseo-core/dist/
           retention-days: 14
 
   publish:
     needs:
-      [analysis, mypy, pyrefly, unittest_linux, unittest_windows, sdist, wheel]
+      [ruff, pylint, mypy, pyrefly, unittest_linux, unittest_windows, build]
     if: startsWith(github.ref_name, 'perseo-core-v')
 
     runs-on: ubuntu-latest
