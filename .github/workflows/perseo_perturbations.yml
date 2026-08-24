@@ -11,7 +11,6 @@ on:
     paths:
       - ".github/workflows/perseo_perturbations.yml"
       - "perseo-perturbations/**"
-      - "noxfile.py"
 
   pull_request:
     branches:
@@ -19,20 +18,12 @@ on:
     paths:
       - ".github/workflows/perseo_perturbations.yml"
       - "perseo-perturbations/**"
-      - "noxfile.py"
 
 jobs:
-  analysis:
+  ruff:
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
-
-    strategy:
-      fail-fast: false
-      matrix:
-        task:
-          - check_format
-          - pylint
 
     defaults:
       run:
@@ -45,11 +36,15 @@ jobs:
 
       - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
       - run: python --version
-      - run: python -m pip install nox
-      - run: python -m nox -s ${{ matrix.task }}
+      - run: python -m pip install ruff
+      - run: python -m ruff --version
+      - run: python -m ruff format --check .
+      - run: python -m ruff check .
 
-  version-check:
+  pylint:
     runs-on: ubuntu-latest
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
 
     defaults:
       run:
@@ -57,22 +52,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-
-      - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          fetch-depth: 1
 
-      - name: Install nox
-        run: |
-          python -m pip install nox
+      - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
+      - run: python --version
+      - run: python -m pip install pylint
+      - run: python -m pylint --version
+      - run: python -m pylint ./src/perseo_perturbations
 
-      - name: Run version consistency check
-        run: |
-          python -m nox -s version_consistency_check
-
-  sdist-perturbations:
-    needs: version-check
-
+  sdist:
     runs-on: ubuntu-latest
     container:
       image: quay.io/pypa/manylinux_2_28_x86_64
@@ -88,9 +77,7 @@ jobs:
           git rev-parse --show-toplevel
 
       - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
-      - run: python --version
-      - run: python -m pip install build
-      - run: python -m build --sdist
+      - run: uv build --sdist .
         working-directory: perseo-perturbations
 
       - uses: actions/upload-artifact@v5
@@ -100,7 +87,6 @@ jobs:
           retention-days: 14
 
   build-wheels:
-    needs: version-check
     name: Build wheels on ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
@@ -367,12 +353,12 @@ jobs:
           name: test-results-macos-${{ matrix.python }}
           path: _build/
 
-  publish-perseo-perturbations:
+  publish:
     needs:
       - test-wheel-linux
       - test-wheel-macos
       - test-wheel-windows
-      - sdist-perturbations
+      - sdist
 
     if: startsWith(github.ref_name, 'perseo-perturbations-v')
 
