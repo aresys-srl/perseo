@@ -327,8 +327,8 @@ def extract_target_area(
     # second cropping, centered on peak coordinates
     peak_coords_swath = np.array(
         (
-            round(azimuth_range_coordinates.range_index_subpx) - round(initial_crop[0] / 2) + peak_range_im,
-            round(azimuth_range_coordinates.azimuth_index_subpx) - round(initial_crop[1] / 2) + peak_azimuth_im,
+            round(azimuth_range_coordinates.range_index_subpx) - math.floor(initial_crop[0] / 2) + peak_range_im,
+            round(azimuth_range_coordinates.azimuth_index_subpx) - math.floor(initial_crop[1] / 2) + peak_azimuth_im,
         )
     )
     peak_az_index = (
