@@ -246,8 +246,8 @@ def point_target_analysis_single(
     try:
         side_lobes_directions, squint_angle, doppler_centroid = compute_side_lobes_directions(
             channel_data=channel_data,
-            peak_azimuth_time=az_time_peak,
-            peak_range_time=rng_time_peak,
+            azimuth_time=az_time_peak,
+            range_time=rng_time_peak,
             azimuth_step_m=location_data.azimuth_step_m,
         )
     except Exception as err:

@@ -25,34 +25,34 @@ class TestGetSquintAngle:
     def test_get_squint_angle(self):
         """Testing get_squint_angle function"""
         squint = support.get_squint_angle(
-            channel_data=self.channel_data, azimuth_time=self.ref_time, ground_point=self.ref_ground_point
+            trajectory=self.channel_data.trajectory, azimuth_times=self.ref_time, ground_points=self.ref_ground_point
         )
         np.testing.assert_allclose(squint, self.expected_res, atol=self.tolerance, rtol=0)
 
     def test_get_squint_angle_vectorized_0(self):
         """Testing get_squint_angle function, vectorized ground points"""
         squint = support.get_squint_angle(
-            channel_data=self.channel_data,
-            azimuth_time=self.ref_time,
-            ground_point=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
+            trajectory=self.channel_data.trajectory,
+            azimuth_times=self.ref_time,
+            ground_points=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
         )
         np.testing.assert_allclose(squint, np.repeat(self.expected_res, 4), atol=self.tolerance, rtol=0)
 
     def test_get_squint_angle_vectorized_1(self):
         """Testing get_squint_angle function, vectorized times"""
         squint = support.get_squint_angle(
-            channel_data=self.channel_data,
-            azimuth_time=np.array([self.ref_time, self.ref_time]),
-            ground_point=self.ref_ground_point,
+            trajectory=self.channel_data.trajectory,
+            azimuth_times=np.array([self.ref_time, self.ref_time]),
+            ground_points=self.ref_ground_point,
         )
         np.testing.assert_allclose(squint, np.repeat(self.expected_res, 2), atol=self.tolerance, rtol=0)
 
     def test_get_squint_angle_vectorized_2(self):
         """Testing get_squint_angle function, vectorized all"""
         squint = support.get_squint_angle(
-            channel_data=self.channel_data,
-            azimuth_time=np.array([self.ref_time, self.ref_time, self.ref_time, self.ref_time]),
-            ground_point=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
+            trajectory=self.channel_data.trajectory,
+            azimuth_times=np.array([self.ref_time, self.ref_time, self.ref_time, self.ref_time]),
+            ground_points=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
         )
         np.testing.assert_allclose(squint, np.repeat(self.expected_res, 4), atol=self.tolerance, rtol=0)
 
@@ -70,34 +70,58 @@ class TestGetDopplerCentroid:
 
     def test_get_doppler_centroid(self):
         """Testing get_doppler_centroid function"""
-        dc = support.get_doppler_centroid(
-            channel_data=self.channel_data, azimuth_time=self.ref_time, ground_point=self.ref_ground_point
+        squint_angles = support.get_squint_angle(
+            trajectory=self.channel_data.trajectory, azimuth_times=self.ref_time, ground_points=self.ref_ground_point
+        )
+        dc = support.squint_to_doppler(
+            squint_angles=squint_angles,
+            trajectory=self.channel_data.trajectory,
+            carrier_frequency=self.channel_data.carrier_frequency,
+            azimuth_times=self.ref_time,
         )
         np.testing.assert_allclose(dc, self.expected_res, atol=self.tolerance, rtol=0)
 
     def test_get_doppler_centroid_vectorized_0(self):
         """Testing get_doppler_centroid function, vectorized ground points"""
-        dc = support.get_doppler_centroid(
-            channel_data=self.channel_data,
-            azimuth_time=self.ref_time,
-            ground_point=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
+        squint_angles = support.get_squint_angle(
+            trajectory=self.channel_data.trajectory,
+            azimuth_times=self.ref_time,
+            ground_points=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
+        )
+        dc = support.squint_to_doppler(
+            squint_angles=squint_angles,
+            trajectory=self.channel_data.trajectory,
+            carrier_frequency=self.channel_data.carrier_frequency,
+            azimuth_times=self.ref_time,
         )
         np.testing.assert_allclose(dc, np.repeat(self.expected_res, 4), atol=self.tolerance, rtol=0)
 
     def test_get_doppler_centroid_vectorized_1(self):
         """Testing get_doppler_centroid function, vectorized times"""
-        dc = support.get_doppler_centroid(
-            channel_data=self.channel_data,
-            azimuth_time=np.array([self.ref_time, self.ref_time]),
-            ground_point=self.ref_ground_point,
+        squint_angles = support.get_squint_angle(
+            trajectory=self.channel_data.trajectory,
+            azimuth_times=np.array([self.ref_time, self.ref_time]),
+            ground_points=self.ref_ground_point,
+        )
+        dc = support.squint_to_doppler(
+            squint_angles=squint_angles,
+            trajectory=self.channel_data.trajectory,
+            carrier_frequency=self.channel_data.carrier_frequency,
+            azimuth_times=np.array([self.ref_time, self.ref_time]),
         )
         np.testing.assert_allclose(dc, np.repeat(self.expected_res, 2), atol=self.tolerance, rtol=0)
 
     def test_get_doppler_centroid_vectorized_2(self):
         """Testing get_doppler_centroid function, vectorized all"""
-        dc = support.get_doppler_centroid(
-            channel_data=self.channel_data,
-            azimuth_time=np.array([self.ref_time, self.ref_time, self.ref_time, self.ref_time]),
-            ground_point=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
+        squint_angles = support.get_squint_angle(
+            trajectory=self.channel_data.trajectory,
+            azimuth_times=np.array([self.ref_time, self.ref_time, self.ref_time, self.ref_time]),
+            ground_points=np.tile(self.ref_ground_point, 4).reshape(-1, 3),
+        )
+        dc = support.squint_to_doppler(
+            squint_angles=squint_angles,
+            trajectory=self.channel_data.trajectory,
+            carrier_frequency=self.channel_data.carrier_frequency,
+            azimuth_times=np.array([self.ref_time, self.ref_time, self.ref_time, self.ref_time]),
         )
         np.testing.assert_allclose(dc, np.repeat(self.expected_res, 4), atol=self.tolerance, rtol=0)
