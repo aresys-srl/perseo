@@ -13,6 +13,8 @@ from perseo_core.geometry.geocoding import (
     inverse_geocoding_monostatic,
     inverse_geocoding_monostatic_with_attitude,
 )
+from perseo_core.geometry.navigation import Trajectory
+from perseo_core.geometry.pointing import Attitude
 from perseo_core.timing import PreciseDateTime
 from scipy.constants import speed_of_light
 
@@ -21,64 +23,177 @@ from perseo_quality.io.quality_input_protocol import ChannelData
 
 
 def get_squint_angle(
-    channel_data: ChannelData, azimuth_time: PreciseDateTime, ground_point: npt.NDArray[np.floating]
-) -> float:
-    """Compute squint angle (radians) for a given azimuth time and ground point.
+    trajectory: Trajectory, azimuth_times: PreciseDateTime | npt.NDArray, ground_points: npt.NDArray[np.floating]
+) -> float | npt.NDArray[np.floating]:
+    """Compute squint angle (radians) for given azimuth times and ground points.
 
     Parameters
     ----------
-    channel_data : ChannelManager
-        ChannelManager instance
-    azimuth_time : PreciseDateTime
-        azimuth time at which compute the squint angle
-    ground_point : npt.NDArray[np.floating]
-        ground point seen by the sensor at the provided azimuth time
+    trajectory : Trajectory
+        trajectory
+    azimuth_times : PreciseDateTime | npt.NDArray
+        azimuth times at which compute the squint angle
+    ground_points : npt.NDArray[np.floating]
+        ground points
+
+    Returns
+    -------
+    float | npt.NDArray[np.floating]
+        squint angle (rad)
+    """
+    sensor_positions = trajectory.position(azimuth_times)
+    sensor_velocities = trajectory.velocity(azimuth_times)
+
+    return get_geometric_squint_angle(
+        sensor_positions=sensor_positions, sensor_velocities=sensor_velocities, ground_points=ground_points
+    )
+
+
+def squint_to_doppler(
+    squint_angles: float | npt.NDArray[np.floating],
+    trajectory: Trajectory,
+    carrier_frequency: float,
+    azimuth_times: PreciseDateTime | npt.NDArray,
+) -> float | npt.NDArray[np.floating]:
+    """Computing doppler centroid frequency from azimuth time and its corresponding squint angle.
+
+    Parameters
+    ----------
+    squint_angles : float | npt.NDArray[np.floating]
+        squint angle (rad)
+    trajectory : Trajectory
+        trajectory
+    carrier_frequency : float
+        carrier frequency (Hz)
+    azimuth_times : PreciseDateTime | npt.NDArray
+        azimuth times at which compute the doppler centroid
+
+    Returns
+    -------
+    float | npt.NDArray[np.floating]
+        doppler centroid frequency (Hz)
+    """
+
+    sensor_velocity = trajectory.velocity(azimuth_times)
+    sensor_velocity_norm = np.linalg.norm(sensor_velocity, axis=-1)
+
+    return 2.0 * carrier_frequency / speed_of_light * sensor_velocity_norm * np.sin(squint_angles)
+
+
+def compute_squint_and_doppler_from_antenna_pointing(
+    trajectory: Trajectory,
+    attitude: Attitude,
+    ground_points: npt.NDArray[np.floating],
+    initial_azimuth_time_guess: PreciseDateTime,
+    carrier_frequency: float,
+) -> tuple[float, float, PreciseDateTime]:
+    """Computing squint angle and doppler centroid from attitude information.
+
+    Parameters
+    ----------
+    trajectory : Trajectory
+        trajectory
+    attitude : Attitude
+        attitude
+    ground_points : npt.NDArray[np.floating]
+        single ground point, shape ``(3,)``
+    initial_azimuth_time_guess : PreciseDateTime
+        initial azimuth time guess
+    carrier_frequency : float
+        carrier frequency (Hz)
 
     Returns
     -------
     float
         squint angle (rad)
+    float
+        doppler centroid (Hz)
+    PreciseDateTime
+        sensor time with doppler
     """
-    sensor_position = channel_data.trajectory.position(azimuth_time).squeeze()
-    sensor_velocity = channel_data.trajectory.velocity(azimuth_time).squeeze()
+    sensor_time_with_doppler, _ = inverse_geocoding_monostatic_with_attitude(
+        trajectory=trajectory,
+        attitude=attitude,
+        ground_points=ground_points,
+        az_initial_time_guesses=initial_azimuth_time_guess,
+        doppler_frequencies=0,
+        wavelength=speed_of_light / carrier_frequency,
+    )
+    assert isinstance(sensor_time_with_doppler, PreciseDateTime)
 
-    return get_geometric_squint_angle(
-        sensor_positions=sensor_position, sensor_velocities=sensor_velocity, ground_points=ground_point
+    squint_angle = get_squint_angle(
+        trajectory=trajectory,
+        azimuth_times=sensor_time_with_doppler,
+        ground_points=ground_points,
+    )
+    doppler_centroid = squint_to_doppler(
+        squint_angles=squint_angle,
+        trajectory=trajectory,
+        carrier_frequency=carrier_frequency,
+        azimuth_times=sensor_time_with_doppler,
     )
 
+    squint_angle = float(squint_angle)
+    doppler_centroid = float(doppler_centroid)
 
-def get_doppler_centroid(
-    channel_data: ChannelData, azimuth_time: PreciseDateTime, ground_point: npt.NDArray[np.floating]
-) -> float:
-    """Computing doppler centroid frequency from azimuth time and its corresponding squint angle.
+    return squint_angle, doppler_centroid, sensor_time_with_doppler
+
+
+def compute_squint_and_doppler_from_polynomials(
+    trajectory: Trajectory,
+    doppler_centroid_poly,
+    ground_points: npt.NDArray[np.floating],
+    azimuth_time: PreciseDateTime,
+    range_time: float,
+    carrier_frequency: float,
+) -> tuple[float, float, PreciseDateTime]:
+    """Computing squint angle and doppler centroid from doppler centroid polynomial.
 
     Parameters
     ----------
-    channel_data : ChannelManager
-        ChannelManager instance
+    trajectory : Trajectory
+        trajectory
+    doppler_centroid_poly : DopplerCentroidPolynomial
+        doppler centroid polynomial
+    ground_points : npt.NDArray[np.floating]
+        single ground point, shape ``(3,)``
     azimuth_time : PreciseDateTime
-        azimuth time at which compute doppler centroid frequency
-    ground_point : npt.NDArray[np.floating]
-        ground point seen by the sensor at the provided azimuth time
+        azimuth time at which to compute the output
+    range_time : float
+        range time at which to compute the output
+    carrier_frequency : float
+        carrier frequency (Hz)
 
     Returns
     -------
     float
-        doppler centroid frequency (Hz)
+        squint angle (rad)
+    float
+        doppler centroid (Hz)
+    PreciseDateTime
+        sensor time with doppler
     """
 
-    squint_angle = get_squint_angle(channel_data=channel_data, azimuth_time=azimuth_time, ground_point=ground_point)
-    sensor_velocity = channel_data.trajectory.velocity(azimuth_time).squeeze()
-    sensor_velocity_norm = np.linalg.norm(sensor_velocity, axis=-1)
-    carrier_freq = channel_data.carrier_frequency / speed_of_light
+    doppler_centroid = float(doppler_centroid_poly.evaluate(azimuth_time=azimuth_time, range_time=range_time))
+    sensor_time_with_doppler, _ = inverse_geocoding_monostatic(
+        trajectory=trajectory,
+        ground_points=ground_points,
+        doppler_frequencies=doppler_centroid,
+        wavelength=speed_of_light / carrier_frequency,
+        az_initial_time_guesses=azimuth_time,
+    )
+    assert isinstance(sensor_time_with_doppler, PreciseDateTime)
 
-    return 2.0 * carrier_freq * sensor_velocity_norm * np.sin(squint_angle)
+    sensor_velocity = float(np.linalg.norm(trajectory.velocity(azimuth_time)))
+    squint_angle = doppler_centroid / (2.0 * sensor_velocity / (speed_of_light / carrier_frequency))
+
+    return squint_angle, doppler_centroid, sensor_time_with_doppler
 
 
 def compute_side_lobes_directions(
     channel_data: ChannelData,
-    peak_azimuth_time: PreciseDateTime,
-    peak_range_time: float,
+    azimuth_time: PreciseDateTime,
+    range_time: float,
     azimuth_step_m: float,
 ) -> tuple[SideLobesDirections, float, float]:
     """Computing side lobe directions for squinted data and squint angle.
@@ -87,10 +202,12 @@ def compute_side_lobes_directions(
     ----------
     channel_data : ChannelManager
         ChannelManager instance
-    peak_azimuth_time : PreciseDateTime
-        azimuth time corresponding to the point target signal peak
-    peak_range_time : float
-        range time corresponding to the point target signal peak
+    azimuth_time : PreciseDateTime
+        azimuth time where to compute the side lobes directions
+    range_time : float
+        range time where to compute the side lobes directions
+    azimuth_step_m : float
+        azimuth step in meters
 
     Returns
     -------
@@ -102,13 +219,13 @@ def compute_side_lobes_directions(
         doppler centroid (Hz)
     """
 
-    sensor_pos = channel_data.trajectory.position(peak_azimuth_time)
-    sensor_vel = channel_data.trajectory.velocity(peak_azimuth_time)
+    sensor_pos = channel_data.trajectory.position(azimuth_time)
+    sensor_vel = channel_data.trajectory.velocity(azimuth_time)
 
     earth_point_zero_doppler = direct_geocoding_monostatic(
         sensor_positions=sensor_pos,
         sensor_velocities=sensor_vel,
-        range_times=peak_range_time,
+        range_times=range_time,
         doppler_frequencies=0,
         wavelength=1,
         look_direction=channel_data.looking_side.value,
@@ -121,44 +238,32 @@ def compute_side_lobes_directions(
 
     if channel_data.attitude is not None:
         # computing side lobes with attitude
-        sensor_time_with_doppler, _ = inverse_geocoding_monostatic_with_attitude(
+        squint_angle, doppler_centroid, sensor_time_with_doppler = compute_squint_and_doppler_from_antenna_pointing(
             trajectory=channel_data.trajectory,
             attitude=channel_data.attitude,
             ground_points=earth_point_zero_doppler,
-            doppler_frequencies=0,
-            wavelength=1,
-            az_initial_time_guesses=peak_azimuth_time,
+            initial_azimuth_time_guess=azimuth_time,
+            carrier_frequency=channel_data.carrier_frequency,
         )
-
-        # computing squint angle and doppler centroid
-        squint_angle = get_squint_angle(
-            channel_data=channel_data, azimuth_time=sensor_time_with_doppler, ground_point=earth_point_zero_doppler
-        )
-        doppler_centroid = get_doppler_centroid(
-            channel_data=channel_data, azimuth_time=sensor_time_with_doppler, ground_point=earth_point_zero_doppler
-        )
-
-    elif channel_data.doppler_centroid is not None:
-        # computing side lobes with doppler
-        doppler_centroid = channel_data.doppler_centroid.evaluate(
-            azimuth_time=peak_azimuth_time, range_time=peak_range_time
-        )
-        sensor_time_with_doppler, _ = inverse_geocoding_monostatic(
+    else:
+        assert channel_data.doppler_centroid is not None
+        squint_angle, doppler_centroid, sensor_time_with_doppler = compute_squint_and_doppler_from_polynomials(
             trajectory=channel_data.trajectory,
+            doppler_centroid_poly=channel_data.doppler_centroid,
             ground_points=earth_point_zero_doppler,
-            doppler_frequencies=doppler_centroid,
-            wavelength=speed_of_light / channel_data.carrier_frequency,
-            az_initial_time_guesses=peak_azimuth_time,
+            azimuth_time=azimuth_time,
+            range_time=range_time,
+            carrier_frequency=channel_data.carrier_frequency,
         )
-        sat_velocity = np.linalg.norm(channel_data.trajectory.velocity(peak_azimuth_time))
-        squint_angle = doppler_centroid / (2 * sat_velocity / (speed_of_light / channel_data.carrier_frequency))
 
-    sensor_position_zero_doppler = channel_data.trajectory.position(peak_azimuth_time).T
-    sensor_position_with_doppler = channel_data.trajectory.position(sensor_time_with_doppler).T
+    sensor_position_zero_doppler = channel_data.trajectory.position(azimuth_time)
+    sensor_position_with_doppler = channel_data.trajectory.position(sensor_time_with_doppler)
 
-    los_zd = np.squeeze(sensor_position_zero_doppler - earth_point_zero_doppler)
-    los_hd = np.squeeze(sensor_position_with_doppler - earth_point_zero_doppler)
-    slope = np.sign(doppler_centroid) * np.arctan2(np.linalg.norm(np.cross(los_zd, los_hd)), np.dot(los_zd, los_hd))
+    los_zero_doppler = np.squeeze(sensor_position_zero_doppler - earth_point_zero_doppler)
+    los_with_doppler = np.squeeze(sensor_position_with_doppler - earth_point_zero_doppler)
+    slope = np.sign(doppler_centroid) * np.arctan2(
+        np.linalg.norm(np.cross(los_zero_doppler, los_with_doppler)), np.dot(los_zero_doppler, los_with_doppler)
+    )
 
     # evaluating range and azimuth angular coefficients in samples (IRF Rng and Az cuts)
     step_ratio = azimuth_step_m / channel_data.range_step_m
