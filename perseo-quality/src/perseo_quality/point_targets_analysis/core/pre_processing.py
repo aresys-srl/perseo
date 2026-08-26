@@ -15,7 +15,7 @@ from perseo_quality.core.custom_errors import (
     RangeExceedsBoundariesError,
     TargetAreaRecenteringError,
 )
-from perseo_quality.core.generic_dataclasses import SARCoordinates, TargetDataType
+from perseo_quality.core.generic_dataclasses import SARCoordinates, SARRadiometricQuantity, TargetDataType
 from perseo_quality.core.masking_operations import get_interpolated_lobes_cuts
 from perseo_quality.io.quality_input_protocol import ChannelData
 from perseo_quality.logger import quality_logger as log
@@ -295,6 +295,7 @@ def extract_target_area(
             range_index=round(azimuth_range_coordinates.range_index_subpx),
             cropping_size=initial_crop,
             burst=azimuth_range_coordinates.burst,
+            output_radiometric_quantity=SARRadiometricQuantity.BETA_NOUGHT,
         )
     except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
         log.warning(err)
@@ -350,6 +351,7 @@ def extract_target_area(
                 range_index=peak_rng_index,
                 cropping_size=final_crop,
                 burst=azimuth_range_coordinates.burst,
+                output_radiometric_quantity=SARRadiometricQuantity.BETA_NOUGHT,
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError):
             log.warning(f"Extracted ROI exceeds burst boundaries, trying a smaller roi {initial_crop}")
@@ -358,6 +360,7 @@ def extract_target_area(
                 range_index=peak_rng_index,
                 cropping_size=initial_crop,
                 burst=azimuth_range_coordinates.burst,
+                output_radiometric_quantity=SARRadiometricQuantity.BETA_NOUGHT,
             )
             log.debug(f"Cropping target area around signal peak position: size {initial_crop}")
     except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
@@ -397,6 +400,7 @@ def extract_target_area(
                 range_index=int(peak_rng_index),
                 cropping_size=(final_crop[0] * rng_ovrs, final_crop[1] * az_ovrs),
                 burst=azimuth_range_coordinates.burst,
+                output_radiometric_quantity=SARRadiometricQuantity.BETA_NOUGHT,
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
             log.warning(err)
