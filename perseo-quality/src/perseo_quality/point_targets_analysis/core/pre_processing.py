@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 import perseo_quality.core.signal_processing as sp
@@ -289,8 +291,8 @@ def extract_target_area(
     try:
         log.debug(f"Cropping target area around nominal target position: size {initial_crop}")
         target_area = channel_data.read_data(
-            azimuth_index=np.round(azimuth_range_coordinates.azimuth_index_subpx).astype("int64"),
-            range_index=np.round(azimuth_range_coordinates.range_index_subpx).astype("int64"),
+            azimuth_index=round(azimuth_range_coordinates.azimuth_index_subpx),
+            range_index=round(azimuth_range_coordinates.range_index_subpx),
             cropping_size=initial_crop,
             burst=azimuth_range_coordinates.burst,
         )
@@ -325,17 +327,18 @@ def extract_target_area(
     # second cropping, centered on peak coordinates
     peak_coords_swath = np.array(
         (
-            np.round(azimuth_range_coordinates.range_index_subpx) - np.round(initial_crop[0] / 2) + peak_range_im,
-            np.round(azimuth_range_coordinates.azimuth_index_subpx) - np.round(initial_crop[1] / 2) + peak_azimuth_im,
+            round(azimuth_range_coordinates.range_index_subpx) - round(initial_crop[0] / 2) + peak_range_im,
+            round(azimuth_range_coordinates.azimuth_index_subpx) - round(initial_crop[1] / 2) + peak_azimuth_im,
         )
     )
-    peak_az_index = np.round(
-        np.round(azimuth_range_coordinates.azimuth_index_subpx)
-        - np.floor(initial_crop[1] / 2)
-        + np.floor(peak_azimuth_im)
+    peak_az_index = (
+        round(azimuth_range_coordinates.azimuth_index_subpx)
+        - math.floor(initial_crop[1] / 2)
+        + math.floor(peak_azimuth_im)
     )
-    peak_rng_index = np.round(
-        np.round(azimuth_range_coordinates.range_index_subpx) - np.floor(initial_crop[0] / 2) + np.floor(peak_range_im)
+
+    peak_rng_index = (
+        round(azimuth_range_coordinates.range_index_subpx) - math.floor(initial_crop[0] / 2) + math.floor(peak_range_im)
     )
 
     # final cropping around peak position
@@ -343,16 +346,16 @@ def extract_target_area(
         log.debug(f"Cropping target area around signal peak position: size {final_crop}")
         try:
             target_area = channel_data.read_data(
-                azimuth_index=int(peak_az_index),
-                range_index=int(peak_rng_index),
+                azimuth_index=peak_az_index,
+                range_index=peak_rng_index,
                 cropping_size=final_crop,
                 burst=azimuth_range_coordinates.burst,
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError):
             log.warning(f"Extracted ROI exceeds burst boundaries, trying a smaller roi {initial_crop}")
             target_area = channel_data.read_data(
-                azimuth_index=int(peak_az_index),
-                range_index=int(peak_rng_index),
+                azimuth_index=peak_az_index,
+                range_index=peak_rng_index,
                 cropping_size=initial_crop,
                 burst=azimuth_range_coordinates.burst,
             )
@@ -367,25 +370,21 @@ def extract_target_area(
 
     if channel_data.sampling_constants is not None:
         try:
-            rng_ovrs = np.max(
-                [
-                    np.round(
-                        channel_data.sampling_constants.range_freq_hz
-                        / channel_data.sampling_constants.range_bandwidth_freq_hz
-                        / ovrs_factor
-                    ),
-                    1,
-                ]
+            rng_ovrs = max(
+                round(
+                    channel_data.sampling_constants.range_freq_hz
+                    / channel_data.sampling_constants.range_bandwidth_freq_hz
+                    / ovrs_factor
+                ),
+                1,
             )
-            az_ovrs = np.max(
-                [
-                    np.round(
-                        channel_data.sampling_constants.azimuth_freq_hz
-                        / channel_data.sampling_constants.azimuth_bandwidth_freq_hz
-                        / ovrs_factor
-                    ),
-                    1,
-                ]
+            az_ovrs = max(
+                round(
+                    channel_data.sampling_constants.azimuth_freq_hz
+                    / channel_data.sampling_constants.azimuth_bandwidth_freq_hz
+                    / ovrs_factor
+                ),
+                1,
             )
         except ZeroDivisionError:
             rng_ovrs = 1
@@ -396,10 +395,7 @@ def extract_target_area(
             target_area = channel_data.read_data(
                 azimuth_index=int(peak_az_index),
                 range_index=int(peak_rng_index),
-                cropping_size=(
-                    np.round(final_crop[0] * rng_ovrs).astype("int64"),
-                    np.round(final_crop[1] * az_ovrs).astype("int64"),
-                ),
+                cropping_size=(final_crop[0] * rng_ovrs, final_crop[1] * az_ovrs),
                 burst=azimuth_range_coordinates.burst,
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
@@ -413,12 +409,8 @@ def extract_target_area(
         ]
     )
 
-    nom_rng = azimuth_range_coordinates.range_index_subpx - (
-        np.round(peak_rng_index).astype("int64") - target_area.shape[0] // 2
-    )
-    nom_az = azimuth_range_coordinates.azimuth_index_subpx - (
-        np.round(peak_az_index).astype("int64") - target_area.shape[1] // 2
-    )
+    nom_rng = azimuth_range_coordinates.range_index_subpx - (peak_rng_index - target_area.shape[0] // 2)
+    nom_az = azimuth_range_coordinates.azimuth_index_subpx - (peak_az_index - target_area.shape[1] // 2)
     nominal_coordinates = np.array([nom_rng, nom_az])
 
     return target_area, peak_coordinates, nominal_coordinates, peak_coords_swath
