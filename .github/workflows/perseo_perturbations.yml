@@ -80,7 +80,7 @@ jobs:
       - run: uv build --sdist .
         working-directory: perseo-perturbations
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: sdist
           path: perseo-perturbations/dist/*.tar.gz
@@ -155,7 +155,7 @@ jobs:
             DELOCATE_ALLOW_VERSION_MISMATCH=1
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
@@ -218,7 +218,7 @@ jobs:
             --junitxml=_build/pytest-report-linux-py${{ matrix.python }}.xml \
             --cov-report=xml:_build/pytest-coverage-linux-py${{ matrix.python }}.xml
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: test-results-linux-${{ matrix.python }}
           path: _build/
@@ -285,7 +285,7 @@ jobs:
             --junitxml=_build/pytest-report-win-py${{ matrix.python }}.xml `
             --cov-report=xml:_build/pytest-coverage-win-py${{ matrix.python }}.xml
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: test-results-windows-${{ matrix.python }}
           path: _build/
@@ -348,7 +348,7 @@ jobs:
             --junitxml=_build/pytest-report-macos-py${{ matrix.python }}.xml \
             --cov-report=xml:_build/pytest-coverage-macos-py${{ matrix.python }}.xml
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: test-results-macos-${{ matrix.python }}
           path: _build/

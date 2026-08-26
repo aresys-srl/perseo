@@ -50,13 +50,13 @@ jobs:
           ls -la site/
 
       - name: Upload docs site
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: docs-site
           path: site/
           retention-days: 14
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: docs-archive
           path: documentation*.zip
