@@ -48,6 +48,7 @@ class SARCoordinatesFunction(Protocol):
         float
             output of the wrapped function
         """
+        ...
 
 
 @runtime_checkable
@@ -57,10 +58,12 @@ class QualityInputProduct(Protocol):
     @property
     def name(self) -> str:
         """Get product name"""
+        ...
 
     @property
     def channels_list(self) -> list[int] | list[str]:
         """Get list of available channels for this product"""
+        ...
 
     def get_channel_data(self, channel_id: int | str) -> ChannelData | ExtendedChannelData:
         """Gathering all the information that are channel dependent and storing them in a protocol compliant object.
@@ -75,6 +78,7 @@ class QualityInputProduct(Protocol):
         ChannelData | ExtendedChannelData
             ChannelData/ExtendedChannelData-compliant object containing data corresponding to the selected channel
         """
+        ...
 
 
 @runtime_checkable
@@ -84,102 +88,127 @@ class ChannelData(Protocol):
     @property
     def sensor_name(self) -> str:
         """Name of the sensor"""
+        ...
 
     @property
     def swath_name(self) -> str:
         """Name of the swath being analyzed"""
+        ...
 
     @property
     def channel_id(self) -> int | str:
         """Identifier corresponding to the current channel data"""
+        ...
 
     @property
     def prf(self) -> float:
         """Sensor Pulse Repetition Frequency (PRF)"""
+        ...
 
     @property
     def range_step_m(self) -> float:
         """Step along range direction, in meters"""
+        ...
 
     @property
     def azimuth_step_s(self) -> float:
         """Step along azimuth direction, in seconds"""
+        ...
 
     @property
     def projection(self) -> SARProjection:
         """Channel data projection"""
+        ...
 
     @property
     def polarization(self) -> SARPolarization:
         """Channel data polarization"""
+        ...
 
     @property
     def acquisition_mode(self) -> SARAcquisitionMode:
         """Channel data acquisition mode"""
+        ...
 
     @property
     def orbit_direction(self) -> SAROrbitDirection:
         """Channel data orbit direction"""
+        ...
 
     @property
     def image_type(self) -> SARImageType:
         """Channel raster image type"""
+        ...
 
     @property
     def sampling_constants(self) -> SARSamplingFrequencies:
         """Channel data sampling constants"""
+        ...
 
     @property
     def looking_side(self) -> SARSideLooking:
         """Sensor look direction for this channel"""
+        ...
 
     @property
     def carrier_frequency(self) -> float:
         """Signal carrier frequency"""
+        ...
 
     @property
     def mid_azimuth_time(self) -> PreciseDateTime:
         """Azimuth time at half swath"""
+        ...
 
     @property
     def mid_range_time(self) -> float:
         """Range time at half swath"""
+        ...
 
     @property
     def trajectory(self) -> Trajectory:
         """Channel trajectory/orbit"""
+        ...
 
     @property
     def attitude(self) -> Attitude | None:
         """Channel attitude defined in ECEF Reference Frame"""
+        ...
 
     @property
     def doppler_centroid(self) -> SARCoordinatesFunction | None:
         """Channel doppler centroid polynomial wrapper"""
+        ...
 
     @property
     def doppler_rate(self) -> SARCoordinatesFunction | None:
         """Channel doppler rate polynomial wrapper"""
+        ...
 
     @property
     def range_axis(self) -> npt.NDArray[np.floating]:
         """Range axis"""
+        ...
 
     @property
     def slant_range_axis(self) -> npt.NDArray[np.floating]:
         """Slant range axis"""
+        ...
 
     @property
     def azimuth_axis(self) -> np.ndarray:
         """Azimuth axis, PreciseDateTime format"""
+        ...
 
     @property
     def lines_per_burst(self) -> np.ndarray:
         """Lines per burst array, a value for each burst in the swath"""
+        ...
 
     @property
     def radiometric_quantity(self) -> SARRadiometricQuantity:
         """Channel radiometric quantity"""
+        ...
 
     def get_mid_burst_times(self, burst: int) -> tuple[PreciseDateTime, float] | tuple[None, None]:
         """Compute mid azimuth and range times for a given burst.
@@ -189,6 +218,7 @@ class ChannelData(Protocol):
         tuple[PreciseDateTime, float] | tuple[None, None]
             azimuth and range mid burst times, (None, None) if no bursts
         """
+        ...
 
     def get_steering_rate(self, azimuth_time: PreciseDateTime, burst: int) -> float:
         """Compute steering rate at a given azimuth time and for a given burst.
@@ -205,9 +235,10 @@ class ChannelData(Protocol):
         float
             azimuth steering rate
         """
+        ...
 
     def pixel_to_times_conversion(
-        self, azimuth_index: float, range_index: float, burst: int = None
+        self, azimuth_index: float, range_index: float, burst: int | None = None
     ) -> tuple[PreciseDateTime, float]:
         """Converting input raster pixel coordinates (azimuth_index and range index) to corresponding absolute times,
         azimuth and range.
@@ -218,7 +249,7 @@ class ChannelData(Protocol):
             azimuth pixel index, subpixel precision
         range_index : float
             range pixel index, subpixel precision
-        burst : int, optional
+        burst : int | None, optional
             burst index, by default None
 
         Returns
@@ -228,9 +259,10 @@ class ChannelData(Protocol):
         float
             range time
         """
+        ...
 
     def times_to_pixel_conversion(
-        self, azimuth_time: PreciseDateTime, range_time: float, burst: int = None
+        self, azimuth_time: PreciseDateTime, range_time: float, burst: int | None = None
     ) -> tuple[float, float]:
         """Converting azimuth and range times to raster image pixels indexes with subpixel precision.
 
@@ -240,7 +272,7 @@ class ChannelData(Protocol):
             azimuth time
         range_time : float
             range time
-        burst : int
+        burst : int | None, optional
             burst number corresponding to these times
 
         Returns
@@ -250,6 +282,7 @@ class ChannelData(Protocol):
         float
             pixel corresponding to range time
         """
+        ...
 
     def ground_points_to_burst_association(self, coordinates: ArrayLike) -> list[list[int] | None]:
         """Determining the burst (or bursts) where the input coordinates lie. If no association can be found (i.e. the
@@ -265,6 +298,7 @@ class ChannelData(Protocol):
         list[list[int] | None]
             list containing the burst association for each input point, None if no association was found
         """
+        ...
 
     def read_data(
         self,
@@ -303,6 +337,7 @@ class ChannelData(Protocol):
             cropped swath array centered to the input target coordinates, data is provided with shape (samples, lines)
             by default the output radiometric quantity is BETA_NOUGHT, unless specified otherwise
         """
+        ...
 
     def get_location_data(
         self,
@@ -324,6 +359,7 @@ class ChannelData(Protocol):
         LocationData
             LocationData instance related to the selected location
         """
+        ...
 
 
 @runtime_checkable
@@ -345,6 +381,7 @@ class ExtendedChannelData(ChannelData, Protocol):
         float | None
             roll angle in degrees, None if roll angle is not available
         """
+        ...
 
     def get_altitude_m(self, azimuth_time: PreciseDateTime) -> float:
         """Compute altitude over WGS84 ellipsoid at a given azimuth time.
@@ -359,6 +396,7 @@ class ExtendedChannelData(ChannelData, Protocol):
         float
             altitude over WGS84 ellipsoid in meters
         """
+        ...
 
     def get_noise_vector(self, azimuth_indexes: int | tuple[int, int]) -> np.ndarray | None:
         """Get noise vector(s) at a given azimuth index(es).
@@ -373,6 +411,7 @@ class ExtendedChannelData(ChannelData, Protocol):
         np.ndarray | None
             noise vector(s) corresponding to the input azimuth index(es), if any else None
         """
+        ...
 
     def times_to_burst_association(self, azimuth_times: ArrayLike) -> list[int]:
         """Associate the right burst to a given input time point. This function returns 1 association for each
@@ -388,6 +427,7 @@ class ExtendedChannelData(ChannelData, Protocol):
         list[int]
             burst associated with the given time
         """
+        ...
 
     def pixel_to_burst_association(self, azimuth_px_indexes: ArrayLike) -> list[int]:
         """Associate the azimuth pixel value to the right burst. This function returns 1 association for each
@@ -403,3 +443,4 @@ class ExtendedChannelData(ChannelData, Protocol):
         list[int]
             burst associated with the given pixel index
         """
+        ...
