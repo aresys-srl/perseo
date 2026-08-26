@@ -147,12 +147,12 @@ def inverse_geocoding_monostatic_core(
     # re-evaluating slant range
     sensor_pos_curr = trajectory.position(azimuth_times)
     line_of_sight = ground_points - sensor_pos_curr
-    slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
+    range_time = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 
-    if np.ndim(slant_range) == 0:
-        slant_range = float(slant_range)  # type: ignore[assignment]
+    if np.ndim(range_time) == 0:
+        return azimuth_times, float(range_time)
 
-    return azimuth_times, slant_range
+    return azimuth_times, range_time
 
 
 def inverse_geocoding_bistatic_core(  # noqa: PLR0915, C901
@@ -701,12 +701,12 @@ def inverse_geocoding_monostatic_attitude_core(
     # re-evaluating slant range
     sensor_pos_curr = trajectory.position(azimuth_times)
     line_of_sight = ground_points - sensor_pos_curr
-    slant_range = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
+    range_time = np.linalg.norm(line_of_sight, axis=-1) * 2 / speed_of_light
 
-    if np.ndim(slant_range) == 0:
-        slant_range = float(slant_range)  # type: ignore[assignment]
+    if np.ndim(range_time) == 0:
+        return azimuth_times, float(range_time)
 
-    return azimuth_times, slant_range
+    return azimuth_times, range_time
 
 
 def _compute_zero_downcrossings(values: np.ndarray) -> npt.NDArray[np.integer]:
