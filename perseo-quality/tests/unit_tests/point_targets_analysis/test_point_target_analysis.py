@@ -13,6 +13,7 @@ import pytest
 from perseo_quality.core.generic_dataclasses import (
     SARCoordinates,
     SARPolarization,
+    SARRadiometricQuantity,
     SARSamplingFrequencies,
 )
 from perseo_quality.io.point_targets import PointTarget
@@ -31,7 +32,12 @@ class MockChannelData:
     """Mock channel to simulate a ChannelData object"""
 
     def read_data(
-        self, azimuth_index: int, range_index: int, burst: int, cropping_size=tuple[int, int]
+        self,
+        azimuth_index: int,
+        range_index: int,
+        burst: int,
+        cropping_size: tuple[int, int],
+        output_radiometric_quantity: SARRadiometricQuantity,
     ) -> npt.NDArray[np.floating]:
         """Mocking the read data method.
 
@@ -43,8 +49,10 @@ class MockChannelData:
             slicing index along range
         burst : int
             burst index
-        cropping_size : tuple[int, int], optional
-            cropping size along both axes, by default tuple[int, int]
+        cropping_size : tuple[int, int]
+            cropping size along both axes
+        output_radiometric_quantity : SARRadiometricQuantity
+            output radiation quantity
 
         Returns
         -------
