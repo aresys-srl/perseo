@@ -394,12 +394,13 @@ def extract_target_area(
     if rng_ovrs > 1 or az_ovrs > 1:
         try:
             target_area = channel_data.read_data(
-                azimuth_index=int(peak_az_index - final_crop[1] * (az_ovrs - 1) / 2),
-                range_index=int(peak_rng_index - final_crop[0] * (rng_ovrs - 1) / 2),
+                azimuth_index=int(peak_az_index),
+                range_index=int(peak_rng_index),
                 cropping_size=(
                     np.round(final_crop[0] * rng_ovrs).astype("int64"),
                     np.round(final_crop[1] * az_ovrs).astype("int64"),
                 ),
+                burst=azimuth_range_coordinates.burst,
             )
         except (AzimuthExceedsBoundariesError, RangeExceedsBoundariesError) as err:
             log.warning(err)
