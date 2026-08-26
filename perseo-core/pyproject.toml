@@ -43,6 +43,12 @@ Documentation = "https://opensource.aresys.it/perseo"
 [project.optional-dependencies]
 dev = ["ruff", "pylint"]
 type = ["mypy", "types-python-dateutil", "scipy-stubs"]
+typecheck = [
+    "mypy==2.1.0",
+    "pyrefly==1.1.0",
+    "types-python-dateutil",
+    "scipy-stubs",
+]
 test = ["pytest>8.0.0", "pytest-cov>7.0.0"]
 docs = ["zensical", "mkdocstrings-python"]
 

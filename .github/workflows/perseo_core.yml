@@ -77,7 +77,7 @@ jobs:
 
       - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
       - run: python --version
-      - run: python -m pip install -e .[type]
+      - run: python -m pip install -e .[typecheck]
       - run: python -m mypy ./src/perseo_core
 
   pyrefly:
@@ -96,7 +96,7 @@ jobs:
 
       - run: echo "/opt/python/cp312-cp312/bin" >> $GITHUB_PATH
       - run: python --version
-      - run: python -m pip install -e . pyrefly
+      - run: python -m pip install -e .[typecheck]
       - run: |
           python -m pyrefly check \
             --python-interpreter-path $(python -c "import sys; print(sys.executable)")
