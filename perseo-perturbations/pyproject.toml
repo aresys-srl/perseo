@@ -13,7 +13,7 @@ dependencies = [
     "more-itertools",
     "netCDF4",
     "pymap3d>=3.2",
-    "perseo-core>=1.0.0",
+    "perseo-core>=1.0.0,<2",
 ]
 dynamic = ["version"]
 classifiers = [
