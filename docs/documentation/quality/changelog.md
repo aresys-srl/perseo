@@ -23,3 +23,4 @@ First official release.
 **Other Changes**
 
 - River masking: adding a stopping criterion for mask growth
+- Restrict perseo-core dependency to version below the next major release to prevent incompatible changes
