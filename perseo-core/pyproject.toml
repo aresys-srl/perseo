@@ -12,6 +12,7 @@ dependencies = [
     "python-dateutil",
     "rich>=13.0.0",
     "astropy>=7.2.0",
+    "satkit",
 ]
 dynamic = ["version"]
 classifiers = [
