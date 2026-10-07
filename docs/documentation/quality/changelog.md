@@ -8,9 +8,17 @@ tags:
 
 # Changelog
 
-## v1.0.0
+## v1.1.1
 
-First official release.
+**Other Changes**
+
+- River masking: adding a stopping criterion for mask growth
+- Restrict perseo-core dependency to version below the next major release to prevent incompatible changes
+- Setting Spectral Analysis variables dtypes in NetCDF output equal to `np.float64`
+
+**Bug Fixes**
+
+- Fixing bug in Point Target Analysis IRF graphical output when plotted objects exceed roi boundaries
 
 ## v1.1.0
 
@@ -18,9 +26,6 @@ First official release.
 
 - Adding cross masking algorithm for RCS computation in point target analysis
 
-## v1.1.1
+## v1.0.0
 
-**Other Changes**
-
-- River masking: adding a stopping criterion for mask growth
-- Restrict perseo-core dependency to version below the next major release to prevent incompatible changes
+First official release.
