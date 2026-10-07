@@ -150,6 +150,8 @@ def irf_graphs(
         ax1.vlines(0, rng_ax_m[0], rng_ax_m[-1])
     else:
         ax1.plot(az_ax_m, lobe_rng * rng_ax_m)
+    ax1.set_xlim(extent[0], extent[1])
+    ax1.set_ylim(extent[2], extent[3])
 
     # customization
     ax1.grid(alpha=0.3, linestyle="--")
