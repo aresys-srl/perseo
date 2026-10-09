@@ -14,3 +14,7 @@ tags:
 ## Cubic Spline Trajectory
 
 ::: perseo_core.geometry.navigation.cubic_spline_trajectory
+
+## PropagatedCubicSplineOrbit
+
+::: perseo_core.geometry.navigation.propagated_cubic_spline_orbit
