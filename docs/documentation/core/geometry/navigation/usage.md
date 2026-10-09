@@ -92,15 +92,17 @@ domain_start, domain_end = trajectory.domain
 print(f"Trajectory valid from {domain_start} to {domain_end}")
 ```
 
-!!! danger "Extrapolation is forbidden"
+!!! warning "Evaluation outside the domain"
 
-    Attempting to evaluate the trajectory outside its defined domain will raise a `RuntimeError`:
+    Attempting to evaluate a `CubicSplineTrajectory` outside its defined domain will raise a `RuntimeError`:
     
     ```python
     # This will raise RuntimeError - outside domain
     trajectory.position(-1.0)  # Error: before start time
     trajectory.position(3.0)   # Error: after end time
     ```
+
+    If evaluation outside the domain is required, use a trajectory implementation that supports it, such as [`PropagatedCubicSplineOrbit`](index.md#propagated-cubic-spline-orbit) for satellite orbits.
 
 ## Use Cases
 
