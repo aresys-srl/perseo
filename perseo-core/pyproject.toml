@@ -42,7 +42,7 @@ Repository = "https://github.com/aresys-srl/perseo"
 Documentation = "https://opensource.aresys.it/perseo"
 
 [project.optional-dependencies]
-dev = ["ruff", "pylint"]
+dev = ["ruff>=0.17.0", "pylint"]
 type = ["mypy", "types-python-dateutil", "scipy-stubs"]
 typecheck = [
     "mypy==2.1.0",
