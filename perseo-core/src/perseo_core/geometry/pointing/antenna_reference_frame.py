@@ -112,7 +112,17 @@ import numpy as np
 import numpy.typing as npt
 from scipy.spatial.transform import Rotation
 
-from perseo_core.geometry.pointing.rotations import RotationOrder, euler_angles_to_rotation, rotation_to_euler_angles
+from perseo_core.geometry.pointing.rotations import (
+    RotationOrder,
+    euler_angles_to_rotation,
+    rotation_to_euler_angles,
+)
+
+__all__ = [
+    "compute_antenna_reference_frame_from_euler_angles",
+    "compute_euler_angles_from_antenna_reference_frame",
+    "compute_pointing_directions",
+]
 
 
 def compute_antenna_reference_frame_from_rotation(
@@ -285,10 +295,3 @@ def compute_pointing_directions(
     local_directions = local_directions / np.linalg.norm(local_directions, axis=-1, keepdims=True)
 
     return np.einsum("...ij,...j->...i", antenna_reference_frame, local_directions)
-
-
-__all__ = [
-    "compute_antenna_reference_frame_from_euler_angles",
-    "compute_euler_angles_from_antenna_reference_frame",
-    "compute_pointing_directions",
-]

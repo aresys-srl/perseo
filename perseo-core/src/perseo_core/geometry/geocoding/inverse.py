@@ -30,6 +30,14 @@ if TYPE_CHECKING:
     from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
+__all__ = [
+    "inverse_geocoding_bistatic",
+    "inverse_geocoding_monostatic",
+    "inverse_geocoding_monostatic_init",
+    "inverse_geocoding_monostatic_with_attitude",
+]
+
+
 def inverse_geocoding_monostatic(
     trajectory: Trajectory,
     ground_points: npt.NDArray[np.floating],
@@ -340,11 +348,3 @@ def inverse_geocoding_bistatic(
     )
 
     return azimuth_times, range_times
-
-
-__all__ = [
-    "inverse_geocoding_bistatic",
-    "inverse_geocoding_monostatic",
-    "inverse_geocoding_monostatic_init",
-    "inverse_geocoding_monostatic_with_attitude",
-]

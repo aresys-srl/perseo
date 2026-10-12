@@ -9,6 +9,8 @@ import numpy as np
 import numpy.typing as npt
 from pyproj import Geod
 
+__all__ = ["WGS84", "compute_line_ellipsoid_intersections", "create_inflated_wgs84_ellipsoid"]
+
 WGS84 = Geod(ellps="WGS84")
 
 
@@ -184,6 +186,3 @@ def compute_line_ellipsoid_intersections(
     if ndim == 1:
         return first_intersections[0], second_intersections[0]
     return first_intersections, second_intersections
-
-
-__all__ = ["WGS84", "compute_line_ellipsoid_intersections", "create_inflated_wgs84_ellipsoid"]

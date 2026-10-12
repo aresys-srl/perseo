@@ -12,6 +12,8 @@ import numpy as np
 
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
+__all__ = ["date_to_gps_week"]
+
 _GPS_START_DATE = datetime(year=1980, month=1, day=6)
 
 
@@ -85,6 +87,3 @@ def precise_datetime_to_numpy(
             return np.array(np.datetime64(times.item().isoformat(), "ns"))
 
         return np.array([np.datetime64(t.isoformat(), "ns") for t in times])
-
-
-__all__ = ["date_to_gps_week"]
