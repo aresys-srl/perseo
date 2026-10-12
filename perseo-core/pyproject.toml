@@ -14,6 +14,7 @@ dependencies = [
     "astropy>=7.2.0",
     "satkit>=0.24",
     "xarray>=2026.9.0",
+    "pillow>=12.0.0",
 ]
 dynamic = ["version"]
 classifiers = [
