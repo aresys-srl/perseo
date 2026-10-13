@@ -8,7 +8,12 @@ from __future__ import annotations
 import numpy as np
 
 from perseo_core.imaging.models import SARDataModel, create_sar_data_model
-from perseo_core.imaging.quicklook.kernels import BoxKernel, DecimationKernel, GaussianKernel
+from perseo_core.imaging.quicklook.kernels import (
+    BoxKernel,
+    DecimationKernel,
+    GaussianKernel,
+    Uniform1DKernel,
+)
 from perseo_core.timing.precise_datetime import PreciseDateTime
 
 DATA_4X4 = np.arange(1, 17, dtype=float).reshape(4, 4)
@@ -60,6 +65,80 @@ class TestBoxKernel:
         data.attrs["units"] = "sigma0"
         result = BoxKernel().apply(data, 2.0, 2.0)
         assert result.attrs["units"] == "sigma0"
+
+
+class TestUniform1DKernel:
+    def test_known_values(self) -> None:
+        result = Uniform1DKernel().apply(_make_data(DATA_4X4), 2.0, 2.0)
+        # window covers 3 pixels with nominal normalization, edges are attenuated
+        np.testing.assert_allclose(result.values, [[14 / 9, 10 / 3], [19 / 3, 11]])
+
+    def test_matches_box_kernel_with_integer_factors(self) -> None:
+        raster = np.random.default_rng(0).random((37, 41))
+        data = _make_data(raster)
+        for factor in [2.0, 3.0, 4.0, 8.0]:
+            uniform = Uniform1DKernel().apply(data, factor, factor).values
+            box = BoxKernel().apply(data, factor, factor).values
+            np.testing.assert_allclose(uniform, box)
+
+    def test_integer_positions_keep_exact_coordinates(self) -> None:
+        data = _make_data(DATA_4X4, azimuth_step=10.0, range_step=5.0)
+        result = Uniform1DKernel().apply(data, 2.0, 2.0)
+        assert result.azimuth.values[0] == data.azimuth.values[0]
+        assert result.azimuth.values[1] == data.azimuth.values[2]
+        np.testing.assert_allclose(result.range.values, [0.0, 10.0])
+
+    def test_rounds_fractional_positions(self) -> None:
+        data = _make_data(np.arange(100, dtype=float).reshape(10, 10))
+        result = Uniform1DKernel().apply(data, 2.4, 2.4)
+        # positions [0, 2.4, 4.8, 7.2, 9.6] are rounded to the nearest pixel
+        positions = np.array([0, 2, 5, 7, 9])
+        raster = data.values
+        # window size is 3, zero-padded: pixels outside the raster count as 0
+        expected = np.array(
+            [
+                [
+                    sum(
+                        raster[i, j]
+                        for i in range(position - 1, position + 2)
+                        for j in range(column - 1, column + 2)
+                        if 0 <= i < raster.shape[0] and 0 <= j < raster.shape[1]
+                    )
+                    / 9.0
+                    for column in positions
+                ]
+                for position in positions
+            ]
+        )
+        np.testing.assert_allclose(result.values, expected)
+
+    def test_fractional_positions_interpolate_coordinates(self) -> None:
+        data = _make_data(np.ones((5, 5)), azimuth_step=10.0, range_step=5.0)
+        result = Uniform1DKernel().apply(data, 2.5, 2.5)
+        # position 2.5 interpolates between pixels 2 and 3
+        expected_azimuth = data.azimuth.values[2] + 0.5 * (data.azimuth.values[3] - data.azimuth.values[2])
+        assert result.azimuth.values[1] == expected_azimuth
+        np.testing.assert_allclose(result.range.values, [0.0, 12.5])
+
+    def test_constant_raster_is_preserved_in_interior(self) -> None:
+        result = Uniform1DKernel().apply(_make_data(np.ones((8, 8))), 2.0, 2.0)
+        np.testing.assert_allclose(result.values[1:-1, 1:-1], 1.0)
+
+    def test_float_subsampling_factor_shape(self) -> None:
+        result = Uniform1DKernel().apply(_make_data(np.ones((5, 5))), 2.5, 2.5)
+        assert result.shape == (2, 2)
+
+    def test_attrs_are_preserved(self) -> None:
+        data = _make_data(DATA_4X4)
+        data.attrs["units"] = "sigma0"
+        result = Uniform1DKernel().apply(data, 2.0, 2.0)
+        assert result.attrs["units"] == "sigma0"
+
+    def test_complex_data(self) -> None:
+        data = _make_data(np.full((6, 6), 1.0 + 1.0j, dtype=np.complex128))
+        result = Uniform1DKernel().apply(data, 2.0, 2.0)
+        assert np.iscomplexobj(result.values)
+        np.testing.assert_allclose(result.values[1:-1, 1:-1], 1.0 + 1.0j)
 
 
 class TestDecimationKernel:

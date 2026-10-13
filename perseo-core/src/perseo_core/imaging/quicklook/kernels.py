@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 from scipy import sparse
+from scipy.ndimage import uniform_filter1d
 
 from perseo_core.imaging.models import (
     AZIMUTH_DIM,
@@ -29,7 +30,7 @@ from perseo_core.imaging.models import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-__all__ = ["BoxKernel", "DecimationKernel", "GaussianKernel", "QuicklookKernel"]
+__all__ = ["BoxKernel", "DecimationKernel", "GaussianKernel", "QuicklookKernel", "Uniform1DKernel"]
 
 
 class QuicklookKernel(Protocol):
@@ -139,6 +140,11 @@ def _gaussian_axis_filter(
     return sparse.csc_matrix(weights / row_sums[:, None])
 
 
+def _uniform_window_size(subsampling_factor: float) -> int:
+    """Window size of the uniform filter matching the box kernel width."""
+    return 2 * int(np.floor(subsampling_factor / 2)) + 1
+
+
 class BoxKernel:
     """Averaging kernel: each output pixel is the mean of the input pixels within a centered window."""
 
@@ -150,6 +156,58 @@ class BoxKernel:
     ) -> SARDataModel:
         """Filter and downsample the data model by separable averaging along both dimensions."""
         return _per_axis_filtering(data, lines_subsampling_factor, samples_subsampling_factor, _box_axis_filter)
+
+
+class Uniform1DKernel:
+    """Averaging kernel based on ``scipy.ndimage.uniform_filter1d``.
+
+    Each output pixel is the mean of the input pixels within a centered
+    window of ``2 * floor(factor / 2) + 1`` pixels, matching the BoxKernel
+    window width. The raster edges are zero-padded, so edge pixels are
+    attenuated like BoxKernel. Filtering is performed by two
+    ``uniform_filter1d`` passes, one per axis with the second in-place,
+    which is faster and uses less memory than building sparse filtering
+    matrices. Fractional subsampling factors are rounded to the nearest
+    pixel position, like DecimationKernel.
+    """
+
+    def apply(
+        self,
+        data: SARDataModel,
+        lines_subsampling_factor: float,
+        samples_subsampling_factor: float,
+    ) -> SARDataModel:
+        """Filter and downsample the data model by separable uniform averaging."""
+        validate_sar_data_model(data)
+        raster_data = data.values
+        low_res_lines = np.arange(raster_data.shape[0], step=lines_subsampling_factor)
+        low_res_samples = np.arange(raster_data.shape[1], step=samples_subsampling_factor)
+        filtered = uniform_filter1d(
+            raster_data,
+            size=_uniform_window_size(lines_subsampling_factor),
+            axis=0,
+            mode="constant",
+            cval=0.0,
+        )
+        uniform_filter1d(
+            filtered,
+            size=_uniform_window_size(samples_subsampling_factor),
+            axis=1,
+            mode="constant",
+            cval=0.0,
+            output=filtered,
+        )
+        line_indexes = np.clip(np.rint(low_res_lines).astype(int), 0, raster_data.shape[0] - 1)
+        sample_indexes = np.clip(np.rint(low_res_samples).astype(int), 0, raster_data.shape[1] - 1)
+        return SARDataModel(
+            filtered[line_indexes][:, sample_indexes],
+            dims=(AZIMUTH_DIM, RANGE_DIM),
+            coords={
+                AZIMUTH_DIM: _interpolate_axis_coords(data[AZIMUTH_DIM].values, low_res_lines),
+                RANGE_DIM: _interpolate_axis_coords(data[RANGE_DIM].values, low_res_samples),
+            },
+            attrs=data.attrs,
+        )
 
 
 class DecimationKernel:
