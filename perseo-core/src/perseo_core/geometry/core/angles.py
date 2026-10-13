@@ -10,6 +10,8 @@ import numpy.typing as npt
 
 from perseo_core.geometry.coordinates.conversions import llh2xyz, xyz2llh
 
+__all__ = ["compute_incidence_angles_core", "compute_look_angles_core", "get_geometric_squint_angle"]
+
 
 def get_geometric_squint_angle(
     sensor_positions: npt.NDArray[np.floating],
@@ -249,6 +251,3 @@ def compute_nadir_from_sensor_positions(
     sensor_position_ground = llh2xyz(sensor_position_ground)
 
     return sensor_position_ground - sensor_positions
-
-
-__all__ = ["compute_incidence_angles_core", "compute_look_angles_core", "get_geometric_squint_angle"]

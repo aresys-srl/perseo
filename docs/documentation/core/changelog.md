@@ -13,6 +13,7 @@ tags:
 **Additional Features**
 
 - Adding `PropagatedCubicSplineOrbit` class, which enables orbit propagation
+- Adding `perseo-core/imaging` module dedicated to imaging utilities such as quicklooks, georeferencing, and more
 
 ## v1.0.0
 

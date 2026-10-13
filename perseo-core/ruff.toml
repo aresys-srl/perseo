@@ -1,6 +1,6 @@
 line-length = 120
 output-format = "concise"
-required-version = ">=0.16.3"
+required-version = ">=0.17.0"
 
 exclude = [
     "scripts",

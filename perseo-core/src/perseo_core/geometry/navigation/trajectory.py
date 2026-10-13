@@ -35,6 +35,8 @@ from typing import Generic, TypeVar
 import numpy as np
 import numpy.typing as npt
 
+__all__ = ["Trajectory"]
+
 T = TypeVar("T", bound=np.generic)
 
 
@@ -121,6 +123,3 @@ class Trajectory(ABC, Generic[T]):
 
         """
         return self.position(time), self.velocity(time), self.acceleration(time)
-
-
-__all__ = ["Trajectory"]
