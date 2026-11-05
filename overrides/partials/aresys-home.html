@@ -1,0 +1,23 @@
+{#-
+  Link to the Aresys Open Source landing page.
+#}
+{% if config.extra.open_source_url %}
+  <a
+    href="{{ config.extra.open_source_url }}"
+    title="{{ config.extra.open_source_label | d('Aresys Open Source Portal') }}"
+    aria-label="{{ config.extra.open_source_label | d('Aresys Open Source Portal') }}"
+    class="md-header__portal"
+  >
+    <img
+      src="{{ 'assets/logo.svg' | url }}"
+      alt=""
+      aria-hidden="true"
+      class="md-header__portal-icon"
+      width="24"
+      height="24"
+    >
+    <span class="md-header__portal-label">
+      {{ config.extra.open_source_label | d('Aresys Open Source Portal') }}
+    </span>
+  </a>
+{% endif %}
