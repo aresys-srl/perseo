@@ -347,7 +347,7 @@ def inverse_geocoding_bistatic_core(  # noqa: PLR0915, C901
 
         # inverse of jacobian
         if jac.shape[0] > 1:
-            inv_jac = np.array([m / jac_det[m_id] for m_id, m in enumerate(jac)])
+            inv_jac = jac / jac_det.reshape(-1, 1, 1)
             delta = np.sum(inv_jac * equations.T[:, None], axis=-1).T
         else:
             inv_jac = jac / jac_det
