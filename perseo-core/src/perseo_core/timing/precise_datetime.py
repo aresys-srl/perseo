@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import functools
 import math
 import re
@@ -67,7 +67,7 @@ def _isoformat_date(year: int, month: int, day: int) -> str:
     return f"{year:04d}-{month:02d}-{day:02d}"
 
 
-def _parse_isoformat_tz(time_string: str) -> tuple[datetime.tzinfo | None, str]:
+def _parse_isoformat_tz(time_string: str) -> tuple[dt.tzinfo | None, str]:
     if not time_string:
         return None, time_string
 
@@ -81,7 +81,7 @@ def _parse_isoformat_tz(time_string: str) -> tuple[datetime.tzinfo | None, str]:
     return None, time_string
 
 
-def _strip_timezone(time: tuple[int, int, int, int, datetime.tzinfo | None]) -> tuple[int, int, int, int]:
+def _strip_timezone(time: tuple[int, int, int, int, dt.tzinfo | None]) -> tuple[int, int, int, int]:
     timezone = time[-1]
     if timezone is not None and timezone != tz.UTC:
         msg = f"Unsupported timezone: {timezone}"
@@ -116,7 +116,7 @@ def _skip_separator(time_string: str, separator: str = _ISO_TIME_SEPARATOR) -> t
     return time_string, False
 
 
-def _parse_isoformat_time(time_string: str) -> tuple[tuple[int, int, int, int, datetime.tzinfo | None], str]:
+def _parse_isoformat_time(time_string: str) -> tuple[tuple[int, int, int, int, dt.tzinfo | None], str]:
     """Parse string formatted according to ISO, returns time components and remaining chars to parse."""
     minute, second, picosecond, timezone = 0, 0, 0, None
 
@@ -234,8 +234,8 @@ class PreciseDateTime:
         "DEC",
     )
     _STRING_FORMAT = "%d-%b-%Y %H:%M:%S."
-    _REFERENCE_DATETIME = datetime.datetime(year=1985, month=1, day=1)
-    _TIME_DIFF_REFERENCE_FROM_1985 = _REFERENCE_DATETIME - datetime.datetime(year=1985, month=1, day=1)
+    _REFERENCE_DATETIME = dt.datetime(year=1985, month=1, day=1)
+    _TIME_DIFF_REFERENCE_FROM_1985 = _REFERENCE_DATETIME - dt.datetime(year=1985, month=1, day=1)
     _PRECISION = 1e-12  # Precision of the decimal part
     _SECONDS_IN_A_DAY = 24 * 60 * 60
 
@@ -413,7 +413,7 @@ class PreciseDateTime:
         """Return a string representation of the current time point."""
         assert isinstance(self._seconds, int)
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         tmp_str = f"{int(self._picoseconds):0>12d}"
 
         # Replacing month abbreviated name directive with english abbreviated month name
@@ -453,7 +453,7 @@ class PreciseDateTime:
         return cls._PRECISION
 
     @classmethod
-    def get_reference_datetime(cls) -> datetime.datetime:
+    def get_reference_datetime(cls) -> dt.datetime:
         """Get reference date-time.
 
         Returns
@@ -468,42 +468,42 @@ class PreciseDateTime:
     def year(self) -> int:
         """Year associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         return int(absolute_datetime.strftime("%Y"))
 
     @property
     def month(self) -> int:
         """Month associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         return int(absolute_datetime.strftime("%m"))
 
     @property
     def day_of_the_month(self) -> int:
         """Day of the month associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         return int(absolute_datetime.strftime("%d"))
 
     @property
     def hour_of_day(self) -> int:
         """Hour of the day associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         return int(absolute_datetime.strftime("%H"))
 
     @property
     def minute_of_hour(self) -> int:
         """Minute of the hour associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         return int(absolute_datetime.strftime("%M"))
 
     @property
     def second_of_minute(self) -> int:
         """Second of the minute associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         return int(absolute_datetime.strftime("%S"))
 
     @property
@@ -524,8 +524,8 @@ class PreciseDateTime:
     def day_of_the_year(self) -> int:
         """Day from the first day of the year associated to the current time point."""
         assert 0 <= self._picoseconds < 1 / self._PRECISION
-        absolute_datetime_first_day_of_year = datetime.datetime(self.year, 1, 1)
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(0, self._seconds)
+        absolute_datetime_first_day_of_year = dt.datetime(self.year, 1, 1)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(0, self._seconds)
         time_diff_from_first_day_of_year = absolute_datetime - absolute_datetime_first_day_of_year
         return time_diff_from_first_day_of_year.days + 1
 
@@ -537,7 +537,7 @@ class PreciseDateTime:
     @classmethod
     def now(cls) -> PreciseDateTime:
         """Create an object with the current time (local timezone)."""
-        absolute_datetime_now = datetime.datetime.now()
+        absolute_datetime_now = dt.datetime.now()
         time_diff_from_reference_date = absolute_datetime_now - cls._REFERENCE_DATETIME
         seconds = time_diff_from_reference_date.total_seconds()
         return cls(seconds, 0)
@@ -629,7 +629,7 @@ class PreciseDateTime:
             in case of invalid picoseconds
 
         """
-        absolute_datetime = datetime.datetime(year, month, day, hours, minutes, seconds)
+        absolute_datetime = dt.datetime(year, month, day, hours, minutes, seconds)
         if not 0 <= picoseconds < 1 / cls._PRECISION:
             msg = f"Picoseconds must be non-negative and less than {1 / cls._PRECISION}"
             raise ValueError(msg)
@@ -705,7 +705,7 @@ class PreciseDateTime:
             time formatted according to ISO
 
         """
-        absolute_datetime = self._REFERENCE_DATETIME + datetime.timedelta(seconds=self._seconds)
+        absolute_datetime = self._REFERENCE_DATETIME + dt.timedelta(seconds=self._seconds)
         date = _isoformat_date(absolute_datetime.year, absolute_datetime.month, absolute_datetime.day)
         time = _isoformat_time(
             absolute_datetime.hour,
