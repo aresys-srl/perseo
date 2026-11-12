@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     import numpy as np
     import numpy.typing as npt
 
+
+__all__ = ["RotationOrder", "euler_angles_to_rotation", "rotation_to_euler_angles"]
+
 RotationOrder = Literal["YPR", "YRP", "PRY", "PYR", "RYP", "RPY"]
 
 _ROT_ORDER_TO_EULER_SEQ: dict[RotationOrder, Literal["ZYX", "ZXY", "YXZ", "YZX", "XZY", "XYZ"]] = {
@@ -107,6 +110,3 @@ def rotation_to_euler_angles(rotation: Rotation, order: RotationOrder) -> npt.ND
 
     indices = [order.index(axis) for axis in "YPR"]
     return euler_angles[..., indices]
-
-
-__all__ = ["RotationOrder", "euler_angles_to_rotation", "rotation_to_euler_angles"]

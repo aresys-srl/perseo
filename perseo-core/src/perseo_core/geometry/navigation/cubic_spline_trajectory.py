@@ -27,6 +27,8 @@ from scipy.interpolate import CubicSpline
 
 from perseo_core.geometry.navigation.trajectory import Trajectory
 
+__all__ = ["CubicSplineTrajectory"]
+
 T = TypeVar("T", bound=np.generic)
 
 
@@ -166,6 +168,3 @@ class CubicSplineTrajectory(Trajectory[T]):
         """
         relative_times = self._relative_times(time)
         return self._interpolator(relative_times, 2, extrapolate=False)
-
-
-__all__ = ["CubicSplineTrajectory"]

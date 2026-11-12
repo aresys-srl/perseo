@@ -12,7 +12,9 @@ dependencies = [
     "python-dateutil",
     "rich>=13.0.0",
     "astropy>=7.2.0",
-    "satkit",
+    "satkit>=0.24",
+    "xarray>=2026.9.0",
+    "pillow>=12.0.0",
 ]
 dynamic = ["version"]
 classifiers = [
@@ -42,7 +44,7 @@ Repository = "https://github.com/aresys-srl/perseo"
 Documentation = "https://opensource.aresys.it/perseo"
 
 [project.optional-dependencies]
-dev = ["ruff", "pylint"]
+dev = ["ruff>=0.17.0", "pylint"]
 type = ["mypy", "types-python-dateutil", "scipy-stubs"]
 typecheck = [
     "mypy==2.1.0",

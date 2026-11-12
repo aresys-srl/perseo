@@ -37,12 +37,23 @@ import numpy as np
 import numpy.typing as npt
 from scipy.spatial.transform import Rotation, Slerp
 
-from perseo_core.geometry.pointing.antenna_reference_frame import compute_antenna_reference_frame_from_euler_angles
-from perseo_core.geometry.pointing.reference_frames import ReferenceFrame, compute_sensor_local_axis
+from perseo_core.geometry.pointing.antenna_reference_frame import (
+    compute_antenna_reference_frame_from_euler_angles,
+)
+from perseo_core.geometry.pointing.reference_frames import (
+    ReferenceFrame,
+    compute_sensor_local_axis,
+)
 from perseo_core.geometry.pointing.rotations import (
     RotationOrder,
     euler_angles_to_rotation,
 )
+
+__all__ = [
+    "Attitude",
+    "compute_antenna_attitude_from_euler_angles",
+    "compute_sensor_attitude_from_state_vectors",
+]
 
 T = TypeVar("T", bound=np.generic)
 
@@ -311,10 +322,3 @@ def compute_sensor_attitude_from_state_vectors(
         sensor_positions=position, sensor_velocities=velocity, reference_frame=reference_frame
     )
     return Attitude(reference_frames=sensor_local_axis, times=times)
-
-
-__all__ = [
-    "Attitude",
-    "compute_antenna_attitude_from_euler_angles",
-    "compute_sensor_attitude_from_state_vectors",
-]

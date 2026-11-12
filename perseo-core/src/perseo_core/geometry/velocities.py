@@ -17,11 +17,13 @@ if TYPE_CHECKING:
     from perseo_core.geometry.pointing.reference_frames import ReferenceFrame
     from perseo_core.timing.precise_datetime import PreciseDateTime
 
+__all__ = ["compute_ground_velocity"]
+
 
 def compute_ground_velocity(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
-    look_angles_rad: npt.NDArray[np.floating],
+    look_angles_rad: float | npt.NDArray[np.floating],
     reference_frame: ReferenceFrame = "ZERODOPPLER",
     geodetic_altitude: float = 0,
     averaging_interval_relative_origin: float = 0,
@@ -39,7 +41,7 @@ def compute_ground_velocity(
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the ground velocity
-    look_angles_rad : npt.NDArray[np.floating]
+    look_angles_rad : float | npt.NDArray[np.floating]
         look angles in radians, float or array with shape (N,)
     reference_frame : "GEOCENTRIC", "GEODETIC", "ZERODOPPLER", optional
         the reference frames in which the look angles are intended, by default "ZERODOPPLER"
@@ -87,6 +89,3 @@ def compute_ground_velocity(
     ground_velocities = np.array([np.sum(v, axis=-1) / averaging_interval_duration for v in ground_velocities_norm])
 
     return ground_velocities if not isinstance(look_angles_rad, float) else ground_velocities[0]
-
-
-__all__ = ["compute_ground_velocity"]
