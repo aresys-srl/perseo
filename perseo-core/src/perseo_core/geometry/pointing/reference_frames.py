@@ -28,6 +28,8 @@ from perseo_core.geometry.pointing.rotations import (
     euler_angles_to_rotation,
 )
 
+__all__ = ["ReferenceFrame", "compute_sensor_local_axis"]
+
 _SIDEREAL_DAY = 86164.09054
 _earth_angular_velocity = 2.0 * np.pi / _SIDEREAL_DAY
 _semi_axes_ratio_min_max = WGS84.b / WGS84.a
@@ -435,6 +437,3 @@ def _ze_xy(x: float, y: float) -> float:
 
 def _ze_xx(x: float, y: float) -> float:
     return -_semi_axis_ratio_sqr / _ze(x, y) + (_semi_axis_ratio_sqr * x) / _ze(x, y) ** 2 * _ze_x(x, y)
-
-
-__all__ = ["ReferenceFrame", "compute_sensor_local_axis"]
