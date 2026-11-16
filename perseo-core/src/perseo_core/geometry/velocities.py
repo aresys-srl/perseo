@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 def compute_ground_velocity(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
-    look_angles_rad: npt.NDArray[np.floating],
+    look_angles_rad: float | npt.NDArray[np.floating],
     reference_frame: ReferenceFrame = "ZERODOPPLER",
     geodetic_altitude: float = 0,
     averaging_interval_relative_origin: float = 0,
@@ -39,7 +39,7 @@ def compute_ground_velocity(
         sensor trajectory
     azimuth_time : PreciseDateTime | np.datetime64
         azimuth time at which compute the ground velocity
-    look_angles_rad : npt.NDArray[np.floating]
+    look_angles_rad : float | npt.NDArray[np.floating]
         look angles in radians, float or array with shape (N,)
     reference_frame : "GEOCENTRIC", "GEODETIC", "ZERODOPPLER", optional
         the reference frames in which the look angles are intended, by default "ZERODOPPLER"
