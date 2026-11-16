@@ -46,12 +46,8 @@ def get_geometric_squint_angle(
     """
     # evaluating squint angle
     line_of_sight = ground_points - sensor_positions
-    line_of_sight = line_of_sight / np.linalg.norm(
-        line_of_sight, axis=-1, keepdims=True
-    )
-    sensor_velocity_norm = sensor_velocities / np.linalg.norm(
-        sensor_velocities, axis=-1, keepdims=True
-    )
+    line_of_sight = line_of_sight / np.linalg.norm(line_of_sight, axis=-1, keepdims=True)
+    sensor_velocity_norm = sensor_velocities / np.linalg.norm(sensor_velocities, axis=-1, keepdims=True)
     squint_angle = np.arcsin(np.sum(line_of_sight * sensor_velocity_norm, axis=-1))
     if not radians:
         return np.rad2deg(squint_angle)
@@ -114,9 +110,7 @@ def compute_look_angles_core(
     sensor_positions = np.asarray(sensor_positions)
     ground_points = np.asarray(ground_points)
     if nadir_directions is None:
-        nadir_directions = compute_nadir_from_sensor_positions(
-            sensor_positions=sensor_positions
-        )
+        nadir_directions = compute_nadir_from_sensor_positions(sensor_positions=sensor_positions)
     else:
         nadir_directions = np.asarray(nadir_directions)
 
@@ -134,14 +128,10 @@ def compute_look_angles_core(
 
     los_directions = ground_points - sensor_positions
     with np.errstate(invalid="ignore", divide="ignore"):
-        los_directions = los_directions / np.linalg.norm(
-            los_directions, axis=-1, keepdims=True
-        )
+        los_directions = los_directions / np.linalg.norm(los_directions, axis=-1, keepdims=True)
 
     if not assume_nadir_directions_normalized:
-        nadir_directions = nadir_directions / np.linalg.norm(
-            nadir_directions, axis=-1, keepdims=True
-        )
+        nadir_directions = nadir_directions / np.linalg.norm(nadir_directions, axis=-1, keepdims=True)
 
     look_angle_cosines = np.sum(nadir_directions * los_directions, axis=-1)
 
@@ -228,18 +218,14 @@ def compute_incidence_angles_core(
             raise ValueError(msg)
 
     los_directions = ground_points - sensor_positions
-    los_directions = los_directions / np.linalg.norm(
-        los_directions, axis=-1, keepdims=True
-    )
+    los_directions = los_directions / np.linalg.norm(los_directions, axis=-1, keepdims=True)
 
     if surface_normals is None:
         surface_normals = ground_points
         assume_surface_normals_normalized = False
 
     if not assume_surface_normals_normalized:
-        surface_normals = surface_normals / np.linalg.norm(
-            surface_normals, axis=-1, keepdims=True
-        )
+        surface_normals = surface_normals / np.linalg.norm(surface_normals, axis=-1, keepdims=True)
 
     incidence_angle_cosine = -1.0 * np.sum(surface_normals * los_directions, axis=-1)
 
