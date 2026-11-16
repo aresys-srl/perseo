@@ -5,4 +5,5 @@
 
 from perseo_core.imaging.quicklook.engine import *
 from perseo_core.imaging.quicklook.kernels import *
+from perseo_core.imaging.quicklook.renderer import *
 from perseo_core.imaging.quicklook.transforms import *
