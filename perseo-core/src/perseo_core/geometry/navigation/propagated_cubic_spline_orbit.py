@@ -25,6 +25,8 @@ from perseo_core.timing.precise_datetime import PreciseDateTime
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+__all__ = ["PropagatedCubicSplineOrbit"]
+
 _GRAVITY_DEGREE: int = 70
 _GRAVITY_ORDER: int = 70
 _ABS_ERROR: float = 1e-10
@@ -285,6 +287,3 @@ class PropagatedCubicSplineOrbit(Trajectory[PreciseDateTime]):  # type: ignore[t
 
         """
         return self._evaluate(time, "acceleration")
-
-
-__all__ = ["PropagatedCubicSplineOrbit"]

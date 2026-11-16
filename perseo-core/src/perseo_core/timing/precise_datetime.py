@@ -13,6 +13,8 @@ from typing import Self, overload
 
 from dateutil import parser, tz  # pyrefly: ignore
 
+__all__ = ["PreciseDateTime"]
+
 _ISO_DATE_SEPARATOR = "-"
 _ISO_TIME_SEPARATOR = ":"
 _ISO_FRACTION_REGEX = re.compile("[\\.,]([0-9]+)")
@@ -715,6 +717,3 @@ class PreciseDateTime:
             timespec=timespec,
         )
         return f"{date}{sep:s}{time}Z"
-
-
-__all__ = ["PreciseDateTime"]

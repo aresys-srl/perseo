@@ -24,6 +24,9 @@ if TYPE_CHECKING:
     from perseo_core.timing.precise_datetime import PreciseDateTime
 
 
+__all__ = ["compute_incidence_angles", "compute_look_angles"]
+
+
 def compute_incidence_angles(
     trajectory: Trajectory,
     azimuth_time: PreciseDateTime | np.datetime64,
@@ -132,6 +135,3 @@ def compute_look_angles(
     if not radians:
         return np.rad2deg(angles)
     return angles
-
-
-__all__ = ["compute_incidence_angles", "compute_look_angles"]
