@@ -18,7 +18,7 @@ thematic operations as indicated by the package name.
 |---------|------|-------|-------------|
 | **perseo-core** | [![PyPI version](https://img.shields.io/pypi/v/perseo-core)](https://pypi.org/project/perseo-core/) | [![Conda](https://img.shields.io/conda/vn/conda-forge/perseo-core)](https://anaconda.org/conda-forge/perseo-core) | Generic and broadly used operations: geometry, timing, logging |
 | **perseo-perturbations** | [![PyPI version](https://img.shields.io/pypi/v/perseo-perturbations)](https://pypi.org/project/perseo-perturbations/) | — | Atmospheric delays, geodynamics displacements, geomagnetic field |
-| **perseo-quality** | [![PyPI version](https://img.shields.io/pypi/v/perseo-quality)](https://pypi.org/project/perseo-quality/) | — | SAR products quality analysis and calibration assessment |
+| **perseo-quality** | [![PyPI version](https://img.shields.io/pypi/v/perseo-quality)](https://pypi.org/project/perseo-quality/) | [![Conda](https://img.shields.io/conda/vn/conda-forge/perseo-quality)](https://anaconda.org/conda-forge/perseo-quality) | SAR products quality analysis and calibration assessment |
 
 ## Installation
 
@@ -30,13 +30,13 @@ pip install perseo-perturbations
 pip install perseo-quality[graphs]
 ```
 
-`perseo-core` is also available on conda-forge:
+`perseo-core` and `perseo-quality` are also available on conda-forge:
 
 ```bash
-conda install -c conda-forge perseo-core
+conda install -c conda-forge perseo-core perseo-quality
 ```
 
-See the [perseo-core conda-forge page](https://anaconda.org/conda-forge/perseo-core) for details. The feedstock is hosted at [github.com/conda-forge/perseo-core-feedstock](https://github.com/conda-forge/perseo-core-feedstock).
+Use the Conda links in the package table to find available versions and builds for each package.
 
 ## Documentation
 
