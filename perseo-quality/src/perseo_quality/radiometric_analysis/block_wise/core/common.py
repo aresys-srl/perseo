@@ -15,7 +15,6 @@ from scipy.ndimage import (
     label,
     uniform_filter,
 )
-from scipy.signal import convolve2d
 
 from perseo_quality.radiometric_analysis.block_wise.config import RiverMaskingConfig
 
@@ -39,14 +38,13 @@ def masking_outliers_by_percentiles(
     npt.NDArray[np.floating]
         input array with NaN where outliers lie
     """
-    filter_kernel = np.ones(kernel)
     masking_cond = np.logical_or(
         data < np.nanpercentile(data.ravel(), percentile_boundaries[0]),
         data > np.nanpercentile(data.ravel(), percentile_boundaries[1]),
     ).astype("int64")
 
     # convolving data with filter kernel
-    mask = np.round(convolve2d(masking_cond, filter_kernel, mode="same") / np.sum(filter_kernel))
+    mask = np.round(uniform_filter(masking_cond, kernel, mode="constant", cval=0.0))
 
     # masking out data
     data[np.where(mask)] = np.nan

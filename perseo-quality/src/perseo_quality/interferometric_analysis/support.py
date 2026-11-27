@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 from netCDF4 import Dataset
-from scipy.signal import convolve2d
+from scipy.ndimage import uniform_filter
 
 from perseo_quality.interferometric_analysis.config import InterferometricConfig
 from perseo_quality.interferometric_analysis.custom_dataclasses import (
@@ -66,21 +66,27 @@ def coherence_histograms_to_netcdf(data: list[InterferometricCoherenceOutput], o
 
         # creating coherence bins variable
         coherence_bins = burst_grp.createVariable(
-            "coherence_bins", item.coherence_histograms.coherence_bin_edges.dtype, "coherence_bins"
+            "coherence_bins",
+            item.coherence_histograms.coherence_bin_edges.dtype,
+            "coherence_bins",
         )
         coherence_bins.unit = ""
         coherence_bins[:] = item.coherence_histograms.coherence_bin_edges[:-1]
 
         # creating azimuth histogram variable
         az_hist = burst_grp.createVariable(
-            "azimuth_histogram", item.coherence_histograms.azimuth_histogram.dtype, ("coherence_bins", "azimuth_blocks")
+            "azimuth_histogram",
+            item.coherence_histograms.azimuth_histogram.dtype,
+            ("coherence_bins", "azimuth_blocks"),
         )
         az_hist.unit = ""
         az_hist[:] = item.coherence_histograms.azimuth_histogram
 
         # creating range histogram variable
         rng_hist = burst_grp.createVariable(
-            "range_histogram", item.coherence_histograms.range_histogram.dtype, ("coherence_bins", "range_blocks")
+            "range_histogram",
+            item.coherence_histograms.range_histogram.dtype,
+            ("coherence_bins", "range_blocks"),
         )
         rng_hist.unit = ""
         rng_hist[:] = item.coherence_histograms.range_histogram
@@ -125,7 +131,11 @@ def coherence_2d_histogram_computation_core(
     # splitting coherence array along azimuth direction in blocks to compute histograms on
     cor_az_blocks = np.array_split(coherence, config.azimuth_blocks_number, axis=0)
     histograms_az = [
-        np.histogram(np.ma.masked_invalid(c).compressed(), bins=config.coherence_bins_number, range=(0, 1))
+        np.histogram(
+            np.ma.masked_invalid(c).compressed(),
+            bins=config.coherence_bins_number,
+            range=(0, 1),
+        )
         for c in cor_az_blocks
     ]
     az_counts = np.stack([h[0] for h in histograms_az], axis=1)
@@ -133,7 +143,11 @@ def coherence_2d_histogram_computation_core(
     # splitting coherence array along range direction in blocks to compute histograms on
     cor_rng_blocks = np.array_split(coherence, config.range_blocks_number, axis=1)
     histograms_rng = [
-        np.histogram(np.ma.masked_invalid(c).compressed(), bins=config.coherence_bins_number, range=(0, 1))
+        np.histogram(
+            np.ma.masked_invalid(c).compressed(),
+            bins=config.coherence_bins_number,
+            range=(0, 1),
+        )
         for c in cor_rng_blocks
     ]
     rng_counts = np.stack([h[0] for h in histograms_rng], axis=1)
@@ -170,20 +184,9 @@ def coherence_computation_interferogram_core(
     npt.NDArray[np.floating]
         coherence array
     """
-    # creating kernel "boxcar" from kernel_size
-    kernel_norm = boxcar_kernel_setup(kernel_size)
-
     # computing the convolution on the phase of the image
-    filtered_image = convolve2d(
-        data,
-        kernel_norm,
-        mode="same",
-    )
-    filtered_abs_image = convolve2d(
-        np.abs(data),
-        kernel_norm,
-        mode="same",
-    )
+    filtered_image = uniform_filter(data, size=kernel_size, mode="constant", cval=0.0)
+    filtered_abs_image = uniform_filter(np.abs(data), size=kernel_size, mode="constant", cval=0.0)
 
     # coherence is obtained by dividing the phase convolution by the absolute convolution
     coherence = np.ma.masked_invalid(filtered_image / filtered_abs_image)
@@ -223,27 +226,12 @@ def coherence_computation_co_registered_core(
     -------
     npt.NDArray[np.floating]
         coherence array
-    """  # noqa: E501
-
-    # creating kernel "boxcar" from kernel_size
-    kernel_norm = boxcar_kernel_setup(kernel_size)
+    """
 
     # computing the convolution on the phase of the image
-    filtered_image = convolve2d(
-        data_1 * data_2.conj(),
-        kernel_norm,
-        mode="same",
-    )
-    filtered_abs_image_1 = convolve2d(
-        np.abs(data_1) ** 2,
-        kernel_norm,
-        mode="same",
-    )
-    filtered_abs_image_2 = convolve2d(
-        np.abs(data_2) ** 2,
-        kernel_norm,
-        mode="same",
-    )
+    filtered_image = uniform_filter(data_1 * data_2.conj(), size=kernel_size, mode="constant", cval=0.0)
+    filtered_abs_image_1 = uniform_filter(np.abs(data_1) ** 2, size=kernel_size, mode="constant", cval=0.0)
+    filtered_abs_image_2 = uniform_filter(np.abs(data_2) ** 2, size=kernel_size, mode="constant", cval=0.0)
 
     # coherence is obtained by dividing the phase convolution by the absolute convolution
     coherence = np.ma.masked_invalid(filtered_image / np.sqrt(filtered_abs_image_1 * filtered_abs_image_2))

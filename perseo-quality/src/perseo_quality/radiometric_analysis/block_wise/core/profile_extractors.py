@@ -12,8 +12,8 @@ from functools import wraps
 import numpy as np
 import numpy.typing as npt
 from numba import jit, prange
-from scipy.ndimage import convolve
-from scipy.signal import convolve2d, medfilt2d
+from scipy.ndimage import convolve, uniform_filter
+from scipy.signal import medfilt2d
 
 from perseo_quality.core.signal_processing import convert_to_db
 from perseo_quality.logger import quality_logger as log
@@ -151,13 +151,9 @@ def nesz_profiles_extractor(
 
     data = _fill_nans(data)
 
-    kernel = np.ones((params.filtering_kernel_size[0], params.filtering_kernel_size[1])) / (
-        params.filtering_kernel_size[0] * params.filtering_kernel_size[1]
-    )
-
     # performing multi-looking 2D convolution (moving average 2D)
     zero_rows_indexes = np.where(np.count_nonzero(data, axis=1) / data.shape[1] < 0.8)[0]
-    data = convolve2d(data, kernel, mode="same")
+    data = uniform_filter(data, size=params.filtering_kernel_size, mode="constant", cval=0.0)
 
     bin_edges = _compute_num_bins(data)
     peaks = np.array([_compute_histogram_peak(row, bins) for row, bins in zip(data, bin_edges, strict=True)])
