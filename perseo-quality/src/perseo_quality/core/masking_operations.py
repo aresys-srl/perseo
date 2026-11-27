@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 from scipy import interpolate as sp_interp
-from scipy.signal import convolve2d
+from scipy.ndimage import uniform_filter
 
 import perseo_quality.core.signal_processing as sp
 from perseo_quality.core.generic_dataclasses import DecibelConversion, MaskingMethod, SideLobesDirections
@@ -935,13 +935,10 @@ def masking_outliers(
     """
 
     array = data.copy()
-    # creating kernels
-    kernel_array = np.ones(kernel_size) / np.prod(kernel_size)
-    filter_kernel = np.ones(filter_size)
 
-    # convolving data with first kernel
-    data_conv = np.sqrt(convolve2d(data, kernel_array, mode="same"))
-    data_conv = data_conv - np.tile(np.nanmedian(data_conv, 1), (data_conv.shape[1], 1)).T
+    # first boxcar filtering
+    data_conv = np.sqrt(uniform_filter(data, kernel_size, mode="constant", cval=0.0))
+    data_conv -= np.nanmedian(data_conv, axis=1)[:, np.newaxis]
 
     # masking data by percentiles
     masking_cond = np.logical_or(
@@ -949,8 +946,8 @@ def masking_outliers(
         data_conv > np.percentile(data_conv.ravel(), percentile_boundaries[1]),
     ).astype("int64")
 
-    # convolving data with filter kernel
-    mask = np.round(convolve2d(masking_cond, filter_kernel, mode="same") / np.sum(filter_kernel))
+    # second boxcar filtering
+    mask = np.round(uniform_filter(masking_cond, filter_size, mode="constant", cval=0.0))
 
     # masking out data
     array[np.where(mask)] = np.nan

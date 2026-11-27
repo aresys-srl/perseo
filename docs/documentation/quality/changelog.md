@@ -15,6 +15,7 @@ tags:
 - River masking: adding a stopping criterion for mask growth
 - Restrict perseo-core dependency to version below the next major release to prevent incompatible changes
 - Setting Spectral Analysis variables dtypes in NetCDF output equal to `np.float64`
+- Replacing separable 2D convolutions with uniform filters to improve performances
 
 **Bug Fixes**
 
